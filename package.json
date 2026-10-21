@@ -1,0 +1,28 @@
+{
+  "name": "libramind-workspace",
+  "version": "1.0.0",
+  "description": "LibraMind — AI-Powered Smart Library Management System (Biophilic Design)",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "dev:all": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "build": "cd frontend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run seed",
+    "seed:backend": "cd backend && npm run seed"
+  },
+  "keywords": [
+    "library-management",
+    "biophilic-design",
+    "ai-finder",
+    "tf-idf",
+    "smart-library"
+  ],
+  "author": "LibraMind Team",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

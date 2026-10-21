@@ -1,0 +1,322 @@
+:root {
+  /* Biophilic Reading Space Color Palette */
+  --forest: #344E41;
+  --forest-dark: #23342B;
+  --forest-light: #446454;
+  --sage: #829779;
+  --sage-light: #9BB092;
+  --botanical: #52734D;
+  --soft-sage: #DCE5D5;
+  --soft-sage-light: #EBF1E6;
+  --warm-beige: #F3EBDD;
+  --warm-beige-light: #FAF5EC;
+  --cream: #FAF8F1;
+  --cream-pure: #FFFFFF;
+  --dark-text: #26352B;
+  --muted-text: #5A6D5E;
+  --subtle-border: rgba(52, 78, 65, 0.12);
+  --border-strong: rgba(52, 78, 65, 0.22);
+  
+  /* Status Colors */
+  --status-available-bg: #E3F2E6;
+  --status-available-text: #2D6A35;
+  --status-borrowed-bg: #FEEFE6;
+  --status-borrowed-text: #B25E1A;
+  --status-reserved-bg: #E8F0FE;
+  --status-reserved-text: #1967D2;
+  --status-danger-bg: #FCE8E6;
+  --status-danger-text: #C5221F;
+
+  /* Typography */
+  --font-sans: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Newsreader', serif;
+
+  /* Shadow Elevation */
+  --shadow-sm: 0 2px 6px rgba(38, 53, 43, 0.04);
+  --shadow-md: 0 6px 18px rgba(38, 53, 43, 0.08);
+  --shadow-lg: 0 14px 34px rgba(38, 53, 43, 0.12);
+  --shadow-card: 0 4px 16px rgba(52, 78, 65, 0.06);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--cream);
+  color: var(--dark-text);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5 {
+  color: var(--forest-dark);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+p {
+  color: var(--muted-text);
+}
+
+a {
+  color: var(--botanical);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--forest);
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.page-container {
+  flex: 1;
+  padding-bottom: 60px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background-color: var(--forest);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: var(--forest-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 78, 65, 0.2);
+}
+
+.btn-secondary {
+  background-color: var(--soft-sage);
+  color: var(--forest-dark);
+}
+
+.btn-secondary:hover {
+  background-color: #CFDBC7;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--forest);
+  color: var(--forest);
+}
+
+.btn-outline:hover {
+  background-color: var(--soft-sage-light);
+}
+
+.btn-botanical {
+  background-color: var(--botanical);
+  color: #FFFFFF;
+}
+
+.btn-botanical:hover {
+  background-color: #405B3C;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-available {
+  background-color: var(--status-available-bg);
+  color: var(--status-available-text);
+  border: 1px solid rgba(45, 106, 53, 0.2);
+}
+
+.badge-borrowed {
+  background-color: var(--status-borrowed-bg);
+  color: var(--status-borrowed-text);
+  border: 1px solid rgba(178, 94, 26, 0.2);
+}
+
+.badge-reserved {
+  background-color: var(--status-reserved-bg);
+  color: var(--status-reserved-text);
+  border: 1px solid rgba(25, 103, 210, 0.2);
+}
+
+.badge-danger {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
+  border: 1px solid rgba(197, 34, 31, 0.2);
+}
+
+.badge-category {
+  background-color: var(--warm-beige);
+  color: var(--forest-dark);
+  font-weight: 500;
+}
+
+/* Biophilic Card */
+.bio-card {
+  background-color: var(--cream-pure);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--subtle-border);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.bio-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(52, 78, 65, 0.24);
+}
+
+/* Form inputs */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--forest-dark);
+  margin-bottom: 6px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--subtle-border);
+  background-color: #FFFFFF;
+  color: var(--dark-text);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--botanical);
+  box-shadow: 0 0 0 3px rgba(82, 115, 77, 0.18);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sage);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--forest);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--cream-pure);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+}
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  color: var(--sage);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--soft-sage-light);
+  border-radius: 50%;
+}
