@@ -24,6 +24,7 @@ async function seed() {
   const adminPass = bcrypt.hashSync('Admin@123', salt);
   const librarianPass = bcrypt.hashSync('Librarian@123', salt);
   const studentPass = bcrypt.hashSync('Student@123', salt);
+  const student2Pass = bcrypt.hashSync('Password@123', salt);
 
   // 1. Insert Users
   const insertUser = db.prepare(`
@@ -61,7 +62,7 @@ async function seed() {
   const student2Id = insertUser.run(
     'Elena Rostova',
     'student2@libramind.edu',
-    studentPass,
+    student2Pass,
     'student',
     'STU-1002',
     'Biophilic Architecture, Classic Literature, Environmental Science'

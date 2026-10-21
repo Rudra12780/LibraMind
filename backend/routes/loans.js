@@ -321,7 +321,7 @@ function handleBookReturn(req, res) {
 
       if (nextReservation) {
         // Mark physical copy as reserved
-        db.prepare('UPDATE book_copies SET status = "reserved" WHERE id = ?').run(loan.copy_id);
+        db.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(loan.copy_id);
 
         // Update reservation to ready_for_pickup with 48h deadline
         const pickupDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();

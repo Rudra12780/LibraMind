@@ -91,7 +91,7 @@ router.post('/', authenticateToken, (req, res) => {
         // Reserve one physical copy
         const copy = db.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(book_id);
         if (copy) {
-          db.prepare('UPDATE book_copies SET status = "reserved" WHERE id = ?').run(copy.id);
+          db.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(copy.id);
           db.prepare('UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?').run(book_id);
         }
       }
@@ -150,7 +150,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
     const cancelTx = db.transaction(() => {
       // If it was ready for pickup, release the held copy
       if (reservation.status === 'ready_for_pickup') {
-        const copy = db.prepare('SELECT id FROM book_copies WHERE book_id = ? AND status = "reserved" LIMIT 1').get(reservation.book_id);
+        const copy = db.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'reserved' LIMIT 1").get(reservation.book_id);
         if (copy) {
           // Check if there is next student in line
           const nextStudent = db.prepare(`
