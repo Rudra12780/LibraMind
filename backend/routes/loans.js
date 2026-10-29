@@ -373,8 +373,23 @@ function handleBookReturn(req, res) {
   }
 }
 
-router.post('/:id/return', authenticateToken, requireRole(['admin', 'librarian']), handleBookReturn);
-router.put('/:id/return', authenticateToken, requireRole(['admin', 'librarian']), handleBookReturn);
+// Allow students to self-return; admins/librarians can return on behalf of any member
+function handleBookReturnWithOwnerCheck(req, res) {
+  // Students may only return their own loans; staff may return any loan
+  if (req.user.role === 'student') {
+    const loan = db.prepare('SELECT user_id FROM loans WHERE id = ?').get(req.params.id);
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan record not found' });
+    }
+    if (loan.user_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only return your own borrowed books.' });
+    }
+  }
+  return handleBookReturn(req, res);
+}
+
+router.post('/:id/return', authenticateToken, handleBookReturnWithOwnerCheck);
+router.put('/:id/return', authenticateToken, handleBookReturnWithOwnerCheck);
 
 // Renew loan
 router.post('/:id/renew', authenticateToken, (req, res) => {

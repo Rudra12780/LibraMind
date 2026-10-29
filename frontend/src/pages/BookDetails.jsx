@@ -322,13 +322,46 @@ export default function BookDetails({
 
   return (
     <div className="container" style={{ padding: '40px 24px 80px' }}>
+      {/* Responsive style overrides */}
+      <style>{`
+        @media (max-width: 860px) {
+          .book-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .book-detail-grid {
+            gap: 24px !important;
+          }
+          .book-cover-img {
+            height: 280px !important;
+          }
+          .book-action-row {
+            flex-direction: column !important;
+          }
+          .book-action-row button {
+            flex: none !important;
+            width: 100% !important;
+          }
+          .book-meta-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .shelf-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+      `}</style>
+
       {/* Toast alert */}
       {toastMessage && (
         <div
           style={{
             position: 'fixed',
-            bottom: '30px',
-            right: '30px',
+            bottom: '24px',
+            right: '16px',
+            left: '16px',
+            maxWidth: '420px',
+            marginLeft: 'auto',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
             color: '#FFFFFF',
             padding: '12px 20px',
@@ -368,6 +401,7 @@ export default function BookDetails({
 
       {/* Main Book Detail Grid */}
       <div
+        className="book-detail-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(280px, 340px) 1fr',
@@ -375,8 +409,7 @@ export default function BookDetails({
           marginBottom: '48px',
           alignItems: 'start'
         }}
-      >
-        {/* Left Column: Cover & Quick Actions */}
+      >        {/* Left Column: Cover & Quick Actions */}
         <div>
           <div
             className="bio-card"
@@ -480,7 +513,7 @@ export default function BookDetails({
                   Due date: <strong>{new Date(userLoan.due_date).toLocaleDateString()}</strong>
                   {userLoan.status === 'overdue' && <span style={{ color: '#C5221F', fontWeight: 700, marginLeft: '6px' }}>(OVERDUE)</span>}
                 </p>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px' }} className="book-action-row">
                   <button
                     onClick={handleReturnBook}
                     disabled={returning}
@@ -517,7 +550,7 @@ export default function BookDetails({
                     ? `Held at desk until ${userReservation.pickup_deadline ? new Date(userReservation.pickup_deadline).toLocaleDateString() : 'within 48h'}.`
                     : `Position #${userReservation.queue_position}. You will receive a notification when a copy becomes available.`}
                 </p>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px' }} className="book-action-row">
                   {userReservation.status === 'ready_for_pickup' && (
                     <button onClick={handleSelfCheckout} disabled={borrowing} className="btn btn-botanical btn-sm" style={{ flex: 1 }}>
                       {borrowing ? 'Checking out...' : 'Claim & Check Out'}
