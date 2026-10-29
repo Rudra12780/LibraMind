@@ -1,12 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNotifications } from '../context/NotificationContext';
-import { Bell, CheckCheck, Clock, Bookmark, BookOpen, AlertTriangle, Info } from 'lucide-react';
+import { Bell, CheckCheck, Clock, Bookmark, BookOpen, AlertTriangle, Info, Megaphone, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
 
 export default function NotificationDropdown({ onClose, onNavigate }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
-  const getIcon = (type) => {
+  // Focused official and actionable notifications only (removed generic noisy activity)
+  const displayedNotifications = notifications.filter(n => {
+    const isWelcome = n.title?.toLowerCase().includes('welcome') || n.message?.toLowerCase().includes('membership');
+    const isDeskMsg = n.type === 'announcement' || n.title?.toLowerCase().includes('admin') || n.title?.toLowerCase().includes('notice') || n.title?.toLowerCase().includes('librarian');
+    const isActionable = n.type === 'pickup' || n.type === 'overdue' || n.type === 'due';
+    return isWelcome || isDeskMsg || isActionable;
+  });
+
+  const getIcon = (type, title) => {
+    if (title?.toLowerCase().includes('welcome')) {
+      return <Sparkles size={16} color="var(--botanical)" />;
+    }
     switch (type) {
+      case 'announcement':
+        return <Megaphone size={16} color="var(--forest)" />;
       case 'borrow':
       case 'return':
         return <BookOpen size={16} color="#52734D" />;
@@ -27,7 +40,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
         position: 'absolute',
         top: '64px',
         right: '20px',
-        width: '380px',
+        width: '400px',
         maxWidth: '92vw',
         backgroundColor: '#FFFFFF',
         borderRadius: '16px',
@@ -43,7 +56,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 20px',
+          padding: '16px 20px 12px',
           borderBottom: '1px solid rgba(52, 78, 65, 0.1)',
           backgroundColor: 'var(--cream)'
         }}
@@ -51,7 +64,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Bell size={18} color="var(--forest)" />
           <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
-            Notifications
+            Notification Center
           </h4>
           {unreadCount > 0 && (
             <span
@@ -90,12 +103,12 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
       </div>
 
       <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
-        {notifications.length === 0 ? (
-          <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--muted-text)', fontSize: '0.9rem' }}>
-            No notifications yet
+        {displayedNotifications.length === 0 ? (
+          <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--muted-text)', fontSize: '0.88rem' }}>
+            No official messages or notifications right now.
           </div>
         ) : (
-          notifications.map(n => (
+          displayedNotifications.map(n => (
             <div
               key={n.id}
               onClick={() => {
@@ -128,13 +141,28 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                   boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                 }}
               >
-                {getIcon(n.type)}
+                {getIcon(n.type, n.title)}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--forest-dark)' }}>
-                    {n.title}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {n.type === 'announcement' && (
+                      <span style={{
+                        backgroundColor: 'var(--forest)',
+                        color: '#FFFFFF',
+                        fontSize: '0.66rem',
+                        fontWeight: 700,
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        letterSpacing: '0.04em'
+                      }}>
+                        ADMIN
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--forest-dark)' }}>
+                      {n.title}
+                    </span>
+                  </div>
                   <span style={{ fontSize: '0.72rem', color: 'var(--muted-text)' }}>
                     {new Date(n.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                   </span>
@@ -158,6 +186,33 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
             </div>
           ))
         )}
+      </div>
+
+      <div
+        style={{
+          padding: '10px 18px',
+          borderTop: '1px solid rgba(52, 78, 65, 0.08)',
+          backgroundColor: 'var(--cream)',
+          textAlign: 'center'
+        }}
+      >
+        <button
+          onClick={() => {
+            onNavigate('notifications');
+            onClose();
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--forest)',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
+          View Notification Center →
+        </button>
       </div>
     </div>
   );

@@ -150,7 +150,7 @@ function initSchema() {
       notes TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, book_id),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,   
       FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
     );
 

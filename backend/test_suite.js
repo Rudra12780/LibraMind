@@ -79,7 +79,7 @@ async function runTests() {
   try {
     const res = await fetchJson('/ai/search', {
       method: 'POST',
-      body: JSON.stringify({ query: 'clean code software architecture design' })
+      body: JSON.stringify({ query: 'spiritual enlightenment inner peace journey novel' })
     });
     const books = res.data.results || [];
     const hasShelfLocation = books.length > 0 && books[0].location_shelf && books[0].location_floor;
@@ -170,6 +170,17 @@ async function runTests() {
     const catalogRes = await fetchJson('/books');
     const bookList = catalogRes.data.books || [];
     reservedBookId = bookList[bookList.length - 1].id;
+
+    // Clear any previous active reservation for target book to ensure test idempotence
+    const [resList1, resList2] = await Promise.all([
+      fetchJson('/reservations', { headers: { Authorization: `Bearer ${studentToken}` } }),
+      fetchJson('/reservations', { headers: { Authorization: `Bearer ${student2Token}` } })
+    ]);
+    const prevHold1 = (resList1.data || []).find(r => String(r.book_id) === String(reservedBookId) && ['waiting', 'ready_for_pickup'].includes(r.status));
+    if (prevHold1) await fetchJson(`/reservations/${prevHold1.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${studentToken}` } });
+
+    const prevHold2 = (resList2.data || []).find(r => String(r.book_id) === String(reservedBookId) && ['waiting', 'ready_for_pickup'].includes(r.status));
+    if (prevHold2) await fetchJson(`/reservations/${prevHold2.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${student2Token}` } });
 
     // Student places reservation
     const res1 = await fetchJson('/reservations', {
@@ -346,7 +357,7 @@ async function runTests() {
     const askRes = await fetchJson('/ai/assistant', {
       method: 'POST',
       headers: { Authorization: `Bearer ${studentToken}` },
-      body: JSON.stringify({ message: 'Where can I find Clean Code in the library?' })
+      body: JSON.stringify({ message: 'Where can I find The Alchemist in the library?' })
     });
 
     const reply = askRes.data.reply || '';

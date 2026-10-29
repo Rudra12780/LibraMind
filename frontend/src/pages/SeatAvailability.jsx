@@ -11,7 +11,9 @@ import {
   AlertCircle,
   Filter,
   Layers,
-  ShieldAlert
+  ShieldAlert,
+  X,
+  Lock
 } from 'lucide-react';
 
 export default function SeatAvailability({ onNavigate }) {
@@ -29,6 +31,8 @@ export default function SeatAvailability({ onNavigate }) {
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [bookingSlot, setBookingSlot] = useState('08:00 - 11:00 (Morning Focus)');
+  const [seatSlots, setSeatSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
 
   const timeSlots = [
@@ -84,6 +88,39 @@ export default function SeatAvailability({ onNavigate }) {
   useEffect(() => {
     fetchMyBookings();
   }, [fetchMyBookings]);
+
+  // Fetch slot availability whenever selected seat or booking date changes
+  useEffect(() => {
+    if (selectedSeat) {
+      setLoadingSlots(true);
+      api.getSeatSlots(selectedSeat.id, bookingDate)
+        .then(res => {
+          const slots = res.slots || [];
+          setSeatSlots(slots);
+          // If the currently selected slot is not available, default to first available
+          const currentSlot = slots.find(s => s.slot === bookingSlot);
+          if (!currentSlot || !currentSlot.isAvailable) {
+            const firstAvail = slots.find(s => s.isAvailable);
+            if (firstAvail) {
+              setBookingSlot(firstAvail.slot);
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Slot endpoint fallback:', err);
+          const fallbackSlots = timeSlots.map(slot => ({
+            slot,
+            isAvailable: selectedSeat.status !== 'maintenance',
+            isMaintenance: selectedSeat.status === 'maintenance',
+            isBooked: false
+          }));
+          setSeatSlots(fallbackSlots);
+        })
+        .finally(() => {
+          setLoadingSlots(false);
+        });
+    }
+  }, [selectedSeat, bookingDate]);
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ msg, isError });
@@ -559,76 +596,259 @@ export default function SeatAvailability({ onNavigate }) {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(35, 52, 43, 0.45)',
-            backdropFilter: 'blur(5px)',
-            zIndex: 3000,
+            backgroundColor: 'rgba(35, 52, 43, 0.65)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '16px'
+            padding: '20px',
+            overflowY: 'auto'
           }}
           onClick={() => setSelectedSeat(null)}
         >
           <div
             className="bio-card"
             style={{
-              width: '460px',
+              width: '540px',
+              maxWidth: '94vw',
+              maxHeight: '90vh',
               backgroundColor: '#FFFFFF',
-              padding: '28px',
-              borderRadius: '16px'
+              borderRadius: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.28)',
+              overflow: 'hidden',
+              margin: 'auto',
+              animation: 'fadeIn 0.2s ease-out'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '6px', color: 'var(--forest-dark)' }}>
-              Reserve Seat {selectedSeat.seat_number}
-            </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-              {selectedSeat.floor} • {selectedSeat.section}
-            </p>
-
-            <form onSubmit={handleBookSeat}>
-              <div className="form-group">
-                <label className="form-label">Date of Study</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={bookingDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setBookingDate(e.target.value)}
-                  required
-                />
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid var(--subtle-border)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                backgroundColor: 'var(--cream)'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span
+                    style={{
+                      backgroundColor: 'var(--forest)',
+                      color: '#FFFFFF',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    POD {selectedSeat.seat_number}
+                  </span>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--forest-dark)', fontWeight: 600 }}>
+                    {selectedSeat.floor} • {selectedSeat.section}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.35rem', margin: 0, color: 'var(--forest-dark)' }}>
+                  Reserve Study Seat
+                </h3>
               </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSeat(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted-text)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px'
+                }}
+                aria-label="Close dialog"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-              <div className="form-group">
-                <label className="form-label">Select Time Slot</label>
-                <select
-                  className="form-control"
-                  value={bookingSlot}
-                  onChange={(e) => setBookingSlot(e.target.value)}
+            {/* Modal Scrollable Body */}
+            <form onSubmit={handleBookSeat} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+                {/* Date Selection */}
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--forest-dark)', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Date of Study</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 400 }}>
+                      Choose your study day
+                    </span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={bookingDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    required
+                    style={{ width: '100%', fontSize: '0.95rem', padding: '10px 14px' }}
+                  />
+                </div>
+
+                {/* Time Slot Selection Menu */}
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: 'var(--forest-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span>Select Time Slot on {bookingDate}</span>
+                    {loadingSlots && (
+                      <span style={{ fontSize: '0.76rem', color: 'var(--botanical)' }}>
+                        Checking slot availability...
+                      </span>
+                    )}
+                  </label>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {timeSlots.map((ts, idx) => {
+                      const slotInfo = seatSlots.find(s => s.slot === ts);
+                      const isAvail = slotInfo ? slotInfo.isAvailable : true;
+                      const isBooked = slotInfo ? slotInfo.isBooked : false;
+                      const isSelected = bookingSlot === ts;
+
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            if (isAvail) setBookingSlot(ts);
+                          }}
+                          style={{
+                            padding: '12px 16px',
+                            borderRadius: '10px',
+                            border: isSelected ? '2px solid var(--forest)' : '1px solid var(--subtle-border)',
+                            backgroundColor: isSelected
+                              ? 'var(--soft-sage-light)'
+                              : isBooked
+                              ? '#F5F5F5'
+                              : '#FFFFFF',
+                            cursor: isAvail ? 'pointer' : 'not-allowed',
+                            opacity: isAvail ? 1 : 0.65,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '50%',
+                                border: isSelected ? '5px solid var(--forest)' : '2px solid var(--muted-text)',
+                                backgroundColor: '#FFFFFF',
+                                flexShrink: 0
+                              }}
+                            />
+                            <div>
+                              <strong style={{ fontSize: '0.9rem', color: isSelected ? 'var(--forest-dark)' : 'var(--dark-text)', display: 'block' }}>
+                                {ts}
+                              </strong>
+                              <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>
+                                {isBooked ? 'Booked by another student at this time' : isAvail ? 'Available for booking' : 'Slot unavailable'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            {isBooked ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  color: '#C5221F',
+                                  backgroundColor: '#FCE8E6',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px'
+                                }}
+                              >
+                                <Lock size={12} /> Reserved
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  color: 'var(--botanical)',
+                                  backgroundColor: 'var(--soft-sage)',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px'
+                                }}
+                              >
+                                <Check size={12} /> Available
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Policy Notice Box */}
+                <div
+                  style={{
+                    backgroundColor: 'var(--cream)',
+                    border: '1px solid var(--subtle-border)',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    color: 'var(--dark-text)',
+                    lineHeight: 1.45,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px'
+                  }}
                 >
-                  {timeSlots.map((ts, idx) => (
-                    <option key={idx} value={ts}>
-                      {ts}
-                    </option>
-                  ))}
-                </select>
+                  <span style={{ fontSize: '1rem', flexShrink: 0 }}>💡</span>
+                  <div>
+                    <strong>Study Space Policy:</strong> A student can reserve 1 study pod per time slot. You are free to reserve this seat or other seats for different time slots on the same day.
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+              {/* Modal Fixed Footer Actions */}
+              <div
+                style={{
+                  padding: '16px 24px',
+                  borderTop: '1px solid var(--subtle-border)',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  gap: '12px'
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setSelectedSeat(null)}
                   className="btn btn-secondary"
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, padding: '10px' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="btn btn-botanical"
-                  style={{ flex: 1 }}
+                  style={{ flex: 2, padding: '10px' }}
+                  disabled={loadingSlots || (seatSlots.find(s => s.slot === bookingSlot) && !seatSlots.find(s => s.slot === bookingSlot)?.isAvailable)}
                 >
-                  Confirm Reservation
+                  Confirm Reservation ({bookingSlot.split(' ')[0]})
                 </button>
               </div>
             </form>

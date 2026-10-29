@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 function getAuthHeader() {
   const token = localStorage.getItem('libramind_token');
@@ -41,6 +41,10 @@ export const api = {
   updateInterests: (interests) => request('/auth/interests', { method: 'PUT', body: { interests } }),
   getAllUsers: () => request('/auth/users'),
   updateUserRole: (id, role) => request(`/auth/users/${id}/role`, { method: 'PUT', body: { role } }),
+  deleteUser: (id) => request(`/auth/users/${id}`, { method: 'DELETE' }),
+  messageUser: (id, body) => request(`/auth/users/${id}/message`, { method: 'POST', body }),
+  messageAdmin: (body) => request('/auth/message-admin', { method: 'POST', body }),
+  createLibrarian: (body) => request('/auth/create-librarian', { method: 'POST', body }),
   getAuditLogs: () => request('/auth/audit-logs'),
 
   // Books
@@ -77,6 +81,7 @@ export const api = {
     const query = new URLSearchParams(params).toString();
     return request(`/seats?${query}`);
   },
+  getSeatSlots: (seatId, date) => request(`/seats/${seatId}/slots?date=${date}`),
   reserveSeat: (body) => request('/seats/reserve', { method: 'POST', body }),
   cancelSeatReservation: (bookingId) => request(`/seats/reserve/${bookingId}`, { method: 'DELETE' }),
   getMySeatBookings: () => request('/seats/my-bookings'),

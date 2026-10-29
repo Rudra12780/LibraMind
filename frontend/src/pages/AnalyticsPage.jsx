@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="container" style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--muted-text)' }}>
-        Generating circulation trends and predictive AI demand models...
+        Generating circulation trends and predictive demand models...
       </div>
     );
   }
@@ -256,12 +256,12 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* AI BOOK-DEMAND PREDICTION MODEL */}
+      {/* CIRCULATION DEMAND PREDICTION MODEL */}
       <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--botanical)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>
-              <Sparkles size={16} /> Predictive Circulation Model
+              <TrendingUp size={16} /> Predictive Circulation Model
             </div>
             <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginTop: '4px' }}>
               30-Day Category Demand Forecast & Inventory Planning

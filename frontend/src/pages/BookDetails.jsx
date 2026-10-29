@@ -17,7 +17,9 @@ import {
   AlertCircle,
   GitCompare,
   Compass,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  Camera
 } from 'lucide-react';
 
 export default function BookDetails({
@@ -27,15 +29,23 @@ export default function BookDetails({
   onAddToCompare,
   compareBookIds = []
 }) {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingActionName, setPendingActionName] = useState('');
   const [issueStudentId, setIssueStudentId] = useState('');
   const [selectedCopyCode, setSelectedCopyCode] = useState('');
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isInPlanner, setIsInPlanner] = useState(false);
+  const [userLoan, setUserLoan] = useState(null);
+  const [userReservation, setUserReservation] = useState(null);
   const [borrowing, setBorrowing] = useState(false);
+  const [reserving, setReserving] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const fetchBookDetails = useCallback(async () => {
     if (!bookId) {
@@ -46,6 +56,11 @@ export default function BookDetails({
     try {
       const data = await api.getBook(bookId);
       setBook(data);
+      if (data.inWishlist !== undefined) setIsWishlisted(Boolean(data.inWishlist));
+      if (data.inVisitPlanner !== undefined) setIsInPlanner(Boolean(data.inVisitPlanner));
+      if (data.userLoan !== undefined) setUserLoan(data.userLoan);
+      if (data.userReservation !== undefined) setUserReservation(data.userReservation);
+
       if (data.copies && data.copies.length > 0) {
         const firstAvail = data.copies.find(c => c.status === 'available');
         if (firstAvail) setSelectedCopyCode(firstAvail.copy_code);
@@ -79,12 +94,40 @@ export default function BookDetails({
 
   const handleReserve = async () => {
     if (!user) {
-      onNavigate('login');
+      setPendingActionName('place a hold for front desk pickup');
+      setShowAuthModal(true);
       return;
     }
+    setReserving(true);
     try {
       const res = await api.placeReservation(book.id);
       showToast(res.message || `Hold confirmed! Queue position #${res.queuePosition}`);
+      setUserReservation({
+        id: res.reservationId,
+        status: res.status || 'waiting',
+        queue_position: res.queuePosition || 1,
+        pickup_deadline: res.status === 'ready_for_pickup' ? new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() : null
+      });
+      if (res.status === 'ready_for_pickup') {
+        setBook(prev => prev ? ({ ...prev, available_copies: Math.max(0, prev.available_copies - 1) }) : prev);
+      }
+      fetchBookDetails();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setReserving(false);
+    }
+  };
+
+  const handleCancelReserve = async () => {
+    if (!userReservation || !userReservation.id) {
+      showToast('Reservation identifier not found', true);
+      return;
+    }
+    try {
+      await api.cancelReservation(userReservation.id);
+      showToast('Reservation hold cancelled');
+      setUserReservation(null);
       fetchBookDetails();
     } catch (err) {
       showToast(err.message, true);
@@ -93,13 +136,22 @@ export default function BookDetails({
 
   const handleSelfCheckout = async () => {
     if (!user) {
-      onNavigate('login');
+      setPendingActionName('borrow this book');
+      setShowAuthModal(true);
       return;
     }
     setBorrowing(true);
     try {
       const res = await api.checkoutBook({ book_id: book.id });
       showToast(`Success! Checked out copy ${res.copyCode}. Due: ${new Date(res.dueDate).toLocaleDateString()}`);
+      setUserLoan({
+        id: res.loanId,
+        due_date: res.dueDate,
+        copy_code: res.copyCode,
+        status: 'active'
+      });
+      setUserReservation(null);
+      setBook(prev => prev ? ({ ...prev, available_copies: Math.max(0, prev.available_copies - 1) }) : prev);
       fetchBookDetails();
     } catch (err) {
       showToast(err.message, true);
@@ -108,14 +160,52 @@ export default function BookDetails({
     }
   };
 
-  const handleAddToPlanner = async () => {
+  const handleReturnBook = async () => {
+    if (!userLoan || !userLoan.id) {
+      showToast('Active loan ID not found to process return', true);
+      return;
+    }
+    setReturning(true);
+    try {
+      await api.returnBook(userLoan.id);
+      showToast(`Book successfully returned! Thank you.`);
+      setUserLoan(null);
+      setBook(prev => prev ? ({ ...prev, available_copies: prev.available_copies + 1 }) : prev);
+      fetchBookDetails();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setReturning(false);
+    }
+  };
+
+  const handleRenewLoan = async () => {
+    if (!userLoan || !userLoan.id) return;
+    try {
+      const res = await api.renewLoan(userLoan.id);
+      showToast(res.message || 'Loan renewed successfully for +14 days!');
+      fetchBookDetails();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const handleTogglePlanner = async () => {
     if (!user) {
-      onNavigate('login');
+      setPendingActionName('add books to your Visit Planner');
+      setShowAuthModal(true);
       return;
     }
     try {
-      await api.addToVisitPlanner(book.id);
-      showToast(`Added "${book.title}" to your Visit Planner!`);
+      if (isInPlanner) {
+        await api.removeFromVisitPlanner(book.id);
+        setIsInPlanner(false);
+        showToast(`Removed "${book.title}" from your Visit Planner`);
+      } else {
+        await api.addToVisitPlanner(book.id);
+        setIsInPlanner(true);
+        showToast(`Added "${book.title}" to your Visit Planner!`);
+      }
     } catch (err) {
       showToast(err.message, true);
     }
@@ -134,7 +224,8 @@ export default function BookDetails({
 
   const handleToggleWishlist = async () => {
     if (!user) {
-      onNavigate('login');
+      setPendingActionName('save books to your Wishlist');
+      setShowAuthModal(true);
       return;
     }
     try {
@@ -149,6 +240,30 @@ export default function BookDetails({
       }
     } catch (err) {
       showToast(err.message, true);
+    }
+  };
+
+  const handleUploadOriginalPhoto = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        showToast('Image file exceeds 8MB limit. Please choose a smaller photo.', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async () => {
+        setUploadingPhoto(true);
+        try {
+          await api.updateBook(book.id, { cover_image: reader.result });
+          showToast(`Success: Uploaded original photo for "${book.title}"!`);
+          fetchBookDetails();
+        } catch (err) {
+          showToast(err.message, true);
+        } finally {
+          setUploadingPhoto(false);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -286,6 +401,53 @@ export default function BookDetails({
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
+
+            {/* Librarian / Admin: Upload Original Photo Action */}
+            {(user?.role === 'librarian' || user?.role === 'admin') && (
+              <div style={{ marginTop: '14px', borderTop: '1px solid var(--subtle-border)', paddingTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: book.cover_image?.startsWith('/uploads') ? 'rgba(82, 115, 77, 0.12)' : 'rgba(217, 119, 6, 0.12)',
+                    color: book.cover_image?.startsWith('/uploads') ? 'var(--botanical)' : '#B45309'
+                  }}>
+                    {book.cover_image?.startsWith('/uploads') ? '● Original Photo Uploaded' : '● Standard Stock Photo'}
+                  </span>
+                </div>
+                <label
+                  className="btn btn-outline btn-sm"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    cursor: uploadingPhoto ? 'wait' : 'pointer',
+                    fontSize: '0.82rem',
+                    padding: '8px 12px',
+                    borderColor: 'var(--botanical)',
+                    color: 'var(--forest-dark)',
+                    backgroundColor: '#FFFFFF'
+                  }}
+                >
+                  <Upload size={14} color="var(--botanical)" />
+                  {uploadingPhoto ? 'Uploading & Saving Locally...' : 'Upload Original Photo from Device'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    disabled={uploadingPhoto}
+                    onChange={handleUploadOriginalPhoto}
+                  />
+                </label>
+                <span style={{ fontSize: '0.7rem', color: 'var(--sage)', display: 'block', textAlign: 'center', marginTop: '5px' }}>
+                  Saved directly to library archive for 100% offline access
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Action Panel */}
@@ -299,7 +461,74 @@ export default function BookDetails({
               gap: '12px'
             }}
           >
-            {isAvailable ? (
+            {/* User Active Loan Status Banner */}
+            {userLoan ? (
+              <div
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--soft-sage-light)',
+                  border: '1.5px solid var(--botanical)',
+                  marginBottom: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--forest-dark)', fontWeight: 700, fontSize: '0.92rem' }}>
+                  <CheckCircle2 size={18} color="var(--botanical)" />
+                  Currently Borrowed by You
+                </div>
+                <p style={{ margin: '4px 0 10px', fontSize: '0.82rem', color: 'var(--muted-text)' }}>
+                  Due date: <strong>{new Date(userLoan.due_date).toLocaleDateString()}</strong>
+                  {userLoan.status === 'overdue' && <span style={{ color: '#C5221F', fontWeight: 700, marginLeft: '6px' }}>(OVERDUE)</span>}
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={handleReturnBook}
+                    disabled={returning}
+                    className="btn btn-secondary btn-sm"
+                    style={{ flex: 1, backgroundColor: 'var(--warm-beige)', color: 'var(--forest-dark)', fontWeight: 600 }}
+                  >
+                    {returning ? 'Returning...' : 'Return Book'}
+                  </button>
+                  <button onClick={handleRenewLoan} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
+                    Renew (+14d)
+                  </button>
+                  <button onClick={() => onNavigate('dashboard')} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                    My Loans
+                  </button>
+                </div>
+              </div>
+            ) : userReservation ? (
+              /* User Active Hold Status Banner */
+              <div
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--soft-sage-light)',
+                  border: '1.5px solid var(--forest)',
+                  marginBottom: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--forest-dark)', fontWeight: 700, fontSize: '0.92rem' }}>
+                  <Bookmark size={18} color="var(--forest)" />
+                  {userReservation.status === 'ready_for_pickup' ? 'Ready for Pickup at Desk!' : `In Waiting Queue (#${userReservation.queue_position})`}
+                </div>
+                <p style={{ margin: '4px 0 10px', fontSize: '0.82rem', color: 'var(--muted-text)' }}>
+                  {userReservation.status === 'ready_for_pickup'
+                    ? `Held at desk until ${userReservation.pickup_deadline ? new Date(userReservation.pickup_deadline).toLocaleDateString() : 'within 48h'}.`
+                    : `Position #${userReservation.queue_position}. You will receive a notification when a copy becomes available.`}
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {userReservation.status === 'ready_for_pickup' && (
+                    <button onClick={handleSelfCheckout} disabled={borrowing} className="btn btn-botanical btn-sm" style={{ flex: 1 }}>
+                      {borrowing ? 'Checking out...' : 'Claim & Check Out'}
+                    </button>
+                  )}
+                  <button onClick={handleCancelReserve} className="btn btn-outline btn-sm" style={{ flex: 1, color: '#C5221F', borderColor: '#C5221F' }}>
+                    Cancel Hold
+                  </button>
+                </div>
+              </div>
+            ) : isAvailable ? (
               <>
                 <button
                   onClick={handleSelfCheckout}
@@ -311,29 +540,31 @@ export default function BookDetails({
                 </button>
                 <button
                   onClick={handleReserve}
+                  disabled={reserving}
                   className="btn btn-outline"
                   style={{ width: '100%' }}
                 >
-                  <Bookmark size={16} /> Place Hold for Front Desk Pickup
+                  <Bookmark size={16} /> {reserving ? 'Placing Hold...' : 'Place Hold for Front Desk Pickup'}
                 </button>
               </>
             ) : (
               <button
                 onClick={handleReserve}
+                disabled={reserving}
                 className="btn btn-primary"
                 style={{ width: '100%' }}
               >
-                <Bookmark size={18} /> Join Waiting Queue (#{book.waitingQueueCount + 1})
+                <Bookmark size={18} /> {reserving ? 'Joining Queue...' : `Join Waiting Queue (#${(book.waitingQueueCount || 0) + 1})`}
               </button>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <button
-                onClick={handleAddToPlanner}
-                className="btn btn-outline btn-sm"
+                onClick={handleTogglePlanner}
+                className={`btn btn-sm ${isInPlanner ? 'btn-primary' : 'btn-outline'}`}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
               >
-                <Compass size={14} /> Add to Visit
+                <Compass size={14} /> {isInPlanner ? 'In Visit Planner' : 'Add to Visit'}
               </button>
 
               <button
@@ -654,6 +885,88 @@ export default function BookDetails({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Sign-In Modal (when unauthenticated visitor clicks book action) */}
+      {showAuthModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(35, 52, 43, 0.55)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 3500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={() => setShowAuthModal(false)}
+        >
+          <div
+            className="bio-card"
+            style={{
+              width: '420px',
+              backgroundColor: '#FFFFFF',
+              padding: '32px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-lg)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--soft-sage-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: 'var(--forest)'
+              }}
+            >
+              <ShieldCheck size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--forest-dark)' }}>
+              Sign In to Continue
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px', lineHeight: 1.5 }}>
+              Please sign in to {pendingActionName || 'interact with library books'}.
+            </p>
+
+            <button
+              onClick={async () => {
+                try {
+                  await login('student@libramind.edu', 'Student@123');
+                  setShowAuthModal(false);
+                  showToast('Signed in as Student (Aarav Sharma)!');
+                  fetchBookDetails();
+                } catch (e) {
+                  showToast(e.message, true);
+                }
+              }}
+              className="btn btn-botanical"
+              style={{ width: '100%', marginBottom: '10px', padding: '12px', justifyContent: 'center', fontWeight: 600 }}
+            >
+              ⚡ 1-Click Sign In as Student (Aarav)
+            </button>
+
+            <button
+              onClick={() => {
+                setShowAuthModal(false);
+                onNavigate('login');
+              }}
+              className="btn btn-outline"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              Sign In with Another Account
+            </button>
           </div>
         </div>
       )}

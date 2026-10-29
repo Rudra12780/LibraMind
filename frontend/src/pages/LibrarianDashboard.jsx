@@ -17,12 +17,33 @@ import {
   Check,
   MapPin,
   Clock,
-  Layers
+  Layers,
+  Send,
+  Upload,
+  CopyPlus,
+  Camera,
+  Image as ImageIcon,
+  X,
+  ShieldAlert,
+  Lock,
+  AlertCircle,
+  Key
 } from 'lucide-react';
 
-export default function LibrarianDashboard({ onNavigate }) {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('issue'); // 'issue', 'return', 'reservations', 'inventory', 'seats', 'announcement'
+export function resolveBookCoverUrl(url) {
+  if (!url) return 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';
+  return url;
+}
+
+export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' }) {
+  const { user, login, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [overview, setOverview] = useState(null);
   const [loans, setLoans] = useState([]);
   const [reservations, setReservations] = useState([]);
@@ -31,25 +52,65 @@ export default function LibrarianDashboard({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Librarian Portal Gateway Sign-in state
+  const [libEmail, setLibEmail] = useState('');
+  const [libPassword, setLibPassword] = useState('');
+  const [libLoginError, setLibLoginError] = useState('');
+  const [loggingInLib, setLoggingInLib] = useState(false);
+
   // Form states
   // 1. Issue
   const [issueMemberId, setIssueMemberId] = useState('');
   const [issueCopyCode, setIssueCopyCode] = useState('');
   const [issueDays, setIssueDays] = useState('14');
 
-  // 2. Add Book
+  // 2. Add Book & Device Image Upload
   const [newBook, setNewBook] = useState({
     title: '', author: '', isbn: '', publisher: '', publication_year: 2024,
-    category: 'Computer Science', edition: '1st Edition', language: 'English',
-    floor: 'Floor 1', section: 'Tech & Engineering', shelf: 'Shelf CS-01', rack: 'Rack 01',
+    category: 'Classic Novels', edition: '1st Edition', language: 'English',
+    floor: 'Floor 1', section: 'Classic Literature Gallery', shelf: 'Shelf CL-01', rack: 'Rack 01',
     total_copies: 1, description: '', cover_image: ''
   });
+  const [imagePreview, setImagePreview] = useState(null);
 
-  // 3. Announcement
+  // 3. Add More Copies to Existing Book
+  const [copyBookId, setCopyBookId] = useState('');
+  const [copyCount, setCopyCount] = useState(1);
+  const [copyCondition, setCopyCondition] = useState('New');
+  const [addingCopies, setAddingCopies] = useState(false);
+
+  // 4. Message Administration (Librarian -> Admin Direct Hotline)
+  const [adminMsgTitle, setAdminMsgTitle] = useState('');
+  const [adminMsgBody, setAdminMsgBody] = useState('');
+  const [sendingAdminMsg, setSendingAdminMsg] = useState(false);
+
+  // 4b. Inventory Requisition to Admin
+  const [restockBookId, setRestockBookId] = useState('');
+  const [restockQty, setRestockQty] = useState(2);
+  const [restockPriority, setRestockPriority] = useState('Standard');
+  const [restockReason, setRestockReason] = useState('Out of stock (0 available copies)');
+  const [restockNotes, setRestockNotes] = useState('');
+  const [sendingRestock, setSendingRestock] = useState(false);
+
+  // 5. Announcement
   const [annTitle, setAnnTitle] = useState('');
   const [annMessage, setAnnMessage] = useState('');
 
+  // 6. Upload Original Photo Modal (for Held Books and Quick Desk Actions)
+  const [photoModalBook, setPhotoModalBook] = useState(null);
+  const [modalPhotoPreview, setModalPhotoPreview] = useState(null);
+  const [modalUploading, setModalUploading] = useState(false);
+
+  // 7. Inventory Section: Upload Original Photo for Existing Book
+  const [inventoryPhotoBookId, setInventoryPhotoBookId] = useState('');
+  const [inventoryPhotoPreview, setInventoryPhotoPreview] = useState(null);
+  const [inventoryPhotoUploading, setInventoryPhotoUploading] = useState(false);
+
   const fetchLibrarianData = useCallback(async () => {
+    if (!user || (user.role !== 'librarian' && user.role !== 'admin')) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [overviewData, loansData, resData, booksData, seatsData] = await Promise.all([
@@ -78,6 +139,23 @@ export default function LibrarianDashboard({ onNavigate }) {
   const showToast = (msg, isError = false) => {
     setToastMessage({ msg, isError });
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Device File Upload Handler (Offline accessible)
+  const handleDeviceImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        showToast('Image file exceeds 8MB limit. Please choose a smaller photo.', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result);
+        setNewBook(prev => ({ ...prev, cover_image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Issue Book Handler
@@ -120,21 +198,99 @@ export default function LibrarianDashboard({ onNavigate }) {
     }
   };
 
-  // Add Book Handler
+  // Add Book Handler (with duplicate protection)
   const handleAddBook = async (e) => {
     e.preventDefault();
     try {
       await api.createBook(newBook);
-      showToast(`Added "${newBook.title}" to catalog with ${newBook.total_copies} physical copies!`);
+      showToast(`Success: Cataloged "${newBook.title}" with ${newBook.total_copies} physical copies!`);
       setNewBook({
         title: '', author: '', isbn: '', publisher: '', publication_year: 2024,
         category: 'Computer Science', edition: '1st Edition', language: 'English',
         floor: 'Floor 1', section: 'Tech & Engineering', shelf: 'Shelf CS-01', rack: 'Rack 01',
         total_copies: 1, description: '', cover_image: ''
       });
+      setImagePreview(null);
       fetchLibrarianData();
     } catch (err) {
       showToast(err.message, true);
+    }
+  };
+
+  // Add Copies to Existing Book Handler
+  const handleAddCopiesToExisting = async (e) => {
+    e.preventDefault();
+    if (!copyBookId) {
+      showToast('Please select an existing book from the catalog first', true);
+      return;
+    }
+    setAddingCopies(true);
+    try {
+      const res = await api.addBookCopy(copyBookId, { count: copyCount, condition: copyCondition });
+      showToast(res.message || `Added ${copyCount} copies to book!`);
+      setCopyCount(1);
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setAddingCopies(false);
+    }
+  };
+
+  // Message Administrator Hotline Handler (Only Librarian can message Admin)
+  const handleSendMessageToAdmin = async (e) => {
+    e.preventDefault();
+    if (!adminMsgTitle.trim() || !adminMsgBody.trim()) {
+      showToast('Subject and message content are required', true);
+      return;
+    }
+    setSendingAdminMsg(true);
+    try {
+      const res = await api.messageAdmin({ title: adminMsgTitle.trim(), message: adminMsgBody.trim() });
+      showToast(res.message || 'Direct dispatch securely sent to Library Administration!');
+      setAdminMsgTitle('');
+      setAdminMsgBody('');
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setSendingAdminMsg(false);
+    }
+  };
+
+  // Restock Requisition Handler
+  const handleSendRestockRequisition = async (e) => {
+    e.preventDefault();
+    if (!restockBookId) {
+      showToast('Please select a catalog book to restock', true);
+      return;
+    }
+    const book = books.find(b => String(b.id) === String(restockBookId));
+    if (!book) {
+      showToast('Selected book not found', true);
+      return;
+    }
+    setSendingRestock(true);
+    try {
+      const title = `[RESTOCK REQUISITION] ${book.title} (${restockPriority} Priority)`;
+      const message = `INVENTORY REQUISITION:
+Book: "${book.title}" (ISBN: ${book.isbn}, ID #${book.id})
+Category: ${book.category}
+Current Stock: ${book.available_copies} available / ${book.total_copies} total
+Requested Copies: ${restockQty}
+Priority: ${restockPriority}
+Reason: ${restockReason}
+${restockNotes ? `Librarian Note: ${restockNotes.trim()}\n` : ''}
+Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
+
+      const res = await api.messageAdmin({ title, message });
+      showToast(res.message || `Restock requisition for "${book.title}" sent to Administration!`);
+      setRestockBookId('');
+      setRestockQty(2);
+      setRestockNotes('');
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setSendingRestock(false);
     }
   };
 
@@ -163,8 +319,376 @@ export default function LibrarianDashboard({ onNavigate }) {
     }
   };
 
+  // Upload Original Photo Modal Handlers (Hold Desk)
+  const handleOpenPhotoModal = (book) => {
+    setPhotoModalBook(book);
+    setModalPhotoPreview(null);
+  };
+
+  const handleModalPhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        showToast('Image file exceeds 8MB limit. Please choose a smaller photo.', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => setModalPhotoPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveModalPhoto = async () => {
+    if (!photoModalBook || !modalPhotoPreview) {
+      showToast('Please choose an image file from your device first', true);
+      return;
+    }
+    setModalUploading(true);
+    try {
+      await api.updateBook(photoModalBook.id, { cover_image: modalPhotoPreview });
+      showToast(`Success: Uploaded original photo for "${photoModalBook.title}"!`);
+      setPhotoModalBook(null);
+      setModalPhotoPreview(null);
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setModalUploading(false);
+    }
+  };
+
+  // Inventory Upload Photo Handlers
+  const handleInventoryPhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        showToast('Image file exceeds 8MB limit.', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => setInventoryPhotoPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveInventoryPhoto = async (e) => {
+    e.preventDefault();
+    if (!inventoryPhotoBookId) {
+      showToast('Please select a book first', true);
+      return;
+    }
+    if (!inventoryPhotoPreview) {
+      showToast('Please choose an original photo from your device', true);
+      return;
+    }
+    setInventoryPhotoUploading(true);
+    try {
+      const selectedBook = books.find(b => String(b.id) === String(inventoryPhotoBookId));
+      await api.updateBook(inventoryPhotoBookId, { cover_image: inventoryPhotoPreview });
+      showToast(`Success: Original photo uploaded for "${selectedBook?.title || 'book'}"!`);
+      setInventoryPhotoPreview(null);
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setInventoryPhotoUploading(false);
+    }
+  };
+
+  const handleLibrarianLogin = async (e) => {
+    e.preventDefault();
+    setLibLoginError('');
+    setLoggingInLib(true);
+    try {
+      let queryEmail = libEmail.trim();
+      if (
+        queryEmail.toLowerCase() === 'librarian' ||
+        queryEmail.toLowerCase() === 'librarian@1234' ||
+        queryEmail.toLowerCase() === 'librarian1234'
+      ) {
+        queryEmail = 'librarian@libramind.edu';
+      }
+      const res = await login(queryEmail, libPassword, false);
+      if (res.user.role !== 'librarian' && res.user.role !== 'admin') {
+        setLibLoginError('Access Denied: This account is not authorized as library circulation staff.');
+      } else {
+        fetchLibrarianData();
+      }
+    } catch (err) {
+      setLibLoginError(err.message || 'Invalid librarian credentials');
+    } finally {
+      setLoggingInLib(false);
+    }
+  };
+
   const activeLoans = loans.filter(l => l.status === 'active' || l.status === 'overdue');
 
+  // Case 1: Logged-in user is NOT a Librarian or Admin -> 403 Forbidden Access Denied Screen
+  if (user && user.role !== 'librarian' && user.role !== 'admin') {
+    return (
+      <div
+        style={{
+          minHeight: '80vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '50px 20px',
+          backgroundColor: 'var(--cream)'
+        }}
+      >
+        <div
+          className="bio-card"
+          style={{
+            width: '480px',
+            maxWidth: '100%',
+            backgroundColor: '#FFFFFF',
+            padding: '38px',
+            borderRadius: '20px',
+            boxShadow: 'var(--shadow-xl)',
+            border: '1px solid rgba(197, 34, 31, 0.25)',
+            textAlign: 'center'
+          }}
+        >
+          <div
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '16px',
+              backgroundColor: '#FCE8E6',
+              color: '#C5221F',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px'
+            }}
+          >
+            <ShieldAlert size={30} />
+          </div>
+          <div
+            style={{
+              display: 'inline-block',
+              backgroundColor: '#FCE8E6',
+              color: '#C5221F',
+              fontSize: '0.74rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              padding: '3px 12px',
+              borderRadius: '12px',
+              marginBottom: '10px'
+            }}
+          >
+            Restricted Circulation Desk
+          </div>
+          <h2 style={{ fontSize: '1.6rem', color: 'var(--forest-dark)', margin: '4px 0 10px' }}>
+            Access Denied: Librarian Privileges Required
+          </h2>
+          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', lineHeight: 1.5, marginBottom: '24px' }}>
+            You are currently authenticated as a <strong>Student Member</strong> ({user.name} • {user.membership_id}). This portal is restricted exclusively to authorized library circulation staff.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="btn btn-primary"
+              style={{ padding: '11px', width: '100%', fontSize: '0.92rem' }}
+            >
+              Return to My Student Hub
+            </button>
+            <button
+              onClick={async () => {
+                await logout();
+                onNavigate('librarian');
+              }}
+              className="btn btn-outline"
+              style={{ padding: '10px', width: '100%', fontSize: '0.88rem' }}
+            >
+              Sign Out & Sign In with Staff Account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 2: Unauthenticated Visitor -> Dedicated Librarian Portal Gateway Login
+  if (!user) {
+    return (
+      <div
+        style={{
+          minHeight: '80vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '50px 20px',
+          backgroundColor: 'var(--cream)'
+        }}
+      >
+        <div
+          className="bio-card"
+          style={{
+            width: '460px',
+            maxWidth: '100%',
+            backgroundColor: '#FFFFFF',
+            padding: '36px',
+            borderRadius: '20px',
+            boxShadow: 'var(--shadow-xl)',
+            border: '1px solid rgba(82, 115, 77, 0.22)'
+          }}
+        >
+          {/* Brand Header */}
+          <div style={{ textAlign: 'center', marginBottom: '26px' }}>
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
+                backgroundColor: 'var(--botanical)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                boxShadow: '0 6px 18px rgba(82, 115, 77, 0.25)'
+              }}
+            >
+              <Layers size={28} color="#FAF8F1" />
+            </div>
+            <div
+              style={{
+                display: 'inline-block',
+                backgroundColor: 'var(--soft-sage)',
+                color: 'var(--forest-dark)',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                padding: '3px 10px',
+                borderRadius: '12px',
+                marginBottom: '8px'
+              }}
+            >
+              Circulation Desk • Staff Gateway
+            </div>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--forest-dark)', margin: '4px 0 6px' }}>
+              Librarian Portal Gateway
+            </h2>
+            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', margin: 0 }}>
+              Sign in with your staff credentials to manage book issues, returns, and catalog inventory.
+            </p>
+          </div>
+
+          {libLoginError && (
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--status-danger-bg)',
+                color: 'var(--status-danger-text)',
+                fontSize: '0.86rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '20px'
+              }}
+            >
+              <AlertCircle size={16} />
+              {libLoginError}
+            </div>
+          )}
+
+          <form onSubmit={handleLibrarianLogin}>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
+                Staff Email or Staff ID
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="librarian@libramind.edu or LIB-5001"
+                value={libEmail}
+                onChange={(e) => setLibEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '22px' }}>
+              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
+                Staff Password / Key
+              </label>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={libPassword}
+                onChange={(e) => setLibPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loggingInLib}
+              style={{ width: '100%', padding: '12px', fontSize: '0.96rem' }}
+            >
+              {loggingInLib ? 'Verifying Staff Credentials...' : 'Sign In to Librarian Desk'}
+            </button>
+          </form>
+
+          {/* 1-Click Quick Demo Login for Librarian */}
+          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--subtle-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--forest-dark)', textTransform: 'uppercase' }}>
+                ⚡ 1-Click Staff Demo Access:
+              </span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--sage)', fontWeight: 600 }}>
+                Pass: Librarian@123
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setLibEmail('librarian@libramind.edu');
+                setLibPassword('Librarian@123');
+                setLibLoginError('');
+                setLoggingInLib(true);
+                try {
+                  await login('librarian@libramind.edu', 'Librarian@123', false);
+                  fetchLibrarianData();
+                } catch (err) {
+                  setLibLoginError(err.message || 'Login failed');
+                } finally {
+                  setLoggingInLib(false);
+                }
+              }}
+              className="btn btn-secondary btn-sm"
+              style={{ width: '100%', fontSize: '0.82rem', padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <span><strong>Marcus Vance</strong> (LIB-5001 • Head Desk)</span>
+              <span style={{ fontSize: '0.74rem', color: 'var(--botanical)', fontWeight: 700 }}>Auto-fill & Enter →</span>
+            </button>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '22px' }}>
+            <button
+              onClick={() => onNavigate('home')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--botanical)',
+                fontSize: '0.84rem',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              ← Return to Library Public Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 3: Authenticated Librarian -> Full Circulation Suite
   return (
     <div className="container" style={{ padding: '40px 24px 80px' }}>
       {/* Toast Alert */}
@@ -263,49 +787,6 @@ export default function LibrarianDashboard({ onNavigate }) {
           </div>
         </div>
       )}
-
-      {/* Operation Tabs Navigation */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          overflowX: 'auto',
-          borderBottom: '2px solid var(--subtle-border)',
-          marginBottom: '32px',
-          paddingBottom: '2px'
-        }}
-      >
-        {[
-          { id: 'issue', label: 'Check Out (Issue)', icon: ArrowRightLeft },
-          { id: 'return', label: `Returns & Overdue (${activeLoans.length})`, icon: RotateCcw },
-          { id: 'reservations', label: `Hold Queues (${reservations.length})`, icon: Bookmark },
-          { id: 'inventory', label: 'Add New Book', icon: Plus },
-          { id: 'seats', label: 'Live Pod Status', icon: Armchair },
-          { id: 'announcement', label: 'Send Announcement', icon: Megaphone }
-        ].map(t => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: activeTab === t.id ? '3px solid var(--forest)' : '3px solid transparent',
-              color: activeTab === t.id ? 'var(--forest-dark)' : 'var(--muted-text)',
-              fontSize: '0.92rem',
-              fontWeight: activeTab === t.id ? 700 : 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <t.icon size={16} />
-            {t.label}
-          </button>
-        ))}
-      </div>
 
       {/* TAB 1: Check Out (Issue Book) */}
       {activeTab === 'issue' && (
@@ -463,7 +944,65 @@ export default function LibrarianDashboard({ onNavigate }) {
                       <strong>{r.student_name}</strong>
                       <div style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>{r.membership_id}</div>
                     </td>
-                    <td style={{ padding: '12px 14px', fontWeight: 600 }}>{r.book_title}</td>
+                    <td style={{ padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '46px',
+                          height: '62px',
+                          flexShrink: 0,
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          backgroundColor: 'var(--warm-beige)',
+                          border: '1px solid var(--subtle-border)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                        }}>
+                          <img
+                            src={resolveBookCoverUrl(r.cover_image)}
+                            alt={r.book_title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--forest-dark)', fontSize: '0.92rem' }}>
+                            {r.book_title}
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>
+                            by {r.book_author || 'Author'}
+                          </div>
+                          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            {r.cover_image?.startsWith('/uploads') ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: 'var(--botanical)', fontWeight: 600, backgroundColor: 'rgba(82, 115, 77, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                <Check size={11} /> Original Photo Active
+                              </span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: '#B45309', fontWeight: 600, backgroundColor: 'rgba(217, 119, 6, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+                                Standard Stock Image
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPhotoModal({ id: r.book_id, title: r.book_title, author: r.book_author, cover_image: r.cover_image })}
+                              className="btn btn-sm btn-outline"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.72rem',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                borderColor: 'var(--botanical)',
+                                color: 'var(--forest-dark)',
+                                backgroundColor: '#FFFFFF'
+                              }}
+                              title="Upload device photo to replace standard image for this book on hold"
+                            >
+                              <Upload size={12} color="var(--botanical)" />
+                              Upload Original Photo
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                     <td style={{ padding: '12px 14px' }}>Position #{r.queue_position}</td>
                     <td style={{ padding: '12px 14px' }}>
                       {r.status === 'ready_for_pickup' ? (
@@ -495,15 +1034,90 @@ export default function LibrarianDashboard({ onNavigate }) {
         </div>
       )}
 
-      {/* TAB 4: Add New Book to Catalog */}
+      {/* TAB 4: Inventory & Add Copies */}
       {activeTab === 'inventory' && (
-        <div style={{ maxWidth: '800px' }}>
-          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF' }}>
-            <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-              Catalog New Book & Physical Stacks
-            </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '850px' }}>
+          
+          {/* Section A: Add Copies to Existing Book */}
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', borderLeft: '5px solid var(--botanical)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <CopyPlus size={22} color="var(--botanical)" />
+              <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
+                Add More Copies to Existing Book
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
+              Select any existing title in the library to increase available stock without creating duplicate records. Unique copy barcodes are assigned automatically.
+            </p>
+
+            <form onSubmit={handleAddCopiesToExisting} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', alignItems: 'end' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Select Existing Book *</label>
+                <select
+                  className="form-control"
+                  value={copyBookId}
+                  onChange={(e) => setCopyBookId(e.target.value)}
+                  required
+                >
+                  <option value="">-- Choose a title from catalog ({books.length} books) --</option>
+                  {books.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.title} — by {b.author} (Current: {b.available_copies}/{b.total_copies} available • ISBN: {b.isbn})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Number of Copies to Add</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  className="form-control"
+                  value={copyCount}
+                  onChange={(e) => setCopyCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Copy Condition</label>
+                <select
+                  className="form-control"
+                  value={copyCondition}
+                  onChange={(e) => setCopyCondition(e.target.value)}
+                >
+                  <option value="New">Brand New</option>
+                  <option value="Good">Good Condition</option>
+                  <option value="Fair">Fair / Usable</option>
+                </select>
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <button
+                  type="submit"
+                  disabled={addingCopies}
+                  className="btn btn-botanical"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px' }}
+                >
+                  <CopyPlus size={16} />
+                  {addingCopies ? 'Adding Copies...' : `Add ${copyCount} Physical Cop${copyCount > 1 ? 'ies' : 'y'}`}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Section B: Catalog New Book Title (Device Image Upload) */}
+          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF', borderLeft: '5px solid var(--forest)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <Plus size={22} color="var(--forest)" />
+              <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
+                Catalog New Book Title & Stacks Location
+              </h3>
+            </div>
             <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px' }}>
-              Add a new book with precise shelf and rack coordinates. Physical copy records will be created automatically.
+              Register a brand new book title. Duplicate titles and ISBNs are automatically prevented. Upload cover photos directly from your device to enable full offline viewing.
             </p>
 
             <form onSubmit={handleAddBook}>
@@ -513,6 +1127,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Title of the book"
                     value={newBook.title}
                     onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
                     required
@@ -524,6 +1139,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Author name"
                     value={newBook.author}
                     onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
                     required
@@ -549,16 +1165,10 @@ export default function LibrarianDashboard({ onNavigate }) {
                     value={newBook.category}
                     onChange={(e) => setNewBook({ ...newBook, category: e.target.value })}
                   >
+                    <option value="Classic Novels">Classic Novels</option>
                     <option value="Emotional Fiction">Emotional Fiction</option>
-                    <option value="Inspirational & Positivity">Inspirational & Positivity</option>
-                    <option value="Classic Literature">Classic Literature</option>
-                    <option value="Personal Growth & Positivity">Personal Growth & Positivity</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Artificial Intelligence">Artificial Intelligence</option>
-                    <option value="Programming">Programming</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Architecture">Architecture</option>
-                    <option value="Web Development">Web Development</option>
+                    <option value="Spiritual & Wisdom">Spiritual & Wisdom</option>
+                    <option value="Modern Novels">Modern Novels</option>
                   </select>
                 </div>
 
@@ -567,6 +1177,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Publisher name"
                     value={newBook.publisher}
                     onChange={(e) => setNewBook({ ...newBook, publisher: e.target.value })}
                   />
@@ -592,6 +1203,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   >
                     <option value="Floor 1">Floor 1</option>
                     <option value="Floor 2">Floor 2</option>
+                    <option value="Floor 3">Floor 3</option>
                   </select>
                 </div>
 
@@ -600,6 +1212,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="e.g. Tech & Engineering"
                     value={newBook.section}
                     onChange={(e) => setNewBook({ ...newBook, section: e.target.value })}
                   />
@@ -610,7 +1223,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Shelf CS-01"
+                    placeholder="e.g. Shelf CS-01"
                     value={newBook.shelf}
                     onChange={(e) => setNewBook({ ...newBook, shelf: e.target.value })}
                   />
@@ -621,7 +1234,7 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Rack 02"
+                    placeholder="e.g. Rack 02"
                     value={newBook.rack}
                     onChange={(e) => setNewBook({ ...newBook, rack: e.target.value })}
                   />
@@ -632,29 +1245,64 @@ export default function LibrarianDashboard({ onNavigate }) {
                   <input
                     type="number"
                     min="1"
+                    max="20"
                     className="form-control"
                     value={newBook.total_copies}
                     onChange={(e) => setNewBook({ ...newBook, total_copies: parseInt(e.target.value) || 1 })}
                   />
                 </div>
 
+                {/* Device Image File Upload (Replaces URL upload) */}
                 <div className="form-group">
-                  <label className="form-label">Cover Image URL</label>
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Upload size={14} color="var(--botanical)" />
+                    Upload Cover Photo from Device *
+                  </label>
                   <input
-                    type="url"
+                    type="file"
+                    accept="image/*"
                     className="form-control"
-                    placeholder="https://..."
-                    value={newBook.cover_image}
-                    onChange={(e) => setNewBook({ ...newBook, cover_image: e.target.value })}
+                    onChange={handleDeviceImageChange}
                   />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--sage)', marginTop: '4px', display: 'block' }}>
+                    Saved locally on server. Fully accessible offline without internet.
+                  </span>
                 </div>
               </div>
 
-              <div className="form-group" style={{ marginTop: '10px' }}>
+              {/* Selected Image Preview */}
+              {imagePreview && (
+                <div style={{ marginTop: '14px', padding: '12px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <img
+                    src={imagePreview}
+                    alt="Device upload preview"
+                    style={{ width: '56px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--subtle-border)' }}
+                  />
+                  <div>
+                    <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+                      Local Device Photo Loaded
+                    </span>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--muted-text)' }}>
+                      Photo will be stored locally in library archive and served offline.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setImagePreview(null); setNewBook(prev => ({ ...prev, cover_image: '' })); }}
+                    className="btn btn-sm btn-outline"
+                    style={{ marginLeft: 'auto', fontSize: '0.76rem' }}
+                  >
+                    Clear Photo
+                  </button>
+                </div>
+              )}
+
+              <div className="form-group" style={{ marginTop: '16px' }}>
                 <label className="form-label">Description / Summary</label>
                 <textarea
                   className="form-control"
                   rows={3}
+                  placeholder="Key concepts, topics, chapters, and summary of the book..."
                   value={newBook.description}
                   onChange={(e) => setNewBook({ ...newBook, description: e.target.value })}
                 />
@@ -663,14 +1311,192 @@ export default function LibrarianDashboard({ onNavigate }) {
               <button
                 type="submit"
                 className="btn btn-primary"
-                style={{ marginTop: '20px', padding: '12px 24px' }}
+                style={{ marginTop: '20px', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                Catalog Book & Generate Barcodes
+                <Plus size={16} /> Catalog New Book & Generate Barcodes
               </button>
+            </form>
+          </div>
+
+          {/* Section C: Upload / Replace Original Photos for Existing Books */}
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', borderLeft: '5px solid #2A6F97' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <Camera size={22} color="#2A6F97" />
+              <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
+                Upload Original Photo for Existing Book Title
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
+              Update an existing book or a book on hold with authentic original photos from your device, replacing standard stock images. Uploaded photos are stored locally on the server and viewable offline without internet.
+            </p>
+
+            <form onSubmit={handleSaveInventoryPhoto}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', alignItems: 'start' }}>
+                <div className="form-group">
+                  <label className="form-label">Select Book to Update Photo *</label>
+                  <select
+                    className="form-control"
+                    value={inventoryPhotoBookId}
+                    onChange={(e) => {
+                      setInventoryPhotoBookId(e.target.value);
+                      setInventoryPhotoPreview(null);
+                    }}
+                    required
+                  >
+                    <option value="">-- Choose a title ({books.length} books) --</option>
+                    {books.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.title} — {b.author} ({b.cover_image?.startsWith('/uploads') ? 'Original Photo' : 'Standard Image'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Upload size={14} color="#2A6F97" />
+                    Choose New Original Photo from Device *
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-control"
+                    onChange={handleInventoryPhotoSelect}
+                    disabled={!inventoryPhotoBookId}
+                    required
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--sage)', marginTop: '4px', display: 'block' }}>
+                    Supports JPG, PNG, WebP up to 8MB. Stored locally in library archive.
+                  </span>
+                </div>
+              </div>
+
+              {/* Current Book Info & Preview Comparison */}
+              {inventoryPhotoBookId && (() => {
+                const selBook = books.find(b => String(b.id) === String(inventoryPhotoBookId));
+                if (!selBook) return null;
+                return (
+                  <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-text)', textTransform: 'uppercase', marginBottom: '6px' }}>Current Image:</div>
+                      <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--subtle-border)', backgroundColor: '#FFF' }}>
+                        <img
+                          src={resolveBookCoverUrl(selBook.cover_image)}
+                          alt={selBook.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '0.68rem', color: selBook.cover_image?.startsWith('/uploads') ? 'var(--botanical)' : '#B45309', fontWeight: 600, display: 'block', marginTop: '4px' }}>
+                        {selBook.cover_image?.startsWith('/uploads') ? '● Original Photo' : '● Standard Stock'}
+                      </span>
+                    </div>
+
+                    {inventoryPhotoPreview && (
+                      <>
+                        <div style={{ fontSize: '1.2rem', color: 'var(--botanical)' }}>➔</div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--botanical)', textTransform: 'uppercase', marginBottom: '6px' }}>New Original Photo Preview:</div>
+                          <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--botanical)', backgroundColor: '#FFF' }}>
+                            <img
+                              src={inventoryPhotoPreview}
+                              alt="New device upload"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--botanical)', fontWeight: 600, display: 'block', marginTop: '4px' }}>
+                            ● Ready to upload
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem' }}>{selBook.title}</strong>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--muted-text)', marginTop: '2px' }}>
+                        Author: {selBook.author} • ISBN: {selBook.isbn}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--forest)', marginTop: '2px' }}>
+                        Location: {selBook.floor} — {selBook.shelf}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div style={{ marginTop: '20px' }}>
+                <button
+                  type="submit"
+                  disabled={inventoryPhotoUploading || !inventoryPhotoBookId || !inventoryPhotoPreview}
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', backgroundColor: '#2A6F97', borderColor: '#2A6F97' }}
+                >
+                  <Upload size={16} />
+                  {inventoryPhotoUploading ? 'Saving Photo Locally...' : 'Upload Original Photo'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* TAB: Message Administrator (Librarian -> Admin Direct Hotline) */}
+      {activeTab === 'adminmsg' && (
+        <div style={{ maxWidth: '680px' }}>
+          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF', borderLeft: '5px solid #2A9D8F' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <Send size={22} color="#2A9D8F" />
+              <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', margin: 0 }}>
+                Direct Hotline to Library Administration
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px' }}>
+              Send an urgent notice, maintenance alert, or inventory incident report directly to Library Administration. Only Librarian accounts have access to dispatch messages to the Admin console.
+            </p>
+
+            <form onSubmit={handleSendMessageToAdmin}>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label">Subject / Alert Title *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Urgent: Floor 2 Rack 03 Shelf Damaged / High Demand for AI Books"
+                  value={adminMsgTitle}
+                  onChange={(e) => setAdminMsgTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label">Message Details for Administration *</label>
+                <textarea
+                  className="form-control"
+                  rows={5}
+                  placeholder="Describe the facility issue, inventory replenishment request, or administrative note..."
+                  value={adminMsgBody}
+                  onChange={(e) => setAdminMsgBody(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--sage)' }}>
+                  🔒 Transmitted directly to all logged Admin consoles with [LIBRARIAN NOTICE] tag.
+                </span>
+                <button
+                  type="submit"
+                  disabled={sendingAdminMsg}
+                  className="btn btn-botanical"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px' }}
+                >
+                  <Send size={16} />
+                  {sendingAdminMsg ? 'Dispatching...' : 'Dispatch Message to Admin'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
       {/* TAB 5: Live Study Pod Status */}
       {activeTab === 'seats' && (
@@ -724,6 +1550,161 @@ export default function LibrarianDashboard({ onNavigate }) {
         </div>
       )}
 
+      {/* TAB: Message Admin & Inventory Requisition */}
+      {activeTab === 'adminmsg' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
+          {/* Form 1: Out-of-Stock / Low Stock Book Requisition */}
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', marginBottom: '8px' }}>
+              <Plus size={18} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Procurement Request</span>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
+              Report Out-of-Stock / Restock Request
+            </h3>
+            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px', lineHeight: 1.45 }}>
+              Officially report low or zero-stock books to Administration for physical copy acquisition.
+            </p>
+
+            <form onSubmit={handleSendRestockRequisition}>
+              <div className="form-group" style={{ marginBottom: '14px' }}>
+                <label className="form-label">Select Book from Catalog *</label>
+                <select
+                  className="form-control"
+                  value={restockBookId}
+                  onChange={(e) => setRestockBookId(e.target.value)}
+                  required
+                >
+                  <option value="">-- Choose Book to Restock --</option>
+                  {books.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.title} ({b.available_copies === 0 ? 'OUT OF STOCK' : `${b.available_copies} avail`}) — ISBN: {b.isbn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">Requested Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    className="form-control"
+                    value={restockQty}
+                    onChange={(e) => setRestockQty(parseInt(e.target.value) || 1)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Priority</label>
+                  <select
+                    className="form-control"
+                    value={restockPriority}
+                    onChange={(e) => setRestockPriority(e.target.value)}
+                  >
+                    <option value="Standard">Standard</option>
+                    <option value="High">High Priority</option>
+                    <option value="Urgent">Urgent / Course Reserve</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '14px' }}>
+                <label className="form-label">Reason for Request</label>
+                <select
+                  className="form-control"
+                  value={restockReason}
+                  onChange={(e) => setRestockReason(e.target.value)}
+                >
+                  <option value="Out of stock (0 available copies)">Out of stock (0 available copies)</option>
+                  <option value="High student hold queue depth">High student hold queue depth</option>
+                  <option value="Damaged / Worn copies in circulation">Damaged / Worn copies in circulation</option>
+                  <option value="Curriculum & exam requirement">Curriculum & exam requirement</option>
+                  <option value="Anticipated seasonal demand spike">Anticipated seasonal demand spike</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '18px' }}>
+                <label className="form-label">Justification / Librarian Notes (Optional)</label>
+                <textarea
+                  className="form-control"
+                  rows={3}
+                  placeholder="e.g. 4 students currently in hold queue; faculty recommended additional copies..."
+                  value={restockNotes}
+                  onChange={(e) => setRestockNotes(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={sendingRestock}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <Send size={15} />
+                {sendingRestock ? 'Dispatching to Administration...' : 'Submit Restock Requisition'}
+              </button>
+            </form>
+          </div>
+
+          {/* Form 2: Direct Administrative Message Hotline */}
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', marginBottom: '8px' }}>
+              <Send size={18} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Administration Hotline</span>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
+              Direct Message to Administration
+            </h3>
+            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px', lineHeight: 1.45 }}>
+              Send an operational inquiry, facilities alert, or administrative message directly to library administrators.
+            </p>
+
+            <form onSubmit={handleSendMessageToAdmin}>
+              <div className="form-group" style={{ marginBottom: '14px' }}>
+                <label className="form-label">Subject / Title *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Air Conditioning in Garden Window Pods or Shelf Audit"
+                  value={adminMsgTitle}
+                  onChange={(e) => setAdminMsgTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '18px' }}>
+                <label className="form-label">Message Details *</label>
+                <textarea
+                  className="form-control"
+                  rows={7}
+                  placeholder="Type your official administrative dispatch here..."
+                  value={adminMsgBody}
+                  onChange={(e) => setAdminMsgBody(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={sendingAdminMsg}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <Send size={15} />
+                {sendingAdminMsg ? 'Sending to Admin...' : 'Send Administrative Dispatch'}
+              </button>
+            </form>
+
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '8px', fontSize: '0.78rem', color: 'var(--muted-text)', lineHeight: 1.45 }}>
+              <strong>Audit Policy:</strong> All dispatches are recorded with cryptographic timestamps in system audit logs and delivered to administrator notification inboxes. Approving a request does not artificially fabricate inventory; physical copies are only added when received and registered.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TAB 6: Broadcast Library Announcement */}
       {activeTab === 'announcement' && (
         <div style={{ maxWidth: '640px' }}>
@@ -768,6 +1749,127 @@ export default function LibrarianDashboard({ onNavigate }) {
                 Broadcast to All Students
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Original Photo Modal (for Held Books and Circulation Quick Desk Actions) */}
+      {photoModalBook && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(27, 43, 36, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 4000,
+          padding: '20px'
+        }}>
+          <div className="bio-card" style={{
+            backgroundColor: '#FFFFFF',
+            width: '100%',
+            maxWidth: '520px',
+            padding: '28px',
+            borderRadius: '16px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+            position: 'relative'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Circulation & Hold Desk
+                </span>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: '4px 0 0' }}>
+                  Upload Original Book Photo
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setPhotoModalBook(null); setModalPhotoPreview(null); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-text)', padding: '4px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '18px', lineHeight: 1.45 }}>
+              Upload authentic original photos of <strong>"{photoModalBook.title}"</strong> from your device to replace standard generic images. Saved locally for offline use.
+            </p>
+
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', padding: '14px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', marginBottom: '18px' }}>
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted-text)', fontWeight: 600, marginBottom: '4px' }}>CURRENT:</div>
+                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--subtle-border)', backgroundColor: '#FFF' }}>
+                  <img
+                    src={resolveBookCoverUrl(photoModalBook.cover_image)}
+                    alt={photoModalBook.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ fontSize: '1.2rem', color: 'var(--botanical)' }}>➔</div>
+
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--botanical)', fontWeight: 700, marginBottom: '4px' }}>NEW ORIGINAL PHOTO:</div>
+                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--botanical)', backgroundColor: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {modalPhotoPreview ? (
+                    <img
+                      src={modalPhotoPreview}
+                      alt="New preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '0.7rem', color: 'var(--muted-text)', textAlign: 'center', padding: '4px' }}>No photo selected</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--forest-dark)' }}>{photoModalBook.title}</div>
+                <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>by {photoModalBook.author || 'Author'}</div>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Upload size={14} color="var(--botanical)" />
+                Choose Original Photo from Device *
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                className="form-control"
+                onChange={handleModalPhotoSelect}
+              />
+              <span style={{ fontSize: '0.72rem', color: 'var(--sage)', marginTop: '4px', display: 'block' }}>
+                Stored locally on the library server. Viewable completely offline.
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => { setPhotoModalBook(null); setModalPhotoPreview(null); }}
+                className="btn btn-outline btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveModalPhoto}
+                disabled={!modalPhotoPreview || modalUploading}
+                className="btn btn-primary btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px' }}
+              >
+                <Upload size={14} />
+                {modalUploading ? 'Uploading & Saving...' : 'Save & Replace Photo'}
+              </button>
+            </div>
           </div>
         </div>
       )}

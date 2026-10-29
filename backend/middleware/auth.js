@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const db = require('../db/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'libramind-biophilic-secret-key-2026';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn('[SECURITY WARNING] JWT_SECRET is not set in environment variables! Using default secret in production is unsafe.');
+}
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];

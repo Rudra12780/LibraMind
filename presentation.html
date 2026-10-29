@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LibraMind — Presentation Slide Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-dark: #233329;
+      --forest: #344E41;
+      --botanical: #52734D;
+      --sage: #829779;
+      --soft-sage: #DCE5D5;
+      --cream: #FAF8F1;
+      --warm-beige: #F3EBDD;
+      --dark-text: #26352B;
+      --muted-text: #5A6E60;
+      --card-bg: #FFFFFF;
+      --amber: #D4A373;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #1a241e;
+      color: var(--dark-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .deck-container {
+      position: relative;
+      width: 92vw;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      background-color: var(--cream);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 44px 56px;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease-out;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    .slide-dark {
+      background: linear-gradient(135deg, #1f2d24 0%, #2b3d32 100%);
+      color: var(--cream);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-tag {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--botanical);
+      margin-bottom: 6px;
+    }
+
+    .slide-dark .slide-tag {
+      color: var(--soft-sage);
+    }
+
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--forest-dark);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .slide-dark .slide-title {
+      color: #FFFFFF;
+    }
+
+    .divider {
+      height: 3px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--botanical) 0%, var(--soft-sage) 60%, transparent 100%);
+      margin-bottom: 24px;
+      border-radius: 2px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--soft-sage);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      color: var(--forest-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card ul {
+      list-style: none;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      color: var(--dark-text);
+    }
+
+    .card ul li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 8px;
+    }
+
+    .card ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--botanical);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--soft-sage);
+      color: var(--forest-dark);
+      margin-top: 6px;
+    }
+
+    /* Controls bar */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 92vw;
+      max-width: 1280px;
+      margin-top: 14px;
+      color: #d1dad4;
+      font-size: 0.9rem;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-nav {
+      background: var(--forest);
+      color: var(--cream);
+      border: 1px solid var(--sage);
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    .btn-nav:hover {
+      background: var(--botanical);
+    }
+
+    .slide-num {
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .code-snippet {
+      background: #1e2922;
+      color: #cce3d1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide slide-dark active" id="slide-1">
+      <div style="margin: auto 0; max-width: 860px;">
+        <div class="slide-tag">Academic Innovation & Next-Gen EdTech</div>
+        <h1 class="slide-title" style="font-size: 3.4rem; font-family: 'Newsreader', serif; margin-bottom: 8px;">LibraMind</h1>
+        <h2 style="font-size: 1.6rem; font-weight: 400; color: var(--sage); margin-bottom: 24px;">AI-Powered Smart Library Management System</h2>
+        <p style="font-size: 1.15rem; line-height: 1.6; color: var(--soft-sage); margin-bottom: 36px;">
+          Reimagining Academic Discovery with TF-IDF Vector Search, Real-Time Study Pod Reservations, 3D Shelf Navigation, and Biophilic UX Architecture.
+        </p>
+        <div style="display: flex; gap: 24px; font-size: 0.95rem; color: var(--amber); font-weight: 600;">
+          <span>🌱 Biophilic Design</span>
+          <span>⚡ Concurrency-Safe SQLite</span>
+          <span>🎯 12/12 Verified Scenarios</span>
+          <span>🚀 Full-Stack Decoupled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem Statement -->
+    <div class="slide" id="slide-2">
+      <div class="slide-tag">Project Vision & Goals</div>
+      <h2 class="slide-title">The Three Critical Campus Library Challenges</h2>
+      <div class="divider"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>🧭 1. Physical Lost Time</h3>
+          <ul>
+            <li>Students spend 15–25 minutes wandering between library stacks trying to locate books.</li>
+            <li>Outdated OPAC catalogs only show Dewey decimal numbers without spatial floor or rack maps.</li>
+            <li>Results in frustration, abandoned searches, and empty-shelf disappointments.</li>
+          </ul>
+          <span class="highlight-pill">Solved with 4-Tier Spatial Coordinate Index</span>
+        </div>
+        <div class="card">
+          <h3>🪑 2. Study Space Friction</h3>
+          <ul>
+            <li>Severe peak-season study crowding and lack of real-time seat availability glance.</li>
+            <li>Concurrence booking clashes and disputes over silent pods and team rooms.</li>
+            <li>No transparency on floor noise zones (Silent Carrel vs. Collaborative Lab).</li>
+          </ul>
+          <span class="highlight-pill">Solved with Atomic Seat Map & Slot Locks</span>
+        </div>
+        <div class="card">
+          <h3>🔍 3. Outdated Discovery</h3>
+          <ul>
+            <li>Traditional keyword search fails when students remember concepts rather than exact titles.</li>
+            <li>Zero personalized recommendations aligned with individual student research interests.</li>
+            <li>Lack of trusted, verified chat assistants grounded in real library availability.</li>
+          </ul>
+          <span class="highlight-pill">Solved with TF-IDF Vector Matcher & Chatbot</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Architecture -->
+    <div class="slide" id="slide-3">
+      <div class="slide-tag">Engineering & Design</div>
+      <h2 class="slide-title">Full-Stack Decoupled Architecture</h2>
+      <div class="divider"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>💻 Frontend Client</h3>
+          <ul>
+            <li><strong>React 19 & Vite 8:</strong> High-performance SPA with instant module replacement.</li>
+            <li><strong>Biophilic CSS Tokens:</strong> Custom natural palette with zero bloated UI dependencies.</li>
+            <li><strong>Interactive SVG Seat Map:</strong> Visual floor pod selector with live statuses.</li>
+            <li><strong>Global State Context:</strong> AuthProvider & real-time NotificationContext.</li>
+          </ul>
+          <div class="code-snippet">Port: http://localhost:5174</div>
+        </div>
+        <div class="card">
+          <h3>⚙️ Backend Services</h3>
+          <ul>
+            <li><strong>Express 5:</strong> Modular RESTful API cleanly structured across 9 routers.</li>
+            <li><strong>RBAC Protection:</strong> Strict JWT role verification (Student, Librarian, Admin).</li>
+            <li><strong>Audit Logging:</strong> Immutable timestamped ledger of administrative actions.</li>
+            <li><strong>Scheduler Engine:</strong> Automated $1/day overdue fine calculation & queue expiry.</li>
+          </ul>
+          <div class="code-snippet">Port: http://localhost:5000</div>
+        </div>
+        <div class="card">
+          <h3>💾 Persistence & AI</h3>
+          <ul>
+            <li><strong>better-sqlite3 WAL Mode:</strong> High-concurrency zero-deadlock file storage.</li>
+            <li><strong>Partial Unique Indexes:</strong> Enforces seat non-duplication at database level.</li>
+            <li><strong>TF-IDF Vector Engine:</strong> In-memory tokenization and cosine similarity scoring.</li>
+            <li><strong>Realistic Seed Data:</strong> 50 curated books, 150 copies, 40 seats.</li>
+          </ul>
+          <div class="code-snippet">DB: backend/libramind.db</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: AI & Vector Discovery -->
+    <div class="slide" id="slide-4">
+      <div class="slide-tag">Natural Language Processing</div>
+      <h2 class="slide-title">AI Book Finder & Semantic Vector Matching</h2>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>🧠 In-Memory TF-IDF & Cosine Similarity</h3>
+          <ul>
+            <li><strong>Query Pre-Processing:</strong> Cleans punctuation, removes stop-words, and stems research terms.</li>
+            <li><strong>Vector Representation:</strong> Indexes catalog titles, authors, categories, and deep technical summaries into dimensional term vectors.</li>
+            <li><strong>Cosine Similarity Calculation:</strong> Determines semantic proximity between student query vectors and book profile vectors in under 15ms.</li>
+            <li><strong>Explainable AI:</strong> Returns transparent match reasons (e.g., <em>"Matches relevant topic terms: [clean, code, software] in Software Engineering."</em>)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🤖 Personalized Recommendations & Chatbot</h3>
+          <ul>
+            <li><strong>Academic Profile Onboarding:</strong> Captures student majors and research interests during account registration.</li>
+            <li><strong>Content-Based Suggestion Engine:</strong> Continuously computes affinity scores against borrowing history to surface curated reading carousels.</li>
+            <li><strong>LibraMind AI Assistant:</strong> Grounded conversational bot strictly referencing active catalog records to provide verified floor locations and live copy availability without hallucination.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: 3D Shelf Stacks & Visit Planner -->
+    <div class="slide" id="slide-5">
+      <div class="slide-tag">Physical Retrieval Optimization</div>
+      <h2 class="slide-title">3D Shelf Coordinates & Visit Planner</h2>
+      <div class="divider"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>📍 4-Tier Spatial Indexing</h3>
+          <ul>
+            <li><strong>Floor Level:</strong> Floor 1 (General & Tech), Floor 2 (Humanities & Labs), Floor 3 (Archives).</li>
+            <li><strong>Section:</strong> Tech & Engineering, Computing, Literature, etc.</li>
+            <li><strong>Shelf Code:</strong> Explicit alphanumeric aisle identifier (e.g., Shelf SE-04).</li>
+            <li><strong>Rack Number:</strong> Precision vertical rack bay (e.g., Rack 03).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🏷️ Copy-Level Barcode Tracking</h3>
+          <ul>
+            <li>Each book tracks individual physical copies (e.g., LM-SE-04-C1, LM-SE-04-C2).</li>
+            <li>Live status indicators: <code>available</code>, <code>borrowed</code>, <code>maintenance</code>, <code>reserved</code>.</li>
+            <li>Physical condition tracking: Excellent, Good, Fair.</li>
+            <li>Clear loan status prevents empty-handed shelf visits.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🗺️ My Library Visit Planner</h3>
+          <ul>
+            <li>Add desired books into an active personalized visit itinerary.</li>
+            <li>Automatically groups books by Floor and Section.</li>
+            <li>Displays real-time study seat density for each destination floor.</li>
+            <li>Interactive checklist allowing students to mark items as found during physical rounds.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Study Pod Reservations -->
+    <div class="slide" id="slide-6">
+      <div class="slide-tag">Study Space Discovery & Concurrency</div>
+      <h2 class="slide-title">Interactive Study Pods & Anti-Conflict Engine</h2>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>🪑 40 Dedicated Pods Across 3 Zones</h3>
+          <ul>
+            <li><strong>Silent Focus Pods:</strong> Sound-insulated carrels with high-speed power ports.</li>
+            <li><strong>Collaborative Labs:</strong> Multi-seat team tables equipped with HDMI docks and whiteboards.</li>
+            <li><strong>Window Nooks:</strong> Biophilic daylight spaces featuring ergonomic lounge seating.</li>
+            <li><strong>Smart Filters:</strong> Instant filtering by floor, zone environment, and equipment (Power, Monitor, Whiteboard).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🔒 Database-Enforced Concurrency Safety</h3>
+          <ul>
+            <li>Strict SQLite Partial Unique Index ensures double-booking is physically impossible:</li>
+            <div class="code-snippet">CREATE UNIQUE INDEX idx_seat_active_reservation<br>ON seat_reservations (seat_id, date, time_slot)<br>WHERE status = 'active';</div>
+            <li>Simultaneous reservation attempts by competing students are handled atomically—one gets reserved, the other receives an instant friendly conflict message.</li>
+            <li>Librarian controls allow immediate maintenance lockout toggles.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Circulation & Waitlist -->
+    <div class="slide" id="slide-7">
+      <div class="slide-tag">Desk Operations & Queueing</div>
+      <h2 class="slide-title">Circulation Rules & Ordered Hold Queues</h2>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>📦 Lending Policies & Automated Fines</h3>
+          <ul>
+            <li><strong>Standard Loan Term:</strong> 14 days with real-time due date countdown indicator.</li>
+            <li><strong>Automated Fines:</strong> $1.00/day fine accrued automatically on overdue items.</li>
+            <li><strong>Self-Service Renewals:</strong> Up to 2 loan renewals permitted when no hold queue exists.</li>
+            <li><strong>Fast Desk Checkout:</strong> Instant barcode scanning for physical book issue & return.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>👥 Ordered FIFO Waitlist Hand-off</h3>
+          <ul>
+            <li>When 100% of copies are checked out, patrons join an ordered hold queue.</li>
+            <li>Transparent sequence feedback: <em>"You are #1 of 3 in queue."</em></li>
+            <li><strong>Automated Hand-off:</strong> Upon book return, the copy transitions to 'reserved' exclusively for Queue #1 with an alert notification.</li>
+            <li>48-hour pickup window before cascading to Queue #2.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: RBAC Portals -->
+    <div class="slide" id="slide-8">
+      <div class="slide-tag">Role-Based Access Control</div>
+      <h2 class="slide-title">Three Tailored Operational Workspaces</h2>
+      <div class="divider"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>🎓 Student Portal</h3>
+          <ul>
+            <li>Active loans & countdown days.</li>
+            <li>Hold queue status & pickup alerts.</li>
+            <li>Personalized reading suggestions.</li>
+            <li>Study seat reservation map.</li>
+            <li>3-Book side-by-side comparison matrix.</li>
+          </ul>
+          <span class="highlight-pill">student@libramind.edu</span>
+        </div>
+        <div class="card">
+          <h3>📚 Librarian Station</h3>
+          <ul>
+            <li>Circulation desk checkout & check-in.</li>
+            <li>Barcode copy management & repairs.</li>
+            <li>Hold queue dispatch & staging.</li>
+            <li>Broadcast notices to student dashboard.</li>
+            <li>Study pod maintenance controls.</li>
+          </ul>
+          <span class="highlight-pill">librarian@libramind.edu</span>
+        </div>
+        <div class="card">
+          <h3>🛡️ Administrator Console</h3>
+          <ul>
+            <li>User role assignments & revocation.</li>
+            <li>Direct messaging to specific patrons.</li>
+            <li>Immutable security audit logs.</li>
+            <li>Database engine health diagnostics.</li>
+            <li>Full catalog CSV export for reporting.</li>
+          </ul>
+          <span class="highlight-pill">admin@libramind.edu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Analytics & Forecasting -->
+    <div class="slide" id="slide-9">
+      <div class="slide-tag">Data-Driven Acquisitions</div>
+      <h2 class="slide-title">Circulation Analytics & Predictive Demand</h2>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>📊 Real Database Metrics</h3>
+          <ul>
+            <li><strong>Circulation Velocity:</strong> Monthly loan volume trends illustrating peak academic periods.</li>
+            <li><strong>Category Breakdown:</strong> Proportion of checkouts across Computer Science, Engineering, Sciences, and Arts.</li>
+            <li><strong>Top 10 Circulation Leaderboard:</strong> Highlighting campus study interests and top reading stacks.</li>
+            <li><strong>Study Seat Density:</strong> Occupancy distribution across floors and pod environments.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>📈 30-Day Algorithmic Demand Forecasting</h3>
+          <ul>
+            <li>Predictive demand score calculated from circulation frequency, category hold depth, and active queue length.</li>
+            <li>Proactively flags titles at risk of inventory stockout (e.g., high waitlist depth).</li>
+            <li>Empowers acquisition committees to make data-backed purchasing and budget decisions.</li>
+            <li>One-click CSV summary download for executive administrative presentations.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Verification Results -->
+    <div class="slide" id="slide-10">
+      <div class="slide-tag">Quality Assurance</div>
+      <h2 class="slide-title">Verification Test Suite: 12/12 Scenarios Passed</h2>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>✅ Core System Tests (Scenarios 1–6)</h3>
+          <ul>
+            <li><strong>Scenario 1:</strong> AI Topic Search with Shelf Location & Match Rationale [PASS]</li>
+            <li><strong>Scenario 2:</strong> Book Details & Live Availability Inspection [PASS]</li>
+            <li><strong>Scenario 3:</strong> Concurrent Borrowing Race Condition Prevention [PASS]</li>
+            <li><strong>Scenario 4:</strong> Ordered Hold Queue Position on Unavailable Books [PASS]</li>
+            <li><strong>Scenario 5:</strong> Return Notification & Queue Hand-off Verification [PASS]</li>
+            <li><strong>Scenario 6:</strong> Seat Double-Booking Conflict Prevention [PASS]</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>✅ Platform & Security Tests (Scenarios 7–12)</h3>
+          <ul>
+            <li><strong>Scenario 7:</strong> Book Match & Compare Data Fidelity [PASS]</li>
+            <li><strong>Scenario 8:</strong> Visit Planner with Floor Grouping & Walking Routes [PASS]</li>
+            <li><strong>Scenario 9:</strong> Contextual AI Assistant with Verified Location [PASS]</li>
+            <li><strong>Scenario 10:</strong> Backend Role-Based Access Control (RBAC) [PASS]</li>
+            <li><strong>Scenario 11:</strong> Analytics & Transparent Demand Forecasting [PASS]</li>
+            <li><strong>Scenario 12:</strong> Complete Regression Verification of All APIs [PASS]</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Biophilic Design -->
+    <div class="slide" id="slide-11">
+      <div class="slide-tag">Aesthetic & Experience</div>
+      <h2 class="slide-title">Biophilic Design System & Cognitive Ergonomics</h2>
+      <div class="divider"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>🌿 Natural Palette</h3>
+          <ul>
+            <li><strong>Deep Forest (#344E41):</strong> Serene foundation grounding the visual structure.</li>
+            <li><strong>Botanical Green (#52734D):</strong> Vibrant accents and call-to-action buttons.</li>
+            <li><strong>Soft Cream (#FAF8F1):</strong> Gentle reading background eliminating glare.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>🧘 Mindful UX</h3>
+          <ul>
+            <li>Eliminates harsh eye-strain during late-night exam prep sessions.</li>
+            <li>Generous whitespace reminiscent of serene library reading gardens.</li>
+            <li>Smooth 200ms cubic-bezier transitions providing responsive visual feedback.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>📖 Editorial Typography</h3>
+          <ul>
+            <li><strong>Outfit:</strong> Geometric modern sans-serif for crystal-clear metrics, badges, and controls.</li>
+            <li><strong>Newsreader:</strong> Literary editorial serif honoring classical publishing tradition.</li>
+            <li>Full WCAG AA contrast compliance.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: Summary & Q&A -->
+    <div class="slide slide-dark" id="slide-12">
+      <div style="margin: auto 0; max-width: 900px;">
+        <div class="slide-tag">Conclusion & Live Demo</div>
+        <h2 class="slide-title" style="font-size: 2.8rem; font-family: 'Newsreader', serif;">LibraMind: The Next-Gen Library Ecosystem</h2>
+        <div class="divider"></div>
+        <ul style="list-style: none; font-size: 1.12rem; line-height: 1.8; color: var(--soft-sage); margin-bottom: 28px;">
+          <li>✔ Solves physical stack navigation with 4-tier coordinates (Floor, Section, Shelf, Rack).</li>
+          <li>✔ Protects study pod booking with atomic, concurrency-safe database constraints.</li>
+          <li>✔ Delivers sub-15ms semantic search with transparent in-memory TF-IDF vector matching.</li>
+          <li>✔ 100% verified test suite passing all 12 operational scenarios.</li>
+        </ul>
+        <div style="background: rgba(255, 255, 255, 0.08); padding: 18px 24px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15);">
+          <strong style="color: #FFFFFF; font-size: 1.05rem; display: block; margin-bottom: 6px;">Live Demo Credentials:</strong>
+          <span style="color: var(--amber);">Student: student@libramind.edu</span> &nbsp;|&nbsp;
+          <span style="color: var(--amber);">Librarian: librarian@libramind.edu</span> &nbsp;|&nbsp;
+          <span style="color: var(--amber);">Admin: admin@libramind.edu</span>
+          <br><small style="color: #cad4ce; margin-top: 4px; display: inline-block;">(All demo passwords: Role@123, e.g., Student@123)</small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="slide-num" id="slideIndicator">Slide 1 of 12</div>
+    <div class="nav-buttons">
+      <button class="btn-nav" id="prevBtn" onclick="prevSlide()">← Previous</button>
+      <button class="btn-nav" id="nextBtn" onclick="nextSlide()">Next →</button>
+      <button class="btn-nav" style="background: var(--botanical);" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      <button class="btn-nav" style="background: #475569;" onclick="window.print()">🖨️ Print / PDF</button>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 12;
+
+    function showSlide(n) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const active = document.getElementById(`slide-${n}`);
+      if (active) {
+        active.classList.add('active');
+      }
+      document.getElementById('slideIndicator').innerText = `Slide ${n} of ${totalSlides}`;
+      document.getElementById('prevBtn').disabled = (n === 1);
+      document.getElementById('nextBtn').disabled = (n === totalSlides);
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        showSlide(currentSlide);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        showSlide(currentSlide);
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>

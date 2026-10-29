@@ -25,8 +25,13 @@ export function NotificationProvider({ children }) {
   useEffect(() => {
     if (user) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 15000); // Poll every 15s
-      return () => clearInterval(interval);
+      const interval = setInterval(fetchNotifications, 25000); // 25s polling to balance timely delivery with low server/disk I/O
+      const handleFocus = () => fetchNotifications(); // Instant refresh when user switches tabs back
+      window.addEventListener('focus', handleFocus);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', handleFocus);
+      };
     } else {
       setNotifications([]);
       setUnreadCount(0);
@@ -58,9 +63,9 @@ export function NotificationProvider({ children }) {
       notifications,
       unreadCount,
       loading,
-      fetchNotifications,
       markAsRead,
-      markAllAsRead
+      markAllAsRead,
+      refreshNotifications: fetchNotifications
     }}>
       {children}
     </NotificationContext.Provider>

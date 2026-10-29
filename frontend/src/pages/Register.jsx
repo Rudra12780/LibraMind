@@ -133,7 +133,7 @@ export default function Register({ onNavigate }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Reading & Research Topics (for AI Engine)</label>
+            <label className="form-label">Reading & Research Interests</label>
             <input
               type="text"
               className="form-control"
@@ -150,9 +150,9 @@ export default function Register({ onNavigate }) {
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{ width: '100%', marginTop: '12px', padding: '12px' }}
+            style={{ width: '100%', marginTop: '24px', padding: '12px' }}
           >
-            {loading ? 'Creating Member Record...' : 'Complete Registration'}
+            {loading ? 'Creating Record...' : 'Complete Registration'}
           </button>
         </form>
 

@@ -197,7 +197,7 @@ export default function BookCompare({
           </div>
           <h3>No books selected for comparison</h3>
           <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem' }}>
-            Select 2 or 3 books from the Catalog or AI Book Finder to view an in-depth side-by-side comparison of shelf locations, copies, and editions.
+            Select 2 or 3 books from the Catalog to view an in-depth side-by-side comparison of shelf locations, copies, and editions.
           </p>
           <button
             onClick={() => onNavigate('catalog')}

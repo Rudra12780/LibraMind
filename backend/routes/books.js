@@ -1,8 +1,36 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 const db = require('../db/database');
-const { authenticateToken, requireRole, logAudit } = require('../middleware/auth');
+const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Helper to save uploaded device images locally for 100% offline access
+function saveBase64ImageLocally(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
+  if (!dataUrl.startsWith('data:image/')) return dataUrl;
+
+  try {
+    const matches = dataUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) return dataUrl;
+
+    const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    const buffer = Buffer.from(matches[2], 'base64');
+    const filename = `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const filePath = path.join(uploadsDir, filename);
+    fs.writeFileSync(filePath, buffer);
+    return `/uploads/${filename}`;
+  } catch (e) {
+    console.error('Failed to save base64 image locally, preserving dataUrl:', e);
+    return dataUrl;
+  }
+}
 
 // Public: Get catalog with search, filter, sort
 router.get('/', (req, res) => {
@@ -89,7 +117,7 @@ router.get('/', (req, res) => {
   }
 });
 
-// Public: Get single book details with physical copies and queue position
+// Public / Contextual: Get single book details with physical copies, queue position, and user-specific status
 router.get('/:id', (req, res) => {
   try {
     const book = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
@@ -100,6 +128,29 @@ router.get('/:id', (req, res) => {
     const copies = db.prepare('SELECT * FROM book_copies WHERE book_id = ? ORDER BY copy_code ASC').all(req.params.id);
     const waitingCount = db.prepare("SELECT COUNT(*) as count FROM reservations WHERE book_id = ? AND status = 'waiting'").get(req.params.id);
 
+    let userLoan = null;
+    let userReservation = null;
+    let inVisitPlanner = false;
+    let inWishlist = false;
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.id) {
+          userLoan = db.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'overdue')").get(req.params.id, decoded.id) || null;
+          userReservation = db.prepare("SELECT * FROM reservations WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup')").get(req.params.id, decoded.id) || null;
+          const vp = db.prepare("SELECT id FROM visit_planner WHERE book_id = ? AND user_id = ?").get(req.params.id, decoded.id);
+          inVisitPlanner = Boolean(vp);
+          const wl = db.prepare("SELECT id FROM wishlist WHERE book_id = ? AND user_id = ?").get(req.params.id, decoded.id);
+          inWishlist = Boolean(wl);
+        }
+      } catch (e) {
+        // Token invalid or expired, proceed with public data
+      }
+    }
+
     res.json({
       ...book,
       location_floor: book.floor,
@@ -107,14 +158,18 @@ router.get('/:id', (req, res) => {
       location_rack: book.rack,
       location_section: book.section,
       copies,
-      waitingQueueCount: waitingCount ? waitingCount.count : 0
+      waitingQueueCount: waitingCount ? waitingCount.count : 0,
+      userLoan,
+      userReservation,
+      inVisitPlanner,
+      inWishlist
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to retrieve book details' });
   }
 });
 
-// Librarian / Admin: Add a new book
+// Librarian / Admin: Add a new book (with duplicate detection & local offline image storage)
 router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
   try {
     const {
@@ -129,6 +184,27 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
       return res.status(400).json({ error: 'Title, author, ISBN, and category are required' });
     }
 
+    // 1. Prevent duplicate books: check if ISBN or Title+Author already exists
+    const cleanIsbn = isbn.trim();
+    const cleanTitle = title.trim();
+    const cleanAuthor = author.trim();
+
+    const existing = db.prepare(`
+      SELECT * FROM books 
+      WHERE LOWER(TRIM(isbn)) = LOWER(?) 
+         OR (LOWER(TRIM(title)) = LOWER(?) AND LOWER(TRIM(author)) = LOWER(?))
+    `).get(cleanIsbn, cleanTitle, cleanAuthor);
+
+    if (existing) {
+      return res.status(409).json({
+        error: `This book already exists in catalog: "${existing.title}" by ${existing.author} (ISBN: ${existing.isbn}). Please use "Add Copies" to increase available stock instead of creating a duplicate.`,
+        existingBook: existing
+      });
+    }
+
+    // 2. Save device image locally to allow offline access
+    const localCoverImage = saveBase64ImageLocally(cover_image);
+
     const copiesCount = Math.max(1, parseInt(total_copies) || 1);
 
     const transaction = db.transaction(() => {
@@ -141,9 +217,9 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
       `);
 
       const result = stmt.run(
-        title.trim(), author.trim(), isbn.trim(), publisher ? publisher.trim() : '',
+        cleanTitle, cleanAuthor, cleanIsbn, publisher ? publisher.trim() : '',
         parseInt(publication_year) || new Date().getFullYear(),
-        category.trim(), language, edition, description, cover_image,
+        category.trim(), language, edition, description, localCoverImage,
         floor, section, shelf, rack, copiesCount, copiesCount
       );
 
@@ -160,7 +236,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
         copyStmt.run(bookId, copyCode);
       }
 
-      logAudit(req.user.id, 'BOOK_CREATED', `Created book: "${title}" (ISBN: ${isbn}) with ${copiesCount} copies.`);
+      logAudit(req.user.id, 'BOOK_CREATED', `Created book: "${cleanTitle}" (ISBN: ${cleanIsbn}) with ${copiesCount} copies.`);
       return bookId;
     });
 
@@ -174,7 +250,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
   } catch (err) {
     console.error('Create book error:', err);
     if (err.message && err.message.includes('UNIQUE constraint failed: books.isbn')) {
-      return res.status(400).json({ error: 'A book with this ISBN already exists' });
+      return res.status(409).json({ error: 'A book with this ISBN already exists' });
     }
     res.status(500).json({ error: 'Failed to create book' });
   }
@@ -193,6 +269,9 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'librarian']), (req,
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
+
+    // Save uploaded device image locally for 100% offline access
+    const localCoverImage = cover_image !== undefined ? saveBase64ImageLocally(cover_image) : undefined;
 
     db.prepare(`
       UPDATE books SET
@@ -213,15 +292,16 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'librarian']), (req,
       WHERE id = ?
     `).run(
       title, author, isbn, publisher, publication_year,
-      category, language, edition, description, cover_image,
+      category, language, edition, description, localCoverImage,
       floor, section, shelf, rack, req.params.id
     );
 
-    logAudit(req.user.id, 'BOOK_UPDATED', `Updated book ID ${req.params.id}: ${title || book.title}`);
+    logAudit(req.user.id, 'BOOK_UPDATED', `Updated book ID ${req.params.id}: "${title || book.title}" (Original photo updated)`);
 
     const updated = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
     res.json({ message: 'Book updated successfully', book: updated });
   } catch (err) {
+    console.error('Failed to update book:', err);
     res.status(500).json({ error: 'Failed to update book' });
   }
 });
@@ -244,40 +324,57 @@ router.delete('/:id', authenticateToken, requireRole(['admin', 'librarian']), (r
   }
 });
 
-// Add physical copy to existing book
+// Add physical copies to existing book (supports adding 1 or multiple copies)
 router.post('/:id/copies', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
   try {
     const bookId = req.params.id;
-    const { condition = 'New' } = req.body;
+    const { condition = 'New', count = 1 } = req.body;
+    const copiesToAdd = Math.max(1, parseInt(count) || 1);
 
     const book = db.prepare('SELECT * FROM books WHERE id = ?').get(bookId);
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const existingCopies = db.prepare('SELECT COUNT(*) as count FROM book_copies WHERE book_id = ?').get(bookId);
-    const nextNum = existingCopies.count + 1;
-    const copyCode = `LM-${book.category.substring(0, 2).toUpperCase()}-${bookId}-C${nextNum}`;
+    const addedCopyCodes = [];
 
     const transaction = db.transaction(() => {
-      db.prepare(`
+      const existingCopies = db.prepare('SELECT COUNT(*) as count FROM book_copies WHERE book_id = ?').get(bookId);
+      let currentNum = existingCopies.count;
+
+      const insertStmt = db.prepare(`
         INSERT INTO book_copies (book_id, copy_code, status, condition)
         VALUES (?, ?, 'available', ?)
-      `).run(bookId, copyCode, condition);
+      `);
+
+      for (let i = 0; i < copiesToAdd; i++) {
+        currentNum++;
+        const copyCode = `LM-${book.category.substring(0, 2).toUpperCase()}-${bookId}-C${currentNum}`;
+        insertStmt.run(bookId, copyCode, condition);
+        addedCopyCodes.push(copyCode);
+      }
 
       db.prepare(`
         UPDATE books SET
-          total_copies = total_copies + 1,
-          available_copies = available_copies + 1
+          total_copies = total_copies + ?,
+          available_copies = available_copies + ?
         WHERE id = ?
-      `).run(bookId);
+      `).run(copiesToAdd, copiesToAdd, bookId);
     });
 
     transaction();
-    logAudit(req.user.id, 'COPY_ADDED', `Added copy ${copyCode} for book: ${book.title}`);
+    logAudit(req.user.id, 'COPY_ADDED', `Added ${copiesToAdd} copies for book: "${book.title}" (${addedCopyCodes.join(', ')})`);
 
-    res.status(201).json({ message: 'Physical copy added successfully', copyCode });
+    const updatedBook = db.prepare('SELECT * FROM books WHERE id = ?').get(bookId);
+
+    res.status(201).json({
+      message: `Successfully added ${copiesToAdd} physical cop${copiesToAdd > 1 ? 'ies' : 'y'} to "${book.title}"!`,
+      addedCount: copiesToAdd,
+      copyCodes: addedCopyCodes,
+      book: updatedBook
+    });
   } catch (err) {
+    console.error('Failed to add copies:', err);
     res.status(500).json({ error: 'Failed to add physical copy' });
   }
 });

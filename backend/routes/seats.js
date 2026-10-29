@@ -83,6 +83,56 @@ router.get('/', (req, res) => {
   }
 });
 
+// Get slot-by-slot availability for a specific seat on a date
+router.get('/:id/slots', (req, res) => {
+  try {
+    const seatId = parseInt(req.params.id);
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+
+    const seat = db.prepare('SELECT * FROM seats WHERE id = ?').get(seatId);
+    if (!seat) {
+      return res.status(404).json({ error: 'Seat not found' });
+    }
+
+    const timeSlots = [
+      '08:00 - 11:00 (Morning Focus)',
+      '11:00 - 14:00 (Mid-day Reading)',
+      '14:00 - 17:00 (Afternoon Study)',
+      '17:00 - 20:00 (Evening Pod)',
+      '20:00 - 22:00 (Night Owl)'
+    ];
+
+    const activeReservations = db.prepare(`
+      SELECT time_slot, user_id FROM seat_reservations
+      WHERE seat_id = ? AND date = ? AND status = 'active'
+    `).all(seatId, date);
+
+    const bookedSlotsMap = {};
+    activeReservations.forEach(r => {
+      bookedSlotsMap[r.time_slot] = r.user_id;
+    });
+
+    const slots = timeSlots.map(slot => ({
+      slot,
+      isAvailable: seat.status !== 'maintenance' && !bookedSlotsMap[slot],
+      isMaintenance: seat.status === 'maintenance',
+      isBooked: !!bookedSlotsMap[slot],
+      bookedByUserId: bookedSlotsMap[slot] || null
+    }));
+
+    res.json({
+      seatId,
+      seatNumber: seat.seat_number,
+      date,
+      seatStatus: seat.status,
+      slots
+    });
+  } catch (err) {
+    console.error('Fetch seat slots error:', err);
+    res.status(500).json({ error: 'Failed to retrieve slot availability' });
+  }
+});
+
 // Reserve a study seat for a date and time slot (Student or Librarian)
 router.post('/reserve', authenticateToken, (req, res) => {
   try {
@@ -104,14 +154,28 @@ router.post('/reserve', authenticateToken, (req, res) => {
         throw new Error('This seat is currently under maintenance.');
       }
 
-      // Check for conflicting reservation
-      const conflict = db.prepare(`
+      // 1. Conflict Check: Is this seat already booked by anyone for this exact date & time slot?
+      const seatConflict = db.prepare(`
         SELECT id FROM seat_reservations
         WHERE seat_id = ? AND date = ? AND time_slot = ? AND status = 'active'
       `).get(seat_id, date, time_slot);
 
-      if (conflict) {
+      if (seatConflict) {
         const err = new Error('This seat is already reserved for the selected time slot.');
+        err.statusCode = 409;
+        throw err;
+      }
+
+      // 2. User Conflict Check: Does this student already have an active seat reservation at this exact time slot?
+      // (Students can reserve only 1 seat per time slot, but can book different time slots on the same day)
+      const userSlotConflict = db.prepare(`
+        SELECT sr.id, s.seat_number FROM seat_reservations sr
+        JOIN seats s ON sr.seat_id = s.id
+        WHERE sr.user_id = ? AND sr.date = ? AND sr.time_slot = ? AND sr.status = 'active'
+      `).get(req.user.id, date, time_slot);
+
+      if (userSlotConflict) {
+        const err = new Error(`You already have seat ${userSlotConflict.seat_number} reserved during ${time_slot}. You can only reserve one seat per time slot.`);
         err.statusCode = 409;
         throw err;
       }

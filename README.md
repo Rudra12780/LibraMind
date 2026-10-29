@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # LibraMind — AI-Powered Smart Library Management System 🍃📚
 
 **LibraMind** is an intelligent, full-stack library management ecosystem built with a serene **Biophilic Reading Space** aesthetic. It solves three critical challenges for students:
@@ -109,7 +108,4 @@ npm run dev      # Runs on http://localhost:5173
 | **Student** | Aarav Sharma | `student@libramind.edu` | `Student@123` |
 | **Librarian** | Marcus Thorne | `librarian@libramind.edu` | `Librarian@123` |
 | **Admin** | Dr. Eleanor Vance | `admin@libramind.edu` | `Admin@123` |
-=======
-# LibraMind
-LibraMind is an AI-powered library management website that combines intelligent book search, personalized recommendations, book availability tracking, reservations, study-seat discovery, and data-driven library analytics in a modern, nature-inspired interface.
->>>>>>> fcae7fda374850830c0cb140f3ff82ae6cc90b07
+

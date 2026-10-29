@@ -161,7 +161,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 
           if (nextStudent) {
             const newDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-            db.prepare('UPDATE reservations SET status = "ready_for_pickup", pickup_deadline = ? WHERE id = ?').run(newDeadline, nextStudent.id);
+            db.prepare("UPDATE reservations SET status = 'ready_for_pickup', pickup_deadline = ? WHERE id = ?").run(newDeadline, nextStudent.id);
             db.prepare(`
               INSERT INTO notifications (user_id, title, message, type, link)
               VALUES (?, ?, ?, 'pickup', '/dashboard')
@@ -177,7 +177,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
         }
       }
 
-      db.prepare('UPDATE reservations SET status = "cancelled" WHERE id = ?').run(reservation.id);
+      db.prepare("UPDATE reservations SET status = 'cancelled' WHERE id = ?").run(reservation.id);
 
       // Shift queue positions for remaining waiting students
       db.prepare(`
@@ -190,6 +190,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
     cancelTx();
     res.json({ message: 'Reservation cancelled successfully' });
   } catch (err) {
+    console.error('Cancel reservation error:', err);
     res.status(500).json({ error: 'Failed to cancel reservation' });
   }
 });

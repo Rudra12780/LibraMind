@@ -181,14 +181,11 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
           </div>
           <h3>Your visit list is empty</h3>
           <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem' }}>
-            Add books to your visit planner from the Catalog or AI Book Finder to organize your trip through the library stacks.
+            Add books to your visit planner from the Catalog to organize your trip through the library stacks.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button onClick={() => onNavigate('catalog')} className="btn btn-primary btn-sm">
               Explore Catalog
-            </button>
-            <button onClick={() => onNavigate('ai-finder')} className="btn btn-outline btn-sm">
-              Use AI Book Finder
             </button>
           </div>
         </div>

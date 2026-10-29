@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
     "dev:all": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "dev:al": "npm run dev:all",
+    "deV:all": "npm run dev:all",
     "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"green,cyan\" \"npm run start:backend\" \"npm run start:frontend\"",
     "build": "cd frontend && npm run build",
     "build:frontend": "cd frontend && npm run build",

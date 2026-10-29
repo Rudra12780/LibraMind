@@ -1,7 +1,10 @@
 import React from 'react';
-import { BookOpen, MapPin, Clock, ShieldCheck, Heart } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { BookOpen, MapPin, Clock, ShieldCheck, Heart, Layers, Shield } from 'lucide-react';
 
 export default function Footer({ onNavigate }) {
+  const { user } = useAuth();
+
   return (
     <footer
       style={{
@@ -35,7 +38,13 @@ export default function Footer({ onNavigate }) {
                   justifyContent: 'center'
                 }}
               >
-                <BookOpen size={20} color="#FAF8F1" />
+                {user?.role === 'admin' ? (
+                  <Shield size={20} color="#FAF8F1" />
+                ) : user?.role === 'librarian' ? (
+                  <Layers size={20} color="#FAF8F1" />
+                ) : (
+                  <BookOpen size={20} color="#FAF8F1" />
+                )}
               </div>
               <span
                 style={{
@@ -58,36 +67,162 @@ export default function Footer({ onNavigate }) {
             </div>
           </div>
 
-          {/* Col 2: Navigation Links */}
+          {/* Col 2: Navigation Links (Strictly Role-Based) */}
           <div>
             <h4 style={{ color: '#FAF8F1', fontSize: '1rem', marginBottom: '16px', fontWeight: 600 }}>
-              Library Services
+              {user?.role === 'admin'
+                ? 'Admin Governance'
+                : user?.role === 'librarian'
+                ? 'Librarian Desk Suite'
+                : 'Library Services'}
             </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem' }}>
-              <li>
-                <button
-                  onClick={() => onNavigate('catalog')}
-                  style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
-                >
-                  Explore Book Catalog
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate('seats')}
-                  style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
-                >
-                  Interactive Seat Map & Pods
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate('analytics')}
-                  style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
-                >
-                  Circulation Analytics & Demand Forecast
-                </button>
-              </li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
+              {user?.role === 'admin' ? (
+                <>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('admin', { tab: 'overview' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Control Center Overview
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('admin', { tab: 'users' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      User Accounts Directory
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('admin', { tab: 'inventory' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Book Inventory & Copies
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('analytics')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Circulation Analytics
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('admin', { tab: 'audit' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      System Audit Trail
+                    </button>
+                  </li>
+                </>
+              ) : user?.role === 'librarian' ? (
+                <>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'issue' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Librarian Desk Overview
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'issue' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Check Out (Issue Book)
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'return' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Returns & Overdue Tracking
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'reservations' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Hold Queues & Pickups
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'inventory' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Add Titles & Physical Copies
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('librarian', { tab: 'seats' })}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Study Pods & Seat Status
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('catalog')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Explore Book Catalog
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('ai-finder')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      AI Book Finder
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('seats')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Study Seats & Pods
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('about')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      About Biophilic Space
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('contact')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Help & Contact Desk
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => onNavigate('terms')}
+                      style={{ background: 'none', border: 'none', color: 'var(--soft-sage)', cursor: 'pointer', padding: 0 }}
+                    >
+                      Terms & Borrowing Rules
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 

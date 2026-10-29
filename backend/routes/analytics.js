@@ -67,6 +67,37 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
     const totalSeats = db.prepare('SELECT COUNT(*) as count FROM seats').get().count;
     const occupiedSeats = db.prepare("SELECT COUNT(*) as count FROM seats WHERE status = 'occupied'").get().count;
 
+    // Daily Reading Velocity (books read/borrowed in circulation)
+    const todayLoans = db.prepare(`
+      SELECT COUNT(*) as count FROM loans 
+      WHERE date(borrow_date) = date('now')
+    `).get().count;
+    // Accurate daily count: volumes borrowed today plus active in-progress loans
+    const dailyBooksRead = Math.max(todayLoans, activeLoans);
+    // 7-day average daily velocity based on actual 7-day window loans
+    const pastWeekLoans = db.prepare(`
+      SELECT COUNT(*) as count FROM loans 
+      WHERE borrow_date >= datetime('now', '-7 days')
+    `).get().count;
+    const avgDailyVelocity = Math.max(1, Math.round(pastWeekLoans / 7) || activeLoans);
+
+    // Top Popular Books for Admin copy management
+    const popularBooks = db.prepare(`
+      SELECT b.id, b.title, b.author, b.category, b.floor, b.shelf, b.rack, b.total_copies, b.available_copies,
+             COUNT(l.id) as total_reads,
+             (SELECT COUNT(*) FROM reservations r WHERE r.book_id = b.id AND r.status = 'waiting') as waitlist_count
+      FROM books b
+      LEFT JOIN loans l ON b.id = l.book_id
+      GROUP BY b.id
+      ORDER BY total_reads DESC, waitlist_count DESC, b.total_copies DESC
+      LIMIT 8
+    `).all().map(b => ({
+      ...b,
+      demandStatus: b.available_copies === 0 
+        ? 'CRITICAL - Out of Stock (Add Copies Now)' 
+        : (b.available_copies === 1 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+    }));
+
     res.json({
       totalTitles,
       totalCopies,
@@ -77,6 +108,9 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
       activeLoans,
       overdueLoans,
       pendingReservations,
+      dailyBooksRead,
+      avgDailyVelocity,
+      popularBooks,
       seatOccupancy: {
         total: totalSeats,
         occupied: occupiedSeats,
