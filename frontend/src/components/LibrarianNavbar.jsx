@@ -31,13 +31,13 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
   };
 
   const navTabs = [
-    { id: 'issue', label: 'Check Out', icon: ArrowRightLeft },
-    { id: 'return', label: 'Returns & Overdue', icon: RotateCcw },
-    { id: 'reservations', label: 'Hold Queues', icon: Bookmark },
-    { id: 'inventory', label: 'Title & Copies', icon: Plus },
-    { id: 'seats', label: 'Study Pods', icon: Armchair },
-    { id: 'adminmsg', label: 'Message Admin', icon: Send },
-    { id: 'announcement', label: 'Announcements', icon: Megaphone }
+    { id: 'issue', label: 'Check Out', icon: ArrowRightLeft, title: 'Book Circulation & Check Out Desk' },
+    { id: 'return', label: 'Returns', icon: RotateCcw, title: 'Book Returns & Overdue Tracker' },
+    { id: 'reservations', label: 'Hold Queues', icon: Bookmark, title: 'Student Book Reservations & Hold Queues' },
+    { id: 'inventory', label: 'Inventory', icon: Plus, title: 'Catalog Titles & Physical Copies' },
+    { id: 'seats', label: 'Study Pods', icon: Armchair, title: 'Study Seat & Pod Real-Time Status' },
+    { id: 'adminmsg', label: 'Msg Admin', icon: Send, title: 'Direct Staff Dispatch to System Admin' },
+    { id: 'announcement', label: 'Notices', icon: Megaphone, title: 'Broadcast Notices to Library Patrons' }
   ];
 
   const handleTabClick = (tab) => {
@@ -48,132 +48,75 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
 
   return (
     <header
+      className="portal-nav-header"
       style={{
-        backgroundColor: '#FFFFFF',
         borderBottom: '2px solid rgba(82, 115, 77, 0.25)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 2px 10px rgba(52, 78, 65, 0.08)',
-        backdropFilter: 'blur(8px)'
+        boxShadow: '0 2px 10px rgba(52, 78, 65, 0.08)'
       }}
     >
-      <div
-        className="container"
-        style={{
-          minHeight: '70px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          padding: '8px 16px'
-        }}
-      >
+      <div className="portal-nav-container">
         {/* Brand Header */}
         <div
+          className="portal-brand"
           onClick={() => {
             setMobileMenuOpen(false);
             if (onSelectTab) onSelectTab('issue');
             if (onNavigate) onNavigate('librarian', { tab: 'issue' });
           }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
           title="Librarian Circulation Desk"
         >
           <div
+            className="portal-brand-logo"
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
               backgroundColor: 'var(--botanical, #52734D)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(82, 115, 77, 0.28)',
-              flexShrink: 0
+              boxShadow: '0 4px 12px rgba(82, 115, 77, 0.28)'
             }}
           >
-            <Layers size={22} color="#FAF8F1" />
+            <Layers size={20} color="#FAF8F1" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  color: 'var(--forest-dark)',
-                  letterSpacing: '-0.02em'
-                }}
-              >
-                LibraMind
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="portal-brand-title">LibraMind</span>
               <span
                 style={{
                   backgroundColor: 'var(--soft-sage-light, #E8EDE6)',
                   color: 'var(--forest-dark)',
                   border: '1px solid rgba(82, 115, 77, 0.3)',
-                  fontSize: '0.68rem',
+                  fontSize: '0.64rem',
                   fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  borderRadius: '5px',
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '3px'
                 }}
               >
-                <Layers size={11} color="var(--botanical)" />
+                <Layers size={10} color="var(--botanical)" />
                 Librarian Portal
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.70rem', color: 'var(--sage)', letterSpacing: '0.02em' }}>
+            <p className="portal-subtitle" style={{ margin: 0, fontSize: '0.66rem', color: 'var(--sage)', letterSpacing: '0.02em', marginTop: '1px' }}>
               Circulation Desk • Staff Management Suite
             </p>
           </div>
         </div>
 
-        {/* Dedicated Librarian Tabs (Desktop Navigation) */}
+        {/* Dedicated Librarian Tabs — Single Clean Line (Desktop & Laptop) */}
         {user && (user.role === 'librarian' || user.role === 'admin') && (
-          <nav
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              flex: 1,
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              padding: '0 8px'
-            }}
-            className="desktop-nav"
-          >
+          <nav className="portal-desktop-nav portal-nav-tabs">
             {navTabs.map(tab => {
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab)}
+                  className={`portal-tab-btn ${active ? 'active' : ''}`}
                   style={{
-                    background: active ? 'var(--soft-sage-light)' : 'transparent',
-                    border: active ? '1px solid rgba(82, 115, 77, 0.35)' : '1px solid transparent',
-                    padding: '6px 10px',
-                    borderRadius: '8px',
-                    fontSize: '0.80rem',
-                    fontWeight: active ? 700 : 500,
-                    color: active ? 'var(--forest-dark)' : 'var(--muted-text)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.15s ease'
+                    background: active ? 'var(--soft-sage-light, #E8EDE6)' : 'transparent',
+                    borderColor: active ? 'rgba(82, 115, 77, 0.35)' : 'transparent',
+                    color: active ? 'var(--forest-dark)' : 'var(--muted-text)'
                   }}
                   onMouseEnter={(e) => {
                     if (!active) {
@@ -187,9 +130,14 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                       e.currentTarget.style.color = 'var(--muted-text)';
                     }
                   }}
+                  title={tab.title || tab.label}
                 >
-                  <tab.icon size={14} color={active ? 'var(--botanical)' : 'currentColor'} />
-                  {tab.label}
+                  <tab.icon
+                    size={13}
+                    color={active ? 'var(--botanical)' : 'currentColor'}
+                    strokeWidth={active ? 2.2 : 1.8}
+                  />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
@@ -197,84 +145,65 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
         )}
 
         {/* Right Section: Quick Links & Staff Profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {/* Quick Cross-Portal Switchers (Desktop) */}
-          {user && (user.role === 'librarian' || user.role === 'admin') && (
-            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
-              {user.role === 'admin' && (
-                <button
-                  onClick={() => onNavigate && onNavigate('admin')}
-                  className="btn btn-outline btn-sm"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontSize: '0.78rem',
-                    padding: '5px 9px',
-                    borderColor: 'rgba(197, 34, 31, 0.35)',
-                    backgroundColor: '#FCE8E6',
-                    color: '#A51D24',
-                    borderRadius: '7px'
-                  }}
-                  title="Return to Admin Master Portal"
-                >
-                  <ShieldCheck size={13} color="#C5221F" />
-                  <span>Admin Portal</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => onNavigate && onNavigate('catalog')}
-                className="btn btn-outline btn-sm"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '0.78rem',
-                  padding: '5px 9px',
-                  borderColor: 'var(--subtle-border)',
-                  borderRadius: '7px'
-                }}
-                title="Browse Public Library & Catalog"
-              >
-                <BookOpen size={13} color="var(--forest)" />
-                <span>View Library</span>
-              </button>
-            </div>
-          )}
-
-          {user && (user.role === 'librarian' || user.role === 'admin') && (
+        <div className="portal-right-actions">
+          {user && (user.role === 'librarian' || user.role === 'admin') ? (
             <>
+              {/* Quick Cross-Portal Switchers (Desktop) */}
+              <div className="portal-desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {user.role === 'admin' && (
+                  <button
+                    onClick={() => onNavigate && onNavigate('admin')}
+                    className="portal-action-pill"
+                    style={{
+                      borderColor: 'rgba(197, 34, 31, 0.35)',
+                      backgroundColor: '#FCE8E6',
+                      color: '#A51D24'
+                    }}
+                    title="Return to Admin Master Portal"
+                  >
+                    <ShieldCheck size={12} color="#C5221F" />
+                    <span>Admin Portal</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => onNavigate && onNavigate('catalog')}
+                  className="portal-action-pill"
+                  style={{
+                    borderColor: 'var(--subtle-border)',
+                    backgroundColor: '#FAFAF9',
+                    color: 'var(--forest-dark)'
+                  }}
+                  title="Browse Public Library & Catalog"
+                >
+                  <BookOpen size={12} color="var(--forest)" />
+                  <span>Library</span>
+                </button>
+              </div>
+
               {/* Notification Center */}
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setShowNotifs(!showNotifs)}
                   aria-label="Staff notifications"
+                  className="portal-icon-btn"
                   style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--subtle-border)',
-                    backgroundColor: showNotifs ? 'var(--soft-sage-light)' : '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    position: 'relative'
+                    backgroundColor: showNotifs ? 'var(--soft-sage-light)' : '#FFFFFF'
                   }}
+                  title="Notifications"
                 >
-                  <Bell size={16} color="var(--forest)" />
+                  <Bell size={15} color="var(--forest)" />
                   {unreadCount > 0 && (
                     <span
                       style={{
                         position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        width: '8px',
-                        height: '8px',
+                        top: '5px',
+                        right: '5px',
+                        width: '7px',
+                        height: '7px',
                         borderRadius: '50%',
                         backgroundColor: 'var(--botanical)',
-                        border: '2px solid #FFFFFF'
+                        border: '1.5px solid #FFFFFF'
                       }}
                     />
                   )}
@@ -289,27 +218,19 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               </div>
 
               {/* Staff Member Tag */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-end',
-                  lineHeight: 1.2
-                }}
-                className="desktop-nav"
-              >
-                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+              <div className="portal-desktop-nav portal-user-tag">
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
                   {user.name.split(' ')[0]}
                 </span>
                 <span
                   style={{
-                    fontSize: '0.68rem',
+                    fontSize: '0.62rem',
                     color: user.role === 'admin' ? '#C5221F' : 'var(--botanical)',
                     fontWeight: 700,
                     textTransform: 'uppercase'
                   }}
                 >
-                  {user.role === 'admin' ? 'Chief Admin' : 'Staff'} • {user.membership_id}
+                  {user.role === 'admin' ? 'Admin' : 'Staff'} • {user.membership_id || 'LIB-5001'}
                 </span>
               </div>
 
@@ -318,43 +239,33 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 onClick={handleLogout}
                 title="Sign Out of Librarian Portal"
                 aria-label="Sign Out"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--subtle-border)',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--muted-text)',
-                  transition: 'all 0.15s ease'
-                }}
+                className="portal-icon-btn"
+                style={{ color: 'var(--muted-text)' }}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
+              </button>
+
+              {/* Mobile Menu Hamburger Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="portal-icon-btn portal-mobile-btn"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
               </button>
             </>
-          )}
-
-          {/* Mobile Menu Hamburger Button */}
-          {user && (user.role === 'librarian' || user.role === 'admin') && (
+          ) : (
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="btn btn-outline btn-sm mobile-menu-btn"
+              onClick={() => onNavigate && onNavigate('catalog')}
+              className="portal-action-pill"
               style={{
-                width: '36px',
-                height: '36px',
-                padding: 0,
-                display: 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '8px',
-                borderColor: 'var(--subtle-border)'
+                borderColor: 'var(--subtle-border)',
+                backgroundColor: '#FAFAF9',
+                color: 'var(--forest-dark)'
               }}
-              aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              <BookOpen size={12} color="var(--forest)" />
+              <span>Public Library</span>
             </button>
           )}
         </div>
@@ -366,18 +277,23 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
           style={{
             backgroundColor: '#FFFFFF',
             borderTop: '1px solid rgba(82, 115, 77, 0.2)',
-            padding: '12px 16px 16px',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.08)',
+            padding: '14px 16px 18px',
+            boxShadow: '0 14px 28px rgba(0,0,0,0.09)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
+            gap: '10px'
           }}
         >
-          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-            Librarian Desk Operations
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Librarian Desk Operations
+            </span>
+            <span style={{ fontSize: '0.70rem', color: 'var(--sage)', fontWeight: 600 }}>
+              {user.name} ({user.membership_id || 'LIB-5001'})
+            </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px' }}>
             {navTabs.map(tab => {
               const active = activeTab === tab.id;
               return (
@@ -389,7 +305,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                     border: active ? '1px solid rgba(82, 115, 77, 0.35)' : '1px solid var(--subtle-border)',
                     padding: '9px 12px',
                     borderRadius: '8px',
-                    fontSize: '0.82rem',
+                    fontSize: '0.80rem',
                     fontWeight: active ? 700 : 500,
                     color: active ? 'var(--forest-dark)' : 'var(--forest-dark)',
                     display: 'flex',
@@ -406,7 +322,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
             })}
           </div>
 
-          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)', margin: '6px 0' }} />
+          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)', margin: '4px 0' }} />
 
           <div style={{ display: 'flex', gap: '8px' }}>
             {user.role === 'admin' && (
@@ -422,7 +338,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                   border: '1px solid rgba(197, 34, 31, 0.35)',
                   backgroundColor: '#FCE8E6',
                   color: '#A51D24',
-                  fontSize: '0.80rem',
+                  fontSize: '0.78rem',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -448,7 +364,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 border: '1px solid var(--subtle-border)',
                 backgroundColor: '#FFFFFF',
                 color: 'var(--forest-dark)',
-                fontSize: '0.80rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',

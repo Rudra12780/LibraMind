@@ -1,10 +1,28 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../db/database');
 const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
+const { sendPasswordResetEmail, isConfigured: isEmailConfigured } = require('../utils/emailService');
 
 const router = express.Router();
+
+// In-memory rate limiting map for password reset requests (key: ip or email)
+const resetRateLimits = new Map();
+function checkResetRateLimit(key, maxRequests = 5, windowMs = 15 * 60 * 1000) {
+  const now = Date.now();
+  const record = resetRateLimits.get(key);
+  if (!record || now > record.resetTime) {
+    resetRateLimits.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  if (record.count >= maxRequests) {
+    return false;
+  }
+  record.count += 1;
+  return true;
+}
 
 // Register new student/member
 router.post('/register', (req, res) => {
@@ -525,6 +543,214 @@ router.get('/audit-logs', authenticateToken, requireRole(['admin']), (req, res) 
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: 'Failed to retrieve audit logs' });
+  }
+});
+
+// Helper to mask email address for display in verification
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return '******';
+  const [local, domain] = email.split('@');
+  if (local.length <= 2) return `${local[0]}*@${domain}`;
+  return `${local.slice(0, 2)}${'*'.repeat(Math.max(1, local.length - 3))}${local.slice(-1)}@${domain}`;
+}
+
+// Request password reset link (public with rate limiting & enumeration protection)
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    const trimmedEmail = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email format (e.g., student@libramind.edu).' });
+    }
+
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+    // Rate limiting: max 8 attempts per IP per 15 min, max 4 attempts per email per 15 min
+    if (!checkResetRateLimit(`ip:${clientIp}`, 8, 15 * 60 * 1000) || !checkResetRateLimit(`email:${trimmedEmail}`, 4, 15 * 60 * 1000)) {
+      return res.status(429).json({
+        error: 'Too many password reset requests. Please wait 15 minutes before attempting again.'
+      });
+    }
+
+    // Look up user
+    const user = db.prepare('SELECT id, name, email FROM users WHERE LOWER(email) = ?').get(trimmedEmail);
+
+    if (user) {
+      // Generate 256-bit cryptographically secure random token
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+
+      // Invalidate existing active tokens
+      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL').run(user.id);
+
+      // Insert new reset token hash
+      db.prepare(`
+        INSERT INTO password_resets (user_id, token_hash, expires_at, ip_address)
+        VALUES (?, ?, ?, ?)
+      `).run(user.id, tokenHash, expiresAt, String(clientIp).slice(0, 45));
+
+      logAudit(user.id, 'PASSWORD_RESET_REQUESTED', `Password reset token generated for ${user.email} (expires in 30m)`);
+
+      // Dispatch reset email
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          name: user.name,
+          token: rawToken,
+          expiresInMinutes: 30
+        });
+      } catch (mailErr) {
+        console.error('[Auth] Error sending reset email:', mailErr.message);
+      }
+    }
+
+    // Return generic message regardless of user existence to prevent account enumeration
+    res.json({
+      success: true,
+      message: 'If an account with that email address exists in LibraMind, a secure password reset link has been dispatched. Please check your inbox and spam folder. The link will remain valid for 30 minutes.'
+    });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'An unexpected error occurred while processing your request. Please try again later.' });
+  }
+});
+
+// Verify reset token validity before showing password form
+router.get('/verify-reset-token', (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ valid: false, error: 'A reset token is required.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const resetRecord = db.prepare(`
+      SELECT pr.*, u.email, u.name
+      FROM password_resets pr
+      JOIN users u ON pr.user_id = u.id
+      WHERE pr.token_hash = ?
+    `).get(tokenHash);
+
+    if (!resetRecord) {
+      return res.status(400).json({
+        valid: false,
+        error: 'This password reset link is invalid or does not exist. Please request a new link.'
+      });
+    }
+
+    if (resetRecord.used_at) {
+      return res.status(400).json({
+        valid: false,
+        error: 'This password reset link has already been used. Please request a new one.'
+      });
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(resetRecord.expires_at);
+    if (now > expiresAt) {
+      return res.status(400).json({
+        valid: false,
+        error: 'This password reset link has expired (valid for 30 minutes). Please request a fresh reset link.'
+      });
+    }
+
+    res.json({
+      valid: true,
+      maskedEmail: maskEmail(resetRecord.email),
+      userName: resetRecord.name
+    });
+  } catch (err) {
+    console.error('Verify token error:', err);
+    res.status(500).json({ valid: false, error: 'Failed to verify reset token' });
+  }
+});
+
+// Reset password using verified token
+router.post('/reset-password', (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: 'A valid reset token is required.' });
+    }
+
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'New password is required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    if (confirmPassword && password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    const resetTx = db.transaction(() => {
+      const resetRecord = db.prepare(`
+        SELECT pr.*, u.id as user_id, u.email, u.name
+        FROM password_resets pr
+        JOIN users u ON pr.user_id = u.id
+        WHERE pr.token_hash = ?
+      `).get(tokenHash);
+
+      if (!resetRecord) {
+        throw new Error('This password reset link is invalid or expired. Please request a new one.');
+      }
+
+      if (resetRecord.used_at) {
+        throw new Error('This password reset link has already been used. Please request a new link.');
+      }
+
+      if (new Date() > new Date(resetRecord.expires_at)) {
+        throw new Error('This password reset link has expired. Please request a fresh reset link.');
+      }
+
+      // Hash new password using bcrypt
+      const salt = bcrypt.genSaltSync(10);
+      const newPasswordHash = bcrypt.hashSync(password, salt);
+
+      // Update user password
+      db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newPasswordHash, resetRecord.user_id);
+
+      // Invalidate the reset token
+      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE id = ?').run(resetRecord.id);
+
+      // Invalidate all other pending tokens for this user
+      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL').run(resetRecord.user_id);
+
+      // Security notification for user
+      db.prepare(`
+        INSERT INTO notifications (user_id, title, message, type, link)
+        VALUES (?, ?, ?, 'announcement', '/dashboard')
+      `).run(
+        resetRecord.user_id,
+        'Security Alert: Password Updated',
+        'Your LibraMind account password was successfully updated. If you did not perform this action, please contact library administration immediately.'
+      );
+
+      logAudit(resetRecord.user_id, 'PASSWORD_RESET_SUCCESS', `Password successfully updated via reset token for ${resetRecord.email}`);
+
+      return { userName: resetRecord.name, email: resetRecord.email };
+    });
+
+    resetTx();
+
+    res.json({
+      success: true,
+      message: 'Your password has been successfully reset! You can now log in with your new credentials.'
+    });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(400).json({ error: err.message || 'Failed to reset password.' });
   }
 });
 

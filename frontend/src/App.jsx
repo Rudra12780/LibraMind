@@ -21,6 +21,9 @@ import About from './pages/About';
 import HelpContact from './pages/HelpContact';
 import TermsPolicies from './pages/TermsPolicies';
 import NotificationsPage from './pages/NotificationsPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import ReservationsPage from './pages/ReservationsPage';
 import NotFound from './pages/NotFound';
 
 // Code-split heavy dashboard pages to optimize initial bundle size
@@ -138,6 +141,12 @@ function AppContent() {
         setActivePage('contact');
       } else if (cleanPath === 'terms' || cleanPath === 'policies' || cleanPath === 'borrowing-rules') {
         setActivePage('terms');
+      } else if (cleanPath === 'reservations' || cleanPath === 'my-reservations' || cleanPath === 'holds' || cleanPath === 'waiting-list') {
+        setActivePage('reservations');
+      } else if (cleanPath === 'forgot-password' || cleanPath === 'forgot') {
+        setActivePage('forgot-password');
+      } else if (cleanPath === 'reset-password' || cleanPath === 'reset') {
+        setActivePage('reset-password');
       } else if (cleanPath === 'notifications') {
         setActivePage('notifications');
       } else if (cleanPath === 'login') {
@@ -243,6 +252,9 @@ function AppContent() {
           : '/admin';
       }
       else if (cleanPage === 'book-details') targetUrl = selectedBookId ? `/books/${selectedBookId}` : '/books';
+      else if (cleanPage === 'reservations') targetUrl = '/reservations';
+      else if (cleanPage === 'forgot-password') targetUrl = '/forgot-password';
+      else if (cleanPage === 'reset-password') targetUrl = '/reset-password';
       else targetUrl = `/${cleanPage}`;
 
       window.history.pushState(null, '', targetUrl);
@@ -364,6 +376,7 @@ function AppContent() {
           holdCount={userStats.holdCount}
           seatCount={userStats.seatCount}
           wishlistCount={userStats.wishlistCount}
+          compareCount={compareBookIds.length}
         />
       ) : (
         <Navbar
@@ -475,6 +488,21 @@ function AppContent() {
 
         {activePage === 'notifications' && (
           <NotificationsPage onNavigate={navigate} />
+        )}
+
+        {activePage === 'reservations' && (
+          <ReservationsPage
+            onNavigate={navigate}
+            onSelectBook={viewBookDetails}
+          />
+        )}
+
+        {activePage === 'forgot-password' && (
+          <ForgotPassword onNavigate={navigate} />
+        )}
+
+        {activePage === 'reset-password' && (
+          <ResetPassword onNavigate={navigate} />
         )}
 
         {activePage === 'login' && (

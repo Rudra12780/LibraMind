@@ -80,6 +80,45 @@ export default function BookCompare({
     try {
       const res = await api.placeReservation(bookId);
       showToast(res.message || `Hold confirmed for "${title}"`);
+      const updated = await api.getBook(bookId);
+      setBooks(prev => prev.map(b => b.id === bookId ? updated : b));
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const handleBorrow = async (bookId, title) => {
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+    try {
+      const res = await api.checkoutBook({ book_id: bookId });
+      showToast(`Success! Checked out copy ${res.copyCode} of "${title}". Due: ${new Date(res.dueDate).toLocaleDateString()}`);
+      const updated = await api.getBook(bookId);
+      setBooks(prev => prev.map(b => b.id === bookId ? updated : b));
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const handleReturn = async (loanId, bookId, title) => {
+    try {
+      await api.returnBook(loanId);
+      showToast(`"${title}" returned successfully. Thank you!`);
+      const updated = await api.getBook(bookId);
+      setBooks(prev => prev.map(b => b.id === bookId ? updated : b));
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const handleCancelReserve = async (reservationId, bookId) => {
+    try {
+      await api.cancelReservation(reservationId);
+      showToast('Reservation hold cancelled.');
+      const updated = await api.getBook(bookId);
+      setBooks(prev => prev.map(b => b.id === bookId ? updated : b));
     } catch (err) {
       showToast(err.message, true);
     }
@@ -249,11 +288,49 @@ export default function BookCompare({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--muted-text)'
+                    color: 'var(--muted-text)',
+                    zIndex: 2
                   }}
                 >
                   <X size={15} />
                 </button>
+
+                {/* Status Badge if user has active loan or hold */}
+                {b.userLoan ? (
+                  <div style={{
+                    marginBottom: '8px',
+                    backgroundColor: 'var(--status-available-bg)',
+                    color: 'var(--status-available-text)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(45,106,53,0.25)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    alignSelf: 'flex-start'
+                  }}>
+                    ✓ Borrowed by You (Due: {new Date(b.userLoan.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })})
+                  </div>
+                ) : b.userReservation ? (
+                  <div style={{
+                    marginBottom: '8px',
+                    backgroundColor: 'var(--status-reserved-bg)',
+                    color: 'var(--status-reserved-text)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(25,103,210,0.25)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    alignSelf: 'flex-start'
+                  }}>
+                    ★ Held in Queue #{b.userReservation.queue_position}
+                  </div>
+                ) : null}
 
                 <div style={{ width: '90px', height: '120px', borderRadius: '6px', overflow: 'hidden', marginBottom: '12px', backgroundColor: 'var(--warm-beige)' }}>
                   <img
@@ -270,21 +347,88 @@ export default function BookCompare({
                   by {b.author}
                 </p>
 
-                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                  <button
-                    onClick={() => onViewBookDetails(b.id)}
-                    className="btn btn-outline btn-sm"
-                    style={{ flex: 1 }}
-                  >
-                    Details
-                  </button>
-                  <button
-                    onClick={() => handleReserve(b.id, b.title)}
-                    className="btn btn-botanical btn-sm"
-                    style={{ flex: 1 }}
-                  >
-                    Reserve
-                  </button>
+                {/* Smart Action Buttons Container */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => onViewBookDetails(b.id)}
+                      className="btn btn-outline btn-sm"
+                      style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem' }}
+                    >
+                      Details
+                    </button>
+
+                    {b.userLoan ? (
+                      <button
+                        onClick={() => handleReturn(b.userLoan.id, b.id, b.title)}
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          flex: 1,
+                          padding: '7px 10px',
+                          fontSize: '0.82rem',
+                          backgroundColor: 'var(--warm-beige)',
+                          color: 'var(--forest-dark)',
+                          fontWeight: 700
+                        }}
+                        title="Return your borrowed copy"
+                      >
+                        Return Book
+                      </button>
+                    ) : b.userReservation ? (
+                      <button
+                        onClick={() => handleCancelReserve(b.userReservation.id, b.id)}
+                        className="btn btn-outline btn-sm"
+                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem', color: '#C5221F', borderColor: 'rgba(197,34,31,0.3)' }}
+                        title="Cancel hold queue"
+                      >
+                        Cancel Hold
+                      </button>
+                    ) : b.available_copies > 0 ? (
+                      <button
+                        onClick={() => handleBorrow(b.id, b.title)}
+                        className="btn btn-botanical btn-sm"
+                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem', fontWeight: 700 }}
+                      >
+                        Borrow Now
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleReserve(b.id, b.title)}
+                        className="btn btn-primary btn-sm"
+                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem' }}
+                      >
+                        Join Waitlist
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Secondary Context Actions */}
+                  {b.userLoan ? (
+                    <button
+                      onClick={() => onNavigate('dashboard', { tab: 'loans' })}
+                      className="btn btn-primary btn-sm"
+                      style={{ width: '100%', fontSize: '0.78rem', padding: '6px' }}
+                    >
+                      Open in My Loans Hub →
+                    </button>
+                  ) : b.available_copies > 0 && !b.userReservation ? (
+                    <button
+                      onClick={() => handleReserve(b.id, b.title)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--forest)',
+                        fontSize: '0.76rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '2px 0',
+                        textDecoration: 'underline',
+                        textAlign: 'center'
+                      }}
+                    >
+                      Or place hold for desk pickup
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))}

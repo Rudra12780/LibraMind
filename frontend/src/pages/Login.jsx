@@ -148,7 +148,24 @@ export default function Login({ onNavigate }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
+              <button
+                type="button"
+                onClick={() => onNavigate('forgot-password')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--botanical)',
+                  fontSize: '0.80rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
             <input
               type="password"
               className="form-control"

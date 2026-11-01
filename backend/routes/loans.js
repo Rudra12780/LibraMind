@@ -5,7 +5,7 @@ const { authenticateToken, requireRole, logAudit } = require('../middleware/auth
 const router = express.Router();
 
 const DAILY_FINE_RATE = 1.0; // $1.00 per day overdue
-const MAX_LOANS_PER_STUDENT = 5;
+const MAX_LOANS_PER_STUDENT = 10; // Generous limit for student research & reading
 const MAX_RENEWALS = 2;
 const LOAN_DURATION_DAYS = 14;
 

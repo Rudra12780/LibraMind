@@ -4,21 +4,21 @@ import { useNotifications } from '../context/NotificationContext';
 import NotificationDropdown from './NotificationDropdown';
 import {
   BookOpen,
-  BookMarked,
-  Clock,
-  Bookmark,
-  Armchair,
-  Heart,
   Sparkles,
+  Armchair,
+  GitCompare,
+  Compass,
   Bell,
   LogOut,
-  Search,
-  Compass,
-  Menu,
-  X,
   Layers,
   ShieldCheck,
   LayoutDashboard,
+  Clock,
+  Bookmark,
+  Heart,
+  Menu,
+  X,
+  Search,
   Home
 } from 'lucide-react';
 
@@ -29,7 +29,8 @@ export default function UserNavbar({
   loanCount = 0,
   holdCount = 0,
   seatCount = 0,
-  wishlistCount = 0
+  wishlistCount = 0,
+  compareCount = 0
 }) {
   const { user, logout, adminVerified } = useAuth();
   const { unreadCount } = useNotifications();
@@ -39,41 +40,60 @@ export default function UserNavbar({
   const handleLogout = async () => {
     await logout();
     if (onNavigate) onNavigate('home');
+    setMobileMenuOpen(false);
   };
 
-  const navTabs = [
-    { id: 'all', label: 'My Hub', icon: LayoutDashboard },
-    { id: 'loans', label: `My Loans${loanCount > 0 ? ` (${loanCount})` : ''}`, icon: Clock, count: loanCount },
-    { id: 'holds', label: `Holds${holdCount > 0 ? ` (${holdCount})` : ''}`, icon: Bookmark, count: holdCount },
-    { id: 'seats', label: `Study Pods${seatCount > 0 ? ` (${seatCount})` : ''}`, icon: Armchair, count: seatCount },
-    { id: 'wishlist', label: `Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ''}`, icon: Heart, count: wishlistCount },
+  const handleTabClick = (tabId) => {
+    setMobileMenuOpen(false);
+    if (onSelectTab) onSelectTab(tabId);
+  };
+
+  // Main Sanctuary Navigation Items (ensures user NEVER loses navigation to the site!)
+  const siteNavItems = [
+    { id: 'home', label: 'Home', action: () => { setMobileMenuOpen(false); onNavigate('home'); } },
+    { id: 'catalog', label: 'Books', action: () => { setMobileMenuOpen(false); onNavigate('catalog'); } },
+    { id: 'ai-finder', label: 'AI Finder', icon: Sparkles, action: () => { setMobileMenuOpen(false); onNavigate('ai-finder'); }, highlight: true },
+    { id: 'seats', label: 'Study Seats', icon: Armchair, action: () => { setMobileMenuOpen(false); onNavigate('seats'); } },
+    { id: 'compare', label: `Compare${compareCount > 0 ? ` (${compareCount})` : ''}`, icon: GitCompare, action: () => { setMobileMenuOpen(false); onNavigate('compare'); } },
+    { id: 'visit-planner', label: 'Plan Visit', icon: Compass, action: () => { setMobileMenuOpen(false); onNavigate('visit-planner'); } },
+    { id: 'reservations', label: 'Holds', icon: Bookmark, action: () => { setMobileMenuOpen(false); onNavigate('reservations'); } }
+  ];
+
+  // Dedicated Member Hub Sub-tabs
+  const memberHubTabs = [
+    { id: 'all', label: 'Overview', icon: LayoutDashboard },
+    { id: 'loans', label: 'My Loans', icon: Clock, count: loanCount },
+    { id: 'holds', label: 'Hold Queues', icon: Bookmark, count: holdCount },
+    { id: 'seats', label: 'Study Pods', icon: Armchair, count: seatCount },
+    { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlistCount },
     { id: 'recommendations', label: 'AI For You', icon: Sparkles }
   ];
 
-  const handleTabClick = (tab) => {
-    setMobileMenuOpen(false);
-    if (onSelectTab) onSelectTab(tab.id);
-  };
+  const userInitial = user?.name?.charAt(0)?.toUpperCase() || 'U';
 
   return (
     <header
       style={{
         backgroundColor: '#FFFFFF',
-        borderBottom: '2px solid rgba(52, 78, 65, 0.22)',
+        borderBottom: '1px solid var(--subtle-border)',
         position: 'sticky',
         top: 0,
-        zIndex: 100,
-        boxShadow: '0 2px 12px rgba(52, 78, 65, 0.08)',
-        backdropFilter: 'blur(8px)'
+        zIndex: 1000,
+        boxShadow: '0 4px 20px rgba(52, 78, 65, 0.08)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        width: '100%',
+        maxWidth: '100vw',
+        overflow: 'hidden'
       }}
     >
-      {/* Top Bar for User Mode Notification or Staff/Admin Reminder */}
+      {/* Top Banner if Admin is browsing in User Mode */}
       {user && user.role === 'admin' && !adminVerified && (
         <div
           style={{
             backgroundColor: '#FCE8E6',
             color: '#A51D24',
-            padding: '4px 20px',
+            padding: '5px 24px',
             fontSize: '0.76rem',
             fontWeight: 700,
             display: 'flex',
@@ -84,7 +104,7 @@ export default function UserNavbar({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ShieldCheck size={13} color="#C5221F" />
-            <span>Administrator User Mode Active: You are experiencing the library hub as a regular reader.</span>
+            <span>Administrator User Mode Active — Experiencing the library hub as a regular reader.</span>
           </div>
           <button
             onClick={() => onNavigate('admin')}
@@ -103,216 +123,186 @@ export default function UserNavbar({
         </div>
       )}
 
+      {/* ── Tier 1: Primary Navigation Bar (Full Site Access) ── */}
       <div
         className="container"
         style={{
-          minHeight: '70px',
+          height: '66px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '12px',
-          padding: '8px 16px'
+          minWidth: 0,
+          overflow: 'hidden'
         }}
       >
-        {/* Brand Header — Member Portal Specific */}
+        {/* Brand Logo */}
         <div
-          onClick={() => {
-            setMobileMenuOpen(false);
-            if (onSelectTab) onSelectTab('all');
-          }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
-          title="Return to Member Hub Overview"
+          onClick={() => onNavigate('home')}
+          style={{ display: 'flex', alignItems: 'center', gap: '11px', cursor: 'pointer', flexShrink: 0 }}
+          title="Return to Library Sanctuary Home"
         >
           <div
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--forest)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '11px',
+              background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(52, 78, 65, 0.25)',
+              boxShadow: '0 4px 14px rgba(52, 78, 65, 0.28)',
               flexShrink: 0
             }}
           >
-            <BookOpen size={22} color="#FAF8F1" />
+            <BookOpen size={20} color="#FAF8F1" strokeWidth={2.2} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
               <span
                 style={{
                   fontFamily: 'var(--font-serif)',
                   fontSize: '1.40rem',
                   fontWeight: 800,
                   color: 'var(--forest-dark)',
-                  letterSpacing: '-0.02em'
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1
                 }}
               >
                 LibraMind
               </span>
               <span
                 style={{
-                  backgroundColor: 'var(--soft-sage-light)',
+                  background: 'linear-gradient(135deg, var(--soft-sage) 0%, #D4E3CB 100%)',
                   color: 'var(--forest-dark)',
-                  border: '1px solid rgba(82, 115, 77, 0.3)',
-                  fontSize: '0.68rem',
+                  border: '1px solid rgba(82, 115, 77, 0.25)',
+                  fontSize: '0.62rem',
                   fontWeight: 800,
-                  padding: '2px 8px',
+                  padding: '2px 7px',
                   borderRadius: '6px',
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '3px'
                 }}
               >
-                <Sparkles size={11} color="var(--forest)" />
+                <Sparkles size={9} color="var(--forest)" />
                 Member Hub
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.70rem', color: 'var(--sage)', letterSpacing: '0.02em' }}>
-              Personal Sanctuary • Active Loans & Reservations
+            <p className="portal-subtitle" style={{ margin: 0, fontSize: '0.66rem', color: 'var(--sage)', letterSpacing: '0.02em', marginTop: '1px' }}>
+              Personal Reading Sanctuary · Active Loans & Services
             </p>
           </div>
         </div>
 
-        {/* Dedicated Member Hub Tabs (Desktop Navigation) */}
+        {/* Primary Desktop Navigation Links */}
         <nav
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
             gap: '4px',
-            flex: 1,
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            padding: '0 8px'
+            flex: '1 1 auto',
+            minWidth: 0,
+            overflow: 'hidden',
+            justifyContent: 'flex-end'
           }}
-          className="desktop-nav"
+          className="usernav-desktop"
         >
-          {navTabs.map(tab => {
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                style={{
-                  background: active ? 'var(--soft-sage-light)' : 'transparent',
-                  border: active ? '1px solid rgba(82, 115, 77, 0.35)' : '1px solid transparent',
-                  padding: '7px 11px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: active ? 700 : 500,
-                  color: active ? 'var(--forest-dark)' : 'var(--muted-text)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.backgroundColor = 'var(--cream)';
-                    e.currentTarget.style.color = 'var(--forest-dark)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'var(--muted-text)';
-                  }
-                }}
-              >
-                <tab.icon
-                  size={15}
-                  color={tab.id === 'wishlist' && tab.count > 0 ? '#C5221F' : active ? 'var(--forest)' : 'currentColor'}
-                  fill={tab.id === 'wishlist' && tab.count > 0 ? '#C5221F' : 'none'}
-                />
-                {tab.label}
-              </button>
-            );
-          })}
+          {siteNavItems.map(item => (
+            <button
+              key={item.id}
+              onClick={item.action}
+              style={{
+                background: item.highlight ? 'rgba(82, 115, 77, 0.07)' : 'transparent',
+                border: item.highlight ? '1px solid rgba(82, 115, 77, 0.18)' : '1px solid transparent',
+                padding: '7px 10px',
+                borderRadius: '8px',
+                fontSize: '0.82rem',
+                fontWeight: 500,
+                color: item.highlight ? 'var(--botanical)' : 'var(--muted-text)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'var(--soft-sage-light)';
+                e.currentTarget.style.color = 'var(--forest-dark)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = item.highlight ? 'rgba(82, 115, 77, 0.07)' : 'transparent';
+                e.currentTarget.style.color = item.highlight ? 'var(--botanical)' : 'var(--muted-text)';
+              }}
+            >
+              {item.icon && <item.icon size={13} color="currentColor" />}
+              {item.label}
+            </button>
+          ))}
+
+          {/* Active "My Hub" Button */}
+          <button
+            onClick={() => handleTabClick('all')}
+            style={{
+              background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '7px 14px',
+              borderRadius: '22px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 3px 10px rgba(52, 78, 65, 0.25)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
+            title="Current page: My Member Hub"
+          >
+            <BookOpen size={13} color="#FFFFFF" strokeWidth={2.2} />
+            <span style={{ whiteSpace: 'nowrap' }}>My Hub</span>
+          </button>
         </nav>
 
-        {/* Right Section: Library Catalog Switcher & Member Profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {/* Public Library & Catalog Switcher Buttons */}
-          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="btn btn-outline btn-sm"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '0.78rem',
-                padding: '6px 11px',
-                borderColor: 'var(--subtle-border)',
-                borderRadius: '8px'
-              }}
-              title="Search and borrow more books from catalog"
-            >
-              <Search size={13} color="var(--forest)" />
-              <span>Catalog</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('home')}
-              className="btn btn-outline btn-sm"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '0.78rem',
-                padding: '6px 11px',
-                borderColor: 'var(--subtle-border)',
-                borderRadius: '8px'
-              }}
-              title="View Public Library Sanctuary Landing Page"
-            >
-              <Home size={13} color="var(--sage)" />
-              <span>Public Page</span>
-            </button>
-          </div>
-
-          {/* Member Notification Center */}
+        {/* Right Section: Notifications, Profile & Sign Out */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          {/* Notifications Bell */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowNotifs(!showNotifs)}
               aria-label="Member notifications"
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
                 border: '1px solid var(--subtle-border)',
                 backgroundColor: showNotifs ? 'var(--soft-sage-light)' : '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                position: 'relative'
+                position: 'relative',
+                transition: 'all 0.15s ease'
               }}
             >
-              <Bell size={16} color="var(--forest)" />
+              <Bell size={17} color={showNotifs ? 'var(--botanical)' : 'var(--forest)'} />
               {unreadCount > 0 && (
                 <span
                   style={{
                     position: 'absolute',
-                    top: '4px',
-                    right: '4px',
+                    top: '7px',
+                    right: '7px',
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: 'var(--botanical)',
-                    border: '2px solid #FFFFFF'
+                    backgroundColor: '#E8453C',
+                    border: '1.5px solid #FFFFFF'
                   }}
                 />
               )}
@@ -326,33 +316,48 @@ export default function UserNavbar({
             )}
           </div>
 
-          {/* Member Profile Tag */}
+          {/* User Profile Chip */}
           {user && (
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                lineHeight: 1.2
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 10px 4px 4px',
+                borderRadius: '10px',
+                border: '1px solid var(--subtle-border)',
+                backgroundColor: '#FFFFFF'
               }}
-              className="desktop-nav"
+              className="usernav-desktop"
             >
-              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
-                {user.name.split(' ')[0]}
-              </span>
-              <span
+              <div
                 style={{
-                  fontSize: '0.68rem',
-                  color: 'var(--forest)',
-                  fontWeight: 700
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, var(--botanical) 0%, var(--sage) 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                  fontSize: '0.76rem',
+                  fontWeight: 800
                 }}
               >
-                {user.role === 'admin' ? 'Admin (User Mode)' : 'Student'} • {user.membership_id}
-              </span>
+                {userInitial}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+                  {user.name.split(' ')[0]}
+                </span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--muted-text)', fontWeight: 600 }}>
+                  {user.role === 'admin' ? 'Admin' : 'Member'} · {user.membership_id}
+                </span>
+              </div>
             </div>
           )}
 
-          {/* Sign Out Button */}
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
             title="Sign Out of Library Account"
@@ -360,7 +365,7 @@ export default function UserNavbar({
             style={{
               width: '36px',
               height: '36px',
-              borderRadius: '8px',
+              borderRadius: '9px',
               border: '1px solid var(--subtle-border)',
               backgroundColor: '#FFFFFF',
               display: 'flex',
@@ -370,63 +375,206 @@ export default function UserNavbar({
               color: 'var(--muted-text)',
               transition: 'all 0.15s ease'
             }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = '#FEE8E8';
+              e.currentTarget.style.borderColor = 'rgba(197, 34, 31, 0.25)';
+              e.currentTarget.style.color = '#C5221F';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.borderColor = 'var(--subtle-border)';
+              e.currentTarget.style.color = 'var(--muted-text)';
+            }}
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
           </button>
 
-          {/* Mobile Menu Hamburger Button */}
+          {/* Mobile Menu Hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="btn btn-outline btn-sm mobile-menu-btn"
+            className="usernav-mobile-btn"
             style={{
-              width: '36px',
-              height: '36px',
-              padding: 0,
-              display: 'none',
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              border: '1px solid var(--subtle-border)',
+              backgroundColor: mobileMenuOpen ? 'var(--soft-sage-light)' : '#FFFFFF',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '8px',
-              borderColor: 'var(--subtle-border)'
+              cursor: 'pointer',
+              display: 'none',
+              transition: 'all 0.15s ease'
             }}
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            {mobileMenuOpen ? <X size={18} color="var(--forest)" /> : <Menu size={18} color="var(--forest)" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* ── Tier 2: Dedicated Member Hub Sub-Navigation Bar ── */}
+      <div
+        style={{
+          backgroundColor: '#FAF8F1',
+          borderTop: '1px solid rgba(52, 78, 65, 0.08)',
+          padding: '6px 0',
+          overflow: 'hidden'
+        }}
+      >
+        <div
+          className="container"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            paddingBottom: '2px',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', marginRight: '4px' }}>
+            Hub Views:
+          </span>
+
+          {memberHubTabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                style={{
+                  background: isActive
+                    ? 'var(--forest)'
+                    : '#FFFFFF',
+                  color: isActive ? '#FFFFFF' : 'var(--forest-dark)',
+                  border: isActive ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '0.80rem',
+                  fontWeight: isActive ? 700 : 500,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  boxShadow: isActive ? '0 2px 8px rgba(52, 78, 65, 0.22)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'var(--soft-sage-light)';
+                    e.currentTarget.style.borderColor = 'rgba(82, 115, 77, 0.3)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = 'var(--subtle-border)';
+                  }
+                }}
+              >
+                <tab.icon
+                  size={13}
+                  color={isActive ? '#FFFFFF' : tab.id === 'wishlist' && tab.count > 0 ? '#C5221F' : 'var(--botanical)'}
+                  fill={tab.id === 'wishlist' && tab.count > 0 ? (isActive ? '#FFFFFF' : '#C5221F') : 'none'}
+                />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span
+                    style={{
+                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--soft-sage)',
+                      color: isActive ? '#FFFFFF' : 'var(--forest-dark)',
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      padding: '1px 6px',
+                      borderRadius: '10px'
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Mobile Drawer Menu ── */}
       {mobileMenuOpen && (
         <div
           style={{
             backgroundColor: '#FFFFFF',
-            borderTop: '1px solid rgba(52, 78, 65, 0.15)',
-            padding: '12px 16px 16px',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.08)',
+            borderTop: '1px solid var(--subtle-border)',
+            padding: '14px 16px 20px',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
+            gap: '12px'
           }}
         >
-          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--forest-dark)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-            Member Hub Sections
+          {/* Group 1: Member Hub Tabs */}
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+              Member Hub Views
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              {memberHubTabs.map(tab => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabClick(tab.id)}
+                    style={{
+                      background: isActive ? 'var(--forest)' : 'var(--cream)',
+                      color: isActive ? '#FFFFFF' : 'var(--forest-dark)',
+                      border: isActive ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
+                      padding: '9px 12px',
+                      borderRadius: '9px',
+                      fontSize: '0.82rem',
+                      fontWeight: isActive ? 700 : 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <tab.icon size={14} color={isActive ? '#FFFFFF' : 'currentColor'} />
+                      <span>{tab.label}</span>
+                    </div>
+                    {tab.count !== undefined && tab.count > 0 && (
+                      <span style={{ fontSize: '0.70rem', fontWeight: 800 }}>({tab.count})</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-            {navTabs.map(tab => {
-              const active = activeTab === tab.id;
-              return (
+          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)' }} />
+
+          {/* Group 2: Public Sanctuary Navigation */}
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--muted-text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+              Library Sanctuary Tools
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {siteNavItems.map(item => (
                 <button
-                  key={tab.id}
-                  onClick={() => handleTabClick(tab)}
+                  key={item.id}
+                  onClick={item.action}
                   style={{
-                    background: active ? 'var(--soft-sage-light)' : '#FAFAFA',
-                    border: active ? '1px solid rgba(82, 115, 77, 0.35)' : '1px solid var(--subtle-border)',
-                    padding: '9px 12px',
+                    background: 'none',
+                    border: 'none',
+                    padding: '8px 10px',
                     borderRadius: '8px',
-                    fontSize: '0.82rem',
-                    fontWeight: active ? 700 : 500,
-                    color: active ? 'var(--forest-dark)' : 'var(--muted-text)',
+                    fontSize: '0.86rem',
+                    fontWeight: 500,
+                    color: 'var(--forest-dark)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -434,62 +582,34 @@ export default function UserNavbar({
                     textAlign: 'left'
                   }}
                 >
-                  <tab.icon size={15} color={active ? 'var(--forest)' : 'currentColor'} />
-                  <span>{tab.label}</span>
+                  {item.icon && <item.icon size={15} color="var(--forest)" />}
+                  <span>{item.label}</span>
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)', margin: '6px 0' }} />
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          {/* Group 3: Sign Out */}
+          <div style={{ borderTop: '1px solid var(--subtle-border)', paddingTop: '10px' }}>
             <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onNavigate('catalog');
-              }}
+              onClick={handleLogout}
               style={{
-                padding: '8px 12px',
+                background: 'none',
+                border: '1px solid rgba(197, 34, 31, 0.25)',
+                color: '#C5221F',
+                padding: '9px 14px',
                 borderRadius: '8px',
-                border: '1px solid var(--subtle-border)',
-                backgroundColor: 'var(--cream)',
-                color: 'var(--forest-dark)',
-                fontSize: '0.80rem',
+                fontSize: '0.86rem',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
-                cursor: 'pointer'
+                gap: '8px',
+                cursor: 'pointer',
+                width: '100%'
               }}
             >
-              <Search size={14} color="var(--forest)" />
-              Browse Catalog
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onNavigate('home');
-              }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid var(--subtle-border)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--forest-dark)',
-                fontSize: '0.80rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                cursor: 'pointer'
-              }}
-            >
-              <Home size={14} color="var(--sage)" />
-              Public Sanctuary
+              <LogOut size={15} /> Sign Out of Account
             </button>
           </div>
         </div>

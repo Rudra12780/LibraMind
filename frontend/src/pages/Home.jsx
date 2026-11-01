@@ -2,6 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
+import VisualBlueprintModal from '../components/VisualBlueprintModal';
+import {
+  BLUEPRINT_PAGES,
+  DESIGN_THINKING_SVG,
+  getThumbnailSVG,
+  downloadPageSVG,
+  downloadPagePNG,
+  downloadAllBlueprintsZIP,
+  downloadAllBlueprintsSVG,
+  downloadAllBlueprintsPNG,
+  downloadDesignThinkingSVG,
+  downloadDesignThinkingPNG,
+  downloadDesignThinkingJPG,
+  printSingleBlueprint,
+  printAllBlueprints,
+  printDesignThinkingWireframe
+} from '../data/visualBlueprints';
 import {
   Search,
   MapPin,
@@ -21,7 +38,15 @@ import {
   TrendingUp,
   Users,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Download,
+  Image as ImageIcon,
+  Printer,
+  FileCode,
+  Eye,
+  Camera,
+  CheckCircle2,
+  Maximize2
 } from 'lucide-react';
 
 export default function Home({ onNavigate, onViewBookDetails }) {
@@ -34,6 +59,8 @@ export default function Home({ onNavigate, onViewBookDetails }) {
   const [seatStats, setSeatStats] = useState({ total: 16, available: 12, occupied: 3 });
   const [memberStats, setMemberStats] = useState({ loans: 0, holds: 0, wishlist: 0 });
   const [loading, setLoading] = useState(true);
+  const [showVisualBlueprintModal, setShowVisualBlueprintModal] = useState(false);
+  const [selectedBlueprintPage, setSelectedBlueprintPage] = useState('home');
 
   useEffect(() => {
     Promise.all([
@@ -410,6 +437,107 @@ export default function Home({ onNavigate, onViewBookDetails }) {
                 </button>
               ))}
             </div>
+
+            {/* High-Visibility UI Blueprints Studio & Download Bar in Hero */}
+            <div
+              style={{
+                marginTop: '26px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '7px 12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1.5px solid rgba(52, 78, 65, 0.22)',
+                borderRadius: '16px',
+                boxShadow: '0 6px 24px rgba(52, 78, 65, 0.12)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 8px',
+                  color: 'var(--forest-dark)',
+                  fontSize: '0.82rem',
+                  fontWeight: 800
+                }}
+              >
+                <Layers size={16} color="var(--botanical)" />
+                <span>14-Page UI Blueprints:</span>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedBlueprintPage('home');
+                  setShowVisualBlueprintModal(true);
+                }}
+                className="btn btn-sm"
+                style={{
+                  background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.80rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(52, 78, 65, 0.22)'
+                }}
+                title="Open interactive 14-page Wireframe Studio"
+              >
+                <Maximize2 size={13} /> View Studio (All 14)
+              </button>
+
+              <button
+                onClick={downloadAllBlueprintsZIP}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: '#111111',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.80rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.18)'
+                }}
+                title="Download all 14 wireframe blueprint files in one .ZIP archive"
+              >
+                <Download size={13} /> Download All 14 (.ZIP)
+              </button>
+
+              <button
+                onClick={printAllBlueprints}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  color: '#222222',
+                  border: '1px solid #CCCCCC',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.80rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer'
+                }}
+                title="Print or export all 14 pages sequentially formatted for Microsoft Word"
+              >
+                <Printer size={13} /> Save All as PDF
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -471,6 +599,451 @@ export default function Home({ onNavigate, onViewBookDetails }) {
         </div>
       </section>
 
+      {/* ══════════════════════════════════════════════════ */}
+      {/* 2.5 COMPLETE 12-PAGE UI WIREFRAME BLUEPRINTS       */}
+      {/* ══════════════════════════════════════════════════ */}
+      <section
+        id="wireframe-blueprint"
+        style={{
+          padding: "68px 0",
+          backgroundColor: "#F9F8F5",
+          borderTop: "1px solid var(--subtle-border)",
+          borderBottom: "1px solid var(--subtle-border)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        {/* Subtle dot-grid background resembling Balsamiq wireframe canvas */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "radial-gradient(#D0D0D0 1.2px, transparent 1.2px)",
+            backgroundSize: "20px 20px",
+            opacity: 0.6,
+            pointerEvents: "none"
+          }}
+        />
+
+        <div className="container" style={{ position: "relative", zIndex: 1 }}>
+          {/* Section Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "20px", marginBottom: "32px" }}>
+            <div style={{ maxWidth: "720px" }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid #CCCCCC",
+                  color: "#222222",
+                  padding: "4px 14px",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: "0.74rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  marginBottom: "12px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+                }}
+              >
+                <Layers size={13} color="#222222" /> Design Thinking Process · Complete 14-Page UI Blueprint Portfolio
+              </div>
+              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.3rem)", color: "var(--forest-dark)", fontFamily: "var(--font-serif)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2 }}>
+                Website UI Wireframe Blueprints for Every Page
+              </h2>
+              <p style={{ color: "var(--muted-text)", fontSize: "0.98rem", lineHeight: 1.55, marginTop: "8px", marginBottom: 0 }}>
+                Clean, low-fidelity black-and-white Balsamiq-style UI blueprints for all 14 pages of the LibraMind system.
+                Formatted in portrait orientation, featuring 2D top-down orthogonal layouts, [X] image placeholder boxes, placeholder text lines, and readable section labels ready for insertion into Word documents.
+              </p>
+            </div>
+
+            {/* Quick Global Actions */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                onClick={downloadAllBlueprintsZIP}
+                style={{
+                  background: "linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "10px 18px",
+                  borderRadius: "10px",
+                  fontSize: "0.84rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(52, 78, 65, 0.22)"
+                }}
+                title="Download all 14 wireframe blueprint files in one .ZIP archive"
+              >
+                <Download size={15} /> Download All 14 (.ZIP)
+              </button>
+
+              <button
+                onClick={downloadAllBlueprintsSVG}
+                style={{
+                  background: "#FFFFFF",
+                  color: "#111111",
+                  border: "1.5px solid #111111",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontSize: "0.84rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}
+                title="Download all 14 individual SVG vector files"
+              >
+                <FileCode size={15} /> Download All (.SVG)
+              </button>
+
+              <button
+                onClick={printAllBlueprints}
+                style={{
+                  background: "#000000",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "10px 18px",
+                  borderRadius: "10px",
+                  fontSize: "0.84rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)"
+                }}
+                title="Print or export all 14 pages as a portrait PDF portfolio for Word Document"
+              >
+                <Printer size={15} /> Save All as PDF
+              </button>
+
+              <button
+                onClick={() => {
+                  setSelectedBlueprintPage("home");
+                  setShowVisualBlueprintModal(true);
+                }}
+                style={{
+                  background: "#FAFAFA",
+                  color: "#333333",
+                  border: "1px solid #CCCCCC",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  fontSize: "0.84rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: "pointer"
+                }}
+                title="Open fullscreen high-definition blueprint studio"
+              >
+                <Maximize2 size={15} /> Open Studio
+              </button>
+            </div>
+          </div>
+
+          {/* Grid of All 12 Page Blueprints */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
+              gap: "20px",
+              marginBottom: "32px"
+            }}
+          >
+            {BLUEPRINT_PAGES.map((page) => (
+              <div
+                key={page.id}
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: "14px",
+                  border: "1.5px solid #D8D8D8",
+                  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 12px 28px rgba(0, 0, 0, 0.12)";
+                  e.currentTarget.style.borderColor = "#000000";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0, 0, 0, 0.04)";
+                  e.currentTarget.style.borderColor = "#D8D8D8";
+                }}
+              >
+                {/* Thumbnail Preview Area */}
+                <div
+                  style={{
+                    height: "230px",
+                    backgroundColor: "#FAFAFA",
+                    borderBottom: "1px solid #E0E0E0",
+                    position: "relative",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "10px"
+                  }}
+                  onClick={() => {
+                    setSelectedBlueprintPage(page.id);
+                    setShowVisualBlueprintModal(true);
+                  }}
+                  title={`Click to inspect Page ${page.pageNumber}: ${page.shortTitle} in high definition`}
+                >
+                  {/* Perfectly scaled full wireframe blueprint preview */}
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      pointerEvents: "none"
+                    }}
+                    dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
+                  />
+
+                  {/* Badges on top */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      left: "10px",
+                      backgroundColor: "#000000",
+                      color: "#FFFFFF",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.68rem",
+                      fontWeight: 800,
+                      letterSpacing: "0.04em"
+                    }}
+                  >
+                    PAGE {page.pageNumber} OF 14
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      backgroundColor: "rgba(255, 255, 255, 0.95)",
+                      border: "1px solid #CCCCCC",
+                      color: "#111111",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <Eye size={11} /> Inspect
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "8px",
+                      left: "10px",
+                      backgroundColor: "#EEEEEE",
+                      border: "1px solid #CCCCCC",
+                      color: "#222222",
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                      fontSize: "0.68rem",
+                      fontFamily: "monospace"
+                    }}
+                  >
+                    {page.route}
+                  </div>
+                </div>
+
+                {/* Card Info Body */}
+                <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <h3 style={{ margin: "0 0 6px", fontSize: "1.05rem", color: "#111111", fontWeight: 800 }}>
+                      {page.name}
+                    </h3>
+                    <p style={{ margin: "0 0 14px", fontSize: "0.80rem", color: "#666666", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {page.desc}
+                    </p>
+                  </div>
+
+                  {/* 3 Download Action Buttons for this Page */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                    <button
+                      onClick={() => downloadPageSVG(page.id)}
+                      style={{
+                        background: "#111111",
+                        color: "#FFFFFF",
+                        border: "none",
+                        padding: "7px 8px",
+                        borderRadius: "6px",
+                        fontSize: "0.74rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px"
+                      }}
+                      title="Download Scalable Vector (.SVG)"
+                    >
+                      <Download size={12} /> .SVG
+                    </button>
+
+                    <button
+                      onClick={() => downloadPagePNG(page.id)}
+                      style={{
+                        background: "#FFFFFF",
+                        color: "#111111",
+                        border: "1px solid #CCCCCC",
+                        padding: "7px 8px",
+                        borderRadius: "6px",
+                        fontSize: "0.74rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px"
+                      }}
+                      title="Download Image (.PNG)"
+                    >
+                      <ImageIcon size={12} /> .PNG
+                    </button>
+
+                    <button
+                      onClick={() => printSingleBlueprint(page.id)}
+                      style={{
+                        background: "var(--soft-sage)",
+                        color: "var(--forest-dark)",
+                        border: "1px solid rgba(82, 115, 77, 0.35)",
+                        padding: "7px 8px",
+                        borderRadius: "6px",
+                        fontSize: "0.74rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px"
+                      }}
+                      title="Print or export portrait PDF for Word Document"
+                    >
+                      <Printer size={12} /> PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Batch Export Banner */}
+          <div
+            style={{
+              padding: "24px 28px",
+              backgroundColor: "#FFFFFF",
+              borderRadius: "16px",
+              border: "1.5px solid #000000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "16px",
+              boxShadow: "0 4px 18px rgba(0, 0, 0, 0.06)"
+            }}
+          >
+            <div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#555555" }}>
+                Batch Export for Design Thinking Documentation
+              </div>
+              <h3 style={{ margin: "4px 0 0", fontSize: "1.20rem", fontWeight: 800, color: "#111111" }}>
+                Need all 14 wireframe blueprints for your Word document or report?
+              </h3>
+              <p style={{ margin: "4px 0 0", fontSize: "0.84rem", color: "#666666" }}>
+                Export the entire 14-page wireframe portfolio sequentially formatted with page breaks ready for insertion into Word.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button
+                onClick={downloadAllBlueprintsZIP}
+                style={{
+                  background: "linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "12px 22px",
+                  borderRadius: "8px",
+                  fontSize: "0.86rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(52, 78, 65, 0.25)"
+                }}
+                title="Download all 14 blueprints packaged in a .ZIP file"
+              >
+                <Download size={16} /> Download All 14 (.ZIP)
+              </button>
+
+              <button
+                onClick={downloadAllBlueprintsSVG}
+                style={{
+                  background: "#FFFFFF",
+                  color: "#111111",
+                  border: "1.5px solid #000000",
+                  padding: "12px 20px",
+                  borderRadius: "8px",
+                  fontSize: "0.86rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer"
+                }}
+                title="Download all 14 individual SVG files"
+              >
+                <FileCode size={16} /> Download All (.SVG)
+              </button>
+
+              <button
+                onClick={printAllBlueprints}
+                style={{
+                  background: "#000000",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "12px 22px",
+                  borderRadius: "8px",
+                  fontSize: "0.86rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)"
+                }}
+                title="Save all 14 pages in a multi-page portrait PDF ready for Word insertion"
+              >
+                <Printer size={16} /> Print / Save All as PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* ══════════════════════════════════════════════════ */}
       {/* 3. KEY FEATURES / SOLUTION PILLARS */}
       {/* ══════════════════════════════════════════════════ */}
@@ -855,6 +1428,13 @@ export default function Home({ onNavigate, onViewBookDetails }) {
           </div>
         </div>
       </section>
+
+      {/* Visual Blueprint Interactive Studio Modal */}
+      <VisualBlueprintModal
+        isOpen={showVisualBlueprintModal}
+        onClose={() => setShowVisualBlueprintModal(false)}
+        initialPage={selectedBlueprintPage}
+      />
 
     </div>
   );

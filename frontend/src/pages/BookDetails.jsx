@@ -513,20 +513,43 @@ export default function BookDetails({
                   Due date: <strong>{new Date(userLoan.due_date).toLocaleDateString()}</strong>
                   {userLoan.status === 'overdue' && <span style={{ color: '#C5221F', fontWeight: 700, marginLeft: '6px' }}>(OVERDUE)</span>}
                 </p>
-                <div style={{ display: 'flex', gap: '8px' }} className="book-action-row">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <button
+                      onClick={handleReturnBook}
+                      disabled={returning}
+                      className="btn btn-secondary btn-sm"
+                      style={{
+                        backgroundColor: 'var(--warm-beige)',
+                        color: 'var(--forest-dark)',
+                        fontWeight: 700,
+                        padding: '8px 10px'
+                      }}
+                    >
+                      {returning ? 'Returning...' : '✓ Return Book'}
+                    </button>
+                    <button
+                      onClick={handleRenewLoan}
+                      className="btn btn-outline btn-sm"
+                      style={{ fontWeight: 600, padding: '8px 10px' }}
+                    >
+                      Renew (+14d)
+                    </button>
+                  </div>
                   <button
-                    onClick={handleReturnBook}
-                    disabled={returning}
-                    className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, backgroundColor: 'var(--warm-beige)', color: 'var(--forest-dark)', fontWeight: 600 }}
+                    onClick={() => onNavigate('dashboard', { tab: 'loans' })}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '8px 12px',
+                      fontSize: '0.82rem'
+                    }}
                   >
-                    {returning ? 'Returning...' : 'Return Book'}
-                  </button>
-                  <button onClick={handleRenewLoan} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
-                    Renew (+14d)
-                  </button>
-                  <button onClick={() => onNavigate('dashboard')} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
-                    My Loans
+                    <BookOpen size={14} /> Open My Loans Hub →
                   </button>
                 </div>
               </div>
@@ -560,6 +583,13 @@ export default function BookDetails({
                     Cancel Hold
                   </button>
                 </div>
+                <button
+                  onClick={() => onNavigate('reservations')}
+                  className="btn btn-outline btn-sm"
+                  style={{ width: '100%', marginTop: '8px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                >
+                  <Bookmark size={12} /> View in My Reservations Hub →
+                </button>
               </div>
             ) : isAvailable ? (
               <>
@@ -581,14 +611,24 @@ export default function BookDetails({
                 </button>
               </>
             ) : (
-              <button
-                onClick={handleReserve}
-                disabled={reserving}
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-              >
-                <Bookmark size={18} /> {reserving ? 'Joining Queue...' : `Join Waiting Queue (#${(book.waitingQueueCount || 0) + 1})`}
-              </button>
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '8px', padding: '6px 10px', backgroundColor: 'rgba(217, 119, 6, 0.08)', borderRadius: '8px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Currently Unavailable
+                  </span>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--muted-text)' }}>
+                    All copies are on loan. Reserve your place in line to automatically claim the next returned copy.
+                  </p>
+                </div>
+                <button
+                  onClick={handleReserve}
+                  disabled={reserving}
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                >
+                  <Bookmark size={18} /> {reserving ? 'Joining Waiting List...' : `Join Waiting List (#${(book.waitingQueueCount || 0) + 1})`}
+                </button>
+              </div>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

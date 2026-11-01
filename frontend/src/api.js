@@ -37,6 +37,9 @@ export const api = {
   // Auth
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
+  verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
+  resetPassword: (body) => request('/auth/reset-password', { method: 'POST', body }),
   getProfile: () => request('/auth/me'),
   updateInterests: (interests) => request('/auth/interests', { method: 'PUT', body: { interests } }),
   getAllUsers: () => request('/auth/users'),
@@ -71,10 +74,15 @@ export const api = {
   payFine: (loanId) => request(`/loans/${loanId}/pay-fine`, { method: 'POST' }),
 
   // Reservations
-  getReservations: () => request('/reservations'),
+  getReservations: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/reservations${query ? '?' + query : ''}`);
+  },
+  getBookReservationInfo: (bookId) => request(`/reservations/book/${bookId}`),
   placeReservation: (book_id) => request('/reservations', { method: 'POST', body: { book_id } }),
   cancelReservation: (id) => request(`/reservations/${id}`, { method: 'DELETE' }),
   markReservationPickup: (id) => request(`/reservations/${id}/pickup`, { method: 'POST' }),
+  claimReservation: (id) => request(`/reservations/${id}/claim`, { method: 'POST' }),
 
   // Seats
   getSeats: (params = {}) => {

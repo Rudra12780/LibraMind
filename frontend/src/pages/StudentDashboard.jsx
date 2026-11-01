@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -25,6 +26,19 @@ import {
   ArrowLeft,
   CheckCircle2
 } from 'lucide-react';
+
+const SUGGESTED_INTEREST_TAGS = [
+  'Fiction & Novels',
+  'Story Books',
+  'Computer Science',
+  'Artificial Intelligence',
+  'Philosophy & Ethics',
+  'History & Heritage',
+  'Psychology',
+  'Classic Literature',
+  'Science & Technology',
+  'Business & Startups'
+];
 
 export default function StudentDashboard({
   onNavigate,
@@ -59,6 +73,58 @@ export default function StudentDashboard({
   // Edit interests modal
   const [showInterestsModal, setShowInterestsModal] = useState(false);
   const [interestsText, setInterestsText] = useState(user?.interests || '');
+  const [savingInterests, setSavingInterests] = useState(false);
+
+  // Custom Return Book Confirmation Modal
+  const [returnModalLoan, setReturnModalLoan] = useState(null);
+  const [returningLoan, setReturningLoan] = useState(false);
+  const [returnError, setReturnError] = useState(null);
+
+  // Lock background scroll and handle Escape key when modals are active
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(showInterestsModal || returnModalLoan);
+    if (!isAnyModalOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (returnModalLoan && !returningLoan) {
+          setReturnModalLoan(null);
+          setReturnError(null);
+        } else if (showInterestsModal && !savingInterests) {
+          setShowInterestsModal(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showInterestsModal, returnModalLoan, returningLoan, savingInterests]);
+
+  const handleToggleTag = (tag) => {
+    const trimmed = (interestsText || '').trim();
+    if (!trimmed) {
+      setInterestsText(tag);
+      return;
+    }
+    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(^|,\\s*)${escapedTag}(\\s*,|$)`, 'i');
+    if (regex.test(trimmed)) {
+      const updated = trimmed
+        .replace(regex, '$1')
+        .replace(/^,\s*|,\s*$/g, '')
+        .replace(/,\s*,/g, ', ')
+        .trim();
+      setInterestsText(updated);
+    } else {
+      setInterestsText(`${trimmed}, ${tag}`);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -81,7 +147,7 @@ export default function StudentDashboard({
       setSeatBookings(seatData || []);
 
       if (onUpdateStats) {
-        const activeL = (loansData || []).filter(l => l.status === 'active' || l.status === 'overdue');
+        const activeL = (loansData || []).filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue');
         const activeR = (resData || []).filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
         const activeS = (seatData || []).filter(b => b.status === 'active');
         onUpdateStats({
@@ -102,9 +168,17 @@ export default function StudentDashboard({
     fetchData();
   }, [fetchData]);
 
-  const showToast = (msg, isError = false) => {
-    setToastMessage({ msg, isError });
-    setTimeout(() => setToastMessage(null), 3500);
+  const showToast = (content, isError = false) => {
+    if (typeof content === 'object' && content !== null) {
+      setToastMessage({
+        title: content.title || null,
+        msg: content.msg || content.message || '',
+        isError: content.isError || isError
+      });
+    } else {
+      setToastMessage({ msg: content, isError });
+    }
+    setTimeout(() => setToastMessage(null), 4500);
   };
 
   const handleRenewLoan = async (loanId) => {
@@ -114,6 +188,45 @@ export default function StudentDashboard({
       fetchData();
     } catch (err) {
       showToast(err.message, true);
+    }
+  };
+
+  const handleOpenReturnModal = (loan) => {
+    setReturnModalLoan(loan);
+    setReturnError(null);
+  };
+
+  const handleReturnLoan = (loanOrId, bookTitle) => {
+    if (typeof loanOrId === 'object' && loanOrId !== null) {
+      handleOpenReturnModal(loanOrId);
+    } else {
+      const found = loans.find(l => l.id === loanOrId);
+      if (found) {
+        handleOpenReturnModal(found);
+      } else {
+        handleOpenReturnModal({ id: loanOrId, book_title: bookTitle || 'Book Copy' });
+      }
+    }
+  };
+
+  const handleConfirmReturn = async () => {
+    if (!returnModalLoan || returningLoan) return;
+    setReturningLoan(true);
+    setReturnError(null);
+    try {
+      await api.returnBook(returnModalLoan.id);
+      setReturnModalLoan(null);
+      showToast({
+        title: 'Book Returned Successfully!',
+        msg: 'Thank you for returning your book. It is now available for other readers.',
+        isError: false
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Return book error:', err);
+      setReturnError(err.message || 'Failed to process return. Please try again or visit the library desk.');
+    } finally {
+      setReturningLoan(false);
     }
   };
 
@@ -149,7 +262,8 @@ export default function StudentDashboard({
   };
 
   const handleSaveInterests = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    setSavingInterests(true);
     try {
       await api.updateInterests(interestsText);
       await reloadProfile();
@@ -158,10 +272,14 @@ export default function StudentDashboard({
       fetchData();
     } catch (err) {
       showToast(err.message, true);
+    } finally {
+      setSavingInterests(false);
     }
   };
 
-  const activeLoans = loans.filter(l => l.status === 'active' || l.status === 'overdue');
+  // Backend maps DB status 'active' → 'borrowed' in API response
+  // We must filter for both 'borrowed' (active) and 'overdue'
+  const activeLoans = loans.filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue');
   const pastLoans = loans.filter(l => l.status === 'returned');
   const activeReservations = reservations.filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
 
@@ -224,28 +342,63 @@ export default function StudentDashboard({
 
   return (
     <div className="container" style={{ padding: '40px 24px 80px' }}>
-      {/* Toast Notification */}
-      {toastMessage && (
+      {/* Toast Notification (Rendered via Portal for Viewport Stability & Rich Animated Feedback) */}
+      {toastMessage && typeof document !== 'undefined' && createPortal(
         <div
+          role="status"
+          aria-live="polite"
           style={{
             position: 'fixed',
             bottom: '30px',
             right: '30px',
-            backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
+            backgroundColor: toastMessage.isError ? '#7F1D1D' : '#1A3326',
             color: '#FFFFFF',
-            padding: '12px 20px',
-            borderRadius: '10px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-            zIndex: 3000,
+            padding: toastMessage.title ? '16px 22px' : '12px 20px',
+            borderRadius: '14px',
+            boxShadow: '0 14px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.9rem'
+            gap: '14px',
+            maxWidth: '460px',
+            animation: 'modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         >
-          {toastMessage.isError ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}
-          <span>{toastMessage.msg}</span>
-        </div>
+          <div
+            style={{
+              width: toastMessage.title ? '40px' : '32px',
+              height: toastMessage.title ? '40px' : '32px',
+              borderRadius: '50%',
+              backgroundColor: toastMessage.isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(74, 222, 128, 0.2)',
+              border: toastMessage.isError ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(74, 222, 128, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            {toastMessage.isError ? (
+              <AlertTriangle size={20} color="#FCA5A5" />
+            ) : (
+              <CheckCircle2
+                size={22}
+                color="#4ADE80"
+                style={{ animation: 'checkmarkPop 0.4s ease-out' }}
+              />
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {toastMessage.title && (
+              <strong style={{ fontSize: '0.96rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '3px', letterSpacing: '-0.01em' }}>
+                {toastMessage.title}
+              </strong>
+            )}
+            <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.92)', lineHeight: 1.45 }}>
+              {toastMessage.msg}
+            </span>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Student Welcome Header */}
@@ -581,19 +734,45 @@ export default function StudentDashboard({
                       Copy Barcode: <strong style={{ color: 'var(--dark-text)', fontFamily: 'monospace' }}>{loan.copy_code}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
                       <span style={{ color: 'var(--muted-text)' }}>
-                        Due: {dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                        Due: <strong>{dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
                       </span>
 
-                      <button
-                        onClick={() => handleRenewLoan(loan.id)}
-                        disabled={loan.renewal_count >= 2}
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-                      >
-                        <RotateCw size={13} /> Renew Loan ({2 - loan.renewal_count} left)
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => handleReturnLoan(loan)}
+                          className="btn btn-secondary btn-sm"
+                          style={{
+                            fontSize: '0.78rem',
+                            padding: '4px 10px',
+                            backgroundColor: 'var(--warm-beige)',
+                            color: 'var(--forest-dark)',
+                            fontWeight: 700
+                          }}
+                          title="Return this book"
+                        >
+                          ✓ Return Book
+                        </button>
+
+                        <button
+                          onClick={() => handleRenewLoan(loan.id)}
+                          disabled={loan.renewal_count >= 2}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                          title={loan.renewal_count >= 2 ? 'Max renewals reached' : 'Extend due date by 14 days'}
+                        >
+                          <RotateCw size={13} /> Renew ({2 - loan.renewal_count})
+                        </button>
+
+                        <button
+                          onClick={() => onViewBookDetails(loan.book_id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                        >
+                          Details
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -606,11 +785,18 @@ export default function StudentDashboard({
         {/* Section 2: Active Holds & Queue Positions */}
         {(currentTab === 'all' || currentTab === 'holds') && (
         <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+            <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
               <Bookmark size={20} color="var(--forest)" />
               Reservation Holds & Queues ({activeReservations.length})
             </h3>
+            <button
+              onClick={() => onNavigate('reservations')}
+              className="btn btn-outline btn-sm"
+              style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              Open Dedicated Reservations Hub →
+            </button>
           </div>
 
           {activeReservations.length === 0 ? (
@@ -681,7 +867,24 @@ export default function StudentDashboard({
                           : `You are in line position #${res.queue_position}. You will receive a notification the moment a student returns a copy.`}
                       </p>
 
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {res.status === 'ready_for_pickup' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await api.claimReservation(res.id);
+                                showToast(`Successfully claimed "${res.book_title}"!`);
+                                fetchStudentData();
+                              } catch (e) {
+                                showToast(e.message, true);
+                              }
+                            }}
+                            className="btn btn-botanical btn-sm"
+                            style={{ fontSize: '0.78rem', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Check size={13} /> Claim & Check Out
+                          </button>
+                        )}
                         <button
                           onClick={() => handleCancelReservation(res.id)}
                           className="btn btn-outline btn-sm"
@@ -1014,58 +1217,154 @@ export default function StudentDashboard({
       </div>
       )}
 
-      {/* Edit Reading Interests Modal */}
-      {showInterestsModal && (
+      {/* Edit Reading Interests Modal (Rendered with React Portal to be locked to viewport center without page scrolling) */}
+      {showInterestsModal && typeof document !== 'undefined' && createPortal(
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="interests-modal-title"
           style={{
             position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(35, 52, 43, 0.45)',
-            backdropFilter: 'blur(5px)',
-            zIndex: 3000,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(20, 32, 25, 0.65)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '16px'
+            padding: '16px',
+            boxSizing: 'border-box'
           }}
           onClick={() => setShowInterestsModal(false)}
         >
           <div
             className="bio-card"
             style={{
-              width: '480px',
+              position: 'relative',
+              width: '100%',
+              maxWidth: '520px',
               backgroundColor: '#FFFFFF',
-              padding: '28px',
-              borderRadius: '16px'
+              padding: '28px 30px',
+              borderRadius: '20px',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08)',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              animation: 'modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--forest-dark)' }}>
-                Personalize Reading Interests
-              </h3>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(64, 93, 76, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--forest-dark)'
+                  }}
+                >
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 id="interests-modal-title" style={{ margin: 0, fontSize: '1.25rem', color: 'var(--forest-dark)', fontWeight: 600 }}>
+                    Personalize Reading Interests
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--muted-text)', marginTop: '2px' }}>
+                    Curate your AI recommendations & feed
+                  </div>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={() => setShowInterestsModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                title="Close modal"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--muted-text)',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--cream)'; e.currentTarget.style.color = 'var(--forest-dark)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--muted-text)'; }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '18px' }}>
-              Enter genres, authors, or disciplines you enjoy (e.g. "Story Books, Novels & Fiction, Emotional Fiction, Philosophy, Classics").
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Enter topics, book genres, or specific authors you enjoy. LibraMind's recommendation engine uses these to highlight matching books in your feed.
             </p>
 
+            {/* Quick Suggestions Chips */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--forest-dark)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                Quick Suggestions (Click to Add / Remove)
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {SUGGESTED_INTEREST_TAGS.map(tag => {
+                  const isSelected = (interestsText || '').toLowerCase().includes(tag.toLowerCase());
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleToggleTag(tag)}
+                      style={{
+                        fontSize: '0.76rem',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        border: isSelected ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
+                        backgroundColor: isSelected ? 'rgba(64, 93, 76, 0.12)' : 'var(--cream)',
+                        color: isSelected ? 'var(--forest-dark)' : 'var(--charcoal)',
+                        fontWeight: isSelected ? 600 : 400,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {isSelected ? '✓ ' : '+ '}{tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <form onSubmit={handleSaveInterests}>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--forest-dark)', display: 'block', marginBottom: '6px' }}>
+                  Your Custom Interests & Topics:
+                </label>
                 <textarea
                   className="form-control"
                   rows={4}
                   value={interestsText}
                   onChange={(e) => setInterestsText(e.target.value)}
-                  placeholder="e.g. Story Books, Classic Literature, History, Novels..."
-                  required
+                  placeholder="e.g. Story Books, Classic Literature, History, Novels, Artificial Intelligence..."
+                  autoFocus
+                  style={{
+                    fontSize: '0.88rem',
+                    lineHeight: 1.5,
+                    resize: 'vertical'
+                  }}
                 />
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted-text)', marginTop: '4px', textAlign: 'right' }}>
+                  Separate multiple interests with commas
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
@@ -1080,14 +1379,302 @@ export default function StudentDashboard({
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ flex: 1 }}
+                  disabled={savingInterests}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
-                  Save Interests
+                  {savingInterests ? (
+                    <>
+                      <RotateCw size={14} className="spinner" style={{ animation: 'spin 0.8s linear infinite' }} />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} />
+                      Save Interests
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+      {/* Custom Return Book Confirmation Modal */}
+      {returnModalLoan && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="return-modal-title"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(20, 32, 25, 0.65)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            boxSizing: 'border-box'
+          }}
+          onClick={() => {
+            if (!returningLoan) {
+              setReturnModalLoan(null);
+              setReturnError(null);
+            }
+          }}
+        >
+          <div
+            className="bio-card"
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '480px',
+              backgroundColor: '#FFFFFF',
+              padding: '30px 28px',
+              borderRadius: '20px',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08)',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              animation: 'modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              textAlign: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!returningLoan) {
+                  setReturnModalLoan(null);
+                  setReturnError(null);
+                }
+              }}
+              disabled={returningLoan}
+              title="Close modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                cursor: returningLoan ? 'not-allowed' : 'pointer',
+                padding: '6px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--muted-text)',
+                opacity: returningLoan ? 0.4 : 1,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!returningLoan) {
+                  e.currentTarget.style.backgroundColor = 'var(--cream)';
+                  e.currentTarget.style.color = 'var(--forest-dark)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = 'var(--muted-text)';
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            {/* Icon: 📚 */}
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(64, 93, 76, 0.12)',
+                border: '2px solid rgba(64, 93, 76, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '30px',
+                margin: '0 auto 14px'
+              }}
+            >
+              📚
+            </div>
+
+            {/* Heading */}
+            <h3
+              id="return-modal-title"
+              style={{
+                margin: '0 0 8px',
+                fontSize: '1.45rem',
+                color: 'var(--forest-dark)',
+                fontWeight: 700,
+                fontFamily: 'var(--font-heading, "Playfair Display", serif)'
+              }}
+            >
+              Ready to Return?
+            </h3>
+
+            {/* Dynamic Book Details Card */}
+            <div
+              style={{
+                backgroundColor: 'var(--cream)',
+                borderRadius: '12px',
+                border: '1px solid var(--subtle-border)',
+                padding: '14px 16px',
+                margin: '16px 0 14px',
+                textAlign: 'left'
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.98rem',
+                  fontWeight: 700,
+                  color: 'var(--forest-dark)',
+                  marginBottom: '6px',
+                  lineHeight: 1.35
+                }}
+              >
+                {returnModalLoan.book_title}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.82rem',
+                  color: 'var(--muted-text)',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <span>Book Barcode:</span>
+                <span
+                  style={{
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    color: 'var(--forest-dark)',
+                    backgroundColor: '#FFFFFF',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--subtle-border)',
+                    letterSpacing: '0.04em'
+                  }}
+                >
+                  {returnModalLoan.copy_code || 'N/A'}
+                </span>
+                {returnModalLoan.due_date && (
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', marginLeft: 'auto' }}>
+                    Due: {new Date(returnModalLoan.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <p
+              style={{
+                fontSize: '0.88rem',
+                color: 'var(--muted-text)',
+                lineHeight: 1.55,
+                margin: '0 0 20px',
+                textAlign: 'left'
+              }}
+            >
+              Are you sure you want to return this book? Its availability will be updated after the return is successfully processed.
+            </p>
+
+            {/* Error Message if Return Failed */}
+            {returnError && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: '#FEE2E2',
+                  border: '1px solid #FCA5A5',
+                  color: '#991B1B',
+                  fontSize: '0.84rem',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  textAlign: 'left'
+                }}
+              >
+                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                <span>{returnError}</span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!returningLoan) {
+                    setReturnModalLoan(null);
+                    setReturnError(null);
+                  }
+                }}
+                disabled={returningLoan}
+                className="btn btn-secondary"
+                style={{
+                  flex: 1,
+                  padding: '11px 16px',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  border: '1px solid var(--subtle-border)',
+                  backgroundColor: 'transparent',
+                  color: 'var(--forest-dark)',
+                  cursor: returningLoan ? 'not-allowed' : 'pointer',
+                  opacity: returningLoan ? 0.6 : 1,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Keep Reading
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmReturn}
+                disabled={returningLoan}
+                className="btn btn-primary"
+                style={{
+                  flex: 1.25,
+                  padding: '11px 16px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  backgroundColor: 'var(--forest)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: returningLoan ? 'not-allowed' : 'pointer',
+                  opacity: returningLoan ? 0.75 : 1,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {returningLoan ? (
+                  <>
+                    <RotateCw size={14} className="spinner" style={{ animation: 'spin 0.8s linear infinite' }} />
+                    Returning Book...
+                  </>
+                ) : (
+                  <>
+                    ✓ Yes, Return Book
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

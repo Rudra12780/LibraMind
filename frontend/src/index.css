@@ -50,6 +50,11 @@
   padding: 0;
 }
 
+html {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--cream);
@@ -59,6 +64,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 #root {
@@ -294,7 +301,29 @@ button {
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
 }
 
 .animate-fade-in {
@@ -335,6 +364,181 @@ button {
   }
 }
 
+/* User hub desktop nav — hides at wider breakpoint (more items) */
+@media (max-width: 1140px) {
+  .usernav-desktop {
+    display: none !important;
+  }
+  .usernav-mobile-btn {
+    display: inline-flex !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* PORTAL NAVBARS (Librarian Desk & Admin Console)      */
+/* ═══════════════════════════════════════════════════ */
+
+.portal-nav-header {
+  background-color: #FFFFFF;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+.portal-nav-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 clamp(8px, 1.2vw, 18px);
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.portal-brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.portal-brand-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--forest-dark);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.portal-nav-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0 4px;
+}
+
+.portal-nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.portal-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.portal-tab-btn.active {
+  font-weight: 700;
+}
+
+.portal-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.portal-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 4px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.portal-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--subtle-border);
+  background-color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.portal-icon-btn:hover {
+  background-color: #F8F9FA;
+  border-color: rgba(52, 78, 65, 0.25);
+}
+
+.portal-user-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+  flex-shrink: 0;
+  padding-left: 2px;
+}
+
+.portal-mobile-btn {
+  display: none !important;
+}
+
+/* Hide verbose brand subtitle on screens <= 1440px so all nav buttons have max space in one line */
+@media (max-width: 1440px) {
+  .portal-subtitle {
+    display: none !important;
+  }
+}
+
+/* On screens <= 1024px, switch cleanly to mobile drawer */
+@media (max-width: 1024px) {
+  .portal-desktop-nav {
+    display: none !important;
+  }
+  .portal-mobile-btn {
+    display: inline-flex !important;
+  }
+}
 /* Tablet: <= 900px */
 @media (max-width: 900px) {
   .container {

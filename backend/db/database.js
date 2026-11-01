@@ -154,15 +154,33 @@ function initSchema() {
       FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     -- Partial unique index to strictly prevent double-booking the same seat, date, and slot
     CREATE UNIQUE INDEX IF NOT EXISTS idx_seat_active_reservation 
     ON seat_reservations (seat_id, date, time_slot) 
     WHERE status = 'active';
 
+    -- Partial unique index to prevent duplicate active waiting list / hold reservations for the same book and user
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_active_user_book_reservation
+    ON reservations (book_id, user_id)
+    WHERE status IN ('waiting', 'ready_for_pickup');
+
     -- Performance and integrity indexes
     CREATE INDEX IF NOT EXISTS idx_loans_status_user ON loans (status, user_id);
     CREATE INDEX IF NOT EXISTS idx_reservations_queue ON reservations (book_id, status, queue_position);
     CREATE INDEX IF NOT EXISTS idx_copies_book_status ON book_copies (book_id, status);
+    CREATE INDEX IF NOT EXISTS idx_password_resets_hash ON password_resets (token_hash);
+    CREATE INDEX IF NOT EXISTS idx_password_resets_user_exp ON password_resets (user_id, expires_at);
   `);
 }
 

@@ -16,7 +16,8 @@ import {
   Shield,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Bookmark
 } from 'lucide-react';
 
 export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
@@ -45,6 +46,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
     { id: 'seats', label: 'Study Seats', icon: Armchair, action: () => onNavigate('seats') },
     { id: 'compare', label: `Compare${compareCount > 0 ? ` (${compareCount})` : ''}`, icon: GitCompare, action: () => onNavigate('compare') },
     { id: 'visit-planner', label: 'Plan Visit', icon: Compass, action: () => onNavigate('visit-planner') },
+    { id: 'reservations', label: 'Holds', icon: Bookmark, action: () => onNavigate('reservations') },
     ...(user && (user.role === 'student' || !adminVerified) ? [
       { id: 'dashboard', label: 'My Hub', icon: BookOpen, isHub: true, action: () => onNavigate('dashboard') }
     ] : [
@@ -216,7 +218,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 Smart
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.67rem', color: 'var(--sage)', letterSpacing: '0.02em', marginTop: '1px' }}>
+            <p className="portal-subtitle" style={{ margin: 0, fontSize: '0.67rem', color: 'var(--sage)', letterSpacing: '0.02em', marginTop: '1px' }}>
               Biophilic Sanctuary · Novels & Wisdom
             </p>
           </div>
@@ -259,6 +261,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                   cursor: 'pointer',
                   transition: 'all 0.18s ease',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   boxShadow: item.isHub ? '0 3px 12px rgba(52, 78, 65, 0.25)' : 'none',
                   position: 'relative'
                 }}

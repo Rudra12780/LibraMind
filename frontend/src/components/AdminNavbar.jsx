@@ -14,6 +14,7 @@ import {
   MessageSquare,
   BookOpen,
   Layers,
+  Search,
   Menu,
   X
 } from 'lucide-react';
@@ -35,12 +36,12 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
   };
 
   const navTabs = [
-    { id: 'overview', label: 'Control Center', icon: Shield },
-    { id: 'users', label: 'User Directory', icon: Users },
-    { id: 'inventory', label: 'Inventory & Velocity', icon: Database },
-    { id: 'messages', label: 'Broadcasts', icon: MessageSquare },
-    { id: 'analytics', label: 'Circulation Analytics', icon: BarChart3, action: () => onNavigate && onNavigate('analytics') },
-    { id: 'audit', label: 'Audit Trail', icon: Lock }
+    { id: 'overview', label: 'Control Center', icon: Shield, title: 'Master Control Center & System Status' },
+    { id: 'users', label: 'Users', icon: Users, title: 'User Management & Role Elevation' },
+    { id: 'inventory', label: 'Inventory', icon: Database, title: 'Physical Inventory & Book Velocity' },
+    { id: 'messages', label: 'Broadcasts', icon: MessageSquare, title: 'Direct Messages & System Broadcasts' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, title: 'Circulation Velocity & Analytics', action: () => onNavigate && onNavigate('analytics') },
+    { id: 'audit', label: 'Audit Trail', icon: Lock, title: 'Security Event Logs & Administrative Audit' }
   ];
 
   const currentTab = activePage === 'analytics' ? 'analytics' : activeTab;
@@ -57,132 +58,75 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
 
   return (
     <header
+      className="portal-nav-header"
       style={{
-        backgroundColor: '#FFFFFF',
         borderBottom: '2px solid rgba(197, 34, 31, 0.25)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 2px 12px rgba(197, 34, 31, 0.08)',
-        backdropFilter: 'blur(8px)'
+        boxShadow: '0 2px 12px rgba(197, 34, 31, 0.08)'
       }}
     >
-      <div
-        className="container"
-        style={{
-          minHeight: '70px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          padding: '8px 16px'
-        }}
-      >
+      <div className="portal-nav-container">
         {/* Brand Header */}
         <div
+          className="portal-brand"
           onClick={() => {
             setMobileMenuOpen(false);
             if (onSelectTab) onSelectTab('overview');
             if (onNavigate) onNavigate('admin', { tab: 'overview' });
           }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
           title="Admin Control Center"
         >
           <div
+            className="portal-brand-logo"
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
               backgroundColor: '#A51D24',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(197, 34, 31, 0.3)',
-              flexShrink: 0
+              boxShadow: '0 4px 12px rgba(197, 34, 31, 0.3)'
             }}
           >
-            <ShieldCheck size={22} color="#FAF8F1" />
+            <ShieldCheck size={20} color="#FAF8F1" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  color: 'var(--forest-dark)',
-                  letterSpacing: '-0.02em'
-                }}
-              >
-                LibraMind
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="portal-brand-title">LibraMind</span>
               <span
                 style={{
                   backgroundColor: '#FCE8E6',
                   color: '#C5221F',
                   border: '1px solid rgba(197, 34, 31, 0.3)',
-                  fontSize: '0.68rem',
+                  fontSize: '0.64rem',
                   fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  borderRadius: '5px',
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '3px'
                 }}
               >
-                <ShieldCheck size={11} color="#C5221F" />
+                <ShieldCheck size={10} color="#C5221F" />
                 Admin Portal
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.70rem', color: '#8C1D18', letterSpacing: '0.02em' }}>
+            <p className="portal-subtitle" style={{ margin: 0, fontSize: '0.66rem', color: '#8C1D18', letterSpacing: '0.02em', marginTop: '1px' }}>
               Master Security Zone • System Governance
             </p>
           </div>
         </div>
 
-        {/* Dedicated Admin Tabs (Desktop Navigation) */}
+        {/* Dedicated Admin Tabs — Single Clean Line (Desktop & Laptop) */}
         {user && user.role === 'admin' && (
-          <nav
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              flex: 1,
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              padding: '0 8px'
-            }}
-            className="desktop-nav"
-          >
+          <nav className="portal-desktop-nav portal-nav-tabs">
             {navTabs.map(tab => {
               const active = currentTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab)}
+                  className={`portal-tab-btn ${active ? 'active' : ''}`}
                   style={{
                     background: active ? '#FCE8E6' : 'transparent',
-                    border: active ? '1px solid rgba(197, 34, 31, 0.35)' : '1px solid transparent',
-                    padding: '6px 10px',
-                    borderRadius: '8px',
-                    fontSize: '0.80rem',
-                    fontWeight: active ? 700 : 500,
-                    color: active ? '#A51D24' : 'var(--muted-text)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.15s ease'
+                    borderColor: active ? 'rgba(197, 34, 31, 0.35)' : 'transparent',
+                    color: active ? '#A51D24' : 'var(--muted-text)'
                   }}
                   onMouseEnter={(e) => {
                     if (!active) {
@@ -196,9 +140,14 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                       e.currentTarget.style.color = 'var(--muted-text)';
                     }
                   }}
+                  title={tab.title || tab.label}
                 >
-                  <tab.icon size={14} color={active ? '#C5221F' : 'currentColor'} />
-                  {tab.label}
+                  <tab.icon
+                    size={13}
+                    color={active ? '#C5221F' : 'currentColor'}
+                    strokeWidth={active ? 2.2 : 1.8}
+                  />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
@@ -206,101 +155,77 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
         )}
 
         {/* Right Section: Quick Links & Admin Profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {/* Quick Cross-Portal Switchers (Desktop) */}
-          {user && user.role === 'admin' && (
-            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
-              <button
-                onClick={() => onNavigate && onNavigate('librarian')}
-                className="btn btn-outline btn-sm"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '0.78rem',
-                  padding: '5px 9px',
-                  borderColor: 'rgba(82, 115, 77, 0.35)',
-                  backgroundColor: 'var(--soft-sage-light)',
-                  color: 'var(--forest-dark)',
-                  borderRadius: '7px'
-                }}
-                title="Open Librarian Circulation Desk"
-              >
-                <Layers size={13} color="var(--botanical)" />
-                <span>Librarian Desk</span>
-              </button>
-
-              <button
-                onClick={handleExitToUserMode}
-                className="btn btn-outline btn-sm"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '0.78rem',
-                  padding: '5px 9px',
-                  borderColor: 'rgba(52, 78, 65, 0.35)',
-                  backgroundColor: 'var(--cream)',
-                  color: 'var(--forest-dark)',
-                  borderRadius: '7px'
-                }}
-                title="Exit Admin Portal and use website as a regular student/member"
-              >
-                <BookOpen size={13} color="var(--forest)" />
-                <span>Switch to User Mode</span>
-              </button>
-
-              <button
-                onClick={() => onNavigate && onNavigate('catalog')}
-                className="btn btn-outline btn-sm"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '0.78rem',
-                  padding: '5px 9px',
-                  borderColor: 'var(--subtle-border)',
-                  borderRadius: '7px'
-                }}
-                title="Browse Public Library & Catalog"
-              >
-                <span>Browse Catalog</span>
-              </button>
-            </div>
-          )}
-
-          {user && user.role === 'admin' && (
+        <div className="portal-right-actions">
+          {user && user.role === 'admin' ? (
             <>
+              {/* Quick Cross-Portal Switchers (Desktop) */}
+              <div className="portal-desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <button
+                  onClick={() => onNavigate && onNavigate('librarian')}
+                  className="portal-action-pill"
+                  style={{
+                    borderColor: 'rgba(82, 115, 77, 0.35)',
+                    backgroundColor: 'var(--soft-sage-light)',
+                    color: 'var(--forest-dark)'
+                  }}
+                  title="Open Librarian Circulation Desk"
+                >
+                  <Layers size={12} color="var(--botanical)" />
+                  <span>Desk</span>
+                </button>
+
+                <button
+                  onClick={handleExitToUserMode}
+                  className="portal-action-pill"
+                  style={{
+                    borderColor: 'rgba(52, 78, 65, 0.28)',
+                    backgroundColor: 'var(--cream)',
+                    color: 'var(--forest-dark)'
+                  }}
+                  title="Exit Admin Portal and use website as a regular member"
+                >
+                  <BookOpen size={12} color="var(--forest)" />
+                  <span>User Mode</span>
+                </button>
+
+                <button
+                  onClick={() => onNavigate && onNavigate('catalog')}
+                  className="portal-action-pill"
+                  style={{
+                    borderColor: 'var(--subtle-border)',
+                    backgroundColor: '#FAFAF9',
+                    color: 'var(--forest-dark)'
+                  }}
+                  title="Browse Public Library & Catalog"
+                >
+                  <Search size={12} color="var(--forest)" />
+                  <span>Catalog</span>
+                </button>
+              </div>
+
               {/* Notification Center */}
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setShowNotifs(!showNotifs)}
                   aria-label="Admin notifications"
+                  className="portal-icon-btn"
                   style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--subtle-border)',
-                    backgroundColor: showNotifs ? '#FCE8E6' : '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    position: 'relative'
+                    backgroundColor: showNotifs ? '#FCE8E6' : '#FFFFFF'
                   }}
+                  title="Notifications"
                 >
-                  <Bell size={16} color="#A51D24" />
+                  <Bell size={15} color="#A51D24" />
                   {unreadCount > 0 && (
                     <span
                       style={{
                         position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        width: '8px',
-                        height: '8px',
+                        top: '5px',
+                        right: '5px',
+                        width: '7px',
+                        height: '7px',
                         borderRadius: '50%',
                         backgroundColor: '#C5221F',
-                        border: '2px solid #FFFFFF'
+                        border: '1.5px solid #FFFFFF'
                       }}
                     />
                   )}
@@ -315,27 +240,19 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
               </div>
 
               {/* Admin Tag */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-end',
-                  lineHeight: 1.2
-                }}
-                className="desktop-nav"
-              >
-                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+              <div className="portal-desktop-nav portal-user-tag">
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
                   {user.name.split(' ')[0]}
                 </span>
                 <span
                   style={{
-                    fontSize: '0.68rem',
+                    fontSize: '0.62rem',
                     color: '#C5221F',
                     fontWeight: 800,
                     textTransform: 'uppercase'
                   }}
                 >
-                  Admin • {user.membership_id}
+                  Admin • {user.membership_id || 'ADM-9001'}
                 </span>
               </div>
 
@@ -344,43 +261,33 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                 onClick={handleLogout}
                 title="Sign Out of Admin Portal"
                 aria-label="Sign Out"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--subtle-border)',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--muted-text)',
-                  transition: 'all 0.15s ease'
-                }}
+                className="portal-icon-btn"
+                style={{ color: 'var(--muted-text)' }}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
+              </button>
+
+              {/* Mobile Menu Hamburger Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="portal-icon-btn portal-mobile-btn"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
               </button>
             </>
-          )}
-
-          {/* Mobile Menu Hamburger Button */}
-          {user && user.role === 'admin' && (
+          ) : (
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="btn btn-outline btn-sm mobile-menu-btn"
+              onClick={() => onNavigate && onNavigate('catalog')}
+              className="portal-action-pill"
               style={{
-                width: '36px',
-                height: '36px',
-                padding: 0,
-                display: 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '8px',
-                borderColor: 'var(--subtle-border)'
+                borderColor: 'var(--subtle-border)',
+                backgroundColor: '#FAFAF9',
+                color: 'var(--forest-dark)'
               }}
-              aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              <BookOpen size={12} color="var(--forest)" />
+              <span>Public Library</span>
             </button>
           )}
         </div>
@@ -392,18 +299,23 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
           style={{
             backgroundColor: '#FFFFFF',
             borderTop: '1px solid rgba(197, 34, 31, 0.2)',
-            padding: '12px 16px 16px',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.08)',
+            padding: '14px 16px 18px',
+            boxShadow: '0 14px 28px rgba(0,0,0,0.09)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
+            gap: '10px'
           }}
         >
-          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#C5221F', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-            Admin Portal Navigation
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#C5221F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Admin Portal Navigation
+            </span>
+            <span style={{ fontSize: '0.70rem', color: '#8C1D18', fontWeight: 600 }}>
+              {user.name} ({user.membership_id || 'ADM-9001'})
+            </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px' }}>
             {navTabs.map(tab => {
               const active = currentTab === tab.id;
               return (
@@ -415,7 +327,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                     border: active ? '1px solid rgba(197, 34, 31, 0.35)' : '1px solid var(--subtle-border)',
                     padding: '9px 12px',
                     borderRadius: '8px',
-                    fontSize: '0.82rem',
+                    fontSize: '0.80rem',
                     fontWeight: active ? 700 : 500,
                     color: active ? '#A51D24' : 'var(--forest-dark)',
                     display: 'flex',
@@ -432,9 +344,9 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
             })}
           </div>
 
-          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)', margin: '6px 0' }} />
+          <div style={{ height: '1px', backgroundColor: 'var(--subtle-border)', margin: '4px 0' }} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '8px' }}>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -446,7 +358,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                 border: '1px solid rgba(52, 78, 65, 0.35)',
                 backgroundColor: 'var(--cream)',
                 color: 'var(--forest-dark)',
-                fontSize: '0.80rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
@@ -456,7 +368,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
               }}
             >
               <BookOpen size={14} color="var(--forest)" />
-              Switch to User Mode
+              User Mode
             </button>
 
             <button
@@ -470,7 +382,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                 border: '1px solid rgba(82, 115, 77, 0.35)',
                 backgroundColor: 'var(--soft-sage-light)',
                 color: 'var(--forest-dark)',
-                fontSize: '0.80rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
@@ -481,6 +393,30 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
             >
               <Layers size={14} color="var(--botanical)" />
               Librarian Desk
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onNavigate) onNavigate('catalog');
+              }}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--subtle-border)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--forest-dark)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <Search size={14} color="var(--forest)" />
+              Catalog
             </button>
           </div>
         </div>
