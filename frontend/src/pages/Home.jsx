@@ -3,21 +3,17 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
 import VisualBlueprintModal from '../components/VisualBlueprintModal';
+import { getOfflineBookCover } from '../utils/offlineCovers';
 import {
   BLUEPRINT_PAGES,
-  DESIGN_THINKING_SVG,
   getThumbnailSVG,
   downloadPageSVG,
   downloadPagePNG,
   downloadAllBlueprintsZIP,
   downloadAllBlueprintsSVG,
   downloadAllBlueprintsPNG,
-  downloadDesignThinkingSVG,
-  downloadDesignThinkingPNG,
-  downloadDesignThinkingJPG,
   printSingleBlueprint,
-  printAllBlueprints,
-  printDesignThinkingWireframe
+  printAllBlueprints
 } from '../data/visualBlueprints';
 import {
   Search,
@@ -28,34 +24,26 @@ import {
   ShieldCheck,
   Compass,
   Layers,
-  Leaf,
   Heart,
-  BookMarked,
   Sparkles,
   Clock,
-  UserCheck,
-  Star,
   TrendingUp,
-  Users,
-  Zap,
-  ChevronRight,
   Download,
-  Image as ImageIcon,
-  Printer,
   FileCode,
-  Eye,
-  Camera,
   CheckCircle2,
-  Maximize2
+  Bookmark,
+  Quote,
+  Feather,
+  Compass as CompassIcon,
+  ChevronRight
 } from 'lucide-react';
 
 export default function Home({ onNavigate, onViewBookDetails }) {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredBooks, setFeaturedBooks] = useState([]);
-  const [storyBooks, setStoryBooks] = useState([]);
-  const [novelBooks, setNovelBooks] = useState([]);
-  const [emotionalNovels, setEmotionalNovels] = useState([]);
+  const [trendingBooks, setTrendingBooks] = useState([]);
+  const [recentBooks, setRecentBooks] = useState([]);
   const [seatStats, setSeatStats] = useState({ total: 16, available: 12, occupied: 3 });
   const [memberStats, setMemberStats] = useState({ loans: 0, holds: 0, wishlist: 0 });
   const [loading, setLoading] = useState(true);
@@ -65,16 +53,14 @@ export default function Home({ onNavigate, onViewBookDetails }) {
   useEffect(() => {
     Promise.all([
       api.getBooks({ limit: 8, sort: 'popularity' }),
-      api.getBooks({ category: 'Story Books', limit: 4 }),
+      api.getBooks({ limit: 4, sort: 'recent' }),
       api.getBooks({ category: 'Novels & Fiction', limit: 4 }),
-      api.getBooks({ category: 'Emotional Fiction', limit: 4 }),
       api.getSeats()
     ])
-      .then(([booksData, storyData, novelData, emoData, seatsData]) => {
-        setFeaturedBooks(booksData.books || []);
-        setStoryBooks(storyData.books || []);
-        setNovelBooks(novelData.books || []);
-        setEmotionalNovels(emoData.books || []);
+      .then(([popData, recentData, trendData, seatsData]) => {
+        setFeaturedBooks(popData.books || []);
+        setRecentBooks(recentData.books || []);
+        setTrendingBooks(trendData.books || []);
         if (seatsData && seatsData.stats) {
           setSeatStats(seatsData.stats);
         } else if (Array.isArray(seatsData)) {
@@ -116,482 +102,281 @@ export default function Home({ onNavigate, onViewBookDetails }) {
     }
   };
 
-  const quickSuggestions = [
-    'Story Books', 'Novels & Fiction', 'Harry Potter',
-    'The Hobbit', 'The Great Gatsby', '1984', 'Pride and Prejudice'
+  const editorialGenres = [
+    { title: 'Classical Literature', slug: 'Classic Literature', desc: 'Homer, Austen, Tolstoy & the enduring Western & Eastern canon', count: '14,200 Volumes' },
+    { title: 'Philosophy & Ethics', slug: 'Philosophy', desc: 'Epistemology, existentialism, moral theory & ancient logic', count: '8,400 Volumes' },
+    { title: 'Artificial Intelligence', slug: 'Artificial Intelligence', desc: 'Machine cognition, neural architectures & algorithm ethics', count: '6,150 Volumes' },
+    { title: 'Novels & Modern Prose', slug: 'Novels & Fiction', desc: 'Booker prize narratives, literary memoirs & contemporary fiction', count: '18,900 Volumes' },
+    { title: 'History & Archives', slug: 'History', desc: 'Manuscripts, world civilisations & institutional records', count: '11,300 Volumes' },
+    { title: 'Science & Physics', slug: 'Computer Science', desc: 'Theoretical physics, computation & biological discovery', count: '9,800 Volumes' }
   ];
 
-  const stats = [
-    { value: '60+', label: 'Curated Titles', icon: BookOpen, color: 'var(--botanical)' },
-    { value: `${seatStats.available}`, label: 'Study Pods Open', icon: Armchair, color: 'var(--forest)' },
-    { value: '3', label: 'Reading Floors', icon: Layers, color: 'var(--sage)' },
-    { value: '100%', label: 'Shelf Mapped', icon: MapPin, color: 'var(--botanical)' },
+  const literaryAuthors = [
+    { name: 'Virginia Woolf', era: '1882 – 1941', focus: 'Modernist Stream of Consciousness', works: 'To the Lighthouse, Mrs Dalloway', query: 'Woolf' },
+    { name: 'Jorge Luis Borges', era: '1899 – 1986', focus: 'Infinite Labyrinths & Bibliographic Myth', works: 'Ficciones, The Aleph, Labyrinths', query: 'Borges' },
+    { name: 'Alan M. Turing', era: '1912 – 1954', focus: 'Theoretical Computation & AI Foundations', works: 'Computing Machinery and Intelligence', query: 'Turing' },
+    { name: 'Fyodor Dostoevsky', era: '1821 – 1881', focus: 'Philosophical Realism & Moral Inquiry', works: 'Crime and Punishment, The Brothers Karamazov', query: 'Dostoevsky' }
   ];
 
-  const features = [
-    {
-      icon: MapPin,
-      title: 'Exact Shelf & Rack Locator',
-      desc: 'Every physical copy is mapped with floor, section, shelf code, and rack number. Never wander aimlessly again.',
-      action: () => onNavigate('catalog'),
-      cta: 'Search Shelf Map',
-      accent: 'var(--botanical)',
-      bg: 'var(--soft-sage)',
-    },
-    {
-      icon: Armchair,
-      title: 'Live Study Pod Availability',
-      desc: 'Check seat vacancy before visiting. Book individual silent pods or collaborative tables across Floor 1 & 2.',
-      action: () => onNavigate('seats'),
-      cta: 'View Live Seat Map',
-      accent: 'var(--forest)',
-      bg: 'var(--warm-beige)',
-      badge: `${seatStats.available} Open`
-    },
-    {
-      icon: Sparkles,
-      title: 'AI-Powered Book Finder',
-      desc: 'Describe the kind of book you feel like reading and our AI will recommend the perfect match from our collection.',
-      action: () => onNavigate('ai-finder'),
-      cta: 'Try AI Finder',
-      accent: 'var(--botanical)',
-      bg: 'var(--soft-sage-light)',
-      isNew: true
-    },
-  ];
+  const bookOfTheWeek = featuredBooks[0] || {
+    id: 1,
+    title: 'The Architecture of Thought',
+    author: 'Eleanor Vane',
+    category: 'Philosophy',
+    floor: 'Floor 3',
+    shelf: 'Stack 14-B',
+    publication_year: 1924,
+    description: 'A landmark inquiry into the spatial cognition of literary memory, classical libraries, and the relationship between physical architecture and sustained mental focus.'
+  };
 
   return (
-    <div>
-
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 1. HERO SECTION */}
-      {/* ══════════════════════════════════════════════════ */}
+    <div className="animate-fade-in" style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '100vh' }}>
+      
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 1. EDITORIAL HERO SECTION (ASYMMETRIC TWO-COLUMN SPREAD)         */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <section
         style={{
-          background: 'linear-gradient(160deg, #F5F2E8 0%, #EDE6D6 40%, #E8F0E3 100%)',
-          padding: '72px 0 80px',
-          borderBottom: '1px solid var(--subtle-border)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        {/* Decorative background pattern */}
-        <div
-          style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-            backgroundImage: `radial-gradient(circle at 80% 20%, rgba(82,115,77,0.07) 0%, transparent 50%),
-                              radial-gradient(circle at 10% 80%, rgba(52,78,65,0.05) 0%, transparent 45%)`
-          }}
-        />
-        <div style={{ position: 'absolute', right: '-60px', bottom: '-60px', opacity: 0.04, pointerEvents: 'none', transform: 'rotate(-15deg)', zIndex: 0 }}>
-          <Leaf size={500} color="var(--forest)" />
-        </div>
-        <div style={{ position: 'absolute', left: '-80px', top: '-80px', opacity: 0.03, pointerEvents: 'none', transform: 'rotate(20deg)', zIndex: 0 }}>
-          <BookOpen size={400} color="var(--forest-dark)" />
-        </div>
-
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ maxWidth: '860px', margin: '0 auto', textAlign: 'center' }}>
-
-            {/* Pill Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 18px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(82, 115, 77, 0.22)',
-                color: 'var(--forest-dark)',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                marginBottom: '28px',
-                boxShadow: '0 2px 12px rgba(52,78,65,0.08)'
-              }}
-            >
-              <Leaf size={14} color="var(--botanical)" />
-              Biophilic Sanctuary · Novels · Story Books · Live Pods
-              <span
-                style={{
-                  backgroundColor: 'var(--botanical)',
-                  color: '#fff',
-                  fontSize: '0.62rem',
-                  fontWeight: 800,
-                  padding: '1px 7px',
-                  borderRadius: 'var(--radius-full)',
-                  letterSpacing: '0.04em'
-                }}
-              >
-                AI-Powered
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1
-              style={{
-                fontSize: 'clamp(2.4rem, 5vw, 3.8rem)',
-                color: 'var(--forest-dark)',
-                marginBottom: '20px',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-                lineHeight: 1.1
-              }}
-            >
-              A Sanctuary of Calm,<br />
-              <span style={{ color: 'var(--botanical)' }}>Literature</span> & Timeless Stories
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              style={{
-                fontSize: '1.1rem',
-                color: 'var(--muted-text)',
-                lineHeight: 1.65,
-                marginBottom: '36px',
-                maxWidth: '640px',
-                margin: '0 auto 36px'
-              }}
-            >
-              Discover cherished novels, magical story books, and exact shelf locations.
-              Book peaceful study pods — all with real-time checkout and reservations.
-            </p>
-
-            {/* Member Quick-Card (Logged In) */}
-            {user ? (
-              <div
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid rgba(82, 115, 77, 0.22)',
-                  borderRadius: '20px',
-                  padding: '22px 26px',
-                  marginBottom: '32px',
-                  boxShadow: '0 8px 32px rgba(52, 78, 65, 0.10)',
-                  textAlign: 'left',
-                  background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FBF6 100%)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.74rem', fontWeight: 800, color: 'var(--botanical)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '5px' }}>
-                      <Sparkles size={13} />
-                      Active Member Session · ID: {user.membership_id}
-                    </div>
-                    <h2 style={{ fontSize: '1.5rem', color: 'var(--forest-dark)', margin: 0, letterSpacing: '-0.02em' }}>
-                      Welcome back, {user.name}! 👋
-                    </h2>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)', marginTop: '3px', display: 'block' }}>
-                      {user.role === 'admin' ? 'Administrator (User Mode)' : 'Student Member'} — access your loans, holds, and study pods.
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => onNavigate('dashboard')}
-                    className="btn btn-primary"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '8px',
-                      padding: '10px 20px', fontSize: '0.88rem', borderRadius: '12px',
-                      background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                      border: 'none', boxShadow: '0 4px 14px rgba(52,78,65,0.22)'
-                    }}
-                  >
-                    <BookOpen size={15} />
-                    Open My Hub
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-                  {[
-                    { label: 'Active Loans', value: memberStats.loans, unit: 'books', nav: () => onNavigate('dashboard', { tab: 'loans' }), color: 'var(--forest-dark)' },
-                    { label: 'Hold Queues', value: memberStats.holds, unit: 'holds', nav: () => onNavigate('dashboard', { tab: 'holds' }), color: 'var(--forest-dark)' },
-                    { label: 'Study Pods', value: seatStats.available, unit: 'open', nav: () => onNavigate('seats'), color: 'var(--botanical)' },
-                    { label: 'Wishlist', value: memberStats.wishlist, unit: 'titles', nav: () => onNavigate('dashboard', { tab: 'wishlist' }), color: '#C5221F' },
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      onClick={s.nav}
-                      style={{
-                        padding: '12px 14px',
-                        borderRadius: '12px',
-                        backgroundColor: 'rgba(250, 248, 241, 0.85)',
-                        border: '1px solid rgba(52, 78, 65, 0.1)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(82,115,77,0.3)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(52,78,65,0.08)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(52,78,65,0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      <span style={{ fontSize: '0.68rem', color: 'var(--muted-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</span>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: s.color, marginTop: '3px' }}>
-                        {s.value} <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--muted-text)' }}>{s.unit}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Visitor CTA Buttons */
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => onNavigate('login')}
-                  className="btn btn-primary"
-                  style={{
-                    padding: '12px 26px', fontSize: '0.95rem',
-                    display: 'inline-flex', alignItems: 'center', gap: '7px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                    border: 'none',
-                    boxShadow: '0 5px 18px rgba(52,78,65,0.25)'
-                  }}
-                >
-                  <BookOpen size={17} /> Member Sign In
-                </button>
-                <button
-                  onClick={() => onNavigate('register')}
-                  className="btn btn-outline"
-                  style={{
-                    padding: '12px 26px', fontSize: '0.95rem',
-                    backgroundColor: 'rgba(255,255,255,0.85)',
-                    backdropFilter: 'blur(8px)',
-                    borderRadius: '12px'
-                  }}
-                >
-                  Register Free Library Card
-                </button>
-              </div>
-            )}
-
-            {/* Search Bar */}
-            <form
-              onSubmit={handleHeroSearch}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '16px',
-                padding: '7px 7px 7px 16px',
-                boxShadow: '0 8px 32px rgba(52, 78, 65, 0.13)',
-                border: '1px solid rgba(52, 78, 65, 0.16)',
-                maxWidth: '700px',
-                margin: '0 auto 18px',
-                backdropFilter: 'blur(8px)'
-              }}
-            >
-              <Search size={19} color="var(--sage)" style={{ marginRight: '10px', flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Search novels, story books, authors, genres…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '0.98rem',
-                  fontFamily: 'var(--font-sans)',
-                  color: 'var(--dark-text)',
-                  background: 'transparent'
-                }}
-              />
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{
-                  padding: '10px 22px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                  border: 'none',
-                  boxShadow: '0 3px 10px rgba(52,78,65,0.22)'
-                }}
-              >
-                Find Books
-              </button>
-            </form>
-
-            {/* Quick Suggestions */}
-            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '7px', fontSize: '0.82rem' }}>
-              <span style={{ color: 'var(--muted-text)', alignSelf: 'center', fontWeight: 500 }}>Try:</span>
-              {quickSuggestions.map((term, i) => (
-                <button
-                  key={i}
-                  onClick={() => onNavigate('catalog', { q: term })}
-                  style={{
-                    background: 'rgba(255,255,255,0.75)',
-                    border: '1px solid rgba(52, 78, 65, 0.15)',
-                    borderRadius: 'var(--radius-full)',
-                    padding: '4px 13px',
-                    color: 'var(--forest-dark)',
-                    cursor: 'pointer',
-                    fontSize: '0.78rem',
-                    fontWeight: 500,
-                    backdropFilter: 'blur(4px)',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(82,115,77,0.12)'; e.currentTarget.style.borderColor = 'rgba(82,115,77,0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.75)'; e.currentTarget.style.borderColor = 'rgba(52,78,65,0.15)'; }}
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
-
-            {/* High-Visibility UI Blueprints Studio & Download Bar in Hero */}
-            <div
-              style={{
-                marginTop: '26px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '7px 12px',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                border: '1.5px solid rgba(52, 78, 65, 0.22)',
-                borderRadius: '16px',
-                boxShadow: '0 6px 24px rgba(52, 78, 65, 0.12)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 8px',
-                  color: 'var(--forest-dark)',
-                  fontSize: '0.82rem',
-                  fontWeight: 800
-                }}
-              >
-                <Layers size={16} color="var(--botanical)" />
-                <span>14-Page UI Blueprints:</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSelectedBlueprintPage('home');
-                  setShowVisualBlueprintModal(true);
-                }}
-                className="btn btn-sm"
-                style={{
-                  background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '7px 14px',
-                  borderRadius: '10px',
-                  fontSize: '0.80rem',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(52, 78, 65, 0.22)'
-                }}
-                title="Open interactive 14-page Wireframe Studio"
-              >
-                <Maximize2 size={13} /> View Studio (All 14)
-              </button>
-
-              <button
-                onClick={downloadAllBlueprintsZIP}
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: '#111111',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '7px 14px',
-                  borderRadius: '10px',
-                  fontSize: '0.80rem',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.18)'
-                }}
-                title="Download all 14 wireframe blueprint files in one .ZIP archive"
-              >
-                <Download size={13} /> Download All 14 (.ZIP)
-              </button>
-
-              <button
-                onClick={printAllBlueprints}
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  color: '#222222',
-                  border: '1px solid #CCCCCC',
-                  padding: '7px 14px',
-                  borderRadius: '10px',
-                  fontSize: '0.80rem',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer'
-                }}
-                title="Print or export all 14 pages sequentially formatted for Microsoft Word"
-              >
-                <Printer size={13} /> Save All as PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 2. LIVE STATS TICKER STRIP */}
-      {/* ══════════════════════════════════════════════════ */}
-      <section
-        style={{
-          background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-          padding: '0',
-          overflow: 'hidden'
+          padding: '48px 0 64px',
+          borderBottom: '1px solid var(--editorial-border)',
+          position: 'relative'
         }}
       >
         <div className="container">
           <div
             style={{
               display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '48px',
+              alignItems: 'center'
+            }}
+          >
+            {/* Left Column: Headline, Narrative & Search */}
+            <div>
+              <div className="editorial-kicker">
+                <Feather size={14} /> Vol. XXIV · The Literary Review &amp; Archives · Autumn Edition
+              </div>
+
+              <h1
+                style={{
+                  fontSize: 'clamp(2.6rem, 5.2vw, 4.4rem)',
+                  lineHeight: 1.08,
+                  marginBottom: '20px',
+                  color: 'var(--editorial-text)'
+                }}
+              >
+                Where Stories Find Their Home.
+              </h1>
+
+              <p
+                style={{
+                  fontSize: '1.12rem',
+                  lineHeight: 1.68,
+                  color: 'var(--editorial-text-muted)',
+                  maxWidth: '560px',
+                  marginBottom: '32px'
+                }}
+              >
+                An elevated digital library sanctuary combining literary curation, research stacks, quiet study pods, and neural semantic discovery. Explore over 120,000 indexed physical volumes and rare academic works.
+              </p>
+
+              {/* Integrated Search Box */}
+              <form
+                onSubmit={handleHeroSearch}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  boxShadow: 'var(--shadow-sm)',
+                  padding: '6px',
+                  maxWidth: '540px',
+                  marginBottom: '24px'
+                }}
+              >
+                <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center' }}>
+                  <Search size={18} color="var(--editorial-text-muted)" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search 120,000+ volumes, authors, or subjects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    fontSize: '0.94rem',
+                    fontFamily: 'var(--font-sans)',
+                    color: 'var(--editorial-text)',
+                    backgroundColor: 'transparent'
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ padding: '10px 22px' }}
+                >
+                  Search
+                </button>
+              </form>
+
+              {/* Action Buttons & Quick Filter Links */}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <button
+                  onClick={() => onNavigate('catalog')}
+                  className="btn btn-primary"
+                >
+                  Explore Library <ArrowRight size={14} />
+                </button>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('featured-week');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="btn btn-outline"
+                >
+                  Discover More
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Curator Topics:
+                </span>
+                {['Classics', 'Philosophy', 'Artificial Intelligence', 'Poetry'].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => onNavigate('catalog', { category: tag })}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--editorial-accent)',
+                      fontSize: '0.80rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '3px'
+                    }}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column: Hero Cover Photographic Showcase */}
+            <div style={{ position: 'relative' }}>
+              <div
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  padding: '24px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-lg)',
+                  maxWidth: '460px',
+                  margin: '0 auto'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <span className="editorial-kicker" style={{ margin: 0 }}>
+                    ★ ISSUE ACCREDITATION
+                  </span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    FOLIO #{bookOfTheWeek.id || '101'}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    height: '360px',
+                    borderRadius: 'var(--radius-sm)',
+                    overflow: 'hidden',
+                    backgroundColor: 'var(--editorial-bg-subtle)',
+                    marginBottom: '18px',
+                    boxShadow: 'var(--shadow-md)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => onViewBookDetails(bookOfTheWeek.id)}
+                >
+                  <img
+                    src={bookOfTheWeek.cover_image || getOfflineBookCover(bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
+                    alt={bookOfTheWeek.title}
+                    className="editorial-zoom-img"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '1.45rem',
+                    marginBottom: '6px',
+                    color: 'var(--editorial-text)',
+                    lineHeight: 1.25,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => onViewBookDetails(bookOfTheWeek.id)}
+                >
+                  {bookOfTheWeek.title}
+                </h3>
+                <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text-muted)', marginBottom: '16px' }}>
+                  Authored by <strong style={{ color: 'var(--editorial-text)' }}>{bookOfTheWeek.author}</strong>
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--editorial-border)', paddingTop: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                    <MapPin size={13} color="var(--editorial-accent)" />
+                    <span>{bookOfTheWeek.floor} • {bookOfTheWeek.shelf}</span>
+                  </div>
+                  <button
+                    onClick={() => onViewBookDetails(bookOfTheWeek.id)}
+                    className="btn btn-outline btn-sm"
+                  >
+                    Read Details →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 2. STATISTICAL BENCHMARKS STRIP                                 */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+        <div className="container">
+          <div
+            className="stats-strip"
+            style={{
+              display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '0'
             }}
           >
-            {stats.map((stat, i) => (
+            {[
+              { num: '120,000+', label: 'Volumes Indexed', sub: 'Classified & Dewey Stacked' },
+              { num: `${seatStats.available} Available`, label: 'Quiet Study Pods', sub: `Out of ${seatStats.total} carrels` },
+              { num: '100%', label: 'Offline Fallback', sub: 'Zero remote CDN failure' },
+              { num: '99.8%', label: 'On-Time Circulation', sub: 'Automated queue management' }
+            ].map((stat, i) => (
               <div
                 key={i}
                 style={{
-                  padding: '22px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  borderRight: i < 3 ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                  padding: '24px 20px',
+                  borderRight: i < 3 ? '1px solid var(--editorial-border)' : 'none'
                 }}
               >
-                <div
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '11px',
-                    backgroundColor: 'rgba(255,255,255,0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  <stat.icon size={20} color="#FAF8F1" />
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2.1rem', fontWeight: 800, color: 'var(--editorial-text)', lineHeight: 1 }}>
+                  {stat.num}
                 </div>
-                <div>
-                  <div style={{ fontSize: '1.55rem', fontWeight: 800, color: '#FFFFFF', lineHeight: 1 }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500, marginTop: '2px' }}>
-                    {stat.label}
-                  </div>
+                <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '6px' }}>
+                  {stat.label}
+                </div>
+                <div style={{ fontSize: '0.76rem', color: 'var(--editorial-text-muted)', marginTop: '2px' }}>
+                  {stat.sub}
                 </div>
               </div>
             ))}
@@ -599,843 +384,575 @@ export default function Home({ onNavigate, onViewBookDetails }) {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 2.5 COMPLETE 12-PAGE UI WIREFRAME BLUEPRINTS       */}
-      {/* ══════════════════════════════════════════════════ */}
-      <section
-        id="wireframe-blueprint"
-        style={{
-          padding: "68px 0",
-          backgroundColor: "#F9F8F5",
-          borderTop: "1px solid var(--subtle-border)",
-          borderBottom: "1px solid var(--subtle-border)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        {/* Subtle dot-grid background resembling Balsamiq wireframe canvas */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: "radial-gradient(#D0D0D0 1.2px, transparent 1.2px)",
-            backgroundSize: "20px 20px",
-            opacity: 0.6,
-            pointerEvents: "none"
-          }}
-        />
-
-        <div className="container" style={{ position: "relative", zIndex: 1 }}>
-          {/* Section Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "20px", marginBottom: "32px" }}>
-            <div style={{ maxWidth: "720px" }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "7px",
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #CCCCCC",
-                  color: "#222222",
-                  padding: "4px 14px",
-                  borderRadius: "var(--radius-full)",
-                  fontSize: "0.74rem",
-                  fontWeight: 800,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  marginBottom: "12px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
-                }}
-              >
-                <Layers size={13} color="#222222" /> Design Thinking Process · Complete 14-Page UI Blueprint Portfolio
-              </div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.3rem)", color: "var(--forest-dark)", fontFamily: "var(--font-serif)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2 }}>
-                Website UI Wireframe Blueprints for Every Page
-              </h2>
-              <p style={{ color: "var(--muted-text)", fontSize: "0.98rem", lineHeight: 1.55, marginTop: "8px", marginBottom: 0 }}>
-                Clean, low-fidelity black-and-white Balsamiq-style UI blueprints for all 14 pages of the LibraMind system.
-                Formatted in portrait orientation, featuring 2D top-down orthogonal layouts, [X] image placeholder boxes, placeholder text lines, and readable section labels ready for insertion into Word documents.
-              </p>
-            </div>
-
-            {/* Quick Global Actions */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <button
-                onClick={downloadAllBlueprintsZIP}
-                style={{
-                  background: "linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)",
-                  color: "#FFFFFF",
-                  border: "none",
-                  padding: "10px 18px",
-                  borderRadius: "10px",
-                  fontSize: "0.84rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "7px",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(52, 78, 65, 0.22)"
-                }}
-                title="Download all 14 wireframe blueprint files in one .ZIP archive"
-              >
-                <Download size={15} /> Download All 14 (.ZIP)
-              </button>
-
-              <button
-                onClick={downloadAllBlueprintsSVG}
-                style={{
-                  background: "#FFFFFF",
-                  color: "#111111",
-                  border: "1.5px solid #111111",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontSize: "0.84rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "7px",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
-                }}
-                title="Download all 14 individual SVG vector files"
-              >
-                <FileCode size={15} /> Download All (.SVG)
-              </button>
-
-              <button
-                onClick={printAllBlueprints}
-                style={{
-                  background: "#000000",
-                  color: "#FFFFFF",
-                  border: "none",
-                  padding: "10px 18px",
-                  borderRadius: "10px",
-                  fontSize: "0.84rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "7px",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)"
-                }}
-                title="Print or export all 14 pages as a portrait PDF portfolio for Word Document"
-              >
-                <Printer size={15} /> Save All as PDF
-              </button>
-
-              <button
-                onClick={() => {
-                  setSelectedBlueprintPage("home");
-                  setShowVisualBlueprintModal(true);
-                }}
-                style={{
-                  background: "#FAFAFA",
-                  color: "#333333",
-                  border: "1px solid #CCCCCC",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  fontSize: "0.84rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  cursor: "pointer"
-                }}
-                title="Open fullscreen high-definition blueprint studio"
-              >
-                <Maximize2 size={15} /> Open Studio
-              </button>
-            </div>
-          </div>
-
-          {/* Grid of All 12 Page Blueprints */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
-              gap: "20px",
-              marginBottom: "32px"
-            }}
-          >
-            {BLUEPRINT_PAGES.map((page) => (
-              <div
-                key={page.id}
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: "14px",
-                  border: "1.5px solid #D8D8D8",
-                  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  transition: "all 0.2s ease"
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = "0 12px 28px rgba(0, 0, 0, 0.12)";
-                  e.currentTarget.style.borderColor = "#000000";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0, 0, 0, 0.04)";
-                  e.currentTarget.style.borderColor = "#D8D8D8";
-                }}
-              >
-                {/* Thumbnail Preview Area */}
-                <div
-                  style={{
-                    height: "230px",
-                    backgroundColor: "#FAFAFA",
-                    borderBottom: "1px solid #E0E0E0",
-                    position: "relative",
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "10px"
-                  }}
-                  onClick={() => {
-                    setSelectedBlueprintPage(page.id);
-                    setShowVisualBlueprintModal(true);
-                  }}
-                  title={`Click to inspect Page ${page.pageNumber}: ${page.shortTitle} in high definition`}
-                >
-                  {/* Perfectly scaled full wireframe blueprint preview */}
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      pointerEvents: "none"
-                    }}
-                    dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
-                  />
-
-                  {/* Badges on top */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "10px",
-                      left: "10px",
-                      backgroundColor: "#000000",
-                      color: "#FFFFFF",
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                      fontSize: "0.68rem",
-                      fontWeight: 800,
-                      letterSpacing: "0.04em"
-                    }}
-                  >
-                    PAGE {page.pageNumber} OF 14
-                  </div>
-
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      border: "1px solid #CCCCCC",
-                      color: "#111111",
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                      fontSize: "0.68rem",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <Eye size={11} /> Inspect
-                  </div>
-
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "8px",
-                      left: "10px",
-                      backgroundColor: "#EEEEEE",
-                      border: "1px solid #CCCCCC",
-                      color: "#222222",
-                      padding: "2px 8px",
-                      borderRadius: "4px",
-                      fontSize: "0.68rem",
-                      fontFamily: "monospace"
-                    }}
-                  >
-                    {page.route}
-                  </div>
-                </div>
-
-                {/* Card Info Body */}
-                <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div>
-                    <h3 style={{ margin: "0 0 6px", fontSize: "1.05rem", color: "#111111", fontWeight: 800 }}>
-                      {page.name}
-                    </h3>
-                    <p style={{ margin: "0 0 14px", fontSize: "0.80rem", color: "#666666", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                      {page.desc}
-                    </p>
-                  </div>
-
-                  {/* 3 Download Action Buttons for this Page */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
-                    <button
-                      onClick={() => downloadPageSVG(page.id)}
-                      style={{
-                        background: "#111111",
-                        color: "#FFFFFF",
-                        border: "none",
-                        padding: "7px 8px",
-                        borderRadius: "6px",
-                        fontSize: "0.74rem",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "4px"
-                      }}
-                      title="Download Scalable Vector (.SVG)"
-                    >
-                      <Download size={12} /> .SVG
-                    </button>
-
-                    <button
-                      onClick={() => downloadPagePNG(page.id)}
-                      style={{
-                        background: "#FFFFFF",
-                        color: "#111111",
-                        border: "1px solid #CCCCCC",
-                        padding: "7px 8px",
-                        borderRadius: "6px",
-                        fontSize: "0.74rem",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "4px"
-                      }}
-                      title="Download Image (.PNG)"
-                    >
-                      <ImageIcon size={12} /> .PNG
-                    </button>
-
-                    <button
-                      onClick={() => printSingleBlueprint(page.id)}
-                      style={{
-                        background: "var(--soft-sage)",
-                        color: "var(--forest-dark)",
-                        border: "1px solid rgba(82, 115, 77, 0.35)",
-                        padding: "7px 8px",
-                        borderRadius: "6px",
-                        fontSize: "0.74rem",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "4px"
-                      }}
-                      title="Print or export portrait PDF for Word Document"
-                    >
-                      <Printer size={12} /> PDF
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Batch Export Banner */}
-          <div
-            style={{
-              padding: "24px 28px",
-              backgroundColor: "#FFFFFF",
-              borderRadius: "16px",
-              border: "1.5px solid #000000",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "16px",
-              boxShadow: "0 4px 18px rgba(0, 0, 0, 0.06)"
-            }}
-          >
-            <div>
-              <div style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#555555" }}>
-                Batch Export for Design Thinking Documentation
-              </div>
-              <h3 style={{ margin: "4px 0 0", fontSize: "1.20rem", fontWeight: 800, color: "#111111" }}>
-                Need all 14 wireframe blueprints for your Word document or report?
-              </h3>
-              <p style={{ margin: "4px 0 0", fontSize: "0.84rem", color: "#666666" }}>
-                Export the entire 14-page wireframe portfolio sequentially formatted with page breaks ready for insertion into Word.
-              </p>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <button
-                onClick={downloadAllBlueprintsZIP}
-                style={{
-                  background: "linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)",
-                  color: "#FFFFFF",
-                  border: "none",
-                  padding: "12px 22px",
-                  borderRadius: "8px",
-                  fontSize: "0.86rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(52, 78, 65, 0.25)"
-                }}
-                title="Download all 14 blueprints packaged in a .ZIP file"
-              >
-                <Download size={16} /> Download All 14 (.ZIP)
-              </button>
-
-              <button
-                onClick={downloadAllBlueprintsSVG}
-                style={{
-                  background: "#FFFFFF",
-                  color: "#111111",
-                  border: "1.5px solid #000000",
-                  padding: "12px 20px",
-                  borderRadius: "8px",
-                  fontSize: "0.86rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer"
-                }}
-                title="Download all 14 individual SVG files"
-              >
-                <FileCode size={16} /> Download All (.SVG)
-              </button>
-
-              <button
-                onClick={printAllBlueprints}
-                style={{
-                  background: "#000000",
-                  color: "#FFFFFF",
-                  border: "none",
-                  padding: "12px 22px",
-                  borderRadius: "8px",
-                  fontSize: "0.86rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)"
-                }}
-                title="Save all 14 pages in a multi-page portrait PDF ready for Word insertion"
-              >
-                <Printer size={16} /> Print / Save All as PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 3. KEY FEATURES / SOLUTION PILLARS */}
-      {/* ══════════════════════════════════════════════════ */}
-      <section style={{ padding: '72px 0', backgroundColor: '#FFFFFF' }}>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 3. FEATURED BOOK OF THE WEEK SPREAD                             */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section id="featured-week" style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)' }}>
         <div className="container">
+          <div style={{ marginBottom: '32px' }}>
+            <span className="editorial-kicker">CURATORIAL MONOGRAPH</span>
+            <h2 style={{ margin: 0 }}>Featured Book of the Week</h2>
+          </div>
 
-          {/* Section Label */}
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <span
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--editorial-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '36px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '40px',
+              alignItems: 'center',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <div
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                fontSize: '0.76rem', fontWeight: 800, textTransform: 'uppercase',
-                letterSpacing: '0.08em', color: 'var(--botanical)',
-                backgroundColor: 'var(--soft-sage-light)', padding: '5px 14px',
-                borderRadius: 'var(--radius-full)', marginBottom: '12px'
+                height: '420px',
+                borderRadius: 'var(--radius-sm)',
+                overflow: 'hidden',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                boxShadow: 'var(--shadow-md)'
               }}
             >
-              <Zap size={12} /> What Makes Us Different
-            </span>
-            <h2 style={{ fontSize: 'clamp(1.7rem, 3vw, 2.3rem)', color: 'var(--forest-dark)', letterSpacing: '-0.02em' }}>
-              Every feature crafted for readers
-            </h2>
-            <p style={{ color: 'var(--muted-text)', marginTop: '8px', maxWidth: '500px', margin: '8px auto 0', fontSize: '0.98rem' }}>
-              A modern, intelligent library system designed around your reading experience.
-            </p>
-          </div>
+              <img
+                src={bookOfTheWeek.cover_image || getOfflineBookCover(bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
+                alt={bookOfTheWeek.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-            {features.map((feat, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: '32px',
-                  borderRadius: '20px',
-                  border: '1px solid var(--subtle-border)',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 4px 20px rgba(52,78,65,0.05)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 36px rgba(52,78,65,0.12)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(52,78,65,0.05)'; }}
-              >
-                {/* Decorative corner */}
-                <div
-                  style={{
-                    position: 'absolute', top: 0, right: 0,
-                    width: '80px', height: '80px',
-                    background: `radial-gradient(circle at top right, ${feat.bg} 0%, transparent 70%)`,
-                    borderRadius: '0 20px 0 0'
-                  }}
-                />
+            <div>
+              <span className="badge badge-category" style={{ marginBottom: '12px' }}>
+                {bookOfTheWeek.category}
+              </span>
+              <h3 style={{ fontSize: '2.4rem', fontFamily: 'var(--font-serif)', marginBottom: '8px', lineHeight: 1.15 }}>
+                {bookOfTheWeek.title}
+              </h3>
+              <p style={{ fontSize: '1.05rem', color: 'var(--editorial-accent)', fontWeight: 600, marginBottom: '20px' }}>
+                By {bookOfTheWeek.author} • First Accessioned {bookOfTheWeek.publication_year}
+              </p>
 
-                {/* NEW badge */}
-                {feat.isNew && (
-                  <span
-                    style={{
-                      position: 'absolute', top: '18px', right: '18px',
-                      background: 'linear-gradient(135deg, var(--botanical) 0%, var(--forest) 100%)',
-                      color: '#fff', fontSize: '0.6rem', fontWeight: 800,
-                      padding: '3px 9px', borderRadius: 'var(--radius-full)',
-                      textTransform: 'uppercase', letterSpacing: '0.05em',
-                      boxShadow: '0 2px 8px rgba(52,78,65,0.25)'
-                    }}
-                  >
-                    AI Powered
-                  </span>
-                )}
+              <div className="editorial-pullquote">
+                "{bookOfTheWeek.description || 'A timeless exploration of ideas, human experience, and scientific discipline from the heart of the library archives.'}"
+              </div>
 
-                {/* Availability Badge */}
-                {feat.badge && (
-                  <span
-                    className="badge badge-available"
-                    style={{
-                      position: 'absolute', top: '18px', right: '18px',
-                      fontSize: '0.7rem', fontWeight: 700
-                    }}
-                  >
-                    ● {feat.badge}
-                  </span>
-                )}
-
-                {/* Icon */}
-                <div
-                  style={{
-                    width: '52px', height: '52px',
-                    borderRadius: '14px',
-                    backgroundColor: feat.bg,
-                    border: `1px solid rgba(52,78,65,0.10)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: '20px'
-                  }}
-                >
-                  <feat.icon size={24} color={feat.accent} strokeWidth={2} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', margin: '24px 0', padding: '16px', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--editorial-text-muted)', display: 'block', fontWeight: 600 }}>Stack Level</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--editorial-text)' }}>{bookOfTheWeek.floor}</span>
                 </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--editorial-text-muted)', display: 'block', fontWeight: 600 }}>Archival Shelf</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--editorial-accent)' }}>{bookOfTheWeek.shelf}</span>
+                </div>
+              </div>
 
-                <h3 style={{ fontSize: '1.15rem', marginBottom: '10px', color: 'var(--forest-dark)', fontWeight: 700 }}>
-                  {feat.title}
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--muted-text)', lineHeight: 1.6, marginBottom: '20px', flex: 1 }}>
-                  {feat.desc}
-                </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
-                  onClick={feat.action}
-                  style={{
-                    background: 'none', border: 'none',
-                    color: feat.accent, fontWeight: 700,
-                    fontSize: '0.85rem',
-                    display: 'inline-flex', alignItems: 'center', gap: '5px',
-                    cursor: 'pointer', padding: 0,
-                    transition: 'gap 0.15s ease'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.gap = '8px'; }}
-                  onMouseLeave={e => { e.currentTarget.style.gap = '5px'; }}
+                  onClick={() => onViewBookDetails(bookOfTheWeek.id)}
+                  className="btn btn-primary"
                 >
-                  {feat.cta} <ArrowRight size={14} />
+                  <BookOpen size={15} /> Examine Volume Specimen
+                </button>
+                <button
+                  onClick={() => onNavigate('catalog')}
+                  className="btn btn-outline"
+                >
+                  Explore More Titles →
                 </button>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 4. STORY BOOKS PAVILION */}
-      {/* ══════════════════════════════════════════════════ */}
-      {storyBooks.length > 0 && (
-        <section style={{ padding: '72px 0', backgroundColor: 'var(--cream)', borderTop: '1px solid var(--subtle-border)' }}>
-          <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <span
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase',
-                    letterSpacing: '0.07em', color: 'var(--botanical)',
-                    backgroundColor: 'var(--soft-sage-light)', padding: '4px 12px',
-                    borderRadius: 'var(--radius-full)', marginBottom: '10px'
-                  }}
-                >
-                  <BookMarked size={12} /> Story Books Pavilion
-                </span>
-                <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', color: 'var(--forest-dark)', letterSpacing: '-0.02em', marginTop: '2px' }}>
-                  Enchanting Story Books & Adventures
-                </h2>
-                <p style={{ fontSize: '0.93rem', color: 'var(--muted-text)', marginTop: '6px', maxWidth: '600px' }}>
-                  Timeless stories filled with magic, wondrous quests, and unforgettable friendships.
-                </p>
-              </div>
-              <button onClick={() => onNavigate('catalog', { category: 'Story Books' })} className="btn btn-outline" style={{ borderRadius: '12px' }}>
-                View All Story Books <ArrowRight size={15} />
-              </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
-              {storyBooks.map(book => (
-                <BookCard key={book.id} book={book} onViewDetails={onViewBookDetails} onReserve={() => onViewBookDetails(book.id)} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 5. NOVELS & FICTION */}
-      {/* ══════════════════════════════════════════════════ */}
-      {novelBooks.length > 0 && (
-        <section style={{ padding: '72px 0', backgroundColor: '#FFFFFF', borderTop: '1px solid var(--subtle-border)' }}>
-          <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <span
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase',
-                    letterSpacing: '0.07em', color: 'var(--forest-dark)',
-                    backgroundColor: 'var(--warm-beige)', padding: '4px 12px',
-                    borderRadius: 'var(--radius-full)', marginBottom: '10px'
-                  }}
-                >
-                  <BookOpen size={12} /> Literary Sanctuary
-                </span>
-                <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', color: 'var(--forest-dark)', letterSpacing: '-0.02em', marginTop: '2px' }}>
-                  Classic & Modern Novels
-                </h2>
-                <p style={{ fontSize: '0.93rem', color: 'var(--muted-text)', marginTop: '6px', maxWidth: '600px' }}>
-                  From the Jazz Age of Gatsby to Orwell's prophetic vision — explore rich characters and literary masterworks.
-                </p>
-              </div>
-              <button onClick={() => onNavigate('catalog', { category: 'Novels & Fiction' })} className="btn btn-primary" style={{ borderRadius: '12px' }}>
-                Browse All Novels <ArrowRight size={15} />
-              </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
-              {novelBooks.map(book => (
-                <BookCard key={book.id} book={book} onViewDetails={onViewBookDetails} onReserve={() => onViewBookDetails(book.id)} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 6. HEARTWARMING / EMOTIONAL FICTION */}
-      {/* ══════════════════════════════════════════════════ */}
-      {emotionalNovels.length > 0 && (
-        <section
-          style={{
-            padding: '72px 0',
-            background: 'linear-gradient(135deg, #F5F9F3 0%, #EBF3E6 100%)',
-            borderTop: '1px solid var(--subtle-border)'
-          }}
-        >
-          <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <span
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase',
-                    letterSpacing: '0.07em', color: 'var(--botanical)',
-                    backgroundColor: 'var(--soft-sage)', padding: '4px 12px',
-                    borderRadius: 'var(--radius-full)', marginBottom: '10px'
-                  }}
-                >
-                  <Heart size={12} /> Uplifting Literature
-                </span>
-                <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', color: 'var(--forest-dark)', letterSpacing: '-0.02em', marginTop: '2px' }}>
-                  Heartwarming Novels & Healing Reads
-                </h2>
-                <p style={{ fontSize: '0.93rem', color: 'var(--muted-text)', marginTop: '6px', maxWidth: '600px' }}>
-                  Step away from textbooks and immerse in deeply moving stories of hope, everyday courage, and human kindness.
-                </p>
-              </div>
-              <button onClick={() => onNavigate('catalog', { category: 'Emotional Fiction' })} className="btn btn-outline" style={{ borderRadius: '12px', backgroundColor: '#fff' }}>
-                Explore Inspiring Reads <ArrowRight size={15} />
-              </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
-              {emotionalNovels.map(book => (
-                <BookCard key={book.id} book={book} onViewDetails={onViewBookDetails} onReserve={() => onViewBookDetails(book.id)} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 7. FEATURED STACKS / FULL COLLECTION */}
-      {/* ══════════════════════════════════════════════════ */}
-      <section style={{ padding: '72px 0', backgroundColor: 'var(--warm-beige-light)', borderTop: '1px solid var(--subtle-border)' }}>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 4. EDITOR'S PICKS GRID                                          */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <span
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase',
-                  letterSpacing: '0.07em', color: 'var(--botanical)',
-                  backgroundColor: 'var(--soft-sage-light)', padding: '4px 12px',
-                  borderRadius: 'var(--radius-full)', marginBottom: '10px'
-                }}
-              >
-                <TrendingUp size={12} /> Curated Collection
-              </span>
-              <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', color: 'var(--forest-dark)', letterSpacing: '-0.02em', marginTop: '2px' }}>
-                Featured Stacks & New Additions
-              </h2>
-              <p style={{ fontSize: '0.93rem', color: 'var(--muted-text)', marginTop: '6px', maxWidth: '560px' }}>
-                Hand-picked popular titles and freshly catalogued books — updated regularly for curious minds.
+              <span className="editorial-kicker">RECOMMENDED EDITIONS</span>
+              <h2 style={{ margin: 0 }}>Editor's Picks</h2>
+              <p style={{ margin: '6px 0 0', color: 'var(--editorial-text-muted)', fontSize: '0.94rem' }}>
+                Curated by our senior archivists for historical significance and thought-provoking narrative.
               </p>
             </div>
-            <button onClick={() => onNavigate('catalog')} className="btn btn-outline" style={{ borderRadius: '12px', backgroundColor: '#fff' }}>
-              Browse Full Catalog (60+ Books) <ArrowRight size={15} />
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="btn btn-outline btn-sm"
+            >
+              View Full Collection →
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
-            {featuredBooks.map(book => (
-              <BookCard key={book.id} book={book} onViewDetails={onViewBookDetails} onReserve={() => onViewBookDetails(book.id)} />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+              gap: '24px'
+            }}
+          >
+            {featuredBooks.slice(0, 4).map((book, idx) => (
+              <div key={book.id} style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-10px', left: '16px', zIndex: 2, backgroundColor: 'var(--editorial-text)', color: '#FFFFFF', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)', borderRadius: '2px' }}>
+                  № 0{idx + 1}
+                </div>
+                <BookCard
+                  book={book}
+                  onViewDetails={onViewBookDetails}
+                  onToggleWishlist={() => {}}
+                  onToggleCompare={() => onNavigate('compare')}
+                  onAddToPlanner={() => onNavigate('visit-planner')}
+                />
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════ */}
-      {/* 8. VISIT CTA BANNER */}
-      {/* ══════════════════════════════════════════════════ */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 5. EXPLORE BY GENRE / EDITORIAL TAXONOMY                         */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)' }}>
+        <div className="container">
+          <div style={{ marginBottom: '36px' }}>
+            <span className="editorial-kicker">TAXONOMY &amp; GENRES</span>
+            <h2 style={{ margin: 0 }}>Explore by Literary Genre</h2>
+            <p style={{ margin: '6px 0 0', color: 'var(--editorial-text-muted)' }}>
+              Navigate the library through carefully arranged disciplines and subject matter.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '20px'
+            }}
+          >
+            {editorialGenres.map((genre, i) => (
+              <div
+                key={i}
+                onClick={() => onNavigate('catalog', { category: genre.slug })}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  padding: '24px 28px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--editorial-border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: 'var(--shadow-card)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'var(--editorial-accent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = 'var(--editorial-border)';
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                      DISCIPLINE 0{i + 1}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)' }}>
+                      {genre.count}
+                    </span>
+                  </div>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.30rem', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+                    {genre.title}
+                  </h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, margin: 0 }}>
+                    {genre.desc}
+                  </p>
+                </div>
+                <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-accent)' }}>
+                  Browse Genre Stacks <ArrowRight size={13} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 6. LITERARY QUOTES BANNER                                       */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <section
         style={{
           padding: '72px 0',
-          background: 'linear-gradient(135deg, var(--forest-dark) 0%, #2A4A36 50%, var(--botanical) 100%)',
-          position: 'relative',
-          overflow: 'hidden'
+          backgroundColor: 'var(--editorial-green)',
+          color: '#FFFFFF',
+          borderTop: '1px solid var(--editorial-border)',
+          borderBottom: '1px solid var(--editorial-border)'
         }}
       >
-        {/* Decorative elements */}
-        <div style={{ position: 'absolute', right: '-40px', top: '-40px', opacity: 0.04, pointerEvents: 'none' }}>
-          <Leaf size={400} color="#FAF8F1" />
+        <div className="container" style={{ textAlign: 'center', maxWidth: '820px' }}>
+          <Quote size={32} color="#D9D3C7" style={{ margin: '0 auto 16px', opacity: 0.6 }} />
+          <blockquote
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: 'clamp(1.5rem, 3.2vw, 2.3rem)',
+              lineHeight: 1.35,
+              color: '#FFFFFF',
+              marginBottom: '18px'
+            }}
+          >
+            "I have always imagined that Paradise will be a kind of a library."
+          </blockquote>
+          <cite
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#D9D3C7',
+              fontStyle: 'normal'
+            }}
+          >
+            — Jorge Luis Borges, <span style={{ opacity: 0.8 }}>Poema de los Dones (1958)</span>
+          </cite>
         </div>
-        <div style={{ position: 'absolute', left: '-60px', bottom: '-60px', opacity: 0.03, pointerEvents: 'none', transform: 'rotate(180deg)' }}>
-          <BookOpen size={350} color="#FAF8F1" />
-        </div>
+      </section>
 
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
-            <div
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '7px',
-                backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 'var(--radius-full)', padding: '5px 16px',
-                fontSize: '0.76rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '22px'
-              }}
-            >
-              <Clock size={12} /> Open Mon–Fri 8am–10pm · Sat–Sun 9am–8pm
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 7. FEATURED AUTHORS                                             */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
+        <div className="container">
+          <div style={{ marginBottom: '36px' }}>
+            <span className="editorial-kicker">LITERARY HERITAGE</span>
+            <h2 style={{ margin: 0 }}>Featured Authors &amp; Scholars</h2>
+            <p style={{ margin: '6px 0 0', color: 'var(--editorial-text-muted)' }}>
+              Explore comprehensive monographs and treatises by influential thinkers.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '24px'
+            }}
+          >
+            {literaryAuthors.map((author, i) => (
+              <div
+                key={i}
+                onClick={() => onNavigate('catalog', { q: author.query })}
+                style={{
+                  padding: '24px',
+                  backgroundColor: 'var(--editorial-bg)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--editorial-border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--editorial-accent)';
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--editorial-border)';
+                  e.currentTarget.style.backgroundColor = 'var(--editorial-bg)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--editorial-green)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'var(--font-serif)',
+                      fontSize: '1.1rem',
+                      fontWeight: 700
+                    }}
+                  >
+                    {author.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.15rem' }}>{author.name}</h4>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', fontFamily: 'var(--font-mono)' }}>{author.era}</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--editorial-accent)', fontWeight: 600, marginBottom: '6px' }}>
+                  {author.focus}
+                </div>
+                <p style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                  Works in Catalog: {author.works}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 8. COMPLETE 21-PAGE WIREFRAME BLUEPRINTS PORTFOLIO              */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section
+        id="wireframe-blueprint"
+        style={{
+          padding: '68px 0',
+          backgroundColor: 'var(--editorial-bg-subtle)',
+          borderBottom: '1px solid var(--editorial-border)',
+          position: 'relative'
+        }}
+      >
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px', marginBottom: '32px' }}>
+            <div style={{ maxWidth: '720px' }}>
+              <div className="editorial-kicker">
+                <Layers size={13} /> Complete 21-Page UI Blueprint Portfolio
+              </div>
+              <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.3rem)', margin: 0 }}>
+                Website Architectural Wireframes
+              </h2>
+              <p style={{ color: 'var(--editorial-text-muted)', fontSize: '0.96rem', marginTop: '8px', marginBottom: 0 }}>
+                Clean, low-fidelity orthogonal black-and-white wireframe blueprints for all 21 pages of the LibraMind system.
+              </p>
             </div>
 
-            <h2
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                onClick={downloadAllBlueprintsZIP}
+                className="btn btn-primary btn-sm"
+              >
+                <Download size={14} /> Download All 21 (.ZIP)
+              </button>
+              <button
+                onClick={downloadAllBlueprintsSVG}
+                className="btn btn-outline btn-sm"
+              >
+                <FileCode size={14} /> Download All (.SVG)
+              </button>
+              <button
+                onClick={printAllBlueprints}
+                className="btn btn-outline btn-sm"
+              >
+                Print 21 Pages (Word Ready)
+              </button>
+            </div>
+          </div>
+
+          {/* Grid of First 4 Blueprints Showcase */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '20px',
+              marginBottom: '28px'
+            }}
+          >
+            {BLUEPRINT_PAGES.slice(0, 4).map((page) => (
+              <div
+                key={page.id}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-sm)',
+                  overflow: 'hidden',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  setSelectedBlueprintPage(page.id);
+                  setShowVisualBlueprintModal(true);
+                }}
+              >
+                <div style={{ height: '220px', backgroundColor: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
+                  <div
+                    style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
+                  />
+                </div>
+                <div style={{ padding: '14px 16px', borderTop: '1px solid var(--editorial-border)' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                    PAGE 0{page.pageNumber} · {page.category}
+                  </div>
+                  <h4 style={{ margin: '4px 0 0', fontSize: '0.94rem' }}>{page.shortTitle}</h4>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                setSelectedBlueprintPage('home');
+                setShowVisualBlueprintModal(true);
+              }}
+              className="btn btn-outline"
+            >
+              Open Full 21-Page Interactive Blueprint Viewer →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 9. ABOUT LIBRAMIND                                              */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
+        <div className="container">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '48px',
+              alignItems: 'center'
+            }}
+          >
+            <div>
+              <span className="editorial-kicker">INSTITUTIONAL CHARTER</span>
+              <h2 style={{ marginBottom: '18px' }}>About the LibraMind Project</h2>
+              <p style={{ lineHeight: 1.7, marginBottom: '16px' }}>
+                LibraMind was founded to dismantle the artificial divide between historic library sanctuaries and modern digital technology. We believe deep focus flourishes in tranquil, beautiful environments where natural materials meet rigorous academic indexing.
+              </p>
+              <p style={{ lineHeight: 1.7, marginBottom: '24px' }}>
+                Every book in our collection is indexed physically by floor, rack, and shelf coordinate, and digitally mapped using mathematical TF-IDF semantic relevance.
+              </p>
+              <button
+                onClick={() => onNavigate('about')}
+                className="btn btn-outline"
+              >
+                Read Full Vision &amp; Architecture →
+              </button>
+            </div>
+
+            <div
               style={{
-                fontSize: 'clamp(1.7rem, 3.5vw, 2.8rem)',
-                color: '#FAF8F1',
-                marginBottom: '16px',
-                fontWeight: 800,
-                letterSpacing: '-0.025em',
-                lineHeight: 1.15
+                backgroundColor: 'var(--editorial-bg)',
+                border: '1px solid var(--editorial-border)',
+                padding: '32px',
+                borderRadius: 'var(--radius-sm)'
               }}
             >
-              Ready to find your next<br />
-              <span style={{ color: '#A8CCA0' }}>great read?</span>
-            </h2>
-
-            <p style={{ color: 'rgba(250,248,241,0.72)', fontSize: '1rem', lineHeight: 1.65, marginBottom: '36px', maxWidth: '540px', margin: '0 auto 36px' }}>
-              Visit our biophilic reading sanctuary at Central Campus Wing B, Level 1 & 2.
-              Book a quiet pod, explore the stacks, or let our AI guide your next literary journey.
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => onNavigate('visit-planner')}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  padding: '13px 26px',
-                  background: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  borderRadius: '14px',
-                  color: '#FAF8F1',
-                  fontSize: '0.92rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.18s ease'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
-              >
-                <Compass size={16} /> Plan My Visit
-              </button>
-              <button
-                onClick={() => onNavigate('catalog')}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  padding: '13px 26px',
-                  backgroundColor: '#FAF8F1',
-                  border: 'none',
-                  borderRadius: '14px',
-                  color: 'var(--forest-dark)',
-                  fontSize: '0.92rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.18s ease',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                <BookOpen size={16} /> Browse the Catalog
-              </button>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '14px' }}>
+                Sanctuary Core Commitments
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.90rem' }}>
+                  <CheckCircle2 size={16} color="var(--editorial-accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>100% Offline Access:</strong> Vector book covers and SQLite records operate locally without remote CDN dependencies.</span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.90rem' }}>
+                  <CheckCircle2 size={16} color="var(--editorial-accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Equitable Circulation:</strong> Automated 48-hour hold queue transitions prevent forgotten physical copies.</span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.90rem' }}>
+                  <CheckCircle2 size={16} color="var(--editorial-accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Cryptographic Security:</strong> Salted Bcrypt password security, role-based protection, and patron audit trails.</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Visual Blueprint Interactive Studio Modal */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 10. EDITORIAL FOOTER                                            */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <footer
+        style={{
+          backgroundColor: 'var(--editorial-bg-subtle)',
+          borderTop: '1px solid var(--editorial-border)',
+          padding: '60px 0 40px'
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '36px',
+              marginBottom: '48px'
+            }}
+          >
+            <div>
+              <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', marginBottom: '12px' }}>LibraMind</h4>
+              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6 }}>
+                The Literary Review &amp; Modern Smart Library Platform. Preserving knowledge and empowering minds since 1892.
+              </p>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Navigation
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem' }}>
+                <li><a onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>Home Sanctuary</a></li>
+                <li><a onClick={() => onNavigate('catalog')} style={{ cursor: 'pointer' }}>Explore Books</a></li>
+                <li><a onClick={() => onNavigate('ai-finder')} style={{ cursor: 'pointer' }}>AI Book Oracle</a></li>
+                <li><a onClick={() => onNavigate('seats')} style={{ cursor: 'pointer' }}>Study Pod Map</a></li>
+                <li><a onClick={() => onNavigate('visit-planner')} style={{ cursor: 'pointer' }}>Plan Your Visit</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Policies &amp; Support
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem' }}>
+                <li><a onClick={() => onNavigate('about')} style={{ cursor: 'pointer' }}>About Our Mission</a></li>
+                <li><a onClick={() => onNavigate('contact')} style={{ cursor: 'pointer' }}>Help &amp; Circulation Desk</a></li>
+                <li><a onClick={() => onNavigate('terms')} style={{ cursor: 'pointer' }}>Borrowing Code &amp; Terms</a></li>
+                <li><a onClick={() => onNavigate('notifications')} style={{ cursor: 'pointer' }}>Announcements</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Sanctuary Hours
+              </div>
+              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, margin: 0 }}>
+                Main Reading Rooms: Mon – Sun, 08:00 – 22:00<br />
+                Silent Stacks (Level 3): 24/7 Access for Fellows<br />
+                Reference Desk: Mon – Fri, 09:00 – 18:00
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              borderTop: '1px solid var(--editorial-border)',
+              paddingTop: '24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '12px',
+              fontSize: '0.78rem',
+              color: 'var(--editorial-text-muted)'
+            }}
+          >
+            <span>© 1892 – 2026 LibraMind Athenaeum. All rights reserved.</span>
+            <span>Designed in Editorial Style for Readers and Scholars worldwide.</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Visual Blueprint Modal */}
       <VisualBlueprintModal
         isOpen={showVisualBlueprintModal}
         onClose={() => setShowVisualBlueprintModal(false)}
         initialPage={selectedBlueprintPage}
       />
-
     </div>
   );
 }

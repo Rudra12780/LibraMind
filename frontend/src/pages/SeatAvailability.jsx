@@ -250,13 +250,15 @@ export default function SeatAvailability({ onNavigate }) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs (Maximalist Deck) */}
       <div
         className="bio-card"
         style={{
           padding: '16px 20px',
           marginBottom: '28px',
           backgroundColor: '#FFFFFF',
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-card)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -266,21 +268,22 @@ export default function SeatAvailability({ onNavigate }) {
       >
         {/* Floor selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--forest-dark)' }}>Floor:</span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>FLOOR:</span>
           {['All', 'Floor 1', 'Floor 2'].map(f => (
             <button
               key={f}
               onClick={() => setSelectedFloor(f)}
               style={{
                 padding: '6px 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid',
-                borderColor: selectedFloor === f ? 'var(--forest)' : 'var(--subtle-border)',
-                backgroundColor: selectedFloor === f ? 'var(--forest)' : '#FFFFFF',
-                color: selectedFloor === f ? '#FFFFFF' : 'var(--muted-text)',
-                fontSize: '0.84rem',
-                fontWeight: selectedFloor === f ? 700 : 500,
-                cursor: 'pointer'
+                border: '1px solid var(--editorial-border)',
+                backgroundColor: selectedFloor === f ? 'var(--editorial-border)' : '#FFFFFF',
+                color: 'var(--editorial-text)',
+                fontSize: '0.80rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                boxShadow: selectedFloor === f ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
               }}
             >
               {f}
@@ -290,11 +293,11 @@ export default function SeatAvailability({ onNavigate }) {
 
         {/* Section selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--forest-dark)' }}>Section:</span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>SECTION:</span>
           {[
             { id: 'All', label: 'All Sections' },
             { id: 'Quiet Study Zone', label: 'Quiet Zone' },
-            { id: 'Collaborative Hub', label: 'Collaborative Hub' },
+            { id: 'Collaborative Hub', label: 'Collab Hub' },
             { id: 'Garden Window Pods', label: 'Garden Pods' },
             { id: 'Research Nook', label: 'Research Nook' }
           ].map(sec => (
@@ -303,14 +306,15 @@ export default function SeatAvailability({ onNavigate }) {
               onClick={() => setSelectedSection(sec.id)}
               style={{
                 padding: '6px 12px',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid',
-                borderColor: selectedSection === sec.id ? 'var(--botanical)' : 'var(--subtle-border)',
-                backgroundColor: selectedSection === sec.id ? 'var(--soft-sage)' : '#FFFFFF',
-                color: selectedSection === sec.id ? 'var(--forest-dark)' : 'var(--muted-text)',
-                fontSize: '0.8rem',
-                fontWeight: selectedSection === sec.id ? 700 : 500,
-                cursor: 'pointer'
+                border: '1px solid var(--editorial-border)',
+                backgroundColor: selectedSection === sec.id ? 'var(--editorial-border)' : '#FFFFFF',
+                color: 'var(--editorial-text)',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                boxShadow: selectedSection === sec.id ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
               }}
             >
               {sec.label}
@@ -322,7 +326,7 @@ export default function SeatAvailability({ onNavigate }) {
         <div
           style={{
             paddingTop: '16px',
-            borderTop: '1px solid var(--subtle-border)',
+            borderTop: '1px solid var(--editorial-border)',
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
@@ -331,31 +335,31 @@ export default function SeatAvailability({ onNavigate }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Calendar size={16} color="var(--forest)" />
-            <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--forest-dark)' }}>Check Slot Vacancy:</span>
+            <Calendar size={16} color="var(--editorial-text)" strokeWidth={2.4} />
+            <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>VACANCY DATE:</span>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
+              className="form-control"
               style={{
                 padding: '6px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--subtle-border)',
-                fontSize: '0.84rem'
+                fontSize: '0.84rem',
+                fontWeight: 700
               }}
             />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '240px' }}>
-            <Clock size={16} color="var(--botanical)" />
+            <Clock size={16} color="var(--editorial-green)" strokeWidth={2.4} />
             <select
               value={selectedSlot}
               onChange={(e) => setSelectedSlot(e.target.value)}
+              className="form-control"
               style={{
                 padding: '6px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--subtle-border)',
                 fontSize: '0.84rem',
+                fontWeight: 700,
                 flex: 1
               }}
             >
@@ -366,7 +370,7 @@ export default function SeatAvailability({ onNavigate }) {
             </select>
           </div>
 
-          <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>
+          <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 600 }}>
             *Occupancy reflects confirmed slot reservations and desk status.
           </span>
         </div>
@@ -505,7 +509,7 @@ export default function SeatAvailability({ onNavigate }) {
                           flex: 1,
                           fontSize: '0.72rem',
                           padding: '4px',
-                          border: '1px solid var(--subtle-border)',
+                          border: '1px solid var(--editorial-border)',
                           borderRadius: '4px',
                           backgroundColor: '#FAF5EC',
                           cursor: 'pointer'
@@ -518,7 +522,7 @@ export default function SeatAvailability({ onNavigate }) {
                         style={{
                           fontSize: '0.72rem',
                           padding: '4px 8px',
-                          border: '1px solid var(--subtle-border)',
+                          border: '1px solid var(--editorial-border)',
                           borderRadius: '4px',
                           backgroundColor: '#FFF',
                           cursor: 'pointer'
@@ -806,7 +810,7 @@ export default function SeatAvailability({ onNavigate }) {
                 <div
                   style={{
                     backgroundColor: 'var(--cream)',
-                    border: '1px solid var(--subtle-border)',
+                    border: '1px solid var(--editorial-border)',
                     padding: '12px 14px',
                     borderRadius: '8px',
                     fontSize: '0.8rem',

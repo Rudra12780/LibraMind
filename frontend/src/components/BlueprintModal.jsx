@@ -64,14 +64,13 @@ export default function BlueprintModal({ isOpen, onClose }) {
       <div
         style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: '20px',
           width: '100%',
           maxWidth: '1000px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-          border: '1px solid var(--subtle-border)',
+          boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--editorial-border)',
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -80,8 +79,8 @@ export default function BlueprintModal({ isOpen, onClose }) {
         <div
           style={{
             padding: '20px 28px',
-            borderBottom: '1px solid var(--subtle-border)',
-            background: 'linear-gradient(135deg, #FAF8F1 0%, #F3EBDD 100%)',
+            borderBottom: '2.5px solid var(--editorial-text)',
+            backgroundColor: 'var(--editorial-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -92,12 +91,12 @@ export default function BlueprintModal({ isOpen, onClose }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span
                 style={{
-                  background: 'var(--botanical)',
+                  background: 'var(--editorial-text)',
                   color: '#FFFFFF',
                   fontSize: '0.68rem',
-                  fontWeight: 800,
+                  fontWeight: 900,
                   padding: '2px 8px',
-                  borderRadius: '6px',
+                  border: '1px solid var(--editorial-text)',
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase'
                 }}
@@ -126,7 +125,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              border: '1px solid var(--subtle-border)',
+              border: '1px solid var(--editorial-border)',
               backgroundColor: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
@@ -201,7 +200,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
             onClick={handleCopy}
             style={{
               background: 'none',
-              border: '1px solid var(--subtle-border)',
+              border: '1px solid var(--editorial-border)',
               borderRadius: '8px',
               padding: '7px 12px',
               fontSize: '0.80rem',
@@ -241,7 +240,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
               backgroundColor: '#FAF8F1',
               padding: '20px',
               borderRadius: '12px',
-              border: '1px solid var(--subtle-border)'
+              border: '1px solid var(--editorial-border)'
             }}
           >
             {BLUEPRINT_MARKDOWN}

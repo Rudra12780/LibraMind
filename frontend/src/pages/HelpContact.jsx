@@ -44,7 +44,7 @@ export default function HelpContact({ onNavigate }) {
     },
     {
       q: 'Can I reserve study seats in advance?',
-      a: 'Yes! Study seats across Quiet Study, Collaborative Hub, and Garden Window Pods can be booked for specific 2-hour and 3-hour focus blocks through our Interactive Study Seat Map.'
+      a: 'Yes! Study seats across Quiet Focus, Collaborative Studio, and Archive Pods can be booked for specific time blocks through our Interactive Study Seat Map.'
     },
     {
       q: 'How does the AI Assistant locate books in the building?',
@@ -68,8 +68,8 @@ export default function HelpContact({ onNavigate }) {
   };
 
   return (
-    <div style={{ padding: '40px 0 80px' }}>
-      <div className="container">
+    <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '85vh', padding: '40px 0 80px' }}>
+      <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 40px' }}>
           <div
@@ -77,23 +77,26 @@ export default function HelpContact({ onNavigate }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              backgroundColor: 'var(--soft-sage-light)',
-              color: 'var(--forest)',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              padding: '4px 12px',
+              backgroundColor: 'var(--editorial-border)',
+              color: 'var(--editorial-text)',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-sm)',
+              fontSize: '0.78rem',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
               marginBottom: '14px'
             }}
           >
-            <HelpCircle size={16} />
-            Circulation Help & Academic Inquiries
+            <HelpCircle size={15} strokeWidth={2.4} />
+            Circulation Help & Patron Inquiries
           </div>
-          <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginBottom: '12px' }}>
-            We're Here to Assist Your Research
+          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '12px' }}>
+            We Are Here to Assist Your Research
           </h1>
-          <p style={{ color: 'var(--muted-text)', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
-            Have a question about book loans, hold queues, study pod bookings, or library policies? Contact our library desk or explore frequent answers below.
+          <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+            Have a question about book loans, hold queues, study pod bookings, or library policies? Contact our staff or explore the answers below.
           </p>
         </div>
 
@@ -106,52 +109,52 @@ export default function HelpContact({ onNavigate }) {
             marginBottom: '48px'
           }}
         >
-          <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '16px' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
-                <Phone size={20} />
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+                <Phone size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem', display: 'block' }}>Front Desk Hotline</strong>
-                <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>Immediate desk assistance</span>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Front Desk Hotline</strong>
+                <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Direct desk phone line</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--forest-dark)', margin: '0 0 4px' }}>
-              +1 (800) 555-LIBRA (5427)
+            <p style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
+              +1 (800) 555-LIBRA
             </p>
-            <span style={{ fontSize: '0.8rem', color: 'var(--sage)' }}>Available during all library open hours</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>Active during all open hours</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '16px' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-green)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
-                <Mail size={20} />
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+                <Mail size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem', display: 'block' }}>Circulation Email</strong>
-                <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>Responses within 12 hours</span>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Circulation Email</strong>
+                <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Response within 12h</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--forest-dark)', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
               support@libramind.edu
             </p>
-            <span style={{ fontSize: '0.8rem', color: 'var(--sage)' }}>For research, hold extensions & inquiries</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>For research & hold inquiries</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '16px' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
-                <Clock size={20} />
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+                <Clock size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem', display: 'block' }}>Desk Service Hours</strong>
-                <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>Physical staff presence</span>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Desk Hours</strong>
+                <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Physical staff presence</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--forest-dark)', margin: '0 0 4px' }}>
-              Mon – Fri: 8:00 AM – 10:00 PM
+            <p style={{ fontSize: '0.92rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', textTransform: 'uppercase' }}>
+              Mon – Fri: 08:00 – 22:00
             </p>
-            <span style={{ fontSize: '0.8rem', color: 'var(--sage)' }}>Sat – Sun: 9:00 AM – 8:00 PM</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>Sat – Sun: 09:00 – 20:00</span>
           </div>
         </div>
 
@@ -166,10 +169,10 @@ export default function HelpContact({ onNavigate }) {
         >
           {/* FAQ Accordion */}
           <div>
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '1.6rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
               Frequently Asked Questions
             </h2>
-            <p style={{ color: 'var(--muted-text)', fontSize: '0.9rem', marginBottom: '20px' }}>
+            <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.9rem', marginBottom: '20px', fontWeight: 500 }}>
               Quick answers about borrowing, renewals, fines, and study spaces.
             </p>
 
@@ -177,12 +180,11 @@ export default function HelpContact({ onNavigate }) {
               {faqs.map((faq, idx) => (
                 <div
                   key={idx}
-                  className="bio-card"
                   style={{
                     backgroundColor: '#FFFFFF',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    border: '1px solid var(--subtle-border)'
+                    border: '1px solid var(--editorial-border)',
+                    boxShadow: activeFaq === idx ? '4px 4px 0px var(--editorial-text)' : '2px 2px 0px var(--editorial-text)',
+                    overflow: 'hidden'
                   }}
                 >
                   <button
@@ -190,7 +192,7 @@ export default function HelpContact({ onNavigate }) {
                     style={{
                       width: '100%',
                       padding: '16px 20px',
-                      background: 'none',
+                      background: activeFaq === idx ? 'var(--editorial-border)' : '#FFFFFF',
                       border: 'none',
                       textAlign: 'left',
                       display: 'flex',
@@ -200,25 +202,26 @@ export default function HelpContact({ onNavigate }) {
                       gap: '12px'
                     }}
                   >
-                    <span style={{ fontWeight: 600, color: 'var(--forest-dark)', fontSize: '0.95rem' }}>
+                    <span style={{ fontWeight: 800, color: 'var(--editorial-text)', fontSize: '0.95rem', textTransform: 'uppercase' }}>
                       {faq.q}
                     </span>
                     {activeFaq === idx ? (
-                      <ChevronUp size={18} color="var(--forest)" />
+                      <ChevronUp size={18} strokeWidth={2.4} color="var(--editorial-text)" />
                     ) : (
-                      <ChevronDown size={18} color="var(--muted-text)" />
+                      <ChevronDown size={18} strokeWidth={2.4} color="var(--editorial-text)" />
                     )}
                   </button>
 
                   {activeFaq === idx && (
                     <div
                       style={{
-                        padding: '0 20px 18px',
+                        padding: '14px 20px 18px',
                         fontSize: '0.88rem',
-                        color: 'var(--muted-text)',
+                        color: 'var(--editorial-text)',
                         lineHeight: 1.6,
-                        borderTop: '1px solid rgba(52, 78, 65, 0.06)',
-                        paddingTop: '12px'
+                        borderTop: '1px solid var(--editorial-border)',
+                        backgroundColor: '#FFFFFF',
+                        fontWeight: 500
                       }}
                     >
                       {faq.a}
@@ -231,110 +234,109 @@ export default function HelpContact({ onNavigate }) {
 
           {/* Inquiry Form */}
           <div
-            className="bio-card"
             style={{
               padding: '32px',
               backgroundColor: '#FFFFFF',
-              borderRadius: '20px'
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-lg)'
             }}
           >
-            <h2 style={{ fontSize: '1.4rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
-              Send an Inquiry to the Librarians
+            <h2 style={{ fontSize: '1.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>
+              Send an Inquiry
             </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-              Submit a question or report an issue. Our library staff will reply directly to your registered email.
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '20px', fontWeight: 500 }}>
+              Submit a question or report an issue. Our library staff will reply directly to your email.
             </p>
 
             {submitted ? (
               <div
                 style={{
                   padding: '24px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--soft-sage-light)',
+                  backgroundColor: 'var(--editorial-border)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-card)',
                   textAlign: 'center'
                 }}
               >
-                <CheckCircle size={36} color="var(--forest)" style={{ margin: '0 auto 12px' }} />
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
-                  Inquiry Dispatched Successfully!
-                </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--dark-text)', margin: 0 }}>
-                  A confirmation has been sent to our circulation desk. Our team will review your message shortly.
+                <CheckCircle size={32} color="var(--editorial-text)" strokeWidth={2.4} style={{ margin: '0 auto 10px' }} />
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', margin: '0 0 6px' }}>
+                  Inquiry Dispatched!
+                </h4>
+                <p style={{ fontSize: '0.88rem', margin: 0, fontWeight: 600 }}>
+                  Thank you. A librarian will review your request and reply shortly.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Your Full Name *</label>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Your Name</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="e.g. Maya Patel"
+                    required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
+                    className="form-control"
+                    placeholder="e.g. Aarav Sharma"
                   />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Email Address *</label>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Registered Email</label>
                   <input
                     type="email"
-                    className="form-control"
-                    placeholder="e.g. maya@libramind.edu"
+                    required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
+                    className="form-control"
+                    placeholder="e.g. aarav@libramind.edu"
                   />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Inquiry Category</label>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Category</label>
                   <select
-                    className="form-control"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="form-control"
                   >
                     <option value="General Inquiry">General Inquiry</option>
                     <option value="Book Loan & Renewals">Book Loan & Renewals</option>
-                    <option value="Hold Queue & Reservations">Hold Queue & Reservations</option>
-                    <option value="Study Pod & Seat Booking">Study Pod & Seat Booking</option>
-                    <option value="Lost or Damaged Book Report">Lost or Damaged Book Report</option>
+                    <option value="Study Pod Booking">Study Pod Booking</option>
+                    <option value="Account & Membership">Account & Membership</option>
+                    <option value="Catalog & Acquisitions">Catalog & Acquisitions</option>
                   </select>
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '14px' }}>
-                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Subject *</label>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Subject</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="Brief summary of your question"
+                    required
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    required
+                    className="form-control"
+                    placeholder="Brief summary of inquiry..."
                   />
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Detailed Message *</label>
+                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Message Details</label>
                   <textarea
-                    className="form-control"
                     rows={4}
-                    placeholder="Describe your question, ISBN of interest, or requested assistance..."
+                    required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                    style={{ resize: 'vertical' }}
+                    className="form-control"
+                    placeholder="Please specify any book IDs, due dates, or pod numbers..."
                   />
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
                 >
-                  <Send size={16} />
-                  Submit Inquiry to Staff
+                  Dispatch Inquiry →
                 </button>
               </form>
             )}

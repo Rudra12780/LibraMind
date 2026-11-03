@@ -495,13 +495,15 @@ export default function Catalog({
         </div>
       )}
 
-      {/* Search & Filter Toolbar */}
+      {/* Search & Filter Toolbar (Maximalist Control Deck) */}
       <div
         className="bio-card"
         style={{
           padding: '20px',
           marginBottom: '32px',
           backgroundColor: '#FFFFFF',
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-card)',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
@@ -512,7 +514,8 @@ export default function Catalog({
           <div style={{ flex: '1 1 320px', position: 'relative' }}>
             <Search
               size={18}
-              color="var(--sage)"
+              color="var(--editorial-text)"
+              strokeWidth={2.4}
               style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }}
             />
             <input
@@ -521,11 +524,11 @@ export default function Catalog({
               placeholder="Search by title, author, ISBN, category, or description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '42px' }}
+              style={{ paddingLeft: '42px', fontWeight: 600 }}
             />
           </div>
 
-          {/* Availability Toggle */}
+          {/* Availability Toggle (Maximalist Primary Stamps) */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             {[
               { id: 'all', label: 'All Items' },
@@ -537,14 +540,15 @@ export default function Catalog({
                 onClick={() => setAvailability(opt.id)}
                 style={{
                   padding: '9px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid',
-                  borderColor: availability === opt.id ? 'var(--forest)' : 'var(--subtle-border)',
-                  backgroundColor: availability === opt.id ? 'var(--soft-sage)' : '#FFFFFF',
-                  color: availability === opt.id ? 'var(--forest-dark)' : 'var(--muted-text)',
-                  fontSize: '0.86rem',
-                  fontWeight: availability === opt.id ? 700 : 500,
-                  cursor: 'pointer'
+                  border: '1px solid var(--editorial-border)',
+                  backgroundColor: availability === opt.id ? 'var(--editorial-border)' : '#FFFFFF',
+                  color: 'var(--editorial-text)',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.03em',
+                  cursor: 'pointer',
+                  boxShadow: availability === opt.id ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
                 }}
               >
                 {opt.label}
@@ -558,7 +562,7 @@ export default function Catalog({
               className="form-control"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase' }}
             >
               <option value="title_asc">Title: A to Z</option>
               <option value="title_desc">Title: Z to A</option>
@@ -570,21 +574,23 @@ export default function Catalog({
         </div>
 
         {/* Category Pills Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '8px', borderTop: '1px solid rgba(52, 78, 65, 0.08)' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Filter size={14} /> Categories:
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em' }}>
+            <Filter size={14} strokeWidth={2.4} /> CATEGORIES:
           </span>
           <button
             onClick={() => setSelectedCategory('All')}
             style={{
-              padding: '4px 12px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              backgroundColor: selectedCategory === 'All' ? 'var(--forest)' : 'var(--warm-beige)',
-              color: selectedCategory === 'All' ? '#FFFFFF' : 'var(--forest-dark)',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer'
+              padding: '5px 12px',
+              border: '1px solid var(--editorial-border)',
+              backgroundColor: selectedCategory === 'All' ? 'var(--editorial-border)' : '#FFFFFF',
+              color: 'var(--editorial-text)',
+              fontSize: '0.76rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.03em',
+              cursor: 'pointer',
+              boxShadow: selectedCategory === 'All' ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
             }}
           >
             All ({categories.length})
@@ -595,14 +601,16 @@ export default function Catalog({
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               style={{
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-full)',
-                border: 'none',
-                backgroundColor: selectedCategory === cat ? 'var(--forest)' : 'var(--warm-beige)',
-                color: selectedCategory === cat ? '#FFFFFF' : 'var(--forest-dark)',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer'
+                padding: '5px 12px',
+                border: '1px solid var(--editorial-border)',
+                backgroundColor: selectedCategory === cat ? 'var(--editorial-border)' : '#FFFFFF',
+                color: 'var(--editorial-text)',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.03em',
+                cursor: 'pointer',
+                boxShadow: selectedCategory === cat ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
               }}
             >
               {cat}

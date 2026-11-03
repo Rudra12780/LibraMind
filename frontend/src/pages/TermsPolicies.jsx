@@ -70,8 +70,8 @@ export default function TermsPolicies({ onNavigate }) {
   ];
 
   return (
-    <div style={{ padding: '40px 0 80px' }}>
-      <div className="container">
+    <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '85vh', padding: '40px 0 80px' }}>
+      <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 40px' }}>
           <div
@@ -79,23 +79,26 @@ export default function TermsPolicies({ onNavigate }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              backgroundColor: 'var(--soft-sage-light)',
-              color: 'var(--forest)',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              padding: '4px 12px',
+              backgroundColor: 'var(--editorial-border)',
+              color: 'var(--editorial-text)',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-sm)',
+              fontSize: '0.78rem',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
               marginBottom: '14px'
             }}
           >
-            <FileText size={16} />
-            Library Governance & Guidelines
+            <FileText size={15} strokeWidth={2.4} />
+            Library Governance & Policies
           </div>
-          <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginBottom: '12px' }}>
-            Terms of Service & Borrowing Rules
+          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '12px' }}>
+            Terms of Service & Rules
           </h1>
-          <p style={{ color: 'var(--muted-text)', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
-            LibraMind operates on principles of academic honor, mutual respect for shared collections, and sustainable library stewardship.
+          <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+            LibraMind operates on principles of academic honor, mutual respect for shared collections, and rational library stewardship.
           </p>
         </div>
 
@@ -104,59 +107,58 @@ export default function TermsPolicies({ onNavigate }) {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px',
-            marginBottom: '48px'
+            gap: '24px'
           }}
         >
-          {policies.map((p, idx) => {
-            const Icon = p.icon;
+          {policies.map((pol, idx) => {
+            const Icon = pol.icon;
+            const borderColors = ['var(--editorial-accent)', 'var(--editorial-green)', 'var(--editorial-border)'];
             return (
               <div
                 key={idx}
-                className="bio-card"
                 style={{
                   padding: '28px',
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px'
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-card)',
+                  borderTop: `6px solid ${borderColors[idx % 3]}`
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                   <div
                     style={{
                       width: '44px',
                       height: '44px',
-                      borderRadius: '12px',
-                      backgroundColor: 'var(--soft-sage-light)',
-                      color: 'var(--forest)',
+                      backgroundColor: 'var(--editorial-border)',
+                      border: '1px solid var(--editorial-border)',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      color: 'var(--editorial-text)'
                     }}
                   >
-                    <Icon size={22} />
+                    <Icon size={22} strokeWidth={2.4} />
                   </div>
-                  <h2 style={{ fontSize: '1.18rem', color: 'var(--forest-dark)', margin: 0 }}>
-                    {p.title}
-                  </h2>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+                    {pol.title}
+                  </h3>
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {p.rules.map((rule, rIdx) => (
+                  {pol.rules.map((rule, rIdx) => (
                     <li
                       key={rIdx}
                       style={{
                         display: 'flex',
                         alignItems: 'flex-start',
-                        gap: '10px',
+                        gap: '8px',
                         fontSize: '0.88rem',
-                        color: 'var(--dark-text)',
-                        lineHeight: 1.5
+                        color: 'var(--editorial-text)',
+                        lineHeight: 1.55,
+                        fontWeight: 500
                       }}
                     >
-                      <CheckCircle size={16} color="var(--forest)" style={{ minWidth: '16px', marginTop: '3px' }} />
+                      <span style={{ color: 'var(--editorial-accent)', fontWeight: 900, flexShrink: 0, marginTop: '2px' }}>■</span>
                       <span>{rule}</span>
                     </li>
                   ))}
@@ -164,37 +166,6 @@ export default function TermsPolicies({ onNavigate }) {
               </div>
             );
           })}
-        </div>
-
-        {/* Bottom Banner */}
-        <div
-          className="bio-card"
-          style={{
-            padding: '32px',
-            backgroundColor: 'var(--cream)',
-            border: '1px solid var(--subtle-border)',
-            borderRadius: '16px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px'
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: '0 0 6px' }}>
-              Questions Regarding a Loan or Fee?
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--muted-text)' }}>
-              Our circulation librarians are available at the front desk to review loan records and assist with waiver petitions.
-            </p>
-          </div>
-          <button
-            onClick={() => onNavigate('contact')}
-            className="btn btn-primary btn-sm"
-          >
-            Contact Circulation Desk
-          </button>
         </div>
       </div>
     </div>

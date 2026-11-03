@@ -46,7 +46,7 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
         ...prev,
         {
           sender: 'bot',
-          text: "I couldn't reach the library catalog server. Please ensure the backend is running.",
+          text: "I could not reach the library catalog server. Please verify network or backend status.",
           time: new Date()
         }
       ]);
@@ -67,8 +67,8 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(35, 52, 43, 0.45)',
-        backdropFilter: 'blur(5px)',
+        backgroundColor: 'rgba(18, 18, 18, 0.75)',
+        backdropFilter: 'blur(4px)',
         zIndex: 2000,
         display: 'flex',
         alignItems: 'center',
@@ -78,30 +78,43 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
       onClick={onClose}
     >
       <div
-        className="bio-card"
         style={{
-          width: '560px',
+          width: '580px',
           maxWidth: '100%',
-          height: '640px',
+          height: '660px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#FFFFFF',
-          borderRadius: '20px',
-          boxShadow: '0 20px 50px rgba(24, 38, 30, 0.25)',
-          overflow: 'hidden'
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-xl)',
+          position: 'relative'
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Top Accent Stripe */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '5px',
+            background: 'linear-gradient(90deg, var(--editorial-accent) 0% 33.3%, var(--editorial-green) 33.3% 66.6%, var(--editorial-border) 66.6% 100%)',
+            zIndex: 10
+          }}
+        />
+
         {/* Header */}
         <div
           style={{
             padding: '16px 20px',
-            backgroundColor: 'var(--forest)',
+            backgroundColor: 'var(--editorial-text)',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            borderBottom: '2.5px solid var(--editorial-text)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -109,21 +122,21 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backgroundColor: 'var(--editorial-border)',
+                border: '1px solid var(--editorial-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <Sparkles size={20} color="#DCE5D5" />
+              <Sparkles size={18} color="var(--editorial-text)" strokeWidth={2.4} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#FFFFFF', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#FFFFFF', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
                 LibraMind AI Assistant
               </h3>
-              <span style={{ fontSize: '0.74rem', color: 'var(--soft-sage)' }}>
-                Powered by TF-IDF & Library Catalog Knowledge
+              <span style={{ fontSize: '0.74rem', color: 'var(--editorial-border)', fontWeight: 800, textTransform: 'uppercase' }}>
+                TF-IDF & Database Knowledge Agent
               </span>
             </div>
           </div>
@@ -131,14 +144,17 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
             onClick={onClose}
             aria-label="Close Assistant"
             style={{
-              background: 'none',
-              border: 'none',
-              color: '#FFFFFF',
+              background: '#FFFFFF',
+              border: '1px solid var(--editorial-border)',
+              color: 'var(--editorial-text)',
               cursor: 'pointer',
-              padding: '4px'
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <X size={20} />
+            <X size={18} strokeWidth={2.4} />
           </button>
         </div>
 
@@ -148,7 +164,7 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
             flex: 1,
             overflowY: 'auto',
             padding: '20px',
-            backgroundColor: 'var(--cream)',
+            backgroundColor: 'var(--editorial-bg)',
             display: 'flex',
             flexDirection: 'column',
             gap: '14px'
@@ -167,33 +183,31 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
               {m.sender === 'bot' && (
                 <div
                   style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--botanical)',
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: 'var(--editorial-green)',
+                    border: '1px solid var(--editorial-border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0
                   }}
                 >
-                  <Bot size={16} color="#FFFFFF" />
+                  <Bot size={16} color="#FFFFFF" strokeWidth={2.4} />
                 </div>
               )}
 
               <div
                 style={{
-                  backgroundColor: m.sender === 'user' ? 'var(--forest)' : '#FFFFFF',
-                  color: m.sender === 'user' ? '#FFFFFF' : 'var(--dark-text)',
+                  backgroundColor: m.sender === 'user' ? 'var(--editorial-accent)' : '#FFFFFF',
+                  color: m.sender === 'user' ? '#FFFFFF' : 'var(--editorial-text)',
                   padding: '12px 16px',
-                  borderRadius: '14px',
-                  borderTopLeftRadius: m.sender === 'bot' ? '2px' : '14px',
-                  borderTopRightRadius: m.sender === 'user' ? '2px' : '14px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  border: m.sender === 'bot' ? '1px solid rgba(52, 78, 65, 0.1)' : 'none',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-md)',
                   fontSize: '0.92rem',
-                  lineHeight: 1.45,
-                  whiteSpace: 'pre-line'
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre-line',
+                  fontWeight: 500
                 }}
               >
                 {m.text}
@@ -211,16 +225,16 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
                       alignItems: 'center',
                       gap: '4px',
                       padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--botanical)',
-                      backgroundColor: 'var(--soft-sage-light)',
-                      color: 'var(--forest-dark)',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
+                      border: '1px solid var(--editorial-border)',
+                      backgroundColor: 'var(--editorial-border)',
+                      color: 'var(--editorial-text)',
+                      fontSize: '0.78rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
                       cursor: 'pointer'
                     }}
                   >
-                    Open Page <CornerDownRight size={14} />
+                    Open Page <CornerDownRight size={13} strokeWidth={2.4} />
                   </button>
                 )}
               </div>
@@ -228,17 +242,17 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
               {m.sender === 'user' && (
                 <div
                   style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--sage)',
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: 'var(--editorial-border)',
+                    border: '1px solid var(--editorial-border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0
                   }}
                 >
-                  <User size={16} color="#FFFFFF" />
+                  <User size={16} color="var(--editorial-text)" strokeWidth={2.4} />
                 </div>
               )}
             </div>
@@ -248,28 +262,30 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
             <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start' }}>
               <div
                 style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--botanical)',
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: 'var(--editorial-green)',
+                  border: '1px solid var(--editorial-border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
               >
-                <Bot size={16} color="#FFFFFF" />
+                <Bot size={16} color="#FFFFFF" strokeWidth={2.4} />
               </div>
               <div
                 style={{
                   backgroundColor: '#FFFFFF',
                   padding: '10px 16px',
-                  borderRadius: '14px',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-sm)',
                   fontSize: '0.85rem',
-                  color: 'var(--muted-text)',
-                  border: '1px solid rgba(52, 78, 65, 0.1)'
+                  color: 'var(--editorial-text)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase'
                 }}
               >
-                Searching library catalog & analyzing records...
+                Analyzing catalog records...
               </div>
             </div>
           )}
@@ -281,8 +297,8 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
         <div
           style={{
             padding: '8px 16px',
-            backgroundColor: '#FAF5EC',
-            borderTop: '1px solid rgba(52, 78, 65, 0.08)',
+            backgroundColor: 'var(--editorial-bg-subtle)',
+            borderTop: '1px solid var(--editorial-border)',
             display: 'flex',
             gap: '8px',
             overflowX: 'auto',
@@ -295,11 +311,12 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
               onClick={() => handleSend(p)}
               style={{
                 background: '#FFFFFF',
-                border: '1px solid var(--subtle-border)',
-                borderRadius: '12px',
+                border: '1px solid var(--editorial-border)',
+                boxShadow: 'var(--shadow-sm)',
                 padding: '4px 10px',
                 fontSize: '0.76rem',
-                color: 'var(--forest-dark)',
+                color: 'var(--editorial-text)',
+                fontWeight: 700,
                 cursor: 'pointer'
               }}
             >
@@ -317,7 +334,7 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
           style={{
             padding: '12px 16px',
             backgroundColor: '#FFFFFF',
-            borderTop: '1px solid rgba(52, 78, 65, 0.1)',
+            borderTop: '1px solid var(--editorial-border)',
             display: 'flex',
             gap: '10px'
           }}
@@ -334,9 +351,9 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
             type="submit"
             className="btn btn-primary"
             disabled={loading || !input.trim()}
-            style={{ padding: '0 18px' }}
+            style={{ padding: '0 20px' }}
           >
-            <Send size={16} />
+            <Send size={16} strokeWidth={2.4} />
           </button>
         </form>
       </div>

@@ -29,14 +29,15 @@ import {
   AlertCircle,
   Key
 } from 'lucide-react';
+import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
-export function resolveBookCoverUrl(url) {
-  if (!url) return 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';
+export function resolveBookCoverUrl(url, title = 'Classical Book', author = 'Author', category = 'Archival') {
+  if (!url) return getOfflineBookCover(title, author, category);
   return url;
 }
 
 export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' }) {
-  const { user, login, logout } = useAuth();
+  const { user, login, loginWithGithub, logout } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -57,6 +58,13 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   const [libPassword, setLibPassword] = useState('');
   const [libLoginError, setLibLoginError] = useState('');
   const [loggingInLib, setLoggingInLib] = useState(false);
+
+  // GitHub Staff SSO state
+  const [showLibGithubModal, setShowLibGithubModal] = useState(false);
+  const [libGithubUsername, setLibGithubUsername] = useState('marcus-thorne');
+  const [libGithubName, setLibGithubName] = useState('Marcus Thorne');
+  const [libGithubEmail, setLibGithubEmail] = useState('librarian@libramind.edu');
+  const [libGithubLoading, setLibGithubLoading] = useState(false);
 
   // Form states
   // 1. Issue
@@ -512,6 +520,25 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
 
   // Case 2: Unauthenticated Visitor -> Dedicated Librarian Portal Gateway Login
   if (!user) {
+    const handleLibGithubAuth = async (e) => {
+      if (e) e.preventDefault();
+      setLibLoginError('');
+      setLibGithubLoading(true);
+      try {
+        await loginWithGithub({
+          githubUsername: libGithubUsername.trim() || 'marcus-librarian',
+          name: libGithubName.trim() || 'Marcus Thorne (Librarian)',
+          email: libGithubEmail.trim() || 'librarian@libramind.edu'
+        }, 'librarian');
+        setShowLibGithubModal(false);
+        fetchLibrarianData();
+      } catch (err) {
+        setLibLoginError(err.message || 'GitHub staff SSO failed');
+      } finally {
+        setLibGithubLoading(false);
+      }
+    };
+
     return (
       <div
         style={{
@@ -520,70 +547,82 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
           alignItems: 'center',
           justifyContent: 'center',
           padding: '50px 20px',
-          backgroundColor: 'var(--cream)'
+          backgroundColor: '#FFFFFF'
         }}
       >
         <div
           className="bio-card"
           style={{
-            width: '460px',
+            width: '480px',
             maxWidth: '100%',
             backgroundColor: '#FFFFFF',
-            padding: '36px',
-            borderRadius: '20px',
+            padding: '38px',
+            borderRadius: 'var(--radius-xl)',
             boxShadow: 'var(--shadow-xl)',
-            border: '1px solid rgba(82, 115, 77, 0.22)'
+            border: '1.5px solid var(--editorial-border)',
+            position: 'relative'
           }}
         >
+          {/* Top Maximalist Organic Accent Ribbon */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '5px',
+              borderTopLeftRadius: 'var(--radius-xl)',
+              borderTopRightRadius: 'var(--radius-xl)',
+              background: 'linear-gradient(90deg, var(--editorial-green) 0%, var(--editorial-border) 50%, var(--editorial-accent) 100%)'
+            }}
+          />
+
           {/* Brand Header */}
-          <div style={{ textAlign: 'center', marginBottom: '26px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '26px', marginTop: '4px' }}>
             <div
               style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                backgroundColor: 'var(--botanical)',
+                width: '60px',
+                height: '60px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, var(--editorial-green), var(--editorial-border))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 14px',
-                boxShadow: '0 6px 18px rgba(82, 115, 77, 0.25)'
+                boxShadow: '0 8px 20px rgba(96, 108, 56, 0.26)'
               }}
             >
-              <Layers size={28} color="#FAF8F1" />
+              <Layers size={28} color="#FFFFFF" />
             </div>
             <div
+              className="pill-badge"
               style={{
-                display: 'inline-block',
-                backgroundColor: 'var(--soft-sage)',
-                color: 'var(--forest-dark)',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                padding: '3px 10px',
-                borderRadius: '12px',
-                marginBottom: '8px'
+                backgroundColor: '#FFFFFF',
+                color: 'var(--editorial-green)',
+                borderColor: 'rgba(96, 108, 56, 0.3)',
+                marginBottom: '10px'
               }}
             >
-              Circulation Desk • Staff Gateway
+              🌿 Circulation Desk • Staff Gateway
             </div>
-            <h2 style={{ fontSize: '1.75rem', color: 'var(--forest-dark)', margin: '4px 0 6px' }}>
+            <h2 style={{ fontSize: '1.9rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '4px 0 6px' }}>
               Librarian Portal Gateway
             </h2>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', margin: 0 }}>
-              Sign in with your staff credentials to manage book issues, returns, and catalog inventory.
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0 }}>
+              Sign in with staff credentials or GitHub Staff SSO to manage circulation, loans, and inventory.
             </p>
           </div>
 
           {libLoginError && (
             <div
               style={{
-                padding: '10px 14px',
-                borderRadius: '8px',
+                padding: '12px 14px',
+                borderRadius: 'var(--radius-md)',
                 backgroundColor: 'var(--status-danger-bg)',
                 color: 'var(--status-danger-text)',
+                border: '1px solid rgba(150, 49, 36, 0.2)',
                 fontSize: '0.86rem',
+                fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -595,9 +634,55 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             </div>
           )}
 
+          {/* Continue with GitHub for Librarian Staff */}
+          <button
+            type="button"
+            onClick={() => setShowLibGithubModal(true)}
+            style={{
+              width: '100%',
+              padding: '12px 18px',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: '#24292F',
+              color: '#FFFFFF',
+              border: 'none',
+              fontSize: '0.92rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(36, 41, 47, 0.2)',
+              transition: 'all 0.2s ease',
+              marginBottom: '20px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#1F2328';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#24292F';
+              e.currentTarget.style.transform = 'none';
+            }}
+          >
+            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <span>Continue with GitHub (Staff SSO)</span>
+          </button>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', gap: '14px' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--editorial-border)' }} />
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              or staff credentials
+            </span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--editorial-border)' }} />
+          </div>
+
           <form onSubmit={handleLibrarianLogin}>
             <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
+              <label className="form-label">
                 Staff Email or Staff ID
               </label>
               <input
@@ -611,7 +696,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             </div>
 
             <div className="form-group" style={{ marginBottom: '22px' }}>
-              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
+              <label className="form-label">
                 Staff Password / Key
               </label>
               <input
@@ -626,21 +711,21 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
 
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn btn-botanical"
               disabled={loggingInLib}
-              style={{ width: '100%', padding: '12px', fontSize: '0.96rem' }}
+              style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
             >
               {loggingInLib ? 'Verifying Staff Credentials...' : 'Sign In to Librarian Desk'}
             </button>
           </form>
 
           {/* 1-Click Quick Demo Login for Librarian */}
-          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--subtle-border)' }}>
+          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--editorial-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--forest-dark)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                 ⚡ 1-Click Staff Demo Access:
               </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--sage)', fontWeight: 600 }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-green)', fontWeight: 600 }}>
                 Pass: Librarian@123
               </span>
             </div>
@@ -660,11 +745,11 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                   setLoggingInLib(false);
                 }
               }}
-              className="btn btn-secondary btn-sm"
-              style={{ width: '100%', fontSize: '0.82rem', padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              className="btn btn-outline btn-sm"
+              style={{ width: '100%', fontSize: '0.84rem', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
-              <span><strong>Marcus Vance</strong> (LIB-5001 • Head Desk)</span>
-              <span style={{ fontSize: '0.74rem', color: 'var(--botanical)', fontWeight: 700 }}>Auto-fill & Enter →</span>
+              <span><strong>Marcus Thorne</strong> (LIB-5001 • Head Desk)</span>
+              <span style={{ fontSize: '0.76rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>Auto-fill & Enter →</span>
             </button>
           </div>
 
@@ -674,7 +759,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
               style={{
                 background: 'none',
                 border: 'none',
-                color: 'var(--botanical)',
+                color: 'var(--editorial-accent)',
                 fontSize: '0.84rem',
                 cursor: 'pointer',
                 fontWeight: 600
@@ -684,6 +769,167 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             </button>
           </div>
         </div>
+
+        {/* Librarian GitHub Staff SSO Modal */}
+        {showLibGithubModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(43, 33, 24, 0.55)',
+              backdropFilter: 'blur(6px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '20px'
+            }}
+            onClick={() => setShowLibGithubModal(false)}
+          >
+            <div
+              className="bio-card"
+              style={{
+                width: '460px',
+                maxWidth: '100%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 'var(--radius-xl)',
+                padding: '32px',
+                boxShadow: 'var(--shadow-xl)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowLibGithubModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: '18px',
+                  right: '18px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted-text)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '16px',
+                    backgroundColor: '#24292F',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(36, 41, 47, 0.25)'
+                  }}
+                >
+                  <svg height="28" width="28" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                  </svg>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--editorial-border)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>🌿</span>
+                  <span style={{ height: '2px', width: '30px', backgroundColor: 'var(--editorial-border)' }} />
+                  <span style={{ fontSize: '1.2rem' }}>🏛️</span>
+                </div>
+
+                <div
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, var(--editorial-green), var(--editorial-border))',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(96, 108, 56, 0.25)'
+                  }}
+                >
+                  <Layers size={24} />
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+                <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', margin: '0 0 6px', color: 'var(--editorial-text)' }}>
+                  Librarian Staff SSO (GitHub)
+                </h3>
+                <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', margin: 0 }}>
+                  Authenticate your staff access to the Circulation Desk and Book Catalog.
+                </p>
+              </div>
+
+              <form onSubmit={handleLibGithubAuth}>
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem' }}>
+                    Staff GitHub Username
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted-text)', fontWeight: 600 }}>@</span>
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ paddingLeft: '28px' }}
+                      value={libGithubUsername}
+                      onChange={(e) => setLibGithubUsername(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem' }}>
+                    Staff Full Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={libGithubName}
+                    onChange={(e) => setLibGithubName(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem' }}>
+                    Staff Email Address
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={libGithubEmail}
+                    onChange={(e) => setLibGithubEmail(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={libGithubLoading}
+                  className="btn btn-botanical"
+                  style={{ width: '100%', padding: '12px', fontSize: '0.94rem' }}
+                >
+                  {libGithubLoading ? 'Verifying Staff Access...' : 'Authorize Staff Desk →'}
+                </button>
+
+                <div style={{ textAlign: 'center', marginTop: '14px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowLibGithubModal(false)}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted-text)', fontSize: '0.82rem', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -953,12 +1199,13 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                           borderRadius: '6px',
                           overflow: 'hidden',
                           backgroundColor: 'var(--warm-beige)',
-                          border: '1px solid var(--subtle-border)',
+                          border: '1.5px solid var(--editorial-border)',
                           boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                         }}>
                           <img
-                            src={resolveBookCoverUrl(r.cover_image)}
+                            src={resolveBookCoverUrl(r.cover_image, r.book_title, 'Archivist', 'Archival')}
                             alt={r.book_title}
+                            onError={(e) => handleBookCoverError(e, r.book_title, 'Archivist', 'Archival')}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         </div>
@@ -1276,7 +1523,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                   <img
                     src={imagePreview}
                     alt="Device upload preview"
-                    style={{ width: '56px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--subtle-border)' }}
+                    style={{ width: '56px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1.5px solid var(--editorial-border)' }}
                   />
                   <div>
                     <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
@@ -1379,10 +1626,11 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                   <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-text)', textTransform: 'uppercase', marginBottom: '6px' }}>Current Image:</div>
-                      <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--subtle-border)', backgroundColor: '#FFF' }}>
+                      <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '1.5px solid var(--editorial-border)', backgroundColor: '#FFF' }}>
                         <img
-                          src={resolveBookCoverUrl(selBook.cover_image)}
+                          src={resolveBookCoverUrl(selBook.cover_image, selBook.title, selBook.author, selBook.category)}
                           alt={selBook.title}
+                          onError={(e) => handleBookCoverError(e, selBook.title, selBook.author, selBook.category)}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       </div>
@@ -1522,7 +1770,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                   padding: '16px',
                   borderRadius: '12px',
                   backgroundColor: seat.status === 'available' ? 'var(--status-available-bg)' : '#FEEFE6',
-                  border: '1px solid var(--subtle-border)',
+                  border: '1.5px solid var(--editorial-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px'
@@ -1774,8 +2022,8 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             width: '100%',
             maxWidth: '520px',
             padding: '28px',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+            border: '1.5px solid var(--editorial-border)',
+            boxShadow: 'var(--shadow-xl)',
             position: 'relative'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -1803,10 +2051,11 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', padding: '14px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', marginBottom: '18px' }}>
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--muted-text)', fontWeight: 600, marginBottom: '4px' }}>CURRENT:</div>
-                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--subtle-border)', backgroundColor: '#FFF' }}>
+                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1.5px solid var(--editorial-border)', backgroundColor: '#FFF' }}>
                   <img
-                    src={resolveBookCoverUrl(photoModalBook.cover_image)}
+                    src={resolveBookCoverUrl(photoModalBook.cover_image, photoModalBook.title, photoModalBook.author, photoModalBook.category)}
                     alt={photoModalBook.title}
+                    onError={(e) => handleBookCoverError(e, photoModalBook.title, photoModalBook.author, photoModalBook.category)}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>

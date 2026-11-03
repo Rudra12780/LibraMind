@@ -23,21 +23,25 @@ import {
   Armchair,
   Zap,
   Monitor,
-  ArrowLeft,
-  CheckCircle2
+  ArrowRight,
+  CheckCircle2,
+  Check,
+  Compass,
+  FileText
 } from 'lucide-react';
+import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
 const SUGGESTED_INTEREST_TAGS = [
   'Fiction & Novels',
-  'Story Books',
+  'Literary Classics',
   'Computer Science',
   'Artificial Intelligence',
   'Philosophy & Ethics',
   'History & Heritage',
   'Psychology',
-  'Classic Literature',
+  'Modern Poetry',
   'Science & Technology',
-  'Business & Startups'
+  'Economics & Society'
 ];
 
 export default function StudentDashboard({
@@ -75,7 +79,7 @@ export default function StudentDashboard({
   const [interestsText, setInterestsText] = useState(user?.interests || '');
   const [savingInterests, setSavingInterests] = useState(false);
 
-  // Custom Return Book Confirmation Modal
+  // Return Book Confirmation Modal
   const [returnModalLoan, setReturnModalLoan] = useState(null);
   const [returningLoan, setReturningLoan] = useState(false);
   const [returnError, setReturnError] = useState(null);
@@ -138,27 +142,34 @@ export default function StudentDashboard({
         api.getReservations(),
         api.getRecommendations(),
         api.getWishlist(),
-        api.getMySeatBookings().catch(() => [])
+        api.getUserSeatReservations()
       ]);
-      setLoans(loansData || []);
-      setReservations(resData || []);
-      setRecommendations(recData.recommendations || []);
-      setWishlist(wishData || []);
-      setSeatBookings(seatData || []);
+
+      const safeLoans = Array.isArray(loansData) ? loansData : [];
+      const safeReservations = Array.isArray(resData) ? resData : [];
+      const safeRecs = Array.isArray(recData) ? recData : [];
+      const safeWishlist = Array.isArray(wishData) ? wishData : [];
+      const safeSeats = Array.isArray(seatData) ? seatData : [];
+
+      setLoans(safeLoans);
+      setReservations(safeReservations);
+      setRecommendations(safeRecs);
+      setWishlist(safeWishlist);
+      setSeatBookings(safeSeats);
 
       if (onUpdateStats) {
-        const activeL = (loansData || []).filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue');
-        const activeR = (resData || []).filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
-        const activeS = (seatData || []).filter(b => b.status === 'active');
+        const activeL = safeLoans.filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue').length;
+        const activeR = safeReservations.filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup').length;
+        const activeS = safeSeats.filter(s => s.status === 'active').length;
         onUpdateStats({
-          loanCount: activeL.length,
-          holdCount: activeR.length,
-          seatCount: activeS.length,
-          wishlistCount: (wishData || []).length
+          loanCount: activeL,
+          holdCount: activeR,
+          seatCount: activeS,
+          wishlistCount: safeWishlist.length
         });
       }
     } catch (err) {
-      console.error('Failed to load student dashboard', err);
+      console.error('Failed to fetch patron folio data:', err);
     } finally {
       setLoading(false);
     }
@@ -169,22 +180,28 @@ export default function StudentDashboard({
   }, [fetchData]);
 
   const showToast = (content, isError = false) => {
-    if (typeof content === 'object' && content !== null) {
+    if (typeof content === 'string') {
+      setToastMessage({ title: null, msg: content, isError });
+    } else if (content && typeof content === 'object') {
       setToastMessage({
         title: content.title || null,
         msg: content.msg || content.message || '',
-        isError: content.isError || isError
+        isError: Boolean(content.isError || isError)
       });
-    } else {
-      setToastMessage({ msg: content, isError });
     }
-    setTimeout(() => setToastMessage(null), 4500);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
   };
 
   const handleRenewLoan = async (loanId) => {
     try {
-      const res = await api.renewLoan(loanId);
-      showToast(res.message || 'Loan renewed successfully!');
+      await api.renewLoan(loanId);
+      showToast({
+        title: 'Loan Extended',
+        msg: 'Due date successfully extended by 14 days.',
+        isError: false
+      });
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -217,14 +234,14 @@ export default function StudentDashboard({
       await api.returnBook(returnModalLoan.id);
       setReturnModalLoan(null);
       showToast({
-        title: 'Book Returned Successfully!',
-        msg: 'Thank you for returning your book. It is now available for other readers.',
+        title: 'Volume Returned Successfully',
+        msg: 'Thank you for returning the physical copy to circulation.',
         isError: false
       });
       fetchData();
     } catch (err) {
       console.error('Return book error:', err);
-      setReturnError(err.message || 'Failed to process return. Please try again or visit the library desk.');
+      setReturnError(err.message || 'Failed to process return. Please visit the front desk.');
     } finally {
       setReturningLoan(false);
     }
@@ -233,7 +250,7 @@ export default function StudentDashboard({
   const handleCancelReservation = async (resId) => {
     try {
       await api.cancelReservation(resId);
-      showToast('Reservation cancelled.');
+      showToast('Reservation hold cancelled.');
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -243,7 +260,7 @@ export default function StudentDashboard({
   const handleCancelSeatBooking = async (bookingId) => {
     try {
       await api.cancelSeatReservation(bookingId);
-      showToast('Study seat reservation cancelled successfully.');
+      showToast('Study seat reservation released.');
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -254,7 +271,7 @@ export default function StudentDashboard({
     if (e) e.stopPropagation();
     try {
       await api.removeFromWishlist(bookId);
-      showToast('Removed from your wishlist.');
+      showToast('Removed from saved wishlist.');
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -268,7 +285,7 @@ export default function StudentDashboard({
       await api.updateInterests(interestsText);
       await reloadProfile();
       setShowInterestsModal(false);
-      showToast('Reading interests updated! Recommendations refreshed.');
+      showToast('Reading interests updated. Recommendations refreshed.');
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -277,11 +294,13 @@ export default function StudentDashboard({
     }
   };
 
-  // Backend maps DB status 'active' → 'borrowed' in API response
-  // We must filter for both 'borrowed' (active) and 'overdue'
   const activeLoans = loans.filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue');
   const pastLoans = loans.filter(l => l.status === 'returned');
   const activeReservations = reservations.filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
+  const activeSeats = seatBookings.filter(b => b.status === 'active');
+
+  // Foremost currently reading volume for magazine feature
+  const primaryLoan = activeLoans.length > 0 ? activeLoans[0] : null;
 
   if (!user) {
     return (
@@ -291,49 +310,52 @@ export default function StudentDashboard({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '50px 20px',
-          backgroundColor: 'var(--cream)'
+          padding: '60px 20px',
+          backgroundColor: 'var(--editorial-bg)'
         }}
       >
         <div
-          className="bio-card"
           style={{
-            width: '460px',
+            width: '480px',
             maxWidth: '100%',
             backgroundColor: '#FFFFFF',
-            padding: '38px',
-            borderRadius: '20px',
-            boxShadow: 'var(--shadow-xl)',
+            padding: '42px 36px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--editorial-border)',
+            boxShadow: 'var(--shadow-md)',
             textAlign: 'center'
           }}
         >
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--soft-sage)',
-              color: 'var(--forest-dark)',
+              width: '54px',
+              height: '54px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--editorial-green)',
+              color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px'
+              margin: '0 auto 18px'
             }}
           >
-            <BookOpen size={28} />
+            <BookOpen size={26} strokeWidth={2.2} />
           </div>
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--forest-dark)', margin: '4px 0 10px' }}>
-            Student Hub Authentication
+          <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+            PATRON AUTHENTICATION
+          </span>
+          <h2 style={{ fontSize: '1.75rem', color: 'var(--editorial-text)', margin: '8px 0 12px', fontFamily: 'var(--font-serif)' }}>
+            Sign In to Your Reading Room
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', lineHeight: 1.5, marginBottom: '24px' }}>
-            Please sign in with your student library account to view your active book loans, holds, wishlist, and reserved study pods.
+          <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, marginBottom: '26px' }}>
+            Please sign in with your patron credentials to view active book loans, reservation queues, saved wishlist, and reserved study carrels.
           </p>
           <button
             onClick={() => onNavigate('login')}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: '0.94rem' }}
+            style={{ width: '100%', padding: '12px' }}
           >
-            Sign In to Student Hub
+            Sign In to Personal Folio
           </button>
         </div>
       </div>
@@ -341,59 +363,42 @@ export default function StudentDashboard({
   }
 
   return (
-    <div className="container" style={{ padding: '40px 24px 80px' }}>
-      {/* Toast Notification (Rendered via Portal for Viewport Stability & Rich Animated Feedback) */}
+    <div className="container" style={{ padding: '36px clamp(16px, 3vw, 32px) 80px', maxWidth: '1360px' }}>
+      {/* Toast Notification */}
       {toastMessage && typeof document !== 'undefined' && createPortal(
         <div
           role="status"
           aria-live="polite"
           style={{
             position: 'fixed',
-            bottom: '30px',
-            right: '30px',
-            backgroundColor: toastMessage.isError ? '#7F1D1D' : '#1A3326',
+            bottom: '28px',
+            right: '28px',
+            backgroundColor: 'var(--editorial-text)',
             color: '#FFFFFF',
-            padding: toastMessage.title ? '16px 22px' : '12px 20px',
-            borderRadius: '14px',
-            boxShadow: '0 14px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-            zIndex: 99999,
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--editorial-border)',
+            padding: '14px 20px',
+            boxShadow: 'var(--shadow-xl)',
+            zIndex: 999999,
             display: 'flex',
             alignItems: 'center',
-            gap: '14px',
-            maxWidth: '460px',
-            animation: 'modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+            gap: '12px',
+            maxWidth: '420px',
+            animation: 'slideUpFade 0.28s ease'
           }}
         >
-          <div
-            style={{
-              width: toastMessage.title ? '40px' : '32px',
-              height: toastMessage.title ? '40px' : '32px',
-              borderRadius: '50%',
-              backgroundColor: toastMessage.isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-              border: toastMessage.isError ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(74, 222, 128, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            {toastMessage.isError ? (
-              <AlertTriangle size={20} color="#FCA5A5" />
-            ) : (
-              <CheckCircle2
-                size={22}
-                color="#4ADE80"
-                style={{ animation: 'checkmarkPop 0.4s ease-out' }}
-              />
-            )}
-          </div>
+          {toastMessage.isError ? (
+            <AlertTriangle size={20} color="#E07A5F" />
+          ) : (
+            <CheckCircle2 size={20} color="#74C69D" />
+          )}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {toastMessage.title && (
-              <strong style={{ fontSize: '0.96rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '3px', letterSpacing: '-0.01em' }}>
+              <strong style={{ fontSize: '0.88rem', color: '#FFFFFF', marginBottom: '2px' }}>
                 {toastMessage.title}
               </strong>
             )}
-            <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.92)', lineHeight: 1.45 }}>
+            <span style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 1.4 }}>
               {toastMessage.msg}
             </span>
           </div>
@@ -401,297 +406,598 @@ export default function StudentDashboard({
         document.body
       )}
 
-      {/* Student Welcome Header */}
-      <div
-        className="bio-card"
+      {/* ── 1. Editorial Reading Room Masthead & Folio Header ── */}
+      <section
         style={{
-          padding: '30px',
-          backgroundColor: 'var(--forest)',
-          color: '#FFFFFF',
-          marginBottom: '36px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '20px'
+          borderBottom: '1px solid var(--editorial-border)',
+          paddingBottom: '28px',
+          marginBottom: '32px'
         }}
       >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--soft-sage)', fontSize: '0.84rem', fontWeight: 600, marginBottom: '6px' }}>
-            <span>{user?.role === 'admin' ? 'Administrator (User Mode)' : user?.role === 'librarian' ? 'Staff Librarian (User Mode)' : 'Verified Member Account'}</span> • <span>ID: {user?.membership_id || 'STU-1001'}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+          <div style={{ maxWidth: '820px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              <span className="editorial-kicker">
+                PATRON FOLIO • VOL. XXIV
+              </span>
+              <span style={{ color: 'var(--editorial-border)' }}>•</span>
+              <span
+                style={{
+                  fontSize: '0.70rem',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 700,
+                  color: 'var(--editorial-accent)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                ID: {user?.membership_id || 'STU-1001'}
+              </span>
+              <span style={{ color: 'var(--editorial-border)' }}>•</span>
+              <span
+                style={{
+                  fontSize: '0.70rem',
+                  fontWeight: 600,
+                  color: 'var(--editorial-green)',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  padding: '2px 8px',
+                  borderRadius: '2px',
+                  border: '1px solid var(--editorial-border)'
+                }}
+              >
+                ● Active Scholar in Good Standing
+              </span>
+            </div>
+
+            <h1
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 'clamp(2.1rem, 3.8vw, 3.2rem)',
+                fontWeight: 800,
+                color: 'var(--editorial-text)',
+                lineHeight: 1.12,
+                letterSpacing: '-0.025em',
+                margin: '0 0 12px'
+              }}
+            >
+              The Reading Room of {user?.name || 'Reader'}
+            </h1>
+
+            <p
+              style={{
+                fontSize: '1.02rem',
+                color: 'var(--editorial-text-muted)',
+                lineHeight: 1.6,
+                margin: 0
+              }}
+            >
+              Your personal circulation ledger — monitor currently borrowed volumes, track renewal eligibility, manage hold queues, and explore literary selections curated for your interests.
+            </p>
           </div>
-          <h1 style={{ fontSize: '2.2rem', color: '#FFFFFF', marginBottom: '8px' }}>
-            Welcome back, {user?.name || 'Student'}
-          </h1>
-          <p style={{ color: 'var(--soft-sage)', fontSize: '0.94rem', margin: 0, maxWidth: '540px' }}>
-            Track your borrowed physical copies, check due date countdowns, manage reservation holds, and view personalized recommendations.
-          </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => onNavigate('catalog')}
-            className="btn btn-secondary"
-            style={{ fontSize: '0.88rem' }}
-          >
-            <Search size={16} /> Search Books
-          </button>
-          <button
-            onClick={() => {
-              setInterestsText(user?.interests || '');
-              setShowInterestsModal(true);
-            }}
-            className="btn btn-outline"
-            style={{ borderColor: 'var(--soft-sage)', color: '#FFFFFF', fontSize: '0.88rem' }}
-          >
-            <Settings size={16} /> Edit Reading Interests
-          </button>
+          {/* Masthead Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '6px' }}>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Search size={14} strokeWidth={2.2} />
+              <span>Explore Catalog</span>
+            </button>
+            <button
+              onClick={() => {
+                setInterestsText(user?.interests || '');
+                setShowInterestsModal(true);
+              }}
+              className="btn btn-outline btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Settings size={14} strokeWidth={2.2} />
+              <span>Curate Interests</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Member Portal Section Filter Pills */}
-      <div
+      {/* ── 2. Editorial Reading Statistics (Large Serif Highlight Numbers) ── */}
+      <section
         style={{
-          display: 'flex',
-          gap: '8px',
-          overflowX: 'auto',
-          paddingBottom: '8px',
-          marginBottom: '28px',
-          scrollbarWidth: 'none'
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          gap: '16px',
+          marginBottom: '36px'
         }}
       >
         {[
-          { id: 'all', label: 'All Personal Activity' },
-          { id: 'loans', label: `My Borrowed Copies (${activeLoans.length})` },
-          { id: 'holds', label: `Hold Queues (${activeReservations.length})` },
-          { id: 'seats', label: `Study Pods (${seatBookings.filter(b => b.status === 'active').length})` },
-          { id: 'wishlist', label: `Saved Wishlist (${wishlist.length})` },
-          { id: 'recommendations', label: `AI Recommended (${recommendations.length})` }
-        ].map(pill => {
-          const isActive = currentTab === pill.id;
-          return (
-            <button
-              key={pill.id}
-              onClick={() => handleTabChange(pill.id)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '24px',
-                border: isActive ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
-                backgroundColor: isActive ? 'var(--forest)' : '#FFFFFF',
-                color: isActive ? '#FFFFFF' : 'var(--forest-dark)',
-                fontSize: '0.84rem',
-                fontWeight: isActive ? 700 : 500,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                boxShadow: isActive ? '0 2px 8px rgba(52, 78, 65, 0.22)' : 'none',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {pill.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Section: Direct Messages & Notices from Administration */}
-      {currentTab === 'all' && (
-      <div
-        className="bio-card"
-        style={{
-          padding: '24px',
-          backgroundColor: '#FFFFFF',
-          marginBottom: '32px',
-          borderLeft: '4px solid var(--forest)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {
+            label: 'VOLUMES ON LOAN',
+            value: String(activeLoans.length).padStart(2, '0'),
+            meta: `Max allowance: 05 copies`,
+            tab: 'loans',
+            color: 'var(--editorial-text)'
+          },
+          {
+            label: 'ACTIVE HOLD QUEUES',
+            value: String(activeReservations.length).padStart(2, '0'),
+            meta: activeReservations.some(r => r.status === 'ready_for_pickup') ? '● 1 Ready for Pickup' : 'Waitlist notifications on',
+            tab: 'holds',
+            color: activeReservations.length > 0 ? 'var(--editorial-accent)' : 'var(--editorial-text)'
+          },
+          {
+            label: 'RESERVED STUDY PODS',
+            value: String(activeSeats.length).padStart(2, '0'),
+            meta: activeSeats.length > 0 ? `${activeSeats[0].time_slot}` : 'Silent carrels available',
+            tab: 'seats',
+            color: 'var(--editorial-text)'
+          },
+          {
+            label: 'CURATED WISHLIST',
+            value: String(wishlist.length).padStart(2, '0'),
+            meta: 'Saved for future study',
+            tab: 'wishlist',
+            color: 'var(--editorial-text)'
+          }
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            onClick={() => handleTabChange(stat.tab)}
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--editorial-border)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '22px 24px',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+              boxShadow: currentTab === stat.tab ? 'var(--shadow-sm)' : 'none',
+              borderColor: currentTab === stat.tab ? 'var(--editorial-green)' : 'var(--editorial-border)',
+              backgroundColor: currentTab === stat.tab ? 'var(--editorial-bg-subtle)' : '#FFFFFF'
+            }}
+          >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                backgroundColor: 'var(--soft-sage-light)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--forest)'
+                fontSize: '0.68rem',
+                fontFamily: 'var(--font-sans)',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                color: 'var(--editorial-accent)',
+                textTransform: 'uppercase',
+                marginBottom: '8px'
               }}
             >
-              <Bell size={18} />
+              {stat.label}
             </div>
-            <div>
-              <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
-                Direct Messages & Announcements from Administration
-              </h3>
-              <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>
-                Official notices, warnings, and library alerts delivered to your screen.
-              </span>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '2.5rem',
+                fontWeight: 800,
+                lineHeight: 1,
+                color: stat.color,
+                letterSpacing: '-0.03em',
+                marginBottom: '6px'
+              }}
+            >
+              {stat.value}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', fontWeight: 500 }}>
+              {stat.meta}
             </div>
           </div>
+        ))}
+      </section>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ display: 'flex', backgroundColor: 'var(--cream)', padding: '3px', borderRadius: '8px', border: '1px solid var(--subtle-border)' }}>
-              <button
-                onClick={() => setNotifTab('official')}
-                style={{
-                  border: 'none',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: notifTab === 'official' ? 700 : 500,
-                  backgroundColor: notifTab === 'official' ? 'var(--forest)' : 'transparent',
-                  color: notifTab === 'official' ? '#FFFFFF' : 'var(--forest-dark)',
-                  cursor: 'pointer'
-                }}
-              >
-                Admin & Welcome
-              </button>
-              <button
-                onClick={() => setNotifTab('all')}
-                style={{
-                  border: 'none',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: notifTab === 'all' ? 700 : 500,
-                  backgroundColor: notifTab === 'all' ? 'var(--forest)' : 'transparent',
-                  color: notifTab === 'all' ? '#FFFFFF' : 'var(--forest-dark)',
-                  cursor: 'pointer'
-                }}
-              >
-                All Activity
-              </button>
-            </div>
-
-            {notifications && notifications.filter(n => !n.is_read).length > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="btn btn-sm btn-outline"
-                style={{ fontSize: '0.78rem' }}
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
-        </div>
-
-        {(() => {
-          const officialList = (notifications || []).filter(n => {
-            const isWelcome = n.title?.toLowerCase().includes('welcome') || n.message?.toLowerCase().includes('membership');
-            const isAdminMsg = n.type === 'announcement' || n.title?.toLowerCase().includes('admin') || n.title?.toLowerCase().includes('notice') || n.title?.toLowerCase().includes('warning');
-            return isWelcome || isAdminMsg;
-          });
-          const displayList = notifTab === 'official' ? officialList : (notifications || []);
-
-          if (displayList.length === 0) {
-            return (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted-text)', fontSize: '0.88rem' }}>
-                {notifTab === 'official'
-                  ? 'No official administrative notices or welcome messages at this time.'
-                  : 'No library activity notifications recorded yet.'}
-              </div>
-            );
-          }
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {displayList.slice(0, 5).map(n => (
-              <div
-                key={n.id}
-                style={{
-                  padding: '14px 18px',
-                  borderRadius: '10px',
-                  backgroundColor: n.is_read ? 'var(--cream)' : 'var(--soft-sage-light)',
-                  border: n.is_read ? '1px solid var(--subtle-border)' : '1px solid var(--botanical)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '14px'
-                }}
-              >
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>
-                    {n.type === 'warning' ? '⚠️' : n.type === 'due_reminder' ? '⏰' : '📢'}
-                  </span>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '0.94rem', color: 'var(--forest-dark)' }}>
-                        {n.title}
-                      </strong>
-                      {!n.is_read && (
-                        <span style={{
-                          backgroundColor: 'var(--botanical)',
-                          color: '#FFFFFF',
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: '8px',
-                          textTransform: 'uppercase'
-                        }}>
-                          New
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--dark-text)', lineHeight: 1.45 }}>
-                      {n.message}
-                    </p>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--muted-text)', marginTop: '4px', display: 'block' }}>
-                      {new Date(n.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                    </span>
-                  </div>
-                </div>
-
-                {!n.is_read && (
-                  <button
-                    onClick={() => markAsRead(n.id)}
-                    className="btn btn-sm btn-outline"
-                    style={{ fontSize: '0.76rem', padding: '4px 8px', backgroundColor: '#FFFFFF', flexShrink: 0 }}
-                  >
-                    Mark read
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-      </div>
-      )}
-
-      {/* Dashboard Grid (Loans & Holds) */}
-      {(currentTab === 'all' || currentTab === 'loans' || currentTab === 'holds') && (
-      <div
+      {/* ── 3. Single Unified Magazine Section Switcher ── */}
+      <section
         style={{
-          display: 'grid',
-          gridTemplateColumns: currentTab === 'all' ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr',
-          gap: '30px',
-          marginBottom: '48px'
+          borderBottom: '1px solid var(--editorial-border)',
+          paddingBottom: '16px',
+          marginBottom: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}
       >
-        {/* Section 1: Active Loans */}
-        {(currentTab === 'all' || currentTab === 'loans') && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookOpen size={20} color="var(--botanical)" />
-              Currently Borrowed ({activeLoans.length} of 5)
-            </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'All Records', count: null },
+            { id: 'loans', label: 'Borrowed Copies', count: activeLoans.length },
+            { id: 'holds', label: 'Hold Queues', count: activeReservations.length },
+            { id: 'seats', label: 'Study Pods', count: activeSeats.length },
+            { id: 'wishlist', label: 'Saved Wishlist', count: wishlist.length },
+            { id: 'recommendations', label: 'Curated For You', count: recommendations.length }
+          ].map(tab => {
+            const isActive = currentTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                style={{
+                  backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
+                  color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                  border: isActive ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '7px 16px',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>{tab.label}</span>
+                {tab.count !== null && (
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.22)' : 'var(--editorial-bg-subtle)',
+                      color: isActive ? '#FFFFFF' : 'var(--editorial-accent)',
+                      padding: '1px 6px',
+                      borderRadius: '10px'
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', fontWeight: 500 }}>
+          Viewing: <strong style={{ color: 'var(--editorial-text)' }}>{currentTab.toUpperCase()}</strong>
+        </div>
+      </section>
+
+      {/* ── 4. Official Notices / Direct Messages from Administration ── */}
+      {currentTab === 'all' && notifications && notifications.length > 0 && (
+        <section
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid var(--editorial-border)',
+            borderLeft: '4px solid var(--editorial-accent)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '22px 26px',
+            marginBottom: '40px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Bell size={18} color="var(--editorial-accent)" strokeWidth={2.2} />
+              <div>
+                <h3 style={{ fontSize: '1.05rem', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
+                  Official Library Notices &amp; Announcements
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                  Administrative dispatches regarding renewals, holiday hours, and collection updates.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                <button
+                  onClick={() => setNotifTab('official')}
+                  style={{
+                    border: 'none',
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: notifTab === 'official' ? 700 : 500,
+                    backgroundColor: notifTab === 'official' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                    color: notifTab === 'official' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Administrative
+                </button>
+                <button
+                  onClick={() => setNotifTab('all')}
+                  style={{
+                    border: 'none',
+                    borderLeft: '1px solid var(--editorial-border)',
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: notifTab === 'all' ? 700 : 500,
+                    backgroundColor: notifTab === 'all' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                    color: notifTab === 'all' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  All Activity
+                </button>
+              </div>
+
+              {notifications.some(n => !n.is_read) && (
+                <button
+                  onClick={markAllAsRead}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: '0.74rem', padding: '4px 8px' }}
+                >
+                  Mark All Read
+                </button>
+              )}
+            </div>
+          </div>
+
+          {(() => {
+            const officialList = (notifications || []).filter(n => {
+              const isWelcome = n.title?.toLowerCase().includes('welcome') || n.message?.toLowerCase().includes('membership');
+              const isAdminMsg = n.type === 'announcement' || n.title?.toLowerCase().includes('admin') || n.title?.toLowerCase().includes('notice') || n.title?.toLowerCase().includes('warning');
+              return isWelcome || isAdminMsg;
+            });
+            const displayList = notifTab === 'official' ? officialList : (notifications || []);
+
+            if (displayList.length === 0) {
+              return (
+                <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--editorial-text-muted)', fontSize: '0.86rem' }}>
+                  No unread official administrative notices at this time.
+                </div>
+              );
+            }
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {displayList.slice(0, 4).map(n => (
+                  <div
+                    key={n.id}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: n.is_read ? 'var(--editorial-bg)' : 'var(--editorial-bg-subtle)',
+                      border: '1px solid var(--editorial-border)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                        <strong style={{ fontSize: '0.88rem', color: 'var(--editorial-text)' }}>
+                          {n.title}
+                        </strong>
+                        {!n.is_read && (
+                          <span
+                            style={{
+                              backgroundColor: 'var(--editorial-accent)',
+                              color: '#FFFFFF',
+                              fontSize: '0.62rem',
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: '2px',
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            New
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--editorial-text-muted)', lineHeight: 1.45 }}>
+                        {n.message}
+                      </p>
+                      <span style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)', marginTop: '4px', display: 'block' }}>
+                        {new Date(n.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
+
+                    {!n.is_read && (
+                      <button
+                        onClick={() => markAsRead(n.id)}
+                        className="btn btn-outline btn-sm"
+                        style={{ fontSize: '0.72rem', padding: '3px 8px', flexShrink: 0 }}
+                      >
+                        Mark Read
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </section>
+      )}
+
+      {/* ── 5. Currently Reading Editorial Feature Spread (Top Active Loan) ── */}
+      {(currentTab === 'all' || currentTab === 'loans') && primaryLoan && (
+        <section
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid var(--editorial-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '32px clamp(20px, 3vw, 40px)',
+            marginBottom: '40px',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '36px',
+              alignItems: 'center'
+            }}
+          >
+            {/* Left: Specimen Book Cover */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                padding: '24px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--editorial-border)'
+              }}
+            >
+              <div
+                style={{
+                  width: '180px',
+                  height: '250px',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 28px rgba(37, 40, 32, 0.18)',
+                  border: '1px solid var(--editorial-border)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => onViewBookDetails(primaryLoan.book_id)}
+              >
+                <img
+                  src={primaryLoan.cover_image || getOfflineBookCover(primaryLoan.book_title, 'Scholar', 'Circulation')}
+                  alt={primaryLoan.book_title}
+                  onError={(e) => handleBookCoverError(e, primaryLoan.book_title, 'Scholar', 'Circulation')}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            </div>
+
+            {/* Right: Editorial Loan Details & Circulation Controls */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+                  CURRENTLY IN CIRCULATION
+                </span>
+                <span style={{ color: 'var(--editorial-border)' }}>•</span>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    color: 'var(--editorial-text-muted)',
+                    backgroundColor: 'var(--editorial-bg-subtle)',
+                    padding: '2px 8px',
+                    borderRadius: '2px',
+                    border: '1px solid var(--editorial-border)'
+                  }}
+                >
+                  {primaryLoan.copy_code}
+                </span>
+              </div>
+
+              <h2
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)',
+                  fontWeight: 800,
+                  color: 'var(--editorial-text)',
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.02em',
+                  margin: '0 0 12px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => onViewBookDetails(primaryLoan.book_id)}
+              >
+                {primaryLoan.book_title}
+              </h2>
+
+              {(() => {
+                const dueDate = new Date(primaryLoan.due_date);
+                const isOverdue = primaryLoan.status === 'overdue' || new Date() > dueDate;
+                const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
+                    {isOverdue ? (
+                      <span className="badge badge-danger">
+                        ● OVERDUE (${primaryLoan.fine_amount ? primaryLoan.fine_amount.toFixed(2) : '1.00'} Fine)
+                      </span>
+                    ) : (
+                      <span className="badge badge-available">
+                        ● Due in {daysLeft} days
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)' }}>
+                      Return deadline: <strong>{dueDate.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}</strong>
+                    </span>
+                  </div>
+                );
+              })()}
+
+              <p style={{ fontSize: '0.92rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, marginBottom: '24px', maxWidth: '540px' }}>
+                This physical edition is checked out under your student folio. Renewals grant an additional 14-day study period, subject to reserve hold status.
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => handleReturnLoan(primaryLoan)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Check size={14} strokeWidth={2.4} />
+                  <span>Return This Volume</span>
+                </button>
+
+                <button
+                  onClick={() => handleRenewLoan(primaryLoan.id)}
+                  disabled={primaryLoan.renewal_count >= 2}
+                  className="btn btn-outline btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  title={primaryLoan.renewal_count >= 2 ? 'Maximum renewals (2) reached' : 'Extend due date by 14 days'}
+                >
+                  <RotateCw size={13} />
+                  <span>Renew Loan ({2 - (primaryLoan.renewal_count || 0)} left)</span>
+                </button>
+
+                <button
+                  onClick={() => onViewBookDetails(primaryLoan.book_id)}
+                  className="btn btn-outline btn-sm"
+                >
+                  <span>Volume Details</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 6. All Active Borrowed Volumes ── */}
+      {(currentTab === 'all' || currentTab === 'loans') && (
+        <section style={{ marginBottom: '44px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '10px' }}>
+            <div>
+              <span className="editorial-kicker">CIRCULATION LEDGER</span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
+                Active Borrowed Books ({activeLoans.length})
+              </h3>
+            </div>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="btn btn-outline btn-sm"
+            >
+              Borrow Another Book →
+            </button>
           </div>
 
           {activeLoans.length === 0 ? (
-            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted-text)', fontSize: '0.9rem' }}>
-              <p>You have no books currently on loan.</p>
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '40px 24px',
+                textAlign: 'center'
+              }}
+            >
+              <BookOpen size={36} color="var(--editorial-text-muted)" style={{ margin: '0 auto 12px' }} />
+              <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
+                No Physical Volumes Currently on Loan
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', margin: '0 0 18px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
+                Your circulation ledger is clear. Explore the library chambers to borrow your next scholarly read.
+              </p>
               <button
                 onClick={() => onNavigate('catalog')}
-                className="btn btn-outline btn-sm"
-                style={{ marginTop: '12px' }}
+                className="btn btn-primary btn-sm"
               >
-                Browse Books to Borrow
+                Browse Available Volumes
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
               {activeLoans.map(loan => {
                 const dueDate = new Date(loan.due_date);
                 const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
@@ -701,76 +1007,67 @@ export default function StudentDashboard({
                   <div
                     key={loan.id}
                     style={{
-                      padding: '16px',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid var(--editorial-border)',
                       borderRadius: 'var(--radius-sm)',
-                      backgroundColor: isOverdue ? 'var(--status-danger-bg)' : 'var(--cream)',
-                      border: `1px solid ${isOverdue ? 'rgba(197,34,31,0.2)' : 'var(--subtle-border)'}`
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '14px',
+                      boxShadow: 'var(--shadow-sm)'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <h4
-                        style={{
-                          fontSize: '1rem',
-                          color: 'var(--forest-dark)',
-                          margin: 0,
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => onViewBookDetails(loan.book_id)}
-                      >
-                        {loan.book_title}
-                      </h4>
-                      {isOverdue ? (
-                        <span className="badge badge-danger">
-                          ● OVERDUE (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
-                        </span>
-                      ) : (
-                        <span className="badge badge-available">
-                          Due in {daysLeft} days
-                        </span>
-                      )}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
+                        <h4
+                          style={{
+                            fontFamily: 'var(--font-serif)',
+                            fontSize: '1.08rem',
+                            color: 'var(--editorial-text)',
+                            margin: 0,
+                            lineHeight: 1.3,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => onViewBookDetails(loan.book_id)}
+                        >
+                          {loan.book_title}
+                        </h4>
+                        {isOverdue ? (
+                          <span className="badge badge-danger">Overdue</span>
+                        ) : (
+                          <span className="badge badge-available">{daysLeft}d left</span>
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', marginBottom: '8px' }}>
+                        Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600 }}>{loan.copy_code}</code>
+                      </div>
+
+                      <div style={{ fontSize: '0.82rem', color: 'var(--editorial-text-muted)' }}>
+                        Due on: <strong style={{ color: 'var(--editorial-text)' }}>{dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                      </div>
                     </div>
 
-                    <div style={{ fontSize: '0.82rem', color: 'var(--muted-text)', marginBottom: '10px' }}>
-                      Copy Barcode: <strong style={{ color: 'var(--dark-text)', fontFamily: 'monospace' }}>{loan.copy_code}</strong>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
-                      <span style={{ color: 'var(--muted-text)' }}>
-                        Due: <strong>{dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)' }}>
+                        Renewals: {loan.renewal_count || 0}/2
                       </span>
-
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           onClick={() => handleReturnLoan(loan)}
                           className="btn btn-secondary btn-sm"
-                          style={{
-                            fontSize: '0.78rem',
-                            padding: '4px 10px',
-                            backgroundColor: 'var(--warm-beige)',
-                            color: 'var(--forest-dark)',
-                            fontWeight: 700
-                          }}
-                          title="Return this book"
+                          style={{ fontSize: '0.76rem', padding: '4px 10px' }}
                         >
-                          ✓ Return Book
+                          Return
                         </button>
-
                         <button
                           onClick={() => handleRenewLoan(loan.id)}
                           disabled={loan.renewal_count >= 2}
                           className="btn btn-outline btn-sm"
-                          style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-                          title={loan.renewal_count >= 2 ? 'Max renewals reached' : 'Extend due date by 14 days'}
+                          style={{ fontSize: '0.76rem', padding: '4px 8px' }}
                         >
-                          <RotateCw size={13} /> Renew ({2 - loan.renewal_count})
-                        </button>
-
-                        <button
-                          onClick={() => onViewBookDetails(loan.book_id)}
-                          className="btn btn-outline btn-sm"
-                          style={{ fontSize: '0.78rem', padding: '4px 8px' }}
-                        >
-                          Details
+                          Renew
                         </button>
                       </div>
                     </div>
@@ -779,450 +1076,443 @@ export default function StudentDashboard({
               })}
             </div>
           )}
-        </div>
-        )}
+        </section>
+      )}
 
-        {/* Section 2: Active Holds & Queue Positions */}
-        {(currentTab === 'all' || currentTab === 'holds') && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-              <Bookmark size={20} color="var(--forest)" />
-              Reservation Holds & Queues ({activeReservations.length})
-            </h3>
+      {/* ── 7. Hold Queues & Reservations ── */}
+      {(currentTab === 'all' || currentTab === 'holds') && (
+        <section style={{ marginBottom: '44px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '10px' }}>
+            <div>
+              <span className="editorial-kicker">WAITLIST LEDGER</span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
+                Active Hold Queues ({activeReservations.length})
+              </h3>
+            </div>
             <button
               onClick={() => onNavigate('reservations')}
               className="btn btn-outline btn-sm"
-              style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Open Dedicated Reservations Hub →
+              Open Full Reservations Hub →
             </button>
           </div>
 
           {activeReservations.length === 0 ? (
-            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted-text)', fontSize: '0.9rem' }}>
-              <p>You have no active book holds or waiting list entries.</p>
-              <span style={{ fontSize: '0.8rem', color: 'var(--sage)' }}>
-                When a desired book has 0 copies, click "Reserve Hold" to join the line.
-              </span>
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '36px 24px',
+                textAlign: 'center'
+              }}
+            >
+              <Bookmark size={34} color="var(--editorial-text-muted)" style={{ margin: '0 auto 10px' }} />
+              <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
+                No Active Book Holds
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                When high-demand books have zero available copies, reserve a hold to join the automated desk queue.
+              </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
               {activeReservations.map(res => (
                 <div
                   key={res.id}
                   style={{
-                    padding: '16px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)',
-                    backgroundColor: res.status === 'ready_for_pickup' ? 'var(--status-available-bg)' : 'var(--warm-beige-light)',
-                    border: '1px solid var(--subtle-border)'
+                    padding: '18px',
+                    display: 'flex',
+                    gap: '14px',
+                    boxShadow: 'var(--shadow-sm)'
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                    <div
-                      style={{
-                        width: '46px',
-                        height: '64px',
-                        borderRadius: '6px',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        backgroundColor: 'var(--warm-beige)',
-                        border: '1px solid var(--subtle-border)',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
-                      }}
-                      onClick={() => onViewBookDetails(res.book_id)}
-                    >
-                      <img
-                        src={res.cover_image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}
-                        alt={res.book_title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '84px',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      border: '1px solid var(--editorial-border)',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => onViewBookDetails(res.book_id)}
+                  >
+                    <img
+                      src={res.cover_image || getOfflineBookCover(res.book_title, 'Scholar', 'Reservation')}
+                      alt={res.book_title}
+                      onError={(e) => handleBookCoverError(e, res.book_title, 'Scholar', 'Reservation')}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '6px', marginBottom: '4px' }}>
                         <h4
-                          style={{ fontSize: '1rem', color: 'var(--forest-dark)', margin: 0, cursor: 'pointer' }}
+                          style={{
+                            fontFamily: 'var(--font-serif)',
+                            fontSize: '0.98rem',
+                            color: 'var(--editorial-text)',
+                            margin: 0,
+                            lineHeight: 1.3,
+                            cursor: 'pointer'
+                          }}
                           onClick={() => onViewBookDetails(res.book_id)}
                         >
                           {res.book_title}
                         </h4>
                         {res.status === 'ready_for_pickup' ? (
-                          <span className="badge badge-available">
-                            ● Ready for Pickup!
-                          </span>
+                          <span className="badge badge-available">Ready</span>
                         ) : (
-                          <span className="badge badge-reserved">
-                            Position #{res.queue_position}
-                          </span>
+                          <span className="badge badge-reserved">Rank #{res.queue_position}</span>
                         )}
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: res.cover_image?.startsWith('/uploads') ? 'var(--botanical)' : '#B45309', fontWeight: 600, display: 'inline-block', marginBottom: '6px' }}>
-                        {res.cover_image?.startsWith('/uploads') ? '● Original Physical Photo Verified' : '● Standard Photo'}
-                      </span>
 
-                      <p style={{ fontSize: '0.82rem', color: 'var(--muted-text)', marginBottom: '10px', lineHeight: 1.4 }}>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', margin: '0 0 8px', lineHeight: 1.4 }}>
                         {res.status === 'ready_for_pickup'
-                          ? `Your book is held at the front circulation desk. Please pick it up before ${new Date(res.pickup_deadline).toLocaleDateString()}.`
-                          : `You are in line position #${res.queue_position}. You will receive a notification the moment a student returns a copy.`}
+                          ? `Held at circulation desk until ${new Date(res.pickup_deadline).toLocaleDateString()}.`
+                          : `In line position #${res.queue_position}. You will be notified when returned.`}
                       </p>
+                    </div>
 
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        {res.status === 'ready_for_pickup' && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                await api.claimReservation(res.id);
-                                showToast(`Successfully claimed "${res.book_title}"!`);
-                                fetchStudentData();
-                              } catch (e) {
-                                showToast(e.message, true);
-                              }
-                            }}
-                            className="btn btn-botanical btn-sm"
-                            style={{ fontSize: '0.78rem', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            <Check size={13} /> Claim & Check Out
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleCancelReservation(res.id)}
-                          className="btn btn-outline btn-sm"
-                          style={{ fontSize: '0.78rem', padding: '4px 8px', color: '#C5221F', borderColor: 'rgba(197,34,31,0.3)' }}
-                        >
-                          Cancel Hold
-                        </button>
-                      </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                      <button
+                        onClick={() => handleCancelReservation(res.id)}
+                        className="btn btn-outline btn-sm"
+                        style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#8C2222', borderColor: 'var(--editorial-border)' }}
+                      >
+                        Cancel Hold
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-        )}
-      </div>
+        </section>
       )}
 
-      {/* Section 2.5: Study Seat Reservations */}
+      {/* ── 8. Biophilic Study Pods & Carrels ── */}
       {(currentTab === 'all' || currentTab === 'seats') && (
-      <div style={{ marginBottom: '48px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--botanical)', fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase' }}>
-              <Armchair size={16} /> Biophilic Study Spaces
+        <section style={{ marginBottom: '44px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '10px' }}>
+            <div>
+              <span className="editorial-kicker">STUDY SANCTUARY</span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
+                Reserved Study Carrels &amp; Pods ({activeSeats.length})
+              </h3>
             </div>
-            <h2 style={{ fontSize: '1.8rem', color: 'var(--forest-dark)', marginTop: '4px' }}>
-              My Reserved Study Seats & Pods
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0 }}>
-              Your confirmed workspace slots in the Silent Sanctuary, Garden Windows, and Research Nooks.
-            </p>
-          </div>
-          <button
-            onClick={() => onNavigate('seats')}
-            className="btn btn-primary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Armchair size={16} /> Reserve Another Seat
-          </button>
-        </div>
-
-        {seatBookings.filter(b => b.status === 'active').length === 0 ? (
-          <div className="card" style={{ padding: '32px', textAlign: 'center', backgroundColor: '#FFFFFF' }}>
-            <Armchair size={40} color="var(--sage)" style={{ margin: '0 auto 12px' }} />
-            <h4 style={{ color: 'var(--forest-dark)', marginBottom: '8px' }}>No Active Study Seat Reservations</h4>
-            <p style={{ color: 'var(--muted-text)', fontSize: '0.90rem', maxWidth: '480px', margin: '0 auto 16px' }}>
-              Need a quiet desk with power outlets, monitors, and natural light? Reserve a seat in advance.
-            </p>
             <button
               onClick={() => onNavigate('seats')}
-              className="btn btn-outline btn-sm"
+              className="btn btn-secondary btn-sm"
             >
-              Explore Study Seat Map
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
-            {seatBookings.filter(b => b.status === 'active').map(booking => (
-              <div
-                key={booking.id}
-                className="card"
-                style={{
-                  padding: '20px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid var(--subtle-border)',
-                  borderLeft: '4px solid var(--botanical)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '14px'
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--botanical)', textTransform: 'uppercase' }}>
-                        {booking.floor} • {booking.section}
-                      </span>
-                      <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: '2px 0 0' }}>
-                        Seat {booking.seat_number}
-                      </h3>
-                    </div>
-                    <span className="badge badge-available" style={{ fontSize: '0.75rem' }}>
-                      Active Slot
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.86rem', color: 'var(--dark-text)', margin: '10px 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Calendar size={15} color="var(--sage)" />
-                      <strong>Date:</strong> {booking.date}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Clock size={15} color="var(--sage)" />
-                      <strong>Time Slot:</strong> {booking.time_slot}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-                    {booking.has_power === 1 && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--forest)', backgroundColor: 'var(--soft-sage)', padding: '2px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Zap size={12} /> Power Socket
-                      </span>
-                    )}
-                    {booking.has_monitor === 1 && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--forest)', backgroundColor: 'var(--soft-sage)', padding: '2px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Monitor size={12} /> External Monitor
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--subtle-border)' }}>
-                  <button
-                    onClick={() => handleCancelSeatBooking(booking.id)}
-                    className="btn btn-outline btn-sm"
-                    style={{ fontSize: '0.80rem', padding: '5px 12px', color: '#C5221F', borderColor: 'rgba(197,34,31,0.3)' }}
-                  >
-                    Cancel Booking
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      )}
-
-      {/* Section 3: Curated Book Recommendations */}
-      {(currentTab === 'all' || currentTab === 'recommendations') && (
-      <div style={{ marginBottom: '48px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--botanical)', fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase' }}>
-              <BookMarked size={16} /> Curated Recommendations
-            </div>
-            <h2 style={{ fontSize: '1.8rem', color: 'var(--forest-dark)', marginTop: '4px' }}>
-              Recommended for {user?.name || 'You'}
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0 }}>
-              Curated from your interests: <em>"{user?.interests || 'Fiction & Literature'}"</em> and your reading history.
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              setInterestsText(user?.interests || '');
-              setShowInterestsModal(true);
-            }}
-            className="btn btn-outline btn-sm"
-          >
-            Refine Topics
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-            gap: '20px'
-          }}
-        >
-          {recommendations.map(book => (
-            <div key={book.id} style={{ display: 'flex', flexDirection: 'column' }}>
-              <div
-                style={{
-                  padding: '6px 10px',
-                  backgroundColor: 'var(--soft-sage)',
-                  color: 'var(--forest-dark)',
-                  fontSize: '0.74rem',
-                  fontWeight: 600,
-                  borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-                  border: '1px solid var(--subtle-border)',
-                  borderBottom: 'none'
-                }}
-              >
-                ★ {book.recommendationReason}
-              </div>
-              <div style={{ flex: 1 }}>
-                <BookCard
-                  book={book}
-                  onViewDetails={onViewBookDetails}
-                  onReserve={() => onNavigate('catalog')}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {/* Section 4: Reading History & Saved Wishlist */}
-      {(currentTab === 'all' || currentTab === 'wishlist' || currentTab === 'loans') && (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: currentTab === 'all' ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr',
-          gap: '30px'
-        }}
-      >
-        {/* Wishlist */}
-        {(currentTab === 'all' || currentTab === 'wishlist') && (
-        <div id="wishlist-section" className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF', scrollMarginTop: '90px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-              <Heart size={20} color="#C5221F" fill="#C5221F" />
-              Your Saved Wishlist ({wishlist.length})
-            </h3>
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="btn btn-sm btn-outline"
-              style={{ fontSize: '0.78rem' }}
-            >
-              Explore Catalog
+              Book Study Carrel →
             </button>
           </div>
 
-          {wishlist.length === 0 ? (
-            <div style={{ padding: '24px 12px', textAlign: 'center' }}>
-              <p style={{ color: 'var(--muted-text)', fontSize: '0.88rem', margin: 0 }}>
-                No books saved yet. Click the heart icon on any book card to add it to your wishlist.
+          {activeSeats.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '36px 24px',
+                textAlign: 'center'
+              }}
+            >
+              <Armchair size={34} color="var(--editorial-text-muted)" style={{ margin: '0 auto 10px' }} />
+              <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
+                No Active Study Pod Bookings
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', margin: '0 0 16px' }}>
+                Reserve quiet desks with power outlets, monitors, and natural courtyard light.
               </p>
+              <button
+                onClick={() => onNavigate('seats')}
+                className="btn btn-outline btn-sm"
+              >
+                View Floor Carrel Availability
+              </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {wishlist.map(book => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+              {activeSeats.map(booking => (
                 <div
-                  key={book.id}
+                  key={booking.id}
                   style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--editorial-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '20px',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    backgroundColor: 'var(--cream)',
-                    border: '1px solid var(--subtle-border)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '14px',
+                    boxShadow: 'var(--shadow-sm)'
                   }}
-                  onClick={() => onViewBookDetails(book.id)}
                 >
-                  <img
-                    src={book.cover_image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}
-                    alt={book.title}
-                    style={{ width: '42px', height: '58px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--subtle-border)' }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <h5 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--forest-dark)', fontWeight: 600 }}>
-                      {book.title}
-                    </h5>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>
-                      {book.author} • {book.floor} ({book.shelf})
-                    </span>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div>
+                        <span style={{ fontSize: '0.70rem', fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          {booking.floor} • {booking.section}
+                        </span>
+                        <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--editorial-text)', margin: '2px 0 0' }}>
+                          Study Pod {booking.seat_number}
+                        </h4>
+                      </div>
+                      <span className="badge badge-available">Active Slot</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: 'var(--editorial-text-muted)', margin: '12px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar size={14} color="var(--editorial-accent)" />
+                        <span>Date: <strong>{booking.date}</strong></span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} color="var(--editorial-accent)" />
+                        <span>Time Slot: <strong>{booking.time_slot}</strong></span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {booking.has_power === 1 && (
+                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          <Zap size={11} /> Power Socket
+                        </span>
+                      )}
+                      {booking.has_monitor === 1 && (
+                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          <Monitor size={11} /> External Screen
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {book.available_copies > 0 ? (
-                      <span className="badge badge-available">● Available</span>
-                    ) : (
-                      <span className="badge badge-borrowed">● Waitlist</span>
-                    )}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}>
                     <button
-                      onClick={(e) => handleRemoveWishlist(book.id, e)}
-                      title="Remove from wishlist"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--muted-text)',
-                        padding: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px'
-                      }}
+                      onClick={() => handleCancelSeatBooking(booking.id)}
+                      className="btn btn-outline btn-sm"
+                      style={{ fontSize: '0.74rem', padding: '4px 10px', color: '#8C2222' }}
                     >
-                      <X size={16} />
+                      Release Carrel
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-        )}
-
-        {/* Borrowing History */}
-        {(currentTab === 'all' || currentTab === 'loans') && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <h3 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Clock size={20} color="var(--sage)" />
-            Past Borrowing Records ({pastLoans.length})
-          </h3>
-
-          {pastLoans.length === 0 ? (
-            <p style={{ color: 'var(--muted-text)', fontSize: '0.88rem' }}>
-              Your past returned books will be cataloged here to track your scholarly reading progress.
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {pastLoans.map(p => (
-                <div
-                  key={p.id}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--cream)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <div>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--forest-dark)' }}>
-                      {p.book_title}
-                    </strong>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>
-                      Returned on {new Date(p.return_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <span className="badge badge-available">Returned</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        )}
-      </div>
+        </section>
       )}
 
-      {/* Edit Reading Interests Modal (Rendered with React Portal to be locked to viewport center without page scrolling) */}
+      {/* ── 9. Curated Recommendations ── */}
+      {(currentTab === 'all' || currentTab === 'recommendations') && (
+        <section style={{ marginBottom: '44px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '10px' }}>
+            <div>
+              <span className="editorial-kicker">LITERARY SELECTIONS</span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
+                Recommended For You ({recommendations.length})
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--editorial-text-muted)', margin: '4px 0 0' }}>
+                Curated based on your interests: <em>"{user?.interests || 'Classical Literature & Science'}"</em>
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setInterestsText(user?.interests || '');
+                setShowInterestsModal(true);
+              }}
+              className="btn btn-outline btn-sm"
+            >
+              Adjust Topics
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
+            {recommendations.slice(0, 8).map(book => (
+              <div key={book.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                <div
+                  style={{
+                    padding: '5px 8px',
+                    backgroundColor: 'var(--editorial-bg-subtle)',
+                    color: 'var(--editorial-accent)',
+                    fontSize: '0.70rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    border: '1px solid var(--editorial-border)',
+                    borderBottom: 'none',
+                    borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0'
+                  }}
+                >
+                  ★ {book.recommendationReason || 'Archival Match'}
+                </div>
+                <BookCard
+                  book={book}
+                  onViewDetails={onViewBookDetails}
+                  onReserve={() => onNavigate('catalog')}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 10. Saved Wishlist & Borrowing History Spread ── */}
+      {(currentTab === 'all' || currentTab === 'wishlist' || currentTab === 'loans') && (
+        <section
+          style={{
+            display: 'grid',
+            gridTemplateColumns: currentTab === 'all' ? 'repeat(auto-fit, minmax(340px, 1fr))' : '1fr',
+            gap: '30px'
+          }}
+        >
+          {/* Wishlist Column */}
+          {(currentTab === 'all' || currentTab === 'wishlist') && (
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '24px',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, color: 'var(--editorial-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Heart size={18} color="var(--editorial-accent)" strokeWidth={2} />
+                  <span>Personal Wishlist ({wishlist.length})</span>
+                </h3>
+                <button
+                  onClick={() => onNavigate('catalog')}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: '0.74rem' }}
+                >
+                  Add Volumes
+                </button>
+              </div>
+
+              {wishlist.length === 0 ? (
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--editorial-text-muted)', fontSize: '0.86rem' }}>
+                  No titles saved to your wishlist yet. Click the bookmark icon on any book card to save it for later.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {wishlist.map(book => (
+                    <div
+                      key={book.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--editorial-bg)',
+                        border: '1px solid var(--editorial-border)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => onViewBookDetails(book.id)}
+                    >
+                      <img
+                        src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
+                        alt={book.title}
+                        onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                        style={{ width: '38px', height: '52px', objectFit: 'cover', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h5 style={{ margin: '0 0 2px', fontSize: '0.88rem', color: 'var(--editorial-text)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {book.title}
+                        </h5>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                          {book.author}
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => handleRemoveWishlist(book.id, e)}
+                        title="Remove from wishlist"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--editorial-text-muted)',
+                          padding: '4px'
+                        }}
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reading History Column */}
+          {(currentTab === 'all' || currentTab === 'loans') && (
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '24px',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, color: 'var(--editorial-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={18} color="var(--editorial-accent)" strokeWidth={2} />
+                  <span>Archival Reading History ({pastLoans.length})</span>
+                </h3>
+              </div>
+
+              {pastLoans.length === 0 ? (
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--editorial-text-muted)', fontSize: '0.86rem' }}>
+                  Returned volumes will be archived here as your permanent reading record.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {pastLoans.map(p => (
+                    <div
+                      key={p.id}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--editorial-bg)',
+                        border: '1px solid var(--editorial-border)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: '0.86rem', color: 'var(--editorial-text)' }}>
+                          {p.book_title}
+                        </strong>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginTop: '2px' }}>
+                          Returned on {new Date(p.return_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                      </div>
+                      <span className="badge badge-available">Archived</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Edit Reading Interests Modal (Editorial Styling) ── */}
       {showInterestsModal && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="interests-modal-title"
           style={{
             position: 'fixed',
             top: 0,
@@ -1231,9 +1521,8 @@ export default function StudentDashboard({
             bottom: 0,
             width: '100vw',
             height: '100vh',
-            backgroundColor: 'rgba(20, 32, 25, 0.65)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
+            backgroundColor: 'rgba(37, 40, 32, 0.65)',
+            backdropFilter: 'blur(4px)',
             zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
@@ -1244,134 +1533,93 @@ export default function StudentDashboard({
           onClick={() => setShowInterestsModal(false)}
         >
           <div
-            className="bio-card"
             style={{
               position: 'relative',
               width: '100%',
               maxWidth: '520px',
               backgroundColor: '#FFFFFF',
-              padding: '28px 30px',
-              borderRadius: '20px',
-              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08)',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              animation: 'modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
+              padding: '32px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-xl)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '10px',
-                    backgroundColor: 'rgba(64, 93, 76, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--forest-dark)'
-                  }}
-                >
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <h3 id="interests-modal-title" style={{ margin: 0, fontSize: '1.25rem', color: 'var(--forest-dark)', fontWeight: 600 }}>
-                    Personalize Reading Interests
-                  </h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted-text)', marginTop: '2px' }}>
-                    Curate your AI recommendations & feed
-                  </div>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <span className="editorial-kicker">PERSONALIZED LITERARY CURATION</span>
+                <h3 style={{ margin: '4px 0 0', fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)' }}>
+                  Reading Interests &amp; Subjects
+                </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowInterestsModal(false)}
-                title="Close modal"
                 style={{
-                  background: 'none',
-                  border: 'none',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  padding: '6px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--muted-text)',
-                  transition: 'all 0.15s ease'
+                  padding: '5px',
+                  color: 'var(--editorial-text-muted)'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--cream)'; e.currentTarget.style.color = 'var(--forest-dark)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--muted-text)'; }}
               >
-                <X size={20} />
+                <X size={16} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', lineHeight: 1.5, marginBottom: '16px' }}>
-              Enter topics, book genres, or specific authors you enjoy. LibraMind's recommendation engine uses these to highlight matching books in your feed.
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, marginBottom: '18px' }}>
+              Select scholarly topics or specify custom literary subjects. Your reading recommendations are continuously tailored to these topics.
             </p>
 
-            {/* Quick Suggestions Chips */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--forest-dark)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-                Quick Suggestions (Click to Add / Remove)
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {SUGGESTED_INTEREST_TAGS.map(tag => {
-                  const isSelected = (interestsText || '').toLowerCase().includes(tag.toLowerCase());
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleToggleTag(tag)}
-                      style={{
-                        fontSize: '0.76rem',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        border: isSelected ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
-                        backgroundColor: isSelected ? 'rgba(64, 93, 76, 0.12)' : 'var(--cream)',
-                        color: isSelected ? 'var(--forest-dark)' : 'var(--charcoal)',
-                        fontWeight: isSelected ? 600 : 400,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {isSelected ? '✓ ' : '+ '}{tag}
-                    </button>
-                  );
-                })}
-              </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '18px' }}>
+              {SUGGESTED_INTEREST_TAGS.map(tag => {
+                const isSelected = (interestsText || '').toLowerCase().includes(tag.toLowerCase());
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleToggleTag(tag)}
+                    style={{
+                      fontSize: '0.78rem',
+                      padding: '5px 12px',
+                      border: isSelected ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: isSelected ? 'var(--editorial-green)' : 'var(--editorial-bg)',
+                      color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {isSelected ? '✓ ' : '+ '}{tag}
+                  </button>
+                );
+              })}
             </div>
 
             <form onSubmit={handleSaveInterests}>
-              <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--forest-dark)', display: 'block', marginBottom: '6px' }}>
-                  Your Custom Interests & Topics:
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '6px' }}>
+                  Custom Topics (comma-separated):
                 </label>
                 <textarea
                   className="form-control"
-                  rows={4}
+                  rows={3}
                   value={interestsText}
                   onChange={(e) => setInterestsText(e.target.value)}
-                  placeholder="e.g. Story Books, Classic Literature, History, Novels, Artificial Intelligence..."
-                  autoFocus
-                  style={{
-                    fontSize: '0.88rem',
-                    lineHeight: 1.5,
-                    resize: 'vertical'
-                  }}
+                  placeholder="e.g. Victorian Novels, Modern Architecture, Astrophysics, Renaissance History..."
+                  style={{ fontSize: '0.90rem', lineHeight: 1.5, resize: 'vertical' }}
                 />
-                <div style={{ fontSize: '0.75rem', color: 'var(--muted-text)', marginTop: '4px', textAlign: 'right' }}>
-                  Separate multiple interests with commas
-                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
                   onClick={() => setShowInterestsModal(false)}
-                  className="btn btn-secondary"
+                  className="btn btn-outline"
                   style={{ flex: 1 }}
                 >
                   Cancel
@@ -1380,19 +1628,9 @@ export default function StudentDashboard({
                   type="submit"
                   className="btn btn-primary"
                   disabled={savingInterests}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  style={{ flex: 1.2 }}
                 >
-                  {savingInterests ? (
-                    <>
-                      <RotateCw size={14} className="spinner" style={{ animation: 'spin 0.8s linear infinite' }} />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={14} />
-                      Save Interests
-                    </>
-                  )}
+                  {savingInterests ? 'Saving...' : 'Save Preferences'}
                 </button>
               </div>
             </form>
@@ -1400,12 +1638,12 @@ export default function StudentDashboard({
         </div>,
         document.body
       )}
-      {/* Custom Return Book Confirmation Modal */}
+
+      {/* ── Return Book Confirmation Modal (Editorial Styling) ── */}
       {returnModalLoan && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="return-modal-title"
           style={{
             position: 'fixed',
             top: 0,
@@ -1414,9 +1652,8 @@ export default function StudentDashboard({
             bottom: 0,
             width: '100vw',
             height: '100vh',
-            backgroundColor: 'rgba(20, 32, 25, 0.65)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
+            backgroundColor: 'rgba(37, 40, 32, 0.65)',
+            backdropFilter: 'blur(4px)',
             zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
@@ -1432,187 +1669,93 @@ export default function StudentDashboard({
           }}
         >
           <div
-            className="bio-card"
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: '480px',
+              maxWidth: '460px',
               backgroundColor: '#FFFFFF',
-              padding: '30px 28px',
-              borderRadius: '20px',
-              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08)',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              animation: 'modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '32px 28px',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-xl)',
               textAlign: 'center'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!returningLoan) {
-                  setReturnModalLoan(null);
-                  setReturnError(null);
-                }
-              }}
-              disabled={returningLoan}
-              title="Close modal"
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                cursor: returningLoan ? 'not-allowed' : 'pointer',
-                padding: '6px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--muted-text)',
-                opacity: returningLoan ? 0.4 : 1,
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!returningLoan) {
-                  e.currentTarget.style.backgroundColor = 'var(--cream)';
-                  e.currentTarget.style.color = 'var(--forest-dark)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = 'var(--muted-text)';
-              }}
-            >
-              <X size={20} />
-            </button>
-
-            {/* Icon: 📚 */}
             <div
               style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(64, 93, 76, 0.12)',
-                border: '2px solid rgba(64, 93, 76, 0.2)',
+                width: '56px',
+                height: '56px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                color: 'var(--editorial-green)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '30px',
-                margin: '0 auto 14px'
+                margin: '0 auto 16px',
+                border: '1px solid var(--editorial-border)'
               }}
             >
-              📚
+              <BookOpen size={26} strokeWidth={2.2} />
             </div>
 
-            {/* Heading */}
+            <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+              CIRCULATION RETURN
+            </span>
+
             <h3
-              id="return-modal-title"
               style={{
-                margin: '0 0 8px',
+                margin: '6px 0 10px',
+                fontFamily: 'var(--font-serif)',
                 fontSize: '1.45rem',
-                color: 'var(--forest-dark)',
-                fontWeight: 700,
-                fontFamily: 'var(--font-heading, "Playfair Display", serif)'
+                color: 'var(--editorial-text)',
+                fontWeight: 800
               }}
             >
-              Ready to Return?
+              Return This Physical Volume?
             </h3>
 
-            {/* Dynamic Book Details Card */}
             <div
               style={{
-                backgroundColor: 'var(--cream)',
-                borderRadius: '12px',
-                border: '1px solid var(--subtle-border)',
-                padding: '14px 16px',
-                margin: '16px 0 14px',
+                backgroundColor: 'var(--editorial-bg)',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '14px',
+                margin: '16px 0 18px',
                 textAlign: 'left'
               }}
             >
-              <div
-                style={{
-                  fontSize: '0.98rem',
-                  fontWeight: 700,
-                  color: 'var(--forest-dark)',
-                  marginBottom: '6px',
-                  lineHeight: 1.35
-                }}
-              >
+              <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '1.05rem', color: 'var(--editorial-text)', marginBottom: '4px' }}>
                 {returnModalLoan.book_title}
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.82rem',
-                  color: 'var(--muted-text)',
-                  flexWrap: 'wrap'
-                }}
-              >
-                <span>Book Barcode:</span>
-                <span
-                  style={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    color: 'var(--forest-dark)',
-                    backgroundColor: '#FFFFFF',
-                    padding: '2px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--subtle-border)',
-                    letterSpacing: '0.04em'
-                  }}
-                >
-                  {returnModalLoan.copy_code || 'N/A'}
-                </span>
-                {returnModalLoan.due_date && (
-                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', marginLeft: 'auto' }}>
-                    Due: {new Date(returnModalLoan.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                  </span>
-                )}
+              <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                Barcode: <code style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--editorial-text)' }}>{returnModalLoan.copy_code || 'N/A'}</code>
               </div>
             </div>
 
-            {/* Description */}
-            <p
-              style={{
-                fontSize: '0.88rem',
-                color: 'var(--muted-text)',
-                lineHeight: 1.55,
-                margin: '0 0 20px',
-                textAlign: 'left'
-              }}
-            >
-              Are you sure you want to return this book? Its availability will be updated after the return is successfully processed.
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, margin: '0 0 22px' }}>
+              Once confirmed, this volume will be checked back into the library catalog and made available for other scholars.
             </p>
 
-            {/* Error Message if Return Failed */}
             {returnError && (
               <div
                 style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
+                  padding: '10px 12px',
                   backgroundColor: '#FEE2E2',
                   border: '1px solid #FCA5A5',
+                  borderRadius: 'var(--radius-sm)',
                   color: '#991B1B',
-                  fontSize: '0.84rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
                   marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
                   textAlign: 'left'
                 }}
               >
-                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                <span>{returnError}</span>
+                {returnError}
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -1622,19 +1765,8 @@ export default function StudentDashboard({
                   }
                 }}
                 disabled={returningLoan}
-                className="btn btn-secondary"
-                style={{
-                  flex: 1,
-                  padding: '11px 16px',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  border: '1px solid var(--subtle-border)',
-                  backgroundColor: 'transparent',
-                  color: 'var(--forest-dark)',
-                  cursor: returningLoan ? 'not-allowed' : 'pointer',
-                  opacity: returningLoan ? 0.6 : 1,
-                  transition: 'all 0.15s ease'
-                }}
+                className="btn btn-outline"
+                style={{ flex: 1 }}
               >
                 Keep Reading
               </button>
@@ -1644,32 +1776,9 @@ export default function StudentDashboard({
                 onClick={handleConfirmReturn}
                 disabled={returningLoan}
                 className="btn btn-primary"
-                style={{
-                  flex: 1.25,
-                  padding: '11px 16px',
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  backgroundColor: 'var(--forest)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  cursor: returningLoan ? 'not-allowed' : 'pointer',
-                  opacity: returningLoan ? 0.75 : 1,
-                  transition: 'all 0.15s ease'
-                }}
+                style={{ flex: 1.3 }}
               >
-                {returningLoan ? (
-                  <>
-                    <RotateCw size={14} className="spinner" style={{ animation: 'spin 0.8s linear infinite' }} />
-                    Returning Book...
-                  </>
-                ) : (
-                  <>
-                    ✓ Yes, Return Book
-                  </>
-                )}
+                {returningLoan ? 'Processing Return...' : 'Confirm Return'}
               </button>
             </div>
           </div>

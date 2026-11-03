@@ -168,25 +168,32 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
   const [updatingRoleId, setUpdatingRoleId] = useState(null);
 
+  const [adminConfirmModal, setAdminConfirmModal] = useState(null);
+
   const handleDeleteUser = async (u) => {
     if (u.id === user?.id || u.email === user?.email) {
       showToast('You cannot delete your own admin account', true);
       return;
     }
 
-    const confirmText = `Are you sure you want to permanently delete user "${u.name}" (${u.email})?\n\nThis will safely release all borrowed copies and reservations associated with this account.`;
-    if (!window.confirm(confirmText)) return;
-
-    setDeletingUserId(u.id);
-    try {
-      const res = await api.deleteUser(u.id);
-      showToast(res.message || `User ${u.name} deleted successfully!`);
-      await fetchUsers();
-    } catch (err) {
-      showToast(err.message || 'Failed to delete user', true);
-    } finally {
-      setDeletingUserId(null);
-    }
+    setAdminConfirmModal({
+      title: 'Permanently Delete User Account?',
+      desc: `Are you sure you want to permanently delete user "${u.name}" (${u.email})?\n\nThis will safely release all borrowed copies and reservations associated with this account.`,
+      confirmLabel: 'Permanently Delete',
+      isDanger: true,
+      onConfirm: async () => {
+        setDeletingUserId(u.id);
+        try {
+          const res = await api.deleteUser(u.id);
+          showToast(res.message || `User ${u.name} deleted successfully!`);
+          await fetchUsers();
+        } catch (err) {
+          showToast(err.message || 'Failed to delete user', true);
+        } finally {
+          setDeletingUserId(null);
+        }
+      }
+    });
   };
 
   const handleRoleChange = async (targetUser, newRole) => {
@@ -195,19 +202,25 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
       showToast('You cannot modify your own administrator role', true);
       return;
     }
-    const confirmPrompt = `Change access role for "${targetUser.name}" from "${targetUser.role}" to "${newRole}"?`;
-    if (!window.confirm(confirmPrompt)) return;
 
-    setUpdatingRoleId(targetUser.id);
-    try {
-      const res = await api.updateUserRole(targetUser.id, newRole);
-      showToast(res.message || `Role updated to ${newRole}`);
-      await fetchUsers();
-    } catch (err) {
-      showToast(err.message || 'Failed to update user role', true);
-    } finally {
-      setUpdatingRoleId(null);
-    }
+    setAdminConfirmModal({
+      title: 'Modify Access Role?',
+      desc: `Change access permissions for "${targetUser.name}" from "${targetUser.role}" to "${newRole}"?`,
+      confirmLabel: `Change to ${newRole}`,
+      isDanger: false,
+      onConfirm: async () => {
+        setUpdatingRoleId(targetUser.id);
+        try {
+          const res = await api.updateUserRole(targetUser.id, newRole);
+          showToast(res.message || `Role updated to ${newRole}`);
+          await fetchUsers();
+        } catch (err) {
+          showToast(err.message || 'Failed to update user role', true);
+        } finally {
+          setUpdatingRoleId(null);
+        }
+      }
+    });
   };
 
   const handleOpenMessageModal = (u) => {
@@ -673,11 +686,10 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               width: '520px',
               maxWidth: '100%',
               backgroundColor: '#FFFFFF',
-              borderRadius: '18px',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
               position: 'relative',
-              border: '1px solid rgba(82, 115, 77, 0.25)'
+              border: '1.5px solid var(--editorial-border)'
             }}
           >
             <button
@@ -826,9 +838,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               maxHeight: '90vh',
               overflowY: 'auto',
               backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
+              border: '1.5px solid var(--editorial-border)',
               position: 'relative'
             }}
           >
@@ -1063,7 +1075,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               width: '520px',
               maxWidth: '100%',
               backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
+              border: '1.5px solid var(--editorial-border)',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
               position: 'relative'
@@ -1257,7 +1269,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
         {/* 4 Reading Velocity Metrics Cards (Overview) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1px solid var(--subtle-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Daily Books Read
             </span>
@@ -1269,7 +1281,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1px solid var(--subtle-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Est. Reading Velocity
             </span>
@@ -1281,7 +1293,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1px solid var(--subtle-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Active Student Readers
             </span>
@@ -1293,7 +1305,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1px solid var(--subtle-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Copies Needing Restock
             </span>
@@ -1396,7 +1408,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
         {/* 4 Reading Velocity Metrics Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--subtle-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Daily Books Read
             </span>
@@ -1408,7 +1420,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--subtle-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Est. Reading Velocity
             </span>
@@ -1420,7 +1432,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--subtle-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Active Student Readers
             </span>
@@ -1432,7 +1444,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--subtle-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Copies Needing Restock
             </span>
@@ -1538,7 +1550,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                             fontSize: '0.76rem',
                             backgroundColor: '#FFFFFF',
                             color: 'var(--forest)',
-                            border: '1px solid var(--subtle-border)',
+                            border: '1.5px solid var(--editorial-border)',
                             borderRadius: '6px',
                             cursor: 'pointer'
                           }}
@@ -1756,7 +1768,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                       width: '100%',
                       padding: '7px 12px 7px 32px',
                       borderRadius: '8px',
-                      border: '1px solid var(--subtle-border)',
+                      border: '1.5px solid var(--editorial-border)',
                       fontSize: '0.84rem'
                     }}
                   />
@@ -1882,7 +1894,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   fontWeight: 600,
                                   backgroundColor: u.role === 'admin' ? '#FCE8E6' : u.role === 'librarian' ? 'var(--soft-sage-light)' : 'var(--cream)',
                                   color: u.role === 'admin' ? '#C5221F' : 'var(--forest-dark)',
-                                  border: '1px solid var(--subtle-border)',
+                                  border: '1.5px solid var(--editorial-border)',
                                   cursor: updatingRoleId === u.id ? 'wait' : 'pointer'
                                 }}
                               >
@@ -1902,7 +1914,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   padding: '5px 12px',
                                   fontSize: '0.80rem',
                                   color: u.role === 'librarian' ? 'var(--botanical)' : 'var(--forest)',
-                                  border: '1px solid var(--subtle-border)',
+                                  border: '1.5px solid var(--editorial-border)',
                                   backgroundColor: '#FFFFFF',
                                   display: 'inline-flex',
                                   alignItems: 'center',
@@ -1973,7 +1985,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   padding: '14px 18px',
                   borderRadius: '10px',
                   backgroundColor: 'var(--cream)',
-                  border: '1px solid var(--subtle-border)',
+                  border: '1.5px solid var(--editorial-border)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
@@ -2083,6 +2095,92 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           </table>
         </div>
       </div>
+      )}
+
+      {/* Custom Vintage Administrative Confirmation Modal */}
+      {adminConfirmModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(28, 15, 10, 0.70)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={() => setAdminConfirmModal(null)}
+        >
+          <div
+            className="bio-card"
+            style={{
+              width: '100%',
+              maxWidth: '460px',
+              backgroundColor: 'var(--vintage-vellum)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '28px 24px',
+              border: '1.5px solid var(--vintage-brass)',
+              boxShadow: 'var(--shadow-modal)',
+              textAlign: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: '50%',
+                background: adminConfirmModal.isDanger
+                  ? 'linear-gradient(135deg, #6E1B24 0%, #8C2A35 100%)'
+                  : 'linear-gradient(135deg, #1E3A2B 0%, #2A4D3B 100%)',
+                border: '1.5px solid #C29B38',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                fontSize: '24px',
+                boxShadow: '0 2px 8px rgba(42, 24, 16, 0.25)'
+              }}
+            >
+              {adminConfirmModal.isDanger ? '⚠️' : '🛡️'}
+            </div>
+            <h3 style={{ fontSize: '1.30rem', fontFamily: 'var(--font-serif)', color: 'var(--vintage-walnut)', margin: '0 0 10px', fontWeight: 800 }}>
+              {adminConfirmModal.title}
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--vintage-sepia)', lineHeight: 1.6, margin: '0 0 20px', whiteSpace: 'pre-line' }}>
+              {adminConfirmModal.desc}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setAdminConfirmModal(null)}
+                className="btn btn-outline"
+                style={{ flex: 1, backgroundColor: 'var(--vintage-cream)', color: 'var(--vintage-walnut)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const cb = adminConfirmModal.onConfirm;
+                  setAdminConfirmModal(null);
+                  if (cb) cb();
+                }}
+                className={adminConfirmModal.isDanger ? 'btn btn-botanical' : 'btn btn-primary'}
+                style={{ flex: 1.2 }}
+              >
+                {adminConfirmModal.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

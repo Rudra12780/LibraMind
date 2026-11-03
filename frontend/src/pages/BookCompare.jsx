@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ArrowRight
 } from 'lucide-react';
+import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
 export default function BookCompare({
   compareBookIds = [],
@@ -34,13 +35,11 @@ export default function BookCompare({
     async function loadData() {
       setLoading(true);
       try {
-        // Fetch details of books in compare list
         const fetched = await Promise.all(
           compareBookIds.map(id => api.getBook(id).catch(() => null))
         );
         setBooks(fetched.filter(Boolean));
 
-        // Also fetch catalog books so student can add another book to compare
         const catalogRes = await api.getBooks({ limit: 50 });
         setAvailableBooks(catalogRes.books || []);
       } catch (err) {
@@ -125,401 +124,413 @@ export default function BookCompare({
   };
 
   return (
-    <div className="container" style={{ padding: '40px 24px 80px' }}>
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '30px',
-            right: '30px',
-            backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
-            padding: '12px 20px',
-            borderRadius: '10px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-            zIndex: 3000,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.9rem'
-          }}
-        >
-          {toastMessage.isError ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
-          <span>{toastMessage.msg}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', fontSize: '0.84rem', fontWeight: 700, textTransform: 'uppercase' }}>
-            <GitCompare size={16} /> Discovery & Analysis
-          </div>
-          <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginTop: '4px', marginBottom: '8px' }}>
-            Book Match & Compare
-          </h1>
-          <p style={{ color: 'var(--muted-text)', fontSize: '1rem', margin: 0, maxWidth: '640px' }}>
-            Compare up to 3 library books side-by-side using verified catalog records, physical shelf stacks, editions, and real-time copy availability.
-          </p>
-        </div>
-
-        {books.length > 0 && (
-          <button
-            onClick={onClearCompare}
-            className="btn btn-outline btn-sm"
-          >
-            Clear All ({books.length})
-          </button>
-        )}
-      </div>
-
-      {/* Book Adder Bar */}
-      {books.length < 3 && (
-        <div
-          className="bio-card"
-          style={{
-            padding: '16px 20px',
-            backgroundColor: '#FFFFFF',
-            marginBottom: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            flexWrap: 'wrap'
-          }}
-        >
-          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--forest-dark)' }}>
-            Add book to comparison ({books.length}/3 selected):
-          </span>
-          <select
-            value={selectedAddId}
-            onChange={(e) => setSelectedAddId(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--subtle-border)',
-              backgroundColor: 'var(--cream)',
-              flex: 1,
-              minWidth: '220px',
-              fontSize: '0.9rem'
-            }}
-          >
-            <option value="">Select a title from the catalog...</option>
-            {availableBooks
-              .filter(ab => !compareBookIds.includes(ab.id))
-              .map(ab => (
-                <option key={ab.id} value={ab.id}>
-                  {ab.title} — {ab.author} ({ab.category})
-                </option>
-              ))}
-          </select>
-          <button
-            onClick={handleAdd}
-            disabled={!selectedAddId}
-            className="btn btn-primary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Plus size={16} /> Add to Compare
-          </button>
-        </div>
-      )}
-
-      {/* Comparison Content */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--muted-text)' }}>
-          Loading comparison data from library catalog...
-        </div>
-      ) : books.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <GitCompare size={32} />
-          </div>
-          <h3>No books selected for comparison</h3>
-          <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem' }}>
-            Select 2 or 3 books from the Catalog to view an in-depth side-by-side comparison of shelf locations, copies, and editions.
-          </p>
-          <button
-            onClick={() => onNavigate('catalog')}
-            className="btn btn-primary"
-          >
-            Browse Library Catalog
-          </button>
-        </div>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
+    <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '85vh', padding: '40px 24px 80px' }}>
+      <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Toast Alert */}
+        {toastMessage && (
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: `200px repeat(${books.length}, minmax(280px, 1fr))`,
-              gap: '16px',
-              alignItems: 'stretch'
+              position: 'fixed',
+              bottom: '30px',
+              right: '30px',
+              backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
+              color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-card)',
+              padding: '12px 20px',
+              zIndex: 3000,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              textTransform: 'uppercase'
             }}
           >
-            {/* Row 1: Header / Cover */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', display: 'flex', alignItems: 'center' }}>
-              Book Overview
+            {toastMessage.isError ? <AlertCircle size={18} strokeWidth={2.4} /> : <CheckCircle size={18} strokeWidth={2.4} />}
+            <span>{toastMessage.msg}</span>
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'var(--editorial-border)',
+                color: 'var(--editorial-text)',
+                border: '1px solid var(--editorial-border)',
+                boxShadow: 'var(--shadow-sm)',
+                fontSize: '0.78rem',
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                padding: '4px 10px',
+                marginBottom: '8px'
+              }}
+            >
+              <GitCompare size={15} strokeWidth={2.4} /> Comparative Analysis
             </div>
-            {books.map(b => (
+            <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', margin: '4px 0 8px' }}>
+              Book Match & Compare
+            </h1>
+            <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', margin: 0, maxWidth: '640px', fontWeight: 500 }}>
+              Compare up to 3 library books side-by-side using verified catalog records, physical shelf stacks, editions, and real-time copy availability.
+            </p>
+          </div>
+
+          {books.length > 0 && (
+            <button
+              onClick={onClearCompare}
+              className="btn btn-outline btn-sm"
+              style={{ alignSelf: 'center' }}
+            >
+              Clear All ({books.length})
+            </button>
+          )}
+        </div>
+
+        {/* Book Adder Bar */}
+        {books.length < 3 && (
+          <div
+            style={{
+              padding: '16px 20px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-lg)',
+              marginBottom: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}
+          >
+            <span style={{ fontSize: '0.88rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
+              Add Book to Comparison ({books.length}/3 selected):
+            </span>
+            <select
+              value={selectedAddId}
+              onChange={(e) => setSelectedAddId(e.target.value)}
+              className="form-control"
+              style={{
+                flex: 1,
+                minWidth: '220px',
+                fontSize: '0.88rem',
+                padding: '8px 10px'
+              }}
+            >
+              <option value="">Select a title from the catalog...</option>
+              {availableBooks
+                .filter(ab => !compareBookIds.includes(ab.id))
+                .map(ab => (
+                  <option key={ab.id} value={ab.id}>
+                    {ab.title} — {ab.author} ({ab.category})
+                  </option>
+                ))}
+            </select>
+            <button
+              onClick={handleAdd}
+              disabled={!selectedAddId}
+              className="btn btn-primary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={16} strokeWidth={2.4} /> Add to Compare
+            </button>
+          </div>
+        )}
+
+        {/* Comparison Content */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+            Loading comparison data from library catalog...
+          </div>
+        ) : books.length === 0 ? (
+          <div
+            style={{
+              padding: '48px 24px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-lg)',
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ marginBottom: '14px' }}>
+              <GitCompare size={36} color="var(--editorial-accent)" strokeWidth={2.4} />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+              No Books Selected for Comparison
+            </h3>
+            <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem', color: 'var(--editorial-text)', opacity: 0.85, fontWeight: 500 }}>
+              Select 2 or 3 books from the Catalog to view an in-depth side-by-side comparison of shelf locations, copies, and editions.
+            </p>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="btn btn-primary"
+            >
+              Browse Library Catalog →
+            </button>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto', paddingBottom: '16px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `180px repeat(${books.length}, minmax(280px, 1fr))`,
+                gap: '14px',
+                alignItems: 'stretch'
+              }}
+            >
+              {/* Row 1: Header / Cover */}
               <div
-                key={b.id}
-                className="bio-card"
                 style={{
-                  padding: '20px',
-                  backgroundColor: '#FFFFFF',
+                  padding: '16px',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  color: 'var(--editorial-text)',
                   display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative'
+                  alignItems: 'center',
+                  backgroundColor: 'var(--editorial-border)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-sm)',
+                  fontSize: '0.85rem'
                 }}
               >
-                <button
-                  onClick={() => onRemoveBook(b.id)}
-                  title="Remove from comparison"
-                  aria-label="Remove from comparison"
+                Book Overview
+              </div>
+              {books.map(b => (
+                <div
+                  key={b.id}
                   style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    border: '1px solid var(--subtle-border)',
+                    padding: '20px',
                     backgroundColor: '#FFFFFF',
-                    cursor: 'pointer',
+                    border: '1px solid var(--editorial-border)',
+                    boxShadow: 'var(--shadow-card)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--muted-text)',
-                    zIndex: 2
+                    flexDirection: 'column',
+                    position: 'relative'
                   }}
                 >
-                  <X size={15} />
-                </button>
+                  <button
+                    onClick={() => onRemoveBook(b.id)}
+                    title="Remove from comparison"
+                    aria-label="Remove from comparison"
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      width: '28px',
+                      height: '28px',
+                      border: '1px solid var(--editorial-border)',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: 'var(--shadow-sm)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--editorial-text)',
+                      zIndex: 2
+                    }}
+                  >
+                    <X size={15} strokeWidth={2.4} />
+                  </button>
 
-                {/* Status Badge if user has active loan or hold */}
-                {b.userLoan ? (
-                  <div style={{
-                    marginBottom: '8px',
-                    backgroundColor: 'var(--status-available-bg)',
-                    color: 'var(--status-available-text)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(45,106,53,0.25)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    alignSelf: 'flex-start'
-                  }}>
-                    ✓ Borrowed by You (Due: {new Date(b.userLoan.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })})
-                  </div>
-                ) : b.userReservation ? (
-                  <div style={{
-                    marginBottom: '8px',
-                    backgroundColor: 'var(--status-reserved-bg)',
-                    color: 'var(--status-reserved-text)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(25,103,210,0.25)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    alignSelf: 'flex-start'
-                  }}>
-                    ★ Held in Queue #{b.userReservation.queue_position}
-                  </div>
-                ) : null}
-
-                <div style={{ width: '90px', height: '120px', borderRadius: '6px', overflow: 'hidden', marginBottom: '12px', backgroundColor: 'var(--warm-beige)' }}>
-                  <img
-                    src={b.cover_image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}
-                    alt={b.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-
-                <h3 style={{ fontSize: '1.15rem', color: 'var(--forest-dark)', marginBottom: '4px', lineHeight: 1.3 }}>
-                  {b.title}
-                </h3>
-                <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '14px' }}>
-                  by {b.author}
-                </p>
-
-                {/* Smart Action Buttons Container */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      onClick={() => onViewBookDetails(b.id)}
-                      className="btn btn-outline btn-sm"
-                      style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem' }}
-                    >
-                      Details
-                    </button>
-
-                    {b.userLoan ? (
-                      <button
-                        onClick={() => handleReturn(b.userLoan.id, b.id, b.title)}
-                        className="btn btn-secondary btn-sm"
-                        style={{
-                          flex: 1,
-                          padding: '7px 10px',
-                          fontSize: '0.82rem',
-                          backgroundColor: 'var(--warm-beige)',
-                          color: 'var(--forest-dark)',
-                          fontWeight: 700
-                        }}
-                        title="Return your borrowed copy"
-                      >
-                        Return Book
-                      </button>
-                    ) : b.userReservation ? (
-                      <button
-                        onClick={() => handleCancelReserve(b.userReservation.id, b.id)}
-                        className="btn btn-outline btn-sm"
-                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem', color: '#C5221F', borderColor: 'rgba(197,34,31,0.3)' }}
-                        title="Cancel hold queue"
-                      >
-                        Cancel Hold
-                      </button>
-                    ) : b.available_copies > 0 ? (
-                      <button
-                        onClick={() => handleBorrow(b.id, b.title)}
-                        className="btn btn-botanical btn-sm"
-                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem', fontWeight: 700 }}
-                      >
-                        Borrow Now
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleReserve(b.id, b.title)}
-                        className="btn btn-primary btn-sm"
-                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.82rem' }}
-                      >
-                        Join Waitlist
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Secondary Context Actions */}
+                  {/* Status Badge */}
                   {b.userLoan ? (
-                    <button
-                      onClick={() => onNavigate('dashboard', { tab: 'loans' })}
-                      className="btn btn-primary btn-sm"
-                      style={{ width: '100%', fontSize: '0.78rem', padding: '6px' }}
-                    >
-                      Open in My Loans Hub →
-                    </button>
-                  ) : b.available_copies > 0 && !b.userReservation ? (
-                    <button
-                      onClick={() => handleReserve(b.id, b.title)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--forest)',
-                        fontSize: '0.76rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: '2px 0',
-                        textDecoration: 'underline',
-                        textAlign: 'center'
-                      }}
-                    >
-                      Or place hold for desk pickup
-                    </button>
+                    <div style={{
+                      marginBottom: '8px',
+                      backgroundColor: 'var(--editorial-border)',
+                      color: 'var(--editorial-text)',
+                      fontSize: '0.74rem',
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                      padding: '3px 8px',
+                      border: '1px solid var(--editorial-border)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      alignSelf: 'flex-start'
+                    }}>
+                      ✓ Borrowed (Due: {new Date(b.userLoan.due_date).toLocaleDateString([], { month: 'short', day: 'numeric' })})
+                    </div>
+                  ) : b.userReservation ? (
+                    <div style={{
+                      marginBottom: '8px',
+                      backgroundColor: 'var(--editorial-green)',
+                      color: '#FFFFFF',
+                      fontSize: '0.74rem',
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                      padding: '3px 8px',
+                      border: '1px solid var(--editorial-border)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      alignSelf: 'flex-start'
+                    }}>
+                      ★ Held in Queue #{b.userReservation.queue_position}
+                    </div>
                   ) : null}
-                </div>
-              </div>
-            ))}
 
-            {/* Row 2: Category & Subject */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', backgroundColor: 'var(--cream)', borderRadius: '8px' }}>
-              Category & Subject
-            </div>
-            {books.map(b => (
-              <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--subtle-border)' }}>
-                <span className="badge badge-category">{b.category}</span>
-              </div>
-            ))}
-
-            {/* Row 3: Physical Shelf & Rack Location */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', backgroundColor: 'var(--cream)', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MapPin size={16} color="var(--forest)" /> Shelf Location
-              </div>
-            </div>
-            {books.map(b => (
-              <div key={b.id} style={{ padding: '16px', backgroundColor: 'var(--soft-sage-light)', borderRadius: '8px', border: '1px solid var(--soft-sage)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--forest-dark)', fontSize: '0.94rem' }}>
-                  {b.floor} • {b.section}
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--botanical)', fontWeight: 600, marginTop: '2px' }}>
-                  {b.shelf} ({b.rack})
-                </div>
-              </div>
-            ))}
-
-            {/* Row 4: Live Availability */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', backgroundColor: 'var(--cream)', borderRadius: '8px' }}>
-              Live Availability
-            </div>
-            {books.map(b => (
-              <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--subtle-border)' }}>
-                {b.available_copies > 0 ? (
-                  <div>
-                    <span className="badge badge-available">
-                      ● {b.available_copies} of {b.total_copies} Copies Available
-                    </span>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted-text)', marginTop: '4px' }}>
-                      Ready on shelf for instant reading
-                    </span>
+                  <div style={{ width: '90px', height: '120px', overflow: 'hidden', marginBottom: '12px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                    <img
+                      src={b.cover_image || getOfflineBookCover(b.title, b.author, b.category)}
+                      alt={b.title}
+                      onError={(e) => handleBookCoverError(e, b.title, b.author, b.category)}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   </div>
-                ) : (
-                  <div>
-                    <span className="badge badge-borrowed">
-                      ● All Copies On Loan
-                    </span>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted-text)', marginTop: '4px' }}>
-                      Join waitlist queue for next return
-                    </span>
+
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px', lineHeight: 1.3 }}>
+                    {b.title}
+                  </h3>
+                  <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '14px', fontWeight: 600 }}>
+                    by {b.author}
+                  </p>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        onClick={() => onViewBookDetails(b.id)}
+                        className="btn btn-outline btn-sm"
+                        style={{ flex: 1, padding: '7px 10px', fontSize: '0.8rem' }}
+                      >
+                        Details
+                      </button>
+
+                      {b.userLoan ? (
+                        <button
+                          onClick={() => handleReturn(b.userLoan.id, b.id, b.title)}
+                          className="btn btn-secondary btn-sm"
+                          style={{
+                            flex: 1,
+                            padding: '7px 10px',
+                            fontSize: '0.8rem'
+                          }}
+                        >
+                          Return Book
+                        </button>
+                      ) : b.userReservation ? (
+                        <button
+                          onClick={() => handleCancelReserve(b.userReservation.id, b.id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ flex: 1, padding: '7px 10px', fontSize: '0.8rem', color: 'var(--editorial-accent)', borderColor: 'var(--editorial-accent)' }}
+                        >
+                          Cancel Hold
+                        </button>
+                      ) : b.available_copies > 0 ? (
+                        <button
+                          onClick={() => handleBorrow(b.id, b.title)}
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, padding: '7px 10px', fontSize: '0.8rem' }}
+                        >
+                          Borrow
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleReserve(b.id, b.title)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ flex: 1, padding: '7px 10px', fontSize: '0.8rem' }}
+                        >
+                          Waitlist
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
 
-            {/* Row 5: Publication Year & Edition */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', backgroundColor: 'var(--cream)', borderRadius: '8px' }}>
-              Edition & Year
-            </div>
-            {books.map(b => (
-              <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--subtle-border)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--forest-dark)', fontSize: '0.9rem' }}>
-                  {b.edition || '1st Edition'}
-                </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>
-                  Published: {b.publication_year || 'N/A'} • {b.language || 'English'}
-                </div>
-                <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)', fontFamily: 'monospace', marginTop: '4px' }}>
-                  ISBN: {b.isbn}
-                </div>
+              {/* Row 2: Category & Subject */}
+              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+                Category
               </div>
-            ))}
+              {books.map(b => (
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <span className="badge badge-category">{b.category}</span>
+                </div>
+              ))}
 
-            {/* Row 6: Synopsis & Topics */}
-            <div style={{ padding: '16px', fontWeight: 700, color: 'var(--forest-dark)', backgroundColor: 'var(--cream)', borderRadius: '8px' }}>
-              Description & Topics
-            </div>
-            {books.map(b => (
-              <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid var(--subtle-border)' }}>
-                <p style={{ fontSize: '0.88rem', color: 'var(--dark-text)', lineHeight: 1.6, margin: 0 }}>
-                  {b.description ? (b.description.length > 220 ? `${b.description.substring(0, 220)}...` : b.description) : 'No description available.'}
-                </p>
+              {/* Row 3: Shelf Location */}
+              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={16} color="var(--editorial-accent)" strokeWidth={2.4} /> Shelf Stack
+                </div>
               </div>
-            ))}
+              {books.map(b => (
+                <div key={b.id} style={{ padding: '16px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.94rem' }}>
+                    {b.floor} • {b.section}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--editorial-green)', fontWeight: 800, marginTop: '2px' }}>
+                    {b.shelf} ({b.rack})
+                  </div>
+                </div>
+              ))}
+
+              {/* Row 4: Live Availability */}
+              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+                Availability
+              </div>
+              {books.map(b => (
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  {b.available_copies > 0 ? (
+                    <div>
+                      <span className="badge badge-available">
+                        ● {b.available_copies} of {b.total_copies} Copies
+                      </span>
+                      <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.8, marginTop: '4px', fontWeight: 600 }}>
+                        Ready on shelf for instant check-out
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="badge badge-borrowed">
+                        ● All Copies On Loan
+                      </span>
+                      <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.8, marginTop: '4px', fontWeight: 600 }}>
+                        Join waitlist queue for next return
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Row 5: Publication Year & Edition */}
+              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+                Edition & Year
+              </div>
+              {books.map(b => (
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 800, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.9rem' }}>
+                    {b.edition || '1st Edition'}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>
+                    Published: {b.publication_year || 'N/A'} • {b.language || 'English'}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontFamily: 'monospace', marginTop: '4px', fontWeight: 700 }}>
+                    ISBN: {b.isbn}
+                  </div>
+                </div>
+              ))}
+
+              {/* Row 6: Synopsis & Topics */}
+              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+                Description
+              </div>
+              {books.map(b => (
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                    {b.description ? (b.description.length > 220 ? `${b.description.substring(0, 220)}...` : b.description) : 'No description available.'}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

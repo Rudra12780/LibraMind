@@ -20,7 +20,6 @@ export default function ResetPassword({ onNavigate }) {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Extract token from location.search or window.location.hash
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get('token');
 
@@ -33,7 +32,6 @@ export default function ResetPassword({ onNavigate }) {
 
     setToken(urlToken);
 
-    // Verify token with backend
     api.verifyResetToken(urlToken)
       .then((res) => {
         if (res.valid) {
@@ -57,7 +55,7 @@ export default function ResetPassword({ onNavigate }) {
   }, []);
 
   const calculateStrength = (pwd) => {
-    if (!pwd) return { score: 0, text: 'Empty', color: '#CBD5E1' };
+    if (!pwd) return { score: 0, text: 'Empty', color: 'var(--muted-text)' };
     let score = 0;
     if (pwd.length >= 6) score += 1;
     if (pwd.length >= 10) score += 1;
@@ -65,9 +63,9 @@ export default function ResetPassword({ onNavigate }) {
     if (/[0-9]/.test(pwd)) score += 1;
     if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
 
-    if (score <= 2) return { score, text: 'Weak', color: '#EF4444' };
-    if (score <= 4) return { score, text: 'Good', color: '#F59E0B' };
-    return { score, text: 'Strong', color: '#10B981' };
+    if (score <= 2) return { score, text: 'Weak', color: 'var(--editorial-accent)' };
+    if (score <= 4) return { score, text: 'Good', color: 'var(--editorial-border)' };
+    return { score, text: 'Strong', color: 'var(--editorial-green)' };
   };
 
   const strength = calculateStrength(password);
@@ -109,60 +107,77 @@ export default function ResetPassword({ onNavigate }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '75vh'
+        minHeight: '80vh',
+        backgroundColor: 'var(--editorial-bg)'
       }}
     >
       <div
         className="bio-card"
         style={{
-          width: '480px',
+          width: '500px',
           maxWidth: '100%',
           backgroundColor: '#FFFFFF',
-          padding: '36px',
-          borderRadius: '20px',
-          boxShadow: 'var(--shadow-lg)'
+          padding: '40px',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-xl)',
+          position: 'relative'
         }}
       >
+        {/* Top Maximalist Organic Accent Ribbon */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '5px',
+            borderTopLeftRadius: 'var(--radius-xl)',
+            borderTopRightRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(90deg, var(--editorial-accent) 0%, var(--editorial-green) 50%, var(--editorial-border) 100%)'
+          }}
+        />
+
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '26px', marginTop: '4px' }}>
           <div
             style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--forest)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, var(--editorial-accent), var(--editorial-border))',
+              boxShadow: '0 8px 20px rgba(192, 108, 78, 0.28)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 12px',
-              boxShadow: '0 4px 14px rgba(52, 78, 65, 0.25)'
+              margin: '0 auto 16px'
             }}
           >
-            <Lock size={26} color="#FAF8F1" />
+            <Lock size={28} color="#FFFFFF" strokeWidth={2.2} />
           </div>
 
           <div
+            className="pill-badge"
             style={{
-              display: 'inline-block',
-              backgroundColor: 'var(--soft-sage-light)',
-              color: 'var(--forest-dark)',
-              fontSize: '0.72rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              padding: '3px 10px',
-              borderRadius: '12px',
-              marginBottom: '8px'
+              marginBottom: '10px'
             }}
           >
-            Secure Account Recovery
+            🔑 Security & Key Update
           </div>
 
-          <h2 style={{ fontSize: '1.75rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
+          <h2
+            style={{
+              fontSize: '2rem',
+              color: 'var(--editorial-text)',
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 700,
+              marginBottom: '6px'
+            }}
+          >
             Reset Your Password
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0, lineHeight: 1.5 }}>
-            Create a strong, new password for your LibraMind sanctuary account.
+          <p style={{ fontSize: '0.90rem', color: 'var(--muted-text)', margin: 0, lineHeight: 1.55, fontWeight: 500 }}>
+            Create a secure, new password for your LibraMind sanctuary account.
           </p>
         </div>
 
@@ -172,35 +187,36 @@ export default function ResetPassword({ onNavigate }) {
               style={{
                 width: '36px',
                 height: '36px',
-                border: '3px solid var(--soft-sage-light)',
-                borderTopColor: 'var(--botanical)',
+                border: '3px solid var(--editorial-bg-subtle)',
+                borderTopColor: 'var(--editorial-accent)',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
                 margin: '0 auto 16px'
               }}
             />
-            <p style={{ color: 'var(--muted-text)', fontSize: '0.88rem', margin: 0 }}>
-              Verifying cryptographic security token...
+            <p style={{ color: 'var(--editorial-text)', fontSize: '0.88rem', margin: 0, fontWeight: 600 }}>
+              Verifying security token...
             </p>
           </div>
         ) : !tokenValid ? (
           <div>
             <div
               style={{
-                padding: '20px',
-                borderRadius: '14px',
+                padding: '24px',
                 backgroundColor: 'var(--status-danger-bg)',
-                border: '1px solid rgba(197, 34, 31, 0.25)',
                 color: 'var(--status-danger-text)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid rgba(150, 49, 36, 0.25)',
+                boxShadow: 'var(--shadow-card)',
                 marginBottom: '24px',
                 textAlign: 'center'
               }}
             >
-              <ShieldAlert size={36} style={{ margin: '0 auto 10px', display: 'block', color: 'var(--accent-crimson)' }} />
-              <h4 style={{ fontSize: '1.05rem', margin: '0 0 8px', fontWeight: 700 }}>
+              <ShieldAlert size={36} style={{ margin: '0 auto 10px', display: 'block' }} />
+              <h4 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-serif)', margin: '0 0 8px', fontWeight: 700 }}>
                 Invalid or Expired Link
               </h4>
-              <p style={{ fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.55, fontWeight: 500 }}>
                 {tokenError}
               </p>
             </div>
@@ -210,16 +226,16 @@ export default function ResetPassword({ onNavigate }) {
                 type="button"
                 onClick={() => onNavigate('forgot-password')}
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '12px', fontSize: '0.90rem' }}
+                style={{ width: '100%', padding: '12px', fontSize: '0.92rem' }}
               >
-                Request a New Reset Link
+                Request a New Reset Link →
               </button>
 
               <button
                 type="button"
                 onClick={() => onNavigate('login')}
                 className="btn btn-outline"
-                style={{ width: '100%', padding: '11px', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '12px', fontSize: '0.90rem' }}
               >
                 Return to Login
               </button>
@@ -229,34 +245,37 @@ export default function ResetPassword({ onNavigate }) {
           <div>
             <div
               style={{
-                padding: '24px 20px',
-                borderRadius: '16px',
-                backgroundColor: 'rgba(82, 115, 77, 0.08)',
-                border: '1px solid rgba(82, 115, 77, 0.25)',
+                padding: '26px 20px',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid rgba(221, 161, 94, 0.4)',
+                boxShadow: 'var(--shadow-card)',
                 marginBottom: '24px',
                 textAlign: 'center'
               }}
             >
               <div
                 style={{
-                  width: '48px',
-                  height: '48px',
+                  width: '52px',
+                  height: '52px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--botanical)',
-                  color: '#FAF8F1',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--editorial-green)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 14px'
                 }}
               >
-                <CheckCircle2 size={28} />
+                <CheckCircle2 size={28} strokeWidth={2.2} />
               </div>
 
-              <h4 style={{ fontSize: '1.2rem', color: 'var(--forest-dark)', marginBottom: '8px', fontWeight: 700 }}>
+              <h4 style={{ fontSize: '1.3rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', marginBottom: '8px', fontWeight: 700 }}>
                 Password Updated!
               </h4>
-              <p style={{ fontSize: '0.88rem', color: 'var(--charcoal)', lineHeight: 1.55, margin: 0 }}>
+              <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                 Your LibraMind account password has been safely updated. All previous reset tokens have been invalidated.
               </p>
             </div>
@@ -265,7 +284,7 @@ export default function ResetPassword({ onNavigate }) {
               type="button"
               onClick={() => onNavigate('login')}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ width: '100%', padding: '13px', fontSize: '0.96rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               Sign In With New Password →
             </button>
@@ -275,46 +294,48 @@ export default function ResetPassword({ onNavigate }) {
             {accountInfo.maskedEmail && (
               <div
                 style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--cream)',
-                  border: '1px solid var(--subtle-border)',
-                  fontSize: '0.82rem',
-                  color: 'var(--forest-dark)',
+                  padding: '10px 16px',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--editorial-border)',
+                  fontSize: '0.84rem',
+                  color: 'var(--editorial-text)',
+                  fontWeight: 600,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '18px'
+                  marginBottom: '20px'
                 }}
               >
-                <span>Resetting for: <strong>{accountInfo.userName}</strong></span>
-                <span style={{ color: 'var(--muted-text)', fontFamily: 'monospace' }}>{accountInfo.maskedEmail}</span>
+                <span>Account: <strong>{accountInfo.userName}</strong></span>
+                <span style={{ fontFamily: 'monospace' }}>{accountInfo.maskedEmail}</span>
               </div>
             )}
 
             {formError && (
               <div
                 style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
+                  padding: '12px 16px',
                   backgroundColor: 'var(--status-danger-bg)',
                   color: 'var(--status-danger-text)',
-                  fontSize: '0.86rem',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '8px',
-                  marginBottom: '18px',
-                  border: '1px solid rgba(197, 34, 31, 0.2)'
+                  gap: '10px',
+                  marginBottom: '20px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid rgba(150, 49, 36, 0.2)'
                 }}
               >
-                <AlertCircle size={17} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>{formError}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ fontWeight: 600, color: 'var(--forest-dark)' }}>
+                <label className="form-label">
                   New Password
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -325,7 +346,7 @@ export default function ResetPassword({ onNavigate }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    style={{ paddingRight: '42px' }}
+                    style={{ paddingRight: '44px' }}
                   />
                   <button
                     type="button"
@@ -350,17 +371,18 @@ export default function ResetPassword({ onNavigate }) {
                 {/* Password strength bar */}
                 {password && (
                   <div style={{ marginTop: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--muted-text)', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--muted-text)', marginBottom: '4px', fontWeight: 600 }}>
                       <span>Password strength:</span>
-                      <span style={{ fontWeight: 700, color: strength.color }}>{strength.text}</span>
+                      <span style={{ color: strength.color, fontWeight: 700 }}>{strength.text}</span>
                     </div>
-                    <div style={{ height: '4px', width: '100%', backgroundColor: '#E2E8F0', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '5px', width: '100%', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
                       <div
                         style={{
                           height: '100%',
                           width: `${(strength.score / 5) * 100}%`,
                           backgroundColor: strength.color,
-                          transition: 'width 0.3s ease'
+                          borderRadius: 'var(--radius-full)',
+                          transition: 'width 0.25s ease'
                         }}
                       />
                     </div>
@@ -368,8 +390,8 @@ export default function ResetPassword({ onNavigate }) {
                 )}
               </div>
 
-              <div className="form-group" style={{ marginBottom: '22px' }}>
-                <label className="form-label" style={{ fontWeight: 600, color: 'var(--forest-dark)' }}>
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label">
                   Confirm New Password
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -380,7 +402,7 @@ export default function ResetPassword({ onNavigate }) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    style={{ paddingRight: '42px' }}
+                    style={{ paddingRight: '44px' }}
                   />
                   <button
                     type="button"
@@ -402,7 +424,7 @@ export default function ResetPassword({ onNavigate }) {
                   </button>
                 </div>
                 {confirmPassword && password !== confirmPassword && (
-                  <span style={{ fontSize: '0.74rem', color: '#DC2626', marginTop: '4px', display: 'block' }}>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-accent)', marginTop: '5px', display: 'block', fontWeight: 600 }}>
                     Passwords do not match yet.
                   </span>
                 )}
@@ -412,21 +434,21 @@ export default function ResetPassword({ onNavigate }) {
                 type="submit"
                 className="btn btn-primary"
                 disabled={submitting || (confirmPassword && password !== confirmPassword)}
-                style={{ width: '100%', padding: '12px', fontSize: '0.95rem', fontWeight: 700 }}
+                style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
               >
-                {submitting ? 'Updating Password...' : 'Reset Password'}
+                {submitting ? 'Updating Password...' : 'Reset Password →'}
               </button>
 
-              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <div style={{ textAlign: 'center', marginTop: '22px' }}>
                 <button
                   type="button"
                   onClick={() => onNavigate('login')}
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: 'var(--botanical)',
+                    color: 'var(--editorial-accent)',
                     fontWeight: 600,
-                    fontSize: '0.86rem',
+                    fontSize: '0.88rem',
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -444,4 +466,3 @@ export default function ResetPassword({ onNavigate }) {
     </div>
   );
 }
-

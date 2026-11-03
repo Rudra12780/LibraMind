@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, AlertCircle, CheckCircle } from 'lucide-react';
+import { BookOpen, AlertCircle, CheckCircle, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Register({ onNavigate }) {
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [interests, setInterests] = useState('Artificial Intelligence, Python, Web Development');
+  const [interests, setInterests] = useState('Classic Literature, Philosophy, Creative Writing');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -39,77 +39,119 @@ export default function Register({ onNavigate }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '75vh'
+        minHeight: '80vh',
+        backgroundColor: 'var(--editorial-bg)'
       }}
     >
       <div
         className="bio-card"
         style={{
-          width: '500px',
+          width: '520px',
           maxWidth: '100%',
           backgroundColor: '#FFFFFF',
-          padding: '36px',
-          borderRadius: '20px',
-          boxShadow: 'var(--shadow-lg)'
+          padding: '40px',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-xl)',
+          position: 'relative'
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        {/* Top Maximalist Organic Accent Ribbon */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '5px',
+            borderTopLeftRadius: 'var(--radius-sm)',
+            borderTopRightRadius: 'var(--radius-sm)',
+            background: 'linear-gradient(90deg, var(--editorial-accent) 0%, var(--editorial-border) 50%, var(--editorial-green) 100%)'
+          }}
+        />
+
+        <div style={{ textAlign: 'center', marginBottom: '28px', marginTop: '4px' }}>
           <div
             style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '14px',
-              backgroundColor: 'var(--forest)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, var(--editorial-green), var(--editorial-border))',
+              boxShadow: '0 8px 20px rgba(96, 108, 56, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 12px'
+              margin: '0 auto 16px'
             }}
           >
-            <BookOpen size={24} color="#FAF8F1" />
+            <BookOpen size={28} color="#FFFFFF" strokeWidth={2.2} />
           </div>
-          <h2 style={{ fontSize: '1.8rem', color: 'var(--forest-dark)', marginBottom: '4px' }}>
+
+          <div
+            className="pill-badge"
+            style={{
+              marginBottom: '10px'
+            }}
+          >
+            🌿 Free Sanctuary Enrollment
+          </div>
+
+          <h2
+            style={{
+              fontSize: '2rem',
+              color: 'var(--editorial-text)',
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 700,
+              marginBottom: '6px'
+            }}
+          >
             Join LibraMind
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0 }}>
-            Create your student membership card to borrow books, reserve quiet study pods, and receive personalized recommendations.
+          <p style={{ fontSize: '0.90rem', color: 'var(--muted-text)', margin: 0, fontWeight: 500 }}>
+            Create your member sanctuary card to borrow physical copies, reserve study pods, and receive curated reading recommendations.
           </p>
         </div>
 
         {error && (
           <div
             style={{
-              padding: '10px 14px',
-              borderRadius: '8px',
+              padding: '12px 16px',
               backgroundColor: 'var(--status-danger-bg)',
               color: 'var(--status-danger-text)',
-              fontSize: '0.86rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(150, 49, 36, 0.2)',
+              fontSize: '0.88rem',
+              fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '10px',
               marginBottom: '20px'
             }}
           >
-            <AlertCircle size={16} />
-            {error}
+            <AlertCircle size={18} />
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label className="form-label">
+              Full Name
+            </label>
             <input
               type="text"
               className="form-control"
-              placeholder="e.g. Maya Patel"
+              placeholder="e.g. Maya Lin"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Academic Email</label>
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label className="form-label">
+              Academic Email
+            </label>
             <input
               type="email"
               className="form-control"
@@ -120,8 +162,10 @@ export default function Register({ onNavigate }) {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Password (min 6 characters)</label>
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label className="form-label">
+              Password (min 6 characters)
+            </label>
             <input
               type="password"
               className="form-control"
@@ -132,17 +176,19 @@ export default function Register({ onNavigate }) {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Reading & Research Interests</label>
+          <div className="form-group" style={{ marginBottom: '22px' }}>
+            <label className="form-label">
+              Reading & Research Interests
+            </label>
             <input
               type="text"
               className="form-control"
-              placeholder="e.g. Machine Learning, Python, Design..."
+              placeholder="e.g. Poetry, Artificial Intelligence, Philosophy..."
               value={interests}
               onChange={(e) => setInterests(e.target.value)}
             />
-            <span style={{ fontSize: '0.74rem', color: 'var(--sage)', display: 'block', marginTop: '4px' }}>
-              Used by our content-based recommendation model to personalize your catalog feed.
+            <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block', marginTop: '5px' }}>
+              Used by our AI sanctuary assistant to curate personalized reading recommendations.
             </span>
           </div>
 
@@ -150,26 +196,26 @@ export default function Register({ onNavigate }) {
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{ width: '100%', marginTop: '24px', padding: '12px' }}
+            style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
           >
-            {loading ? 'Creating Record...' : 'Complete Registration'}
+            {loading ? 'Issuing Member Card...' : 'Complete Registration →'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.86rem', color: 'var(--muted-text)' }}>
-          Already registered?{' '}
+        <div style={{ textAlign: 'center', marginTop: '22px', fontSize: '0.86rem', color: 'var(--muted-text)', fontWeight: 500 }}>
+          Already have a sanctuary card?{' '}
           <button
             onClick={() => onNavigate('login')}
             style={{
               background: 'none',
               border: 'none',
-              color: 'var(--botanical)',
+              color: 'var(--editorial-accent)',
               fontWeight: 700,
               cursor: 'pointer',
               padding: 0
             }}
           >
-            Sign In here
+            Sign In here →
           </button>
         </div>
       </div>

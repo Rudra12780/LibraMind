@@ -1,15 +1,15 @@
 // LibraMind Design Thinking UI Wireframe Blueprint Portfolio
-// Clean low-fidelity black-and-white Balsamiq-style UI wireframes for all 14 pages of the system.
+// Clean low-fidelity black-and-white Balsamiq-style UI wireframes for all 21 pages of the system.
 
 function wrapPageSVG({
   pageNumber,
-  pageTotal = 14,
+  pageTotal = 21,
   pageTitle,
   pageRoute,
   activeNavIndex = 0,
   content
 }) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="100%" style="background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
   <defs>
     <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
     <pattern id="dot-grid-${pageNumber}" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -2517,6 +2517,993 @@ const RESERVATIONS_CONTENT = `
 // --------------------------------------------------------------------------------
 // 12-PAGE BLUEPRINT ARRAY EXPORT
 // --------------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------------
+// PAGE 15: SCHOLAR & STUDENT REGISTRATION PORTAL (/register)
+// --------------------------------------------------------------------------------
+const REGISTER_CONTENT = `
+    <!-- 2. REGISTRATION HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. REGISTRATION HEADER</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">SCHOLAR FOLIO ENROLLMENT</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Create your academic borrowing profile to reserve books, study pods, and view AI recommendations.</text>
+      </g>
+    </g>
+
+    <!-- 3. REGISTRATION FORM CARD (CENTERED BALSAMIQ FORM CONTAINER) -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. ENROLLMENT FORM</text>
+
+      <rect width="764" height="1060" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Left Column: Primary Credential Inputs -->
+      <g transform="translate(36, 28)">
+        <text x="0" y="16" font-size="13" font-weight="bold">PATRON CREDENTIALS &amp; ACADEMIC FOLIO</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Fields marked with (*) are recorded in SQLite archive</text>
+
+        <!-- Full Name -->
+        <g transform="translate(0, 48)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">FULL NAME *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ e.g. Aarav Sharma ]</text>
+        </g>
+
+        <!-- Email -->
+        <g transform="translate(0, 118)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">INSTITUTIONAL / STUDENT EMAIL *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ scholar@libramind.edu ]</text>
+        </g>
+
+        <!-- Password -->
+        <g transform="translate(0, 188)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">CHOOSE PASSWORD *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="41" font-size="13" font-family="monospace">••••••••••••</text>
+          <rect x="296" y="24" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="302" y="40" font-size="11">👁</text>
+        </g>
+
+        <!-- Student / Folio ID -->
+        <g transform="translate(0, 258)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">STUDENT ROLL / FOLIO ID *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ STU-1002 ]</text>
+        </g>
+
+        <!-- Academic Department -->
+        <g transform="translate(0, 328)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">DEPARTMENT / FACULTY *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#222222">Computer Science &amp; Engineering</text>
+          <text x="306" y="40" font-size="10">▼</text>
+        </g>
+      </g>
+
+      <!-- Right Column: Reading Interest Pills & SSO -->
+      <g transform="translate(396, 28)">
+        <text x="0" y="16" font-size="13" font-weight="bold">RESEARCH &amp; READING INTERESTS</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Powers initial TF-IDF recommendation seeds</text>
+
+        <!-- Interest Tags Multi-Select Pills -->
+        <g transform="translate(0, 48)">
+          <!-- Row 1 -->
+          <rect x="0" y="0" width="160" height="28" rx="14" fill="#000000" />
+          <text x="14" y="18" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Fiction &amp; Novels</text>
+
+          <rect x="170" y="0" width="160" height="28" rx="14" fill="#000000" />
+          <text x="180" y="18" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Artificial Intelligence</text>
+
+          <!-- Row 2 -->
+          <rect x="0" y="36" width="145" height="28" rx="14" fill="#000000" />
+          <text x="12" y="54" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Computer Science</text>
+
+          <rect x="155" y="36" width="145" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="168" y="54" font-size="9" font-weight="bold">+ Philosophy &amp; Ethics</text>
+
+          <!-- Row 3 -->
+          <rect x="0" y="72" width="150" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="90" font-size="9" font-weight="bold">+ Classic Literature</text>
+
+          <rect x="160" y="72" width="155" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="172" y="90" font-size="9" font-weight="bold">+ Science &amp; Technology</text>
+
+          <!-- Row 4 -->
+          <rect x="0" y="108" width="140" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="126" font-size="9" font-weight="bold">+ History &amp; Heritage</text>
+
+          <rect x="150" y="108" width="145" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="162" y="126" font-size="9" font-weight="bold">+ Business &amp; Startups</text>
+        </g>
+
+        <!-- Terms Agreement Checkbox -->
+        <g transform="translate(0, 215)">
+          <rect x="0" y="0" width="18" height="18" rx="3" fill="#000000" />
+          <text x="4" y="14" font-size="12" fill="#FFFFFF">✓</text>
+          <text x="28" y="14" font-size="9.5" font-weight="bold">I accept the Library Circulation Code and Policies</text>
+          <text x="28" y="28" font-size="8.5" fill="#666666">Standard 14-day student borrowing terms with automated hold cues</text>
+        </g>
+
+        <!-- GitHub SSO Button Option -->
+        <g transform="translate(0, 265)">
+          <rect width="330" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+          <!-- Octocat / GitHub Icon Placeholder -->
+          <circle cx="28" cy="21" r="10" fill="#000000" />
+          <text x="24" y="25" font-size="11" fill="#FFFFFF">🐙</text>
+          <text x="52" y="25" font-size="11" font-weight="bold">Continue with GitHub SSO Account</text>
+        </g>
+
+        <!-- Submit Button -->
+        <g transform="translate(0, 325)">
+          <rect width="330" height="44" rx="6" fill="#000000" />
+          <text x="64" y="27" font-size="11.5" font-weight="bold" fill="#FFFFFF">Complete Registration &amp; Enter</text>
+        </g>
+
+        <!-- Existing Member Login Link -->
+        <g transform="translate(0, 390)">
+          <text x="0" y="14" font-size="9.5" fill="#555555">Already possess an accession folio? <tspan font-weight="bold" fill="#000000" text-decoration="underline">Sign in to Member Hub</tspan></text>
+        </g>
+      </g>
+
+      <!-- Bottom Form Diagram: 4-Step Registration to Access Flow -->
+      <g transform="translate(36, 520)">
+        <text x="0" y="14" font-size="11.5" font-weight="bold">NEW SCHOLAR ONBOARDING WORKFLOW</text>
+        <line x1="0" y1="24" x2="692" y2="24" stroke="#000000" stroke-width="1" />
+
+        <g transform="translate(0, 40)">
+          <!-- Step 1 -->
+          <rect x="0" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="24" cy="24" r="12" fill="#000000" />
+          <text x="20" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">1</text>
+          <text x="44" y="28" font-size="10" font-weight="bold">Folio Entry</text>
+          <line x1="12" y1="52" x2="143" y2="52" stroke="#CCCCCC" stroke-width="3" />
+          <line x1="12" y1="64" x2="110" y2="64" stroke="#CCCCCC" stroke-width="3" />
+          <line x1="12" y1="76" x2="130" y2="76" stroke="#CCCCCC" stroke-width="3" />
+          <rect x="12" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="28" y="114" font-size="8.5">Enter Credentials</text>
+
+          <text x="162" y="70" font-size="18">→</text>
+
+          <!-- Step 2 -->
+          <rect x="178" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="202" cy="24" r="12" fill="#000000" />
+          <text x="198" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">2</text>
+          <text x="222" y="28" font-size="10" font-weight="bold">Password Hash</text>
+          <rect x="190" y="52" width="131" height="40" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+          <text x="196" y="74" font-size="8" font-family="monospace">bcrypt.hash(10)</text>
+          <rect x="190" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="200" y="114" font-size="8.5">Salted Encryption</text>
+
+          <text x="340" y="70" font-size="18">→</text>
+
+          <!-- Step 3 -->
+          <rect x="356" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="380" cy="24" r="12" fill="#000000" />
+          <text x="376" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">3</text>
+          <text x="400" y="28" font-size="10" font-weight="bold">DB Insertion</text>
+          <rect x="368" y="52" width="131" height="40" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+          <text x="376" y="74" font-size="8" font-family="monospace">INSERT INTO users</text>
+          <rect x="368" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="382" y="114" font-size="8.5">SQLite Persistence</text>
+
+          <text x="518" y="70" font-size="18">→</text>
+
+          <!-- Step 4 -->
+          <rect x="534" y="0" width="158" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="558" cy="24" r="12" fill="#000000" />
+          <text x="554" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">4</text>
+          <text x="578" y="28" font-size="10" font-weight="bold">JWT Issued</text>
+          <rect x="546" y="52" width="134" height="40" rx="3" fill="#000000" />
+          <text x="556" y="74" font-size="8.5" font-weight="bold" fill="#FFFFFF">ACCESS SANCTUARY</text>
+          <rect x="546" y="98" width="134" height="24" rx="3" fill="#EEEEEE" />
+          <text x="554" y="114" font-size="8.5">Auto-Redirect to Hub</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // SCHOLAR REGISTRATION BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 15 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 16: ABOUT LIBRAMIND SANCTUARY & VISION (/about)
+// --------------------------------------------------------------------------------
+const ABOUT_CONTENT = `
+    <!-- 2. ABOUT HERO & MISSION -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. ABOUT HERO</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">ABOUT LIBRAMIND ARCHIVES &amp; SANCTUARY</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Bridging nineteenth-century classical library scholarship with twentieth-first-century AI discovery.</text>
+      </g>
+    </g>
+
+    <!-- 3. MISSION STATEMENT & VISION CONTAINER -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. SANCTUARY MISSION</text>
+
+      <rect width="764" height="280" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Left Side: Architectural Illustration Placeholder [X] -->
+      <g transform="translate(24, 24)">
+        <rect width="250" height="232" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <line x1="0" y1="0" x2="250" y2="232" stroke="#000000" stroke-width="1.2" />
+        <line x1="250" y1="0" x2="0" y2="232" stroke="#000000" stroke-width="1.2" />
+        <rect x="50" y="98" width="150" height="36" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="60" y="120" font-size="9" font-weight="bold">SANCTUARY ATRIUM [X]</text>
+      </g>
+
+      <!-- Right Side: Narrative Copy & Values -->
+      <g transform="translate(298, 24)">
+        <text x="0" y="16" font-size="14" font-weight="bold">THE FOUNDING CHARTER OF LIBRAMIND</text>
+        <line x1="0" y1="26" x2="440" y2="26" stroke="#000000" stroke-width="1.2" />
+
+        <text x="0" y="52" font-size="10" fill="#333333">Established to cultivate deep focus, serendipitous intellectual discovery,</text>
+        <text x="0" y="70" font-size="10" fill="#333333">and open academic equity. LibraMind pairs classical physical stacks</text>
+        <text x="0" y="88" font-size="10" fill="#333333">with neural TF-IDF retrieval algorithms and live circulation intelligence.</text>
+
+        <!-- 3 Feature Bullets -->
+        <g transform="translate(0, 110)">
+          <circle cx="8" cy="8" r="4" fill="#000000" />
+          <text x="22" y="12" font-size="9.5" font-weight="bold">Biophilic Calm &amp; Silent Architecture</text>
+          <text x="22" y="26" font-size="8.5" fill="#666666">Designed for uninterrupted scholarly reading with natural lighting.</text>
+
+          <circle cx="8" cy="46" r="4" fill="#000000" />
+          <text x="22" y="50" font-size="9.5" font-weight="bold">Algorithmic TF-IDF Book Oracle</text>
+          <text x="22" y="64" font-size="8.5" fill="#666666">Mathematical keyword vectorization across volume abstracts &amp; call numbers.</text>
+
+          <circle cx="8" cy="84" r="4" fill="#000000" />
+          <text x="22" y="88" font-size="9.5" font-weight="bold">Cryptographic Role-Based Security</text>
+          <text x="22" y="102" font-size="8.5" fill="#666666">Zero-trust patron privacy, salted password hashes, and instant audit trails.</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. COLLECTION BENCHMARK METRICS STRIP -->
+    <g transform="translate(48, 480)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. ARCHIVE BENCHMARKS</text>
+
+      <rect width="764" height="130" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- 4 Metric Cards -->
+      <g transform="translate(20, 20)">
+        <!-- Metric 1 -->
+        <g transform="translate(0, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">120,000+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">PHYSICAL VOLUMES</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Dewey &amp; LoC Indexed</text>
+        </g>
+
+        <!-- Metric 2 -->
+        <g transform="translate(186, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">450+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">STUDY PODS &amp; DESKS</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Silent &amp; Collaborative</text>
+        </g>
+
+        <!-- Metric 3 -->
+        <g transform="translate(372, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">14,200+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">SCHOLAR PATRONS</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Students, Faculty &amp; Fellows</text>
+        </g>
+
+        <!-- Metric 4 -->
+        <g transform="translate(558, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">99.98%</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">DIGITAL AVAILABILITY</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Always-On Local Offline Fallback</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. BOARD OF CURATORS & LEADERSHIP -->
+    <g transform="translate(48, 635)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">5. BOARD OF CURATORS</text>
+
+      <text x="0" y="14" font-size="13" font-weight="bold">CURATORIAL BOARD &amp; LIBRARY FACULTY</text>
+
+      <g transform="translate(0, 26)">
+        <!-- Curator 1 -->
+        <g transform="translate(0, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">DR. ELEANOR VANE</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Chief Archival Curator</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Specialist in Classical Manuscripts &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Bibliographic Preservation Systems</text>
+        </g>
+
+        <!-- Curator 2 -->
+        <g transform="translate(262, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">MARCUS HOLLOWAY</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Head of Information Architecture</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Pioneer in Algorithmic Cataloguing &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Semantic Knowledge Graphs</text>
+        </g>
+
+        <!-- Curator 3 -->
+        <g transform="translate(524, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">SOPHIA STERLING</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Director of Patron Experience</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Lead Architect of Study Sanctuaries &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Ergonomic Silent Reading Pods</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // ABOUT &amp; MISSION BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 16 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 17: HELP CENTER & CIRCULATION DESK (/contact)
+// --------------------------------------------------------------------------------
+const CONTACT_CONTENT = `
+    <!-- 2. CONTACT HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. HELP DESK HEADER</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">CIRCULATION HELP DESK &amp; INQUIRIES</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Get assistance from reference archivists, submit circulation questions, or locate stacks.</text>
+      </g>
+    </g>
+
+    <!-- 3. CONTACT CHANNELS (3 COLUMNS) -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. CONTACT CHANNELS</text>
+
+      <!-- Channel 1 -->
+      <g transform="translate(0, 0)">
+        <rect width="240" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+        <text x="24" y="38" font-size="16" fill="#FFFFFF">📖</text>
+        <text x="56" y="32" font-size="11" font-weight="bold">Circulation Front Desk</text>
+        <text x="56" y="46" font-size="8.5" fill="#666666">Level 1 Main Atrium</text>
+        <line x1="16" y1="64" x2="224" y2="64" stroke="#DDDDDD" stroke-width="1" />
+        <text x="16" y="86" font-size="9">Hours: Mon-Sun 8:00 AM - 10:00 PM</text>
+        <text x="16" y="104" font-size="9">Desk Phone: Ext. 4012 / (02) 8800</text>
+        <text x="16" y="122" font-size="8.5" font-weight="bold" fill="#000000">Status: ● Active Desk Duty</text>
+      </g>
+
+      <!-- Channel 2 -->
+      <g transform="translate(262, 0)">
+        <rect width="240" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+        <text x="24" y="38" font-size="16" fill="#FFFFFF">🔍</text>
+        <text x="56" y="32" font-size="11" font-weight="bold">Research Reference</text>
+        <text x="56" y="46" font-size="8.5" fill="#666666">Level 3 North Gallery</text>
+        <line x1="16" y1="64" x2="224" y2="64" stroke="#DDDDDD" stroke-width="1" />
+        <text x="16" y="86" font-size="9">Hours: Mon-Fri 9:00 AM - 6:00 PM</text>
+        <text x="16" y="104" font-size="9">Email: reference@libramind.edu</text>
+        <text x="16" y="122" font-size="8.5" font-weight="bold" fill="#000000">Status: ● Consultation Open</text>
+      </g>
+
+      <!-- Channel 3 -->
+      <g transform="translate(524, 0)">
+        <rect width="240" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+        <text x="24" y="38" font-size="16" fill="#FFFFFF">💻</text>
+        <text x="56" y="32" font-size="11" font-weight="bold">Digital IT &amp; Pod Access</text>
+        <text x="56" y="46" font-size="8.5" fill="#666666">Online Ticket System</text>
+        <line x1="16" y1="64" x2="224" y2="64" stroke="#DDDDDD" stroke-width="1" />
+        <text x="16" y="86" font-size="9">Hours: 24/7 Digital Intake</text>
+        <text x="16" y="104" font-size="9">Support: support@libramind.edu</text>
+        <text x="16" y="122" font-size="8.5" font-weight="bold" fill="#000000">Status: ● Response &lt; 2 Hours</text>
+      </g>
+    </g>
+
+    <!-- 4. INTERACTIVE PATRON DISPATCH FORM -->
+    <g transform="translate(48, 350)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. DISPATCH INTAKE FORM</text>
+
+      <rect width="764" height="420" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <g transform="translate(24, 24)">
+        <text x="0" y="16" font-size="13" font-weight="bold">SUBMIT PATRON INQUIRY OR CIRCULATION REQUEST</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Routed automatically to the appropriate circulation department queue</text>
+
+        <!-- Form Grid -->
+        <g transform="translate(0, 50)">
+          <!-- Left: Name & Folio -->
+          <g transform="translate(0, 0)">
+            <text x="0" y="12" font-size="9.5" font-weight="bold">SCHOLAR NAME *</text>
+            <rect x="0" y="18" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+            <text x="12" y="40" font-size="10" fill="#777777">[ Aarav Sharma ]</text>
+
+            <g transform="translate(0, 70)">
+              <text x="0" y="12" font-size="9.5" font-weight="bold">MEMBERSHIP / FOLIO ID *</text>
+              <rect x="0" y="18" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+              <text x="12" y="40" font-size="10" fill="#777777">[ STU-1001 ]</text>
+            </g>
+
+            <g transform="translate(0, 140)">
+              <text x="0" y="12" font-size="9.5" font-weight="bold">INQUIRY SUBJECT / CATEGORY *</text>
+              <rect x="0" y="18" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+              <text x="12" y="40" font-size="10">Loan Renewal &amp; Due Date Extension ▾</text>
+            </g>
+          </g>
+
+          <!-- Right: Message Area & Submit -->
+          <g transform="translate(376, 0)">
+            <text x="0" y="12" font-size="9.5" font-weight="bold">DISPATCH MESSAGE *</text>
+            <rect x="0" y="18" width="340" height="150" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+            <text x="12" y="40" font-size="10" fill="#777777">Please enter details regarding your book copy,</text>
+            <text x="12" y="56" font-size="10" fill="#777777">study pod reservation, or research request...</text>
+
+            <g transform="translate(0, 185)">
+              <rect width="340" height="42" rx="6" fill="#000000" />
+              <text x="80" y="26" font-size="11" font-weight="bold" fill="#FFFFFF">Transmit Dispatch to Archivist</text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. FREQUENTLY ASKED QUESTIONS ACCORDION -->
+    <g transform="translate(48, 795)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">5. FAQ ACCORDION</text>
+
+      <text x="0" y="14" font-size="13" font-weight="bold">FREQUENTLY ASKED CIRCULATION QUESTIONS</text>
+
+      <g transform="translate(0, 26)">
+        <!-- Q1 -->
+        <rect width="764" height="46" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="16" y="28" font-size="10.5" font-weight="bold">Q: How do I renew my borrowed book copies online?</text>
+        <text x="736" y="28" font-size="14" font-weight="bold">▾</text>
+
+        <!-- Q2 (Expanded) -->
+        <g transform="translate(0, 56)">
+          <rect width="764" height="85" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="24" font-size="10.5" font-weight="bold">Q: What happens when an active reservation hold is placed on my book?</text>
+          <text x="736" y="24" font-size="14" font-weight="bold">▴</text>
+          <line x1="16" y1="36" x2="748" y2="36" stroke="#EEEEEE" stroke-width="1" />
+          <text x="16" y="54" font-size="9" fill="#444444">When another patron joins the waiting queue for your borrowed title, automated renewal is locked.</text>
+          <text x="16" y="70" font-size="9" fill="#444444">You must return the physical copy by the stipulated due date to ensure equitable campus circulation.</text>
+        </g>
+
+        <!-- Q3 -->
+        <g transform="translate(0, 150)">
+          <rect width="764" height="46" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="28" font-size="10.5" font-weight="bold">Q: Can I book study pods for group research projects?</text>
+          <text x="736" y="28" font-size="14" font-weight="bold">▾</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // CONTACT &amp; CIRCULATION HELP DESK</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 17 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 18: LIBRARY POLICIES & BORROWING CODE (/terms)
+// --------------------------------------------------------------------------------
+const TERMS_CONTENT = `
+    <!-- 2. TERMS & POLICIES HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. CHARTER HEADER</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">LIBRARY CODE OF CONDUCT &amp; BORROWING POLICIES</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Official regulations governing book circulation, reservation queues, study pod bookings, and patron privacy.</text>
+      </g>
+    </g>
+
+    <!-- 3. BORROWING LIMITS & PRIVILEGES TABLE -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. CIRCULATION MATRIX</text>
+
+      <rect width="764" height="260" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <g transform="translate(24, 20)">
+        <text x="0" y="16" font-size="13" font-weight="bold">PATRON TIER BORROWING ALLOWANCES</text>
+
+        <!-- Table Header -->
+        <g transform="translate(0, 36)">
+          <rect width="716" height="32" rx="4" fill="#000000" />
+          <text x="16" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">PATRON TIER</text>
+          <text x="160" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">MAX COPIES</text>
+          <text x="270" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">LOAN PERIOD</text>
+          <text x="390" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">RENEWAL LIMITS</text>
+          <text x="530" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">GRACE PERIOD</text>
+          <text x="640" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">OVERDUE FEE</text>
+
+          <!-- Row 1: Undergraduate -->
+          <g transform="translate(0, 34)">
+            <rect width="716" height="34" fill="#FFFFFF" stroke="#DDDDDD" stroke-width="1" />
+            <text x="16" y="22" font-size="9.5" font-weight="bold">Undergraduate Student</text>
+            <text x="160" y="22" font-size="9.5">5 Books</text>
+            <text x="270" y="22" font-size="9.5">14 Calendar Days</text>
+            <text x="390" y="22" font-size="9.5">Up to 2 Times</text>
+            <text x="530" y="22" font-size="9.5">24 Hours</text>
+            <text x="640" y="22" font-size="9.5" font-weight="bold">$0.50 / Day</text>
+          </g>
+
+          <!-- Row 2: Postgraduate / Researcher -->
+          <g transform="translate(0, 68)">
+            <rect width="716" height="34" fill="#F9F9F9" stroke="#DDDDDD" stroke-width="1" />
+            <text x="16" y="22" font-size="9.5" font-weight="bold">Postgraduate / Fellow</text>
+            <text x="160" y="22" font-size="9.5">8 Books</text>
+            <text x="270" y="22" font-size="9.5">28 Calendar Days</text>
+            <text x="390" y="22" font-size="9.5">Up to 3 Times</text>
+            <text x="530" y="22" font-size="9.5">48 Hours</text>
+            <text x="640" y="22" font-size="9.5" font-weight="bold">$0.50 / Day</text>
+          </g>
+
+          <!-- Row 3: Faculty & Staff -->
+          <g transform="translate(0, 102)">
+            <rect width="716" height="34" fill="#FFFFFF" stroke="#DDDDDD" stroke-width="1" />
+            <text x="16" y="22" font-size="9.5" font-weight="bold">Faculty / University Staff</text>
+            <text x="160" y="22" font-size="9.5">15 Books</text>
+            <text x="270" y="22" font-size="9.5">90 Calendar Days</text>
+            <text x="390" y="22" font-size="9.5">Up to 5 Times</text>
+            <text x="530" y="22" font-size="9.5">7 Days</text>
+            <text x="640" y="22" font-size="9.5" font-weight="bold">Exempt</text>
+          </g>
+
+          <!-- Row 4: Visiting Scholar -->
+          <g transform="translate(0, 136)">
+            <rect width="716" height="34" fill="#F9F9F9" stroke="#DDDDDD" stroke-width="1" />
+            <text x="16" y="22" font-size="9.5" font-weight="bold">Visiting Scholar</text>
+            <text x="160" y="22" font-size="9.5">3 Books</text>
+            <text x="270" y="22" font-size="9.5">14 Calendar Days</text>
+            <text x="390" y="22" font-size="9.5">1 Time Only</text>
+            <text x="530" y="22" font-size="9.5">24 Hours</text>
+            <text x="640" y="22" font-size="9.5" font-weight="bold">$1.00 / Day</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. POLICIES GRID: QUEUE PROTOCOLS & SILENT STUDY CODE -->
+    <g transform="translate(48, 455)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. DETAILED CLAUSES</text>
+
+      <g transform="translate(0, 0)">
+        <!-- Clause 1 Card: Hold & Queue Protocol -->
+        <g transform="translate(0, 0)">
+          <rect width="370" height="320" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+          <g transform="translate(20, 20)">
+            <rect width="28" height="28" rx="4" fill="#000000" />
+            <text x="9" y="19" font-size="12" fill="#FFFFFF">§1</text>
+            <text x="36" y="18" font-size="12" font-weight="bold">RESERVATION HOLDS &amp; QUEUES</text>
+            <text x="36" y="32" font-size="8.5" fill="#666666">Automated Circulation Lifecycle</text>
+            <line x1="0" y1="46" x2="330" y2="46" stroke="#DDDDDD" stroke-width="1" />
+
+            <text x="0" y="68" font-size="9.5" font-weight="bold">1.1 Priority Queue Ordering</text>
+            <text x="0" y="84" font-size="8.5" fill="#444444">Holds are assigned strict FIFO (First-In-First-Out) ranking.</text>
+
+            <text x="0" y="112" font-size="9.5" font-weight="bold">1.2 48-Hour Claim Window</text>
+            <text x="0" y="128" font-size="8.5" fill="#444444">When a copy is returned, the next patron in queue has</text>
+            <text x="0" y="142" font-size="8.5" fill="#444444">48 hours to collect it before queue forfeiture.</text>
+
+            <text x="0" y="170" font-size="9.5" font-weight="bold">1.3 Cancellation Without Penalty</text>
+            <text x="0" y="186" font-size="8.5" fill="#444444">Patrons may cancel a hold request at any time prior to</text>
+            <text x="0" y="200" font-size="8.5" fill="#444444">physical book issuance without demerits.</text>
+          </g>
+        </g>
+
+        <!-- Clause 2 Card: Sanctuary Etiquette & Data Privacy -->
+        <g transform="translate(394, 0)">
+          <rect width="370" height="320" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+          <g transform="translate(20, 20)">
+            <rect width="28" height="28" rx="4" fill="#000000" />
+            <text x="9" y="19" font-size="12" fill="#FFFFFF">§2</text>
+            <text x="36" y="18" font-size="12" font-weight="bold">SANCTUARY CODE &amp; ETHICS</text>
+            <text x="36" y="32" font-size="8.5" fill="#666666">Preserving Intellectual Focus</text>
+            <line x1="0" y1="46" x2="330" y2="46" stroke="#DDDDDD" stroke-width="1" />
+
+            <text x="0" y="68" font-size="9.5" font-weight="bold">2.1 Zoned Noise Architecture</text>
+            <text x="0" y="84" font-size="8.5" fill="#444444">Level 3: Absolute Silence. Level 2: Whisper Pods.</text>
+
+            <text x="0" y="112" font-size="9.5" font-weight="bold">2.2 Pod Reservation Courtesy</text>
+            <text x="0" y="128" font-size="8.5" fill="#444444">Study pods held vacant for &gt; 20 minutes are released</text>
+            <text x="0" y="142" font-size="8.5" fill="#444444">automatically to waiting scholars on the floor map.</text>
+
+            <text x="0" y="170" font-size="9.5" font-weight="bold">2.3 Cryptographic Patron Privacy</text>
+            <text x="0" y="186" font-size="8.5" fill="#444444">Reading histories and recommendation vectors are stored</text>
+            <text x="0" y="200" font-size="8.5" fill="#444444">securely and never sold or shared with outside parties.</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // CHARTER &amp; POLICIES BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 18 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 19: PATRON NOTICE CENTER & DISPATCHES (/notifications)
+// --------------------------------------------------------------------------------
+const NOTIFICATIONS_CONTENT = `
+    <!-- 2. NOTICE CENTER HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. NOTICE HEADER</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">PATRON NOTICE CENTER &amp; DISPATCHES</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Real-time alerts regarding circulation due dates, reservation hold arrivals, and academic broadcasts.</text>
+      </g>
+    </g>
+
+    <!-- 3. NOTICE FILTER PILLS & ACTIONS BAR -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. FILTER CONTROLS</text>
+
+      <rect width="764" height="52" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Filter Pills -->
+      <g transform="translate(16, 12)">
+        <rect x="0" y="0" width="130" height="28" rx="14" fill="#000000" />
+        <text x="18" y="18" font-size="9.5" font-weight="bold" fill="#FFFFFF">All Dispatches (8)</text>
+
+        <rect x="140" y="0" width="155" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+        <text x="154" y="18" font-size="9.5">Due Date Alerts (2)</text>
+
+        <rect x="305" y="0" width="145" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+        <text x="319" y="18" font-size="9.5">Hold Ready (1)</text>
+
+        <rect x="460" y="0" width="130" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+        <text x="474" y="18" font-size="9.5">Broadcasts (5)</text>
+
+        <!-- Right Side: Mark All Read Action -->
+        <rect x="618" y="0" width="114" height="28" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="628" y="18" font-size="8.5" font-weight="bold">✓ Mark All Read</text>
+      </g>
+    </g>
+
+    <!-- 4. NOTIFICATION CARDS LIST -->
+    <g transform="translate(48, 245)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. DISPATCH FEED</text>
+
+      <!-- Card 1: Urgent Due Date Warning -->
+      <g transform="translate(0, 0)">
+        <rect width="764" height="95" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+        <rect x="16" y="16" width="36" height="36" rx="6" fill="#000000" />
+        <text x="26" y="39" font-size="16" fill="#FFFFFF">⚠️</text>
+
+        <text x="64" y="30" font-size="11.5" font-weight="bold">DUE DATE COUNTDOWN: "CLEAN CODE" EXPIRES TOMORROW</text>
+        <text x="64" y="46" font-size="9.5" fill="#444444">Your physical copy (Barcode: LM-BOK-001) is due on Oct 31, 2026. Renew or return to avoid overdue fines.</text>
+        <text x="64" y="66" font-size="8" fill="#888888">DISPATCHED: TODAY 08:30 AM · PRIORITY: HIGH</text>
+
+        <!-- Action Button -->
+        <rect x="630" y="28" width="115" height="36" rx="5" fill="#000000" />
+        <text x="642" y="50" font-size="9" font-weight="bold" fill="#FFFFFF">Quick Renew 7d</text>
+      </g>
+
+      <!-- Card 2: Reservation Ready for Collection -->
+      <g transform="translate(0, 110)">
+        <rect width="764" height="95" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+        <rect x="16" y="16" width="36" height="36" rx="6" fill="#000000" />
+        <text x="26" y="39" font-size="16" fill="#FFFFFF">📗</text>
+
+        <text x="64" y="30" font-size="11.5" font-weight="bold">HOLD COPY READY: "INTRODUCTION TO ALGORITHMS"</text>
+        <text x="64" y="46" font-size="9.5" fill="#444444">Returned by previous borrower. Reserved copy placed on Level 1 Hold Shelf A-4. 48-Hour hold active.</text>
+        <text x="64" y="66" font-size="8" fill="#888888">DISPATCHED: YESTERDAY 03:15 PM · PICKUP DEADLINE: OCT 31 03:15 PM</text>
+
+        <!-- Action Button -->
+        <rect x="630" y="28" width="115" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="642" y="50" font-size="9" font-weight="bold">View Hold Pass</text>
+      </g>
+
+      <!-- Card 3: Study Pod Confirmed -->
+      <g transform="translate(0, 220)">
+        <rect width="764" height="95" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <rect x="16" y="16" width="36" height="36" rx="6" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+        <text x="26" y="39" font-size="16">🪑</text>
+
+        <text x="64" y="30" font-size="11.5" font-weight="bold">STUDY POD CONFIRMATION: POD #04 (LEVEL 2 COLLABORATIVE)</text>
+        <text x="64" y="46" font-size="9.5" fill="#444444">Your reservation for Focus Pod #04 is active for 2 hours. Power sockets and high-speed Wi-Fi confirmed.</text>
+        <text x="64" y="66" font-size="8" fill="#888888">DISPATCHED: 2 DAYS AGO · POD ACTIVE</text>
+
+        <!-- Action Button -->
+        <rect x="630" y="28" width="115" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="648" y="50" font-size="9" font-weight="bold">Floor Map</text>
+      </g>
+
+      <!-- Card 4: General Library Broadcast -->
+      <g transform="translate(0, 330)">
+        <rect width="764" height="95" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <rect x="16" y="16" width="36" height="36" rx="6" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+        <text x="26" y="39" font-size="16">📢</text>
+
+        <text x="64" y="30" font-size="11.5" font-weight="bold">ANNUAL ATHENAEUM BOOK SALON ANNOUNCEMENT</text>
+        <text x="64" y="46" font-size="9.5" fill="#444444">Special curator lecture on rare Victorian bindings and modern cryptographic cataloguing this Friday at 4 PM.</text>
+        <text x="64" y="66" font-size="8" fill="#888888">DISPATCHED: 3 DAYS AGO · ALL MEMBERS INVITED</text>
+
+        <!-- Action Button -->
+        <rect x="630" y="28" width="115" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="645" y="50" font-size="9" font-weight="bold">Event Details</text>
+      </g>
+    </g>
+
+    <!-- 5. DELIVERY PREFERENCES STRIP -->
+    <g transform="translate(48, 700)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">5. PREFERENCE TOGGLES</text>
+
+      <rect width="764" height="110" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <g transform="translate(24, 20)">
+        <text x="0" y="16" font-size="12" font-weight="bold">NOTIFICATION DISPATCH CHANNELS &amp; FREQUENCY</text>
+
+        <g transform="translate(0, 36)">
+          <!-- Toggle 1: Email Notifications -->
+          <rect x="0" y="0" width="220" height="34" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="12" y="22" font-size="9" font-weight="bold">Email Alerts: [✓ ENABLED]</text>
+
+          <!-- Toggle 2: In-App Sound Alerts -->
+          <rect x="236" y="0" width="220" height="34" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="248" y="22" font-size="9" font-weight="bold">In-Hub Banners: [✓ ACTIVE]</text>
+
+          <!-- Toggle 3: Due Date Timing -->
+          <rect x="472" y="0" width="230" height="34" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="484" y="22" font-size="9" font-weight="bold">Alert Window: [ 48h Advance ▾ ]</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // PATRON NOTICE CENTER BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 19 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 20: SECURITY PASSWORD RESET PORTAL (/reset-password)
+// --------------------------------------------------------------------------------
+const RESET_PASSWORD_PAGE_CONTENT = `
+    <!-- 2. RESET SECURITY HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. SECURITY RESET</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">ESTABLISH NEW SECURITY CREDENTIALS</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Cryptographic reset verification. Create an updated master password for your folio account.</text>
+      </g>
+    </g>
+
+    <!-- 3. RESET FORM CONTAINER (CENTERED 540PX) -->
+    <g transform="translate(160, 180)">
+      <rect x="360" y="-12" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="370" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. RESET FORM CARD</text>
+
+      <rect width="540" height="580" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <g transform="translate(36, 32)">
+        <!-- Verified Token Status Badge -->
+        <rect width="468" height="36" rx="4" fill="#000000" />
+        <text x="20" y="22" font-size="9.5" font-weight="bold" fill="#FFFFFF">✓ CRYPTOGRAPHIC RESET TOKEN VALIDATED</text>
+        <text x="350" y="22" font-size="8.5" fill="#AAAAAA">30-min window</text>
+
+        <!-- Input 1: New Password -->
+        <g transform="translate(0, 56)">
+          <text x="0" y="14" font-size="9.5" font-weight="bold">NEW MASTER PASSWORD *</text>
+          <rect x="0" y="20" width="468" height="42" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="47" font-size="15" font-family="monospace">••••••••••••••••</text>
+          <rect x="424" y="27" width="28" height="28" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="432" y="46" font-size="12">👁</text>
+        </g>
+
+        <!-- Input 2: Confirm Password -->
+        <g transform="translate(0, 136)">
+          <text x="0" y="14" font-size="9.5" font-weight="bold">CONFIRM NEW MASTER PASSWORD *</text>
+          <rect x="0" y="20" width="468" height="42" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="47" font-size="15" font-family="monospace">••••••••••••••••</text>
+          <rect x="424" y="27" width="28" height="28" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="432" y="46" font-size="12">👁</text>
+        </g>
+
+        <!-- Password Strength Meter -->
+        <g transform="translate(0, 218)">
+          <text x="0" y="12" font-size="9" font-weight="bold">PASSWORD COMPLEXITY RATING</text>
+          <rect x="0" y="18" width="468" height="10" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <rect x="0" y="18" width="468" height="10" rx="3" fill="#000000" />
+          <text x="0" y="44" font-size="8.5" font-weight="bold">✓ 100% STRONG · All security requirements satisfied</text>
+
+          <!-- Checklist -->
+          <g transform="translate(0, 60)">
+            <text x="0" y="12" font-size="8.5" fill="#444444">✓ Minimum 8 alphanumeric characters</text>
+            <text x="0" y="26" font-size="8.5" fill="#444444">✓ Contains both uppercase &amp; lowercase glyphs</text>
+            <text x="0" y="40" font-size="8.5" fill="#444444">✓ Contains numerical digits (0-9)</text>
+            <text x="0" y="54" font-size="8.5" fill="#444444">✓ Contains special symbol (@, #, $, etc.)</text>
+          </g>
+        </g>
+
+        <!-- Submit Button -->
+        <g transform="translate(0, 375)">
+          <rect width="468" height="44" rx="6" fill="#000000" />
+          <text x="120" y="27" font-size="11.5" font-weight="bold" fill="#FFFFFF">Update Password &amp; Enter Hub</text>
+        </g>
+
+        <!-- Back Link -->
+        <g transform="translate(0, 440)">
+          <text x="140" y="16" font-size="9" fill="#555555">Cancel and return to <tspan font-weight="bold" fill="#000000" text-decoration="underline">Patron Login</tspan></text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. SECURITY AUDIT CALLOUT -->
+    <g transform="translate(160, 785)">
+      <rect width="540" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" stroke-dasharray="4,3" />
+      <text x="24" y="32" font-size="10" font-weight="bold">AUTOMATED AUDIT TRAIL LOGGING</text>
+      <text x="24" y="50" font-size="8.5" fill="#555555">Password updates trigger immediate revocation of active JWT tokens across all</text>
+      <text x="24" y="66" font-size="8.5" fill="#555555">devices, record an audit event in SQLite, and dispatch an email confirmation.</text>
+    </g>
+
+    <!-- 5. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // PASSWORD RESET BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 20 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
+// --------------------------------------------------------------------------------
+// PAGE 21: HISTORICAL ARCHIVE NOT FOUND 404 (/not-found)
+// --------------------------------------------------------------------------------
+const NOT_FOUND_CONTENT = `
+    <!-- 2. 404 FOLIO MISSING HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. 404 STATUS</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">HISTORICAL ARCHIVE NOT FOUND // ERROR 404</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">The requested manuscript, catalogue shelf index, or chamber does not exist in the collection.</text>
+      </g>
+    </g>
+
+    <!-- 3. BROKEN BOOKPLATE & 404 EMBLEM CONTAINER -->
+    <g transform="translate(48, 180)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. LOST MANUSCRIPT [X]</text>
+
+      <rect width="764" height="420" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Centered Broken Book Illustration Box [X] -->
+      <g transform="translate(257, 36)">
+        <rect width="250" height="210" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <line x1="0" y1="0" x2="250" y2="210" stroke="#000000" stroke-width="1.2" />
+        <line x1="250" y1="0" x2="0" y2="210" stroke="#000000" stroke-width="1.2" />
+        <rect x="40" y="85" width="170" height="38" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="48" y="108" font-size="10" font-weight="bold">MISSING FOLIO [X]</text>
+      </g>
+
+      <!-- 404 Typography -->
+      <g transform="translate(0, 270)">
+        <text x="382" y="32" font-size="34" font-weight="bold" text-anchor="middle">FOLIO UNRESOLVED: 404</text>
+        <text x="382" y="58" font-size="11" fill="#444444" text-anchor="middle">The page or volume you are seeking has either been de-accessioned, relocated to closed reserves,</text>
+        <text x="382" y="76" font-size="11" fill="#444444" text-anchor="middle">or the accession address contains an orthographical discrepancy.</text>
+
+        <!-- Search Bar within 404 -->
+        <g transform="translate(182, 96)">
+          <rect width="400" height="40" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="25" font-size="10" fill="#777777">Search archive by title, author, or Dewey call number...</text>
+          <rect x="306" y="5" width="88" height="30" rx="3" fill="#000000" />
+          <text x="320" y="24" font-size="9" font-weight="bold" fill="#FFFFFF">Search</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. QUICK RECOVERY RESCUE TILES -->
+    <g transform="translate(48, 630)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. RESCUE HUBS</text>
+
+      <text x="0" y="14" font-size="13" font-weight="bold">RETURN TO ACTIVE SANCTUARY CHAMBERS</text>
+
+      <g transform="translate(0, 26)">
+        <!-- Tile 1: Home Sanctuary -->
+        <g transform="translate(0, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🏛️</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Home Sanctuary</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Main entrance, showcase, and statistics</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="44" y="127" font-size="8.5" font-weight="bold">Visit Home →</text>
+        </g>
+
+        <!-- Tile 2: Book Catalog -->
+        <g transform="translate(196, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">📚</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Book Catalog</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Browse all 120,000+ indexed books</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="40" y="127" font-size="8.5" font-weight="bold">Open Catalog →</text>
+        </g>
+
+        <!-- Tile 3: AI Book Oracle -->
+        <g transform="translate(392, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🤖</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">AI Book Oracle</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Semantic search across full abstracts</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="42" y="127" font-size="8.5" font-weight="bold">Consult Oracle →</text>
+        </g>
+
+        <!-- Tile 4: Study Seat Map -->
+        <g transform="translate(588, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🪑</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Study Seat Map</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Live floor availability &amp; focus pods</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="42" y="127" font-size="8.5" font-weight="bold">Find a Seat →</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // 404 ARCHIVAL NOT FOUND BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 21 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+`;
+
 export const BLUEPRINT_PAGES = [
   {
     id: 'home',
@@ -2529,7 +3516,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Hero Banner', '3. Search Bar', '4. Status Bar', '5. 4-Column Card Grid', '6. Additional Features', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 1,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Landing Sanctuary (Home)',
       pageRoute: '/home',
       activeNavIndex: 0,
@@ -2547,7 +3534,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Search & Controls Bar', '3. Category Sidebar Filters', '4. Book Results Grid (3x2)', '5. Pagination Bar', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 2,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Book Catalog & Filters',
       pageRoute: '/catalog',
       activeNavIndex: 1,
@@ -2565,7 +3552,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Specimen View (Cover [X] & Info)', '3. 4-Tier Shelf Waypoint', '4. Copies Ledger Table', '5. Related Books Carousel', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 3,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Book Details & 4-Tier Shelf Map',
       pageRoute: '/book-details',
       activeNavIndex: 1,
@@ -2583,7 +3570,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. AI Engine Header', '3. Natural Language Prompt Input', '4. Curated Mood Chips', '5. Semantic Confidence Gauge', '6. 3-Column Match Cards', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 4,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'AI Semantic Book Finder',
       pageRoute: '/ai-finder',
       activeNavIndex: 2,
@@ -2601,7 +3588,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Seat Booking Controls & Slots', '3. Seat Status Legend', '4. 4-Zone Sanctuary Floor Plan', '5. Reservation Confirmation Drawer', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 5,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Study Seat & Focus Pod Map',
       pageRoute: '/seats',
       activeNavIndex: 3,
@@ -2619,7 +3606,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Comparison Controls', '3. 9-Row Side-by-Side Matrix', '4. Direct Dispatch Actions', '5. Footer'],
     svg: wrapPageSVG({
       pageNumber: 6,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Multi-Book Comparison Matrix',
       pageRoute: '/compare',
       activeNavIndex: 4,
@@ -2637,7 +3624,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Visit Intent Selector (3 Cards)', '3. Pickup Volumes Checklist', '4. Optimal Floor Waypoint Path', '5. Printable Itinerary Slip', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 7,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Library Visit Planner & Route',
       pageRoute: '/visit-planner',
       activeNavIndex: 5,
@@ -2655,7 +3642,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar (Member Hub Active)', '2. Member Profile Header', '3. Hub Views & 4 KPI Cards', '4. Currently Borrowed Books', '5. Active Hold Queues & Pod Booking', '6. Wishlist Strip', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 8,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Student Sanctuary Hub',
       pageRoute: '/dashboard',
       activeNavIndex: 6,
@@ -2673,7 +3660,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar (Staff Active)', '2. Desk Operations Tab Bar', '3. Barcode Scanner Station [X]', '4. Student Verification Card', '5. Checkout Dispatcher', '6. Today\'s Circulation Ledger', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 9,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Librarian Circulation Desk',
       pageRoute: '/librarian',
       activeNavIndex: 6,
@@ -2691,7 +3678,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar (Admin Shield)', '2. Admin Console Tabs', '3. System Vital Health Cards', '4. User Role Management Table', '5. Cataloging Action Triggers', '6. Security Audit Log Stream', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 10,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Administrator Central Control',
       pageRoute: '/admin',
       activeNavIndex: 6,
@@ -2709,7 +3696,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Analytics Date Controls', '3. Key KPI Metric Cards', '4. 12-Month Circulation Line Graph [X]', '5. Most Borrowed Categories Bar Chart', '6. Hourly Seat Occupancy Heatmap', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 11,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Circulation Analytics',
       pageRoute: '/analytics',
       activeNavIndex: 6,
@@ -2727,7 +3714,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Branding Illustration Box [X]', '3. Feature Checklist', '4. Sign In / Register Tabbed Card', '5. Form Fields (Email, Password, Remember)', '6. 1-Click Demo Role Switcher', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 12,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Authentication Portal',
       pageRoute: '/login',
       activeNavIndex: 0,
@@ -2745,7 +3732,7 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Recovery Header & Notice', '3. Email Dispatch Card', '4. Rate Limiting & Verification Feedback', '5. 3-Step Security Token Lifecycle Flow', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 13,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Password Recovery Portal',
       pageRoute: '/forgot-password',
       activeNavIndex: 0,
@@ -2763,11 +3750,137 @@ export const BLUEPRINT_PAGES = [
     sections: ['1. Navigation Bar', '2. Reservations Header & Actions', '3. 4-Column Queue KPI Cards', '4. Status Filter Tabs & Search Bar', '5. Active Hold & Queue Cards (Ready, Waiting, Completed)', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 14,
-      pageTotal: 14,
+      pageTotal: 21,
       pageTitle: 'Book Reservations & Queue Hub',
       pageRoute: '/reservations',
       activeNavIndex: 6,
       content: RESERVATIONS_CONTENT
+    })
+  },
+  {
+    id: 'register',
+    pageNumber: 15,
+    name: '15. Scholar & Student Registration Portal',
+    shortTitle: 'Scholar Registration',
+    route: '/register',
+    category: 'Public Tier',
+    desc: 'New patron folio enrollment wireframe with full credentials input, department selector, reading interest tag pills, Continue with GitHub SSO, and 4-step onboarding lifecycle diagram.',
+    sections: ['1. Navigation Bar', '2. Registration Header', '3. Enrollment Form & Reading Interest Pills', '4. GitHub SSO & Policy Agreement', '5. 4-Step Registration to Access Flow', '6. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 15,
+      pageTotal: 21,
+      pageTitle: 'Scholar Registration Portal',
+      pageRoute: '/register',
+      activeNavIndex: 0,
+      content: REGISTER_CONTENT
+    })
+  },
+  {
+    id: 'about',
+    pageNumber: 16,
+    name: '16. About LibraMind Sanctuary & Philosophy',
+    shortTitle: 'About & Sanctuary Vision',
+    route: '/about',
+    category: 'Public Tier',
+    desc: 'Institutional vision & philosophy wireframe featuring architectural atrium illustration [X], three core pillars, four benchmark metrics counters, and Board of Curators faculty grid.',
+    sections: ['1. Navigation Bar', '2. About Hero & Mission', '3. Sanctuary Mission & Pillars', '4. Archive Benchmarks (120k+ Volumes)', '5. Board of Curators & Faculty', '6. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 16,
+      pageTotal: 21,
+      pageTitle: 'About LibraMind Sanctuary',
+      pageRoute: '/about',
+      activeNavIndex: 0,
+      content: ABOUT_CONTENT
+    })
+  },
+  {
+    id: 'contact',
+    pageNumber: 17,
+    name: '17. Help Center & Circulation Desk',
+    shortTitle: 'Circulation Help Desk',
+    route: '/contact',
+    category: 'Public Tier',
+    desc: 'Patron assistance and circulation help desk wireframe with three contact modality cards, interactive inquiry dispatch ticket form, and FAQ accordion.',
+    sections: ['1. Navigation Bar', '2. Help Desk Header', '3. Contact Channels (Circulation, Reference, IT)', '4. Dispatch Intake Form', '5. FAQ Accordion', '6. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 17,
+      pageTotal: 21,
+      pageTitle: 'Circulation Help Desk',
+      pageRoute: '/contact',
+      activeNavIndex: 0,
+      content: CONTACT_CONTENT
+    })
+  },
+  {
+    id: 'terms',
+    pageNumber: 18,
+    name: '18. Library Code of Conduct & Policies',
+    shortTitle: 'Borrowing Code & Policies',
+    route: '/terms',
+    category: 'Public Tier',
+    desc: 'Official library borrowing rules and circulation charter wireframe with patron tier allowances table, reservation queue protocols, and silent study etiquette.',
+    sections: ['1. Navigation Bar', '2. Charter Header', '3. Circulation Matrix Table', '4. Reservation Hold & Queue Protocols (§1)', '5. Sanctuary Code & Study Ethics (§2)', '6. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 18,
+      pageTotal: 21,
+      pageTitle: 'Borrowing Code & Policies',
+      pageRoute: '/terms',
+      activeNavIndex: 0,
+      content: TERMS_CONTENT
+    })
+  },
+  {
+    id: 'notifications',
+    pageNumber: 19,
+    name: '19. Patron Notice Center & Dispatches',
+    shortTitle: 'Patron Notice Center',
+    route: '/notifications',
+    category: 'Member Tier',
+    desc: 'Central patron notice & dispatch wireframe with status filter pills, urgent due date countdown cards, reservation hold ready pick-up passes, and delivery preference toggles.',
+    sections: ['1. Navigation Bar', '2. Notice Header', '3. Filter Controls (Due Dates, Holds, Broadcasts)', '4. Dispatch Feed Cards', '5. Preference Toggles', '6. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 19,
+      pageTotal: 21,
+      pageTitle: 'Patron Notice Center',
+      pageRoute: '/notifications',
+      activeNavIndex: 0,
+      content: NOTIFICATIONS_CONTENT
+    })
+  },
+  {
+    id: 'reset-password',
+    pageNumber: 20,
+    name: '20. Security Password Reset Portal',
+    shortTitle: 'Password Reset Portal',
+    route: '/reset-password',
+    category: 'Security Tier',
+    desc: 'Cryptographic reset authentication wireframe featuring token validation status badge, new password inputs with eye toggles, 100% password complexity gauge, and automated audit trail card.',
+    sections: ['1. Navigation Bar', '2. Security Reset Header', '3. Reset Form Card & Strength Meter', '4. Security Audit Trail Callout', '5. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 20,
+      pageTotal: 21,
+      pageTitle: 'Security Password Reset Portal',
+      pageRoute: '/reset-password',
+      activeNavIndex: 0,
+      content: RESET_PASSWORD_PAGE_CONTENT
+    })
+  },
+  {
+    id: 'not-found',
+    pageNumber: 21,
+    name: '21. Historical Archive Not Found 404',
+    shortTitle: '404 Folio Not Found',
+    route: '/not-found',
+    category: 'Utility Tier',
+    desc: 'Classical 404 Folio Unresolved error wireframe with missing manuscript [X] bookplate illustration, rescue search input, and four recovery hub shortcut tiles.',
+    sections: ['1. Navigation Bar', '2. 404 Status Header', '3. Missing Folio Illustration & Search Bar', '4. Rescue Hub Tiles (Home, Catalog, Oracle, Seats)', '5. Footer'],
+    svg: wrapPageSVG({
+      pageNumber: 21,
+      pageTotal: 21,
+      pageTitle: '404 Folio Not Found',
+      pageRoute: '/not-found',
+      activeNavIndex: 0,
+      content: NOT_FOUND_CONTENT
     })
   }
 ];
@@ -2829,8 +3942,16 @@ export function downloadPagePNG(pageId) {
 export function getThumbnailSVG(svg) {
   if (!svg) return '';
   return svg.replace(
-    '<svg ',
-    '<svg style="max-height: 100%; max-width: 100%; width: auto; height: 100%; display: block; margin: 0 auto; pointer-events: none;" '
+    /<svg\b([^>]*)>/i,
+    (match, attrs) => {
+      const cleanAttrs = attrs
+        .replace(/\bstyle="[^"]*"/gi, '')
+        .replace(/\bwidth="[^"]*"/gi, '')
+        .replace(/\bheight="[^"]*"/gi, '')
+        .replace(/\bpreserveAspectRatio="[^"]*"/gi, '')
+        .trim();
+      return `<svg ${cleanAttrs} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="max-width: 100%; max-height: 100%; width: auto; height: 100%; aspect-ratio: 920 / 1520; display: block; margin: 0 auto; pointer-events: none; background-color: #FFFFFF;">`;
+    }
   );
 }
 
@@ -3219,11 +4340,11 @@ export function printAllBlueprints() {
       <body>
         <div class="floating-print-bar">
           <div>
-            <strong>Complete 14-Page UI Blueprint Specification (Word Ready)</strong>
-            <span>Click the button to open print dialog. Choose destination: <em>Save as PDF (Portrait)</em> to export all 14 pages.</span>
+            <strong>Complete 21-Page UI Blueprint Specification (Word Ready)</strong>
+            <span>Click the button to open print dialog. Choose destination: <em>Save as PDF (Portrait)</em> to export all 21 pages.</span>
           </div>
           <button class="btn-print" onclick="window.print()">
-            🖨️ Print / Save All 14 Pages as PDF
+            🖨️ Print / Save All 21 Pages as PDF
           </button>
         </div>
         ${pagesMarkup}

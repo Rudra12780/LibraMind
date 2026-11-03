@@ -48,79 +48,95 @@ export default function ForgotPassword({ onNavigate }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '75vh'
+        minHeight: '80vh',
+        backgroundColor: 'var(--editorial-bg)'
       }}
     >
       <div
         className="bio-card"
         style={{
-          width: '460px',
+          width: '480px',
           maxWidth: '100%',
           backgroundColor: '#FFFFFF',
-          padding: '36px',
-          borderRadius: '20px',
-          boxShadow: 'var(--shadow-lg)'
+          padding: '40px',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--editorial-border)',
+          boxShadow: 'var(--shadow-xl)',
+          position: 'relative'
         }}
       >
+        {/* Top Maximalist Organic Accent Ribbon */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '5px',
+            borderTopLeftRadius: 'var(--radius-xl)',
+            borderTopRightRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(90deg, var(--editorial-border) 0%, var(--editorial-accent) 50%, var(--editorial-green) 100%)'
+          }}
+        />
+
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px', marginTop: '4px' }}>
           <div
             style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--forest)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, var(--editorial-border), var(--editorial-accent))',
+              boxShadow: '0 8px 20px rgba(221, 161, 94, 0.28)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 12px',
-              boxShadow: '0 4px 14px rgba(52, 78, 65, 0.25)'
+              margin: '0 auto 16px'
             }}
           >
-            <KeyRound size={26} color="#FAF8F1" />
+            <KeyRound size={28} color="#FFFFFF" strokeWidth={2.2} />
           </div>
 
           <div
+            className="pill-badge"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: 'var(--soft-sage-light)',
-              color: 'var(--forest-dark)',
-              fontSize: '0.72rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              padding: '3px 10px',
-              borderRadius: '12px',
-              marginBottom: '8px'
+              marginBottom: '10px'
             }}
           >
             <ShieldCheck size={13} />
-            LibraMind Security Recovery
+            Security & Recovery
           </div>
 
-          <h2 style={{ fontSize: '1.75rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
-            Forgot Your Password?
+          <h2
+            style={{
+              fontSize: '2rem',
+              color: 'var(--editorial-text)',
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 700,
+              marginBottom: '6px'
+            }}
+          >
+            Forgot Password?
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0, lineHeight: 1.5 }}>
-            No problem! Enter the email address linked to your LibraMind membership and we'll dispatch a secure recovery link.
+          <p style={{ fontSize: '0.90rem', color: 'var(--muted-text)', margin: 0, lineHeight: 1.55, fontWeight: 500 }}>
+            Enter your registered email address and we will dispatch a single-use password reset link.
           </p>
         </div>
 
         {error && (
           <div
             style={{
-              padding: '12px 14px',
-              borderRadius: '10px',
+              padding: '12px 16px',
               backgroundColor: 'var(--status-danger-bg)',
               color: 'var(--status-danger-text)',
-              fontSize: '0.86rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(150, 49, 36, 0.2)',
+              fontSize: '0.88rem',
+              fontWeight: 600,
               display: 'flex',
               alignItems: 'flex-start',
               gap: '10px',
-              marginBottom: '20px',
-              border: '1px solid rgba(197, 34, 31, 0.2)'
+              marginBottom: '20px'
             }}
           >
             <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -132,47 +148,51 @@ export default function ForgotPassword({ onNavigate }) {
           <div>
             <div
               style={{
-                padding: '18px',
-                borderRadius: '14px',
-                backgroundColor: 'rgba(82, 115, 77, 0.08)',
-                border: '1px solid rgba(82, 115, 77, 0.25)',
+                padding: '24px',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid rgba(221, 161, 94, 0.4)',
+                boxShadow: 'var(--shadow-card)',
                 marginBottom: '24px',
                 textAlign: 'center'
               }}
             >
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
+                  width: '50px',
+                  height: '50px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--botanical)',
-                  color: '#FAF8F1',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--editorial-green)',
+                  border: '1px solid var(--editorial-border)',
+                  boxShadow: 'var(--shadow-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 12px'
+                  margin: '0 auto 14px'
                 }}
               >
-                <CheckCircle2 size={24} />
+                <CheckCircle2 size={26} strokeWidth={2.2} />
               </div>
-              <h4 style={{ fontSize: '1.05rem', color: 'var(--forest-dark)', marginBottom: '8px', fontWeight: 700 }}>
-                Reset Instructions Sent
+              <h4 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', marginBottom: '8px', fontWeight: 700 }}>
+                Reset Instructions Dispatched
               </h4>
-              <p style={{ fontSize: '0.86rem', color: 'var(--charcoal)', lineHeight: 1.55, margin: 0 }}>
+              <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                 {feedbackMessage}
               </p>
               <div
                 style={{
-                  marginTop: '12px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
+                  marginTop: '16px',
+                  padding: '8px 14px',
                   backgroundColor: '#FFFFFF',
                   fontSize: '0.78rem',
                   color: 'var(--muted-text)',
-                  border: '1px dashed var(--subtle-border)'
+                  borderRadius: 'var(--radius-full)',
+                  border: '1px solid var(--editorial-border)',
+                  fontWeight: 600
                 }}
               >
-                For security, the reset token will expire in <strong>30 minutes</strong> and can only be used once.
+                Token expires in 30 minutes • Single-use only
               </div>
             </div>
 
@@ -184,7 +204,7 @@ export default function ForgotPassword({ onNavigate }) {
                   setEmail('');
                 }}
                 className="btn btn-outline"
-                style={{ width: '100%', padding: '11px', fontSize: '0.88rem' }}
+                style={{ width: '100%', padding: '12px', fontSize: '0.90rem' }}
               >
                 Send to a different email
               </button>
@@ -193,7 +213,7 @@ export default function ForgotPassword({ onNavigate }) {
                 type="button"
                 onClick={() => onNavigate('login')}
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '11px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px', fontSize: '0.90rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <ArrowLeft size={16} />
                 Back to Sign In
@@ -202,26 +222,26 @@ export default function ForgotPassword({ onNavigate }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label" style={{ fontWeight: 600, color: 'var(--forest-dark)' }}>
+            <div className="form-group" style={{ marginBottom: '22px' }}>
+              <label className="form-label">
                 Registered Email Address
               </label>
               <div style={{ position: 'relative' }}>
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="e.g. aarav@libramind.edu or student@libramind.edu"
+                  placeholder="e.g. reader@libramind.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  style={{ paddingLeft: '40px' }}
+                  style={{ paddingLeft: '42px' }}
                 />
                 <Mail
                   size={18}
                   style={{
                     position: 'absolute',
-                    left: '13px',
+                    left: '14px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     color: 'var(--muted-text)',
@@ -229,8 +249,8 @@ export default function ForgotPassword({ onNavigate }) {
                   }}
                 />
               </div>
-              <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)', marginTop: '4px', display: 'block' }}>
-                We'll verify this against registered students, staff, and administrators.
+              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', marginTop: '5px', display: 'block' }}>
+                Verified against registered students, staff, and administrators.
               </span>
             </div>
 
@@ -238,9 +258,9 @@ export default function ForgotPassword({ onNavigate }) {
               type="submit"
               className="btn btn-primary"
               disabled={loading}
-              style={{ width: '100%', padding: '12px', fontSize: '0.95rem', fontWeight: 700 }}
+              style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
             >
-              {loading ? 'Generating Secure Link...' : 'Send Reset Link'}
+              {loading ? 'Generating Link...' : 'Send Reset Link →'}
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '22px' }}>
@@ -250,9 +270,9 @@ export default function ForgotPassword({ onNavigate }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--botanical)',
+                  color: 'var(--editorial-accent)',
                   fontWeight: 600,
-                  fontSize: '0.86rem',
+                  fontSize: '0.88rem',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -269,4 +289,3 @@ export default function ForgotPassword({ onNavigate }) {
     </div>
   );
 }
-

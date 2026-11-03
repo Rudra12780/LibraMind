@@ -37,6 +37,7 @@ export const api = {
   // Auth
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
+  githubLogin: (body) => request('/auth/github', { method: 'POST', body }),
   forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
   verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
   resetPassword: (body) => request('/auth/reset-password', { method: 'POST', body }),

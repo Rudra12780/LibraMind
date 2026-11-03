@@ -54,6 +54,16 @@ export function AuthProvider({ children }) {
     return res;
   };
 
+  const loginWithGithub = async (githubData = {}, targetRole = 'student') => {
+    const res = await api.githubLogin({ ...githubData, role: targetRole });
+    localStorage.setItem('libramind_token', res.token);
+    setToken(res.token);
+    setUser(res.user);
+    sessionStorage.removeItem('libramind_admin_verified');
+    setAdminVerified(false);
+    return res;
+  };
+
   const logout = () => {
     localStorage.removeItem('libramind_token');
     sessionStorage.removeItem('libramind_admin_verified');
@@ -86,6 +96,7 @@ export function AuthProvider({ children }) {
       adminVerified,
       setAdminVerified,
       login,
+      loginWithGithub,
       register,
       logout,
       logoutAdminPortal,

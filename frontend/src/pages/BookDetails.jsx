@@ -21,6 +21,7 @@ import {
   Upload,
   Camera
 } from 'lucide-react';
+import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
 export default function BookDetails({
   bookId,
@@ -429,8 +430,9 @@ export default function BookDetails({
               }}
             >
               <img
-                src={book.cover_image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}
+                src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
                 alt={book.title}
+                onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
@@ -707,32 +709,33 @@ export default function BookDetails({
             )}
           </div>
 
-          <h1 style={{ fontSize: '2.5rem', color: 'var(--forest-dark)', marginBottom: '8px', lineHeight: 1.25 }}>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 3.2vw, 2.7rem)', fontWeight: 800, color: 'var(--editorial-text)', marginBottom: '8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
             {book.title}
           </h1>
 
-          <p style={{ fontSize: '1.2rem', color: 'var(--muted-text)', marginBottom: '24px' }}>
-            by <strong style={{ color: 'var(--dark-text)' }}>{book.author}</strong>
+          <p style={{ fontSize: '1.15rem', color: 'var(--editorial-text-muted)', marginBottom: '24px' }}>
+            by <strong style={{ color: 'var(--editorial-text)' }}>{book.author}</strong>
           </p>
 
-          {/* EXACT SHELF & RACK LOCATION CARD (Core Problem Solution) */}
+          {/* EXACT SHELF & RACK LOCATION CARD */}
           <div
-            className="bio-card"
             style={{
               padding: '24px',
-              backgroundColor: 'var(--warm-beige)',
-              borderLeft: '5px solid var(--botanical)',
+              backgroundColor: 'var(--editorial-bg-subtle)',
+              border: '1px solid var(--editorial-border)',
+              borderLeft: '4px solid var(--editorial-green)',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '32px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-              <MapPin size={22} color="var(--forest-dark)" />
-              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--forest-dark)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <MapPin size={20} color="var(--editorial-accent)" strokeWidth={2.2} />
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700 }}>
                 Exact Physical Shelf Location
               </h3>
             </div>
-            <p style={{ fontSize: '0.92rem', color: 'var(--dark-text)', lineHeight: 1.5, marginBottom: '16px' }}>
-              Find this book on physical library stacks using the following coordinates:
+            <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Find this volume in the physical library stacks using these accession coordinates:
             </p>
 
             <div
@@ -742,38 +745,38 @@ export default function BookDetails({
                 gap: '12px'
               }}
             >
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)', textTransform: 'uppercase', display: 'block' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Floor Level
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.floor}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)', textTransform: 'uppercase', display: 'block' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Section
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.section}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)', textTransform: 'uppercase', display: 'block' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Shelf Code
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--botanical)' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-green)' }}>
                   {book.shelf}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)', textTransform: 'uppercase', display: 'block' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Rack Unit
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.rack}
                 </span>
               </div>
@@ -782,10 +785,10 @@ export default function BookDetails({
 
           {/* Description */}
           <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '12px', color: 'var(--forest-dark)' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Synopsis & Description
             </h3>
-            <p style={{ fontSize: '0.98rem', color: 'var(--dark-text)', lineHeight: 1.7 }}>
+            <p style={{ fontSize: '0.96rem', color: 'var(--editorial-text)', lineHeight: 1.75 }}>
               {book.description || 'No description provided for this volume.'}
             </p>
           </div>
@@ -794,70 +797,73 @@ export default function BookDetails({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
               gap: '16px',
-              padding: '20px',
+              padding: '20px 24px',
               backgroundColor: '#FFFFFF',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--subtle-border)',
-              marginBottom: '36px'
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--editorial-border)',
+              marginBottom: '36px',
+              boxShadow: 'var(--shadow-sm)'
             }}
           >
             <div>
-              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block' }}>ISBN-13</span>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--forest-dark)' }}>{book.isbn}</strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>ISBN-13</span>
+              <strong style={{ fontSize: '0.90rem', color: 'var(--editorial-text)', fontFamily: 'monospace' }}>{book.isbn}</strong>
             </div>
             <div>
-              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block' }}>Publisher</span>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--forest-dark)' }}>{book.publisher || 'N/A'}</strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Publisher</span>
+              <strong style={{ fontSize: '0.90rem', color: 'var(--editorial-text)' }}>{book.publisher || 'N/A'}</strong>
             </div>
             <div>
-              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block' }}>Publication Year</span>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--forest-dark)' }}>{book.publication_year}</strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Publication Year</span>
+              <strong style={{ fontSize: '0.90rem', color: 'var(--editorial-text)' }}>{book.publication_year}</strong>
             </div>
             <div>
-              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block' }}>Edition</span>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--forest-dark)' }}>{book.edition}</strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Edition</span>
+              <strong style={{ fontSize: '0.90rem', color: 'var(--editorial-text)' }}>{book.edition}</strong>
             </div>
             <div>
-              <span style={{ fontSize: '0.76rem', color: 'var(--muted-text)', display: 'block' }}>Language</span>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--forest-dark)' }}>{book.language}</strong>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '2px' }}>Language</span>
+              <strong style={{ fontSize: '0.90rem', color: 'var(--editorial-text)' }}>{book.language}</strong>
             </div>
           </div>
 
           {/* PHYSICAL COPIES TRACKING TABLE */}
           <div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '14px', color: 'var(--forest-dark)' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '14px', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Physical Copy Inventory ({book.copies?.length || 0})
             </h3>
             <div
-              className="bio-card"
               style={{
                 backgroundColor: '#FFFFFF',
-                overflowX: 'auto'
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--editorial-border)',
+                overflowX: 'auto',
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
-                  <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--forest-dark)' }}>
-                      Copy Barcode / Identifier
+                  <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      Copy Identifier
                     </th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--forest-dark)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Condition
                     </th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: 'var(--forest-dark)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Status
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {book.copies && book.copies.map(copy => (
-                    <tr key={copy.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.06)' }}>
-                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--forest-dark)' }}>
+                    <tr key={copy.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
+                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
                         {copy.copy_code}
                       </td>
-                      <td style={{ padding: '12px 16px', color: 'var(--muted-text)' }}>
+                      <td style={{ padding: '12px 16px', color: 'var(--editorial-text-muted)' }}>
                         {copy.condition}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
@@ -884,8 +890,8 @@ export default function BookDetails({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(35, 52, 43, 0.45)',
-            backdropFilter: 'blur(5px)',
+            backgroundColor: 'rgba(37, 40, 32, 0.65)',
+            backdropFilter: 'blur(4px)',
             zIndex: 3000,
             display: 'flex',
             alignItems: 'center',
@@ -895,25 +901,31 @@ export default function BookDetails({
           onClick={() => setShowIssueModal(false)}
         >
           <div
-            className="bio-card"
             style={{
               width: '460px',
               backgroundColor: '#FFFFFF',
-              padding: '28px',
-              borderRadius: '16px'
+              padding: '32px',
+              border: '1px solid var(--editorial-border)',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: 'var(--shadow-xl)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--forest-dark)' }}>
-              Check Out Book Copy
+            <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+              STAFF CIRCULATION
+            </span>
+            <h3 style={{ fontSize: '1.35rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 800 }}>
+              Issue Physical Volume
             </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-              Issue "{book.title}" to a verified student or faculty member.
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+              Check out "{book.title}" to a verified student or faculty folio.
             </p>
 
             <form onSubmit={handleIssueCopy}>
-              <div className="form-group">
-                <label className="form-label">Member ID or Email</label>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--editorial-accent)', fontWeight: 700 }}>
+                  Member ID or Email
+                </label>
                 <input
                   type="text"
                   className="form-control"
@@ -924,8 +936,10 @@ export default function BookDetails({
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Select Available Physical Copy</label>
+              <div className="form-group" style={{ marginBottom: '22px' }}>
+                <label className="form-label" style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--editorial-accent)', fontWeight: 700 }}>
+                  Select Available Physical Copy
+                </label>
                 <select
                   className="form-control"
                   value={selectedCopyCode}
@@ -940,11 +954,11 @@ export default function BookDetails({
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
                   onClick={() => setShowIssueModal(false)}
-                  className="btn btn-secondary"
+                  className="btn btn-outline"
                   style={{ flex: 1 }}
                 >
                   Cancel
@@ -952,7 +966,7 @@ export default function BookDetails({
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  style={{ flex: 1 }}
+                  style={{ flex: 1.2 }}
                 >
                   Confirm Issue
                 </button>
@@ -968,8 +982,8 @@ export default function BookDetails({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(35, 52, 43, 0.55)',
-            backdropFilter: 'blur(5px)',
+            backgroundColor: 'rgba(37, 40, 32, 0.65)',
+            backdropFilter: 'blur(4px)',
             zIndex: 3500,
             display: 'flex',
             alignItems: 'center',
@@ -979,14 +993,14 @@ export default function BookDetails({
           onClick={() => setShowAuthModal(false)}
         >
           <div
-            className="bio-card"
             style={{
               width: '420px',
               backgroundColor: '#FFFFFF',
-              padding: '32px',
-              borderRadius: '16px',
-              textAlign: 'center',
-              boxShadow: 'var(--shadow-lg)'
+              padding: '34px 28px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--editorial-border)',
+              boxShadow: 'var(--shadow-xl)',
+              textAlign: 'center'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -994,23 +1008,26 @@ export default function BookDetails({
               style={{
                 width: '52px',
                 height: '52px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--soft-sage-light)',
+                backgroundColor: 'var(--editorial-green)',
+                borderRadius: 'var(--radius-sm)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px',
-                color: 'var(--forest)'
+                color: '#FFFFFF'
               }}
             >
-              <ShieldCheck size={28} />
+              <BookOpen size={24} strokeWidth={2.2} />
             </div>
 
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '8px', color: 'var(--forest-dark)' }}>
+            <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+              PATRON SANCTUARY
+            </span>
+            <h3 style={{ fontSize: '1.45rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 800 }}>
               Sign In to Continue
             </h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px', lineHeight: 1.5 }}>
-              Please sign in to {pendingActionName || 'interact with library books'}.
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', marginBottom: '22px', lineHeight: 1.5 }}>
+              Please sign in to {pendingActionName || 'borrow or reserve library volumes'}.
             </p>
 
             <button
@@ -1024,8 +1041,8 @@ export default function BookDetails({
                   showToast(e.message, true);
                 }
               }}
-              className="btn btn-botanical"
-              style={{ width: '100%', marginBottom: '10px', padding: '12px', justifyContent: 'center', fontWeight: 600 }}
+              className="btn btn-primary"
+              style={{ width: '100%', marginBottom: '10px', padding: '12px', justifyContent: 'center' }}
             >
               ⚡ 1-Click Sign In as Student (Aarav)
             </button>

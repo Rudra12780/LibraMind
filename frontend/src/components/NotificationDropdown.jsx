@@ -43,12 +43,11 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
         width: '400px',
         maxWidth: '92vw',
         backgroundColor: '#FFFFFF',
-        borderRadius: '16px',
-        boxShadow: '0 12px 36px rgba(38, 53, 43, 0.16)',
-        border: '1px solid rgba(52, 78, 65, 0.15)',
+        border: '1px solid var(--editorial-border)',
+        boxShadow: 'var(--shadow-lg)',
         zIndex: 1000,
         overflow: 'hidden',
-        animation: 'fadeIn 0.2s ease forwards'
+        animation: 'fadeIn 0.15s ease forwards'
       }}
     >
       <div
@@ -56,25 +55,25 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 20px 12px',
-          borderBottom: '1px solid rgba(52, 78, 65, 0.1)',
-          backgroundColor: 'var(--cream)'
+          padding: '14px 18px 12px',
+          borderBottom: '1px solid var(--editorial-border)',
+          backgroundColor: 'var(--editorial-border)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Bell size={18} color="var(--forest)" />
-          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
-            Notification Center
+          <Bell size={18} color="var(--editorial-text)" strokeWidth={2.4} />
+          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
+            Notifications
           </h4>
           {unreadCount > 0 && (
             <span
               style={{
-                backgroundColor: 'var(--botanical)',
+                backgroundColor: 'var(--editorial-accent)',
                 color: '#fff',
                 fontSize: '0.72rem',
                 padding: '2px 7px',
-                borderRadius: '10px',
-                fontWeight: 700
+                border: '1px solid var(--editorial-text)',
+                fontWeight: 900
               }}
             >
               {unreadCount} new
@@ -88,16 +87,17 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
             style={{
               background: 'none',
               border: 'none',
-              color: 'var(--botanical)',
-              fontSize: '0.8rem',
-              fontWeight: 600,
+              color: 'var(--editorial-text)',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
             }}
           >
-            <CheckCheck size={14} /> Mark all read
+            <CheckCheck size={14} strokeWidth={2.4} /> Mark all read
           </button>
         )}
       </div>

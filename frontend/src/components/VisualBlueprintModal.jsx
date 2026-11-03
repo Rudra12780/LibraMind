@@ -60,15 +60,14 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
       <div
         style={{
           backgroundColor: '#FFFFFF',
-          color: '#1A1A1A',
-          borderRadius: '16px',
+          color: 'var(--editorial-text)',
           width: '100%',
           maxWidth: '1240px',
           height: '95vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 70px rgba(0, 0, 0, 0.45)',
-          border: '1px solid #D0D0D0',
+          boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--editorial-border)',
           overflow: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
@@ -77,8 +76,8 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         <div
           style={{
             padding: '12px 24px',
-            borderBottom: '1px solid #E0E0E0',
-            backgroundColor: '#FAFAFA',
+            borderBottom: '2.5px solid var(--editorial-text)',
+            backgroundColor: 'var(--editorial-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -92,34 +91,33 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               style={{
                 width: '38px',
                 height: '38px',
-                borderRadius: '8px',
-                backgroundColor: '#111111',
+                backgroundColor: 'var(--editorial-text)',
+                border: '1px solid var(--editorial-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF'
               }}
             >
-              <FileText size={20} color="#FFFFFF" />
+              <FileText size={20} color="#FFFFFF" strokeWidth={2.4} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span
                   style={{
                     fontSize: '0.68rem',
-                    fontWeight: 800,
+                    fontWeight: 900,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
-                    backgroundColor: '#EEEEEE',
-                    color: '#333333',
+                    backgroundColor: '#FFFFFF',
+                    color: 'var(--editorial-text)',
                     padding: '2px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid #CCCCCC'
+                    border: '1px solid var(--editorial-border)'
                   }}
                 >
-                  Design Thinking UI Blueprint Portfolio
+                  UI Blueprint Portfolio
                 </span>
-                <span style={{ fontSize: '0.78rem', color: '#666666' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', fontWeight: 700 }}>
                   Page {activePage.pageNumber} of {BLUEPRINT_PAGES.length}: {activePage.shortTitle} · Balsamiq Low-Fi Wireframe
                 </span>
               </div>
@@ -127,11 +125,12 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 style={{
                   margin: '2px 0 0',
                   fontSize: '1.20rem',
-                  fontWeight: 800,
-                  color: '#111111'
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  color: 'var(--editorial-text)'
                 }}
               >
-                LibraMind – {activePage.name} (Word Document Ready)
+                LibraMind – {activePage.name}
               </h2>
             </div>
           </div>
@@ -183,7 +182,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               </div>
             )}
 
-            {/* Download All 12 ZIP Package */}
+            {/* Download All 21 ZIP Package */}
             <button
               onClick={downloadAllBlueprintsZIP}
               style={{
@@ -200,12 +199,12 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px rgba(52,78,65,0.25)'
               }}
-              title="Download all 14 wireframe SVG files in a single .ZIP file"
+              title="Download all 21 wireframe SVG files in a single .ZIP file"
             >
-              <Download size={13} /> Download All 14 (.ZIP)
+              <Download size={13} /> Download All 21 (.ZIP)
             </button>
 
-            {/* Print All 14 Pages */}
+            {/* Print All 21 Pages */}
             <button
               onClick={printAllBlueprints}
               style={{
@@ -222,9 +221,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
               }}
-              title="Print or export all 14 pages in a single portrait document for Word"
+              title="Print or export all 21 pages in a single portrait document for Word"
             >
-              <Printer size={13} /> Print All 14 Pages (Word Ready)
+              <Printer size={13} /> Print All 21 Pages (Word Ready)
             </button>
 
             <button
@@ -248,7 +247,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           </div>
         </div>
 
-        {/* 14-Page Navigation Tab Bar */}
+        {/* 21-Page Navigation Tab Bar */}
         <div
           style={{
             padding: '8px 20px',
@@ -263,7 +262,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           }}
         >
           <span style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#333333', whiteSpace: 'nowrap', marginRight: '4px' }}>
-            All 14 Pages:
+            All 21 Pages:
           </span>
           {BLUEPRINT_PAGES.map((page) => {
             const isSelected = page.id === selectedPageId;
@@ -439,7 +438,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
 
           {/* Action Download Buttons for Active Page */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Download All 12 ZIP Package */}
+            {/* Download All 21 ZIP Package */}
             <button
               onClick={downloadAllBlueprintsZIP}
               style={{
@@ -456,9 +455,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px rgba(52,78,65,0.22)'
               }}
-              title="Download all 14 wireframe blueprint files in one .ZIP archive"
+              title="Download all 21 wireframe blueprint files in one .ZIP archive"
             >
-              <Download size={14} /> Download All 14 (.ZIP)
+              <Download size={14} /> Download All 21 (.ZIP)
             </button>
 
             {/* Download Vector (.SVG) */}

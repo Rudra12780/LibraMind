@@ -196,6 +196,110 @@ router.post('/login', (req, res) => {
   }
 });
 
+// GitHub Authentication (SSO for Students and Librarians)
+router.post('/github', (req, res) => {
+  try {
+    const { githubUsername, email, name, role = 'student', avatarUrl } = req.body;
+
+    const cleanUsername = (githubUsername || 'github-user').trim().replace(/[^a-zA-Z0-9_-]/g, '');
+    const cleanEmail = (email && email.includes('@')) 
+      ? email.toLowerCase().trim() 
+      : `${cleanUsername.toLowerCase()}@github.libramind.edu`;
+    const cleanName = (name && name.trim()) ? name.trim() : (cleanUsername ? `@${cleanUsername}` : 'GitHub Reader');
+    const targetRole = role === 'librarian' ? 'librarian' : 'student';
+
+    // Check if user already exists with this email or github username
+    let user = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)').get(cleanEmail);
+
+    if (user) {
+      // If user exists and is logging in as librarian via librarian portal, ensure they have staff role
+      if (targetRole === 'librarian' && user.role !== 'librarian' && user.role !== 'admin') {
+        db.prepare('UPDATE users SET role = ? WHERE id = ?').run('librarian', user.id);
+        user.role = 'librarian';
+      }
+      logAudit(user.id, 'GITHUB_LOGIN', `User ${user.email} logged in via GitHub SSO (@${cleanUsername})`);
+    } else {
+      // Auto-provision new account for GitHub user
+      const prefix = targetRole === 'librarian' ? 'LIB' : 'STU';
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const membership_id = `${prefix}-${randomNum}`;
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const password_hash = bcrypt.hashSync(randomPassword, 10);
+      const defaultInterests = targetRole === 'librarian' 
+        ? 'Catalog Management, Archival Preservation, Digital Humanities'
+        : 'Open Source Software, Artificial Intelligence, Creative Writing';
+
+      const insertStmt = db.prepare(`
+        INSERT INTO users (name, email, password_hash, role, membership_id, interests)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      const result = insertStmt.run(
+        cleanName,
+        cleanEmail,
+        password_hash,
+        targetRole,
+        membership_id,
+        defaultInterests
+      );
+
+      const newUserId = result.lastInsertRowid;
+
+      // Welcome notification
+      db.prepare(`
+        INSERT INTO notifications (user_id, title, message, type, link)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        newUserId,
+        `Welcome from GitHub, ${cleanName}! 🌿`,
+        `Your Bohemian Library sanctuary membership (${membership_id}) is now active with GitHub SSO.`,
+        'announcement',
+        targetRole === 'librarian' ? '/librarian' : '/catalog'
+      );
+
+      logAudit(newUserId, 'GITHUB_REGISTER', `${targetRole === 'librarian' ? 'Librarian' : 'Member'} account created via GitHub (@${cleanUsername})`);
+
+      user = {
+        id: newUserId,
+        name: cleanName,
+        email: cleanEmail,
+        role: targetRole,
+        membership_id,
+        interests: defaultInterests
+      };
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        membership_id: user.membership_id
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: `Successfully authenticated with GitHub as ${user.name}`,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        membership_id: user.membership_id,
+        interests: user.interests || '',
+        avatarUrl: avatarUrl || `https://avatars.githubusercontent.com/${cleanUsername}`
+      }
+    });
+  } catch (err) {
+    console.error('GitHub authentication error:', err);
+    res.status(500).json({ error: 'Internal server error during GitHub authentication' });
+  }
+});
+
 // Get current user profile
 router.get('/me', authenticateToken, (req, res) => {
   try {
