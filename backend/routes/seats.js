@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { authenticateToken, requireRole, logAudit } = require('../middleware/auth');
+const { checkUserPenaltyStatus } = require('../utils/penalties');
 
 const router = express.Router();
 
@@ -143,6 +144,8 @@ router.post('/reserve', authenticateToken, (req, res) => {
     if (!seat_id || !date || !time_slot) {
       return res.status(400).json({ error: 'Seat, date, and time slot are required' });
     }
+
+    // Note: Library policy allows study seat reservations even if penalties are pending (only book borrowing is restricted).
 
     const reserveSeatTx = db.transaction(() => {
       const seat = db.prepare('SELECT * FROM seats WHERE id = ?').get(seat_id);

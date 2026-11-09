@@ -68,6 +68,45 @@ app.post('/api/notifications/run-cron', (req, res) => {
   });
 });
 
+// Direct PowerPoint Presentation (.pptx) Download Endpoint
+app.get('/api/download-presentation', (req, res) => {
+  const pptxUploads = path.join(uploadsDir, 'LibraMind_Design_Thinking_Presentation.pptx');
+  const pptxRoot = path.join(__dirname, '..', 'LibraMind_Design_Thinking_Presentation.pptx');
+  const targetFile = fs.existsSync(pptxUploads) ? pptxUploads : pptxRoot;
+  if (fs.existsSync(targetFile)) {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    res.download(targetFile, 'LibraMind_Design_Thinking_Presentation.pptx');
+  } else {
+    res.status(404).json({ error: 'Presentation file not found' });
+  }
+});
+
+// Direct Complete Blueprints Offline Package (.zip) Download Endpoint
+app.get('/api/download-blueprints', (req, res) => {
+  const zipUploads = path.join(uploadsDir, 'LibraMind_Complete_Blueprints_Offline_Bundle.zip');
+  const zipRoot = path.join(__dirname, '..', 'LibraMind_Complete_Blueprints_Offline_Bundle.zip');
+  const targetZip = fs.existsSync(zipUploads) ? zipUploads : zipRoot;
+  if (fs.existsSync(targetZip)) {
+    res.setHeader('Content-Type', 'application/zip');
+    res.download(targetZip, 'LibraMind_Complete_Blueprints_Offline_Bundle.zip');
+  } else {
+    res.status(404).json({ error: 'Blueprints bundle file not found' });
+  }
+});
+
+// Standalone Offline Website & Blueprint Viewer Download Endpoint
+app.get('/api/download-offline-viewer', (req, res) => {
+  const htmlRoot = path.join(__dirname, '..', 'LibraMind_Offline_Website_&_Blueprints.html');
+  const htmlPublic = path.join(__dirname, '..', 'frontend', 'public', 'LibraMind_Offline_Website_&_Blueprints.html');
+  const targetHtml = fs.existsSync(htmlRoot) ? htmlRoot : htmlPublic;
+  if (fs.existsSync(targetHtml)) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.download(targetHtml, 'LibraMind_Offline_Website_&_Blueprints.html');
+  } else {
+    res.status(404).json({ error: 'Offline viewer file not found' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({

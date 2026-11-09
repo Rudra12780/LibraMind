@@ -9,7 +9,9 @@ function wrapPageSVG({
   activeNavIndex = 0,
   content
 }) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  const safeTitle = (pageTitle || '').toUpperCase().replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/g, '&amp;');
+  const rawSvg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
   <defs>
     <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
     <pattern id="dot-grid-${pageNumber}" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -27,7 +29,7 @@ function wrapPageSVG({
   <g transform="translate(30, 20)">
     <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
     <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
-    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE ${pageNumber} OF ${pageTotal}: ${pageTitle.toUpperCase()} · PORTRAIT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE ${pageNumber} OF ${pageTotal}: ${safeTitle} · PORTRAIT</text>
   </g>
 
   <!-- Main Website Wireframe Container -->
@@ -123,6 +125,7 @@ function wrapPageSVG({
     </g>
   </g>
 </svg>`;
+  return rawSvg.replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/g, '&amp;');
 }
 
 // --------------------------------------------------------------------------------
@@ -4049,6 +4052,14 @@ function createZipBuffer(files) {
 
 // Batch Download 1: All 12 Blueprints as a single .ZIP package
 export function downloadAllBlueprintsZIP() {
+  const link = document.createElement('a');
+  link.href = '/LibraMind_Complete_Blueprints_Offline_Bundle.zip';
+  link.download = 'LibraMind_Complete_Blueprints_Offline_Bundle.zip';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  return;
+
   const readmeText = `========================================================================
 LIBRAMIND LMS - DESIGN THINKING UI WIREFRAME BLUEPRINT SPECIFICATION
 ========================================================================

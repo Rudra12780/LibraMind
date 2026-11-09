@@ -1,0 +1,384 @@
+[
+  {
+    "pageNumber": 1,
+    "id": "home",
+    "name": "1. Landing Sanctuary (Home)",
+    "shortTitle": "Landing Sanctuary",
+    "route": "/home",
+    "category": "Public Tier",
+    "desc": "Balsamiq low-fidelity wireframe featuring Navigation Bar, Hero Banner, Search Bar, Status Bar, 4-Column Card Grid, Additional Features, and Footer.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Hero Banner",
+      "3. Search Bar",
+      "4. Status Bar",
+      "5. 4-Column Card Grid",
+      "6. Additional Features",
+      "7. Footer"
+    ],
+    "filename": "01_LibraMind_Landing_Sanctuary_Blueprint.svg"
+  },
+  {
+    "pageNumber": 2,
+    "id": "catalog",
+    "name": "2. Book Catalog & Multi-Filter Search",
+    "shortTitle": "Book Catalog",
+    "route": "/catalog",
+    "category": "Public Tier",
+    "desc": "Comprehensive multi-filter search catalog wireframe with category checklists, availability toggles, floor stack filters, 3x2 book card specimen grid, and pagination.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Search & Controls Bar",
+      "3. Category Sidebar Filters",
+      "4. Book Results Grid (3x2)",
+      "5. Pagination Bar",
+      "6. Footer"
+    ],
+    "filename": "02_LibraMind_Book_Catalog_Blueprint.svg"
+  },
+  {
+    "pageNumber": 3,
+    "id": "book-details",
+    "name": "3. Book Specimen & 4-Tier Shelf Stacks",
+    "shortTitle": "Book Details & Stacks",
+    "route": "/book-details",
+    "category": "Public Tier",
+    "desc": "Individual book specimen wireframe featuring two-column cover & metadata layout, action buttons, 4-tier physical shelf waypoint navigator, copies ledger, and similar books carousel.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Specimen View (Cover [X] & Info)",
+      "3. 4-Tier Shelf Waypoint",
+      "4. Copies Ledger Table",
+      "5. Related Books Carousel",
+      "6. Footer"
+    ],
+    "filename": "03_LibraMind_Book_Details___Stacks_Blueprint.svg"
+  },
+  {
+    "pageNumber": 4,
+    "id": "ai-finder",
+    "name": "4. AI Semantic Book Finder",
+    "shortTitle": "AI Semantic Finder",
+    "route": "/ai-finder",
+    "category": "Public Tier",
+    "desc": "Natural language semantic search wireframe with prompt textarea, curated theme chips, confidence percentage gauge, and 3-column AI match rationale cards.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. AI Engine Header",
+      "3. Natural Language Prompt Input",
+      "4. Curated Mood Chips",
+      "5. Semantic Confidence Gauge",
+      "6. 3-Column Match Cards",
+      "7. Footer"
+    ],
+    "filename": "04_LibraMind_AI_Semantic_Finder_Blueprint.svg"
+  },
+  {
+    "pageNumber": 5,
+    "id": "seats",
+    "name": "5. Study Seat & Focus Pod Map",
+    "shortTitle": "Study Pod Map",
+    "route": "/seats",
+    "category": "Public Tier",
+    "desc": "Interactive study seat reservation wireframe with date & slot pickers, 4-state seat legend, 4-zone floor layout (Quiet Pods, Collaborative Hub, Window Pods, Carrels), and confirmation drawer.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Seat Booking Controls & Slots",
+      "3. Seat Status Legend",
+      "4. 4-Zone Sanctuary Floor Plan",
+      "5. Reservation Confirmation Drawer",
+      "6. Footer"
+    ],
+    "filename": "05_LibraMind_Study_Pod_Map_Blueprint.svg"
+  },
+  {
+    "pageNumber": 6,
+    "id": "compare",
+    "name": "6. Multi-Book Comparison Matrix",
+    "shortTitle": "Book Comparison Matrix",
+    "route": "/compare",
+    "category": "Public Tier",
+    "desc": "Side-by-side comparison matrix wireframe comparing up to 3 book specimens across 9 parameters: cover, title, genre, page volume, shelf waypoint, loan duration, status, and community ratings.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Comparison Controls",
+      "3. 9-Row Side-by-Side Matrix",
+      "4. Direct Dispatch Actions",
+      "5. Footer"
+    ],
+    "filename": "06_LibraMind_Book_Comparison_Matrix_Blueprint.svg"
+  },
+  {
+    "pageNumber": 7,
+    "id": "visit-planner",
+    "name": "7. Intelligent Library Visit Planner",
+    "shortTitle": "Visit Planner",
+    "route": "/visit-planner",
+    "category": "Public Tier",
+    "desc": "Step-by-step physical visit planner wireframe with visit intent selector, book pickup checklist, 5-point optimal floor route map, and printable visit itinerary slip.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Visit Intent Selector (3 Cards)",
+      "3. Pickup Volumes Checklist",
+      "4. Optimal Floor Waypoint Path",
+      "5. Printable Itinerary Slip",
+      "6. Footer"
+    ],
+    "filename": "07_LibraMind_Visit_Planner_Blueprint.svg"
+  },
+  {
+    "pageNumber": 8,
+    "id": "dashboard",
+    "name": "8. Student & Member Sanctuary Hub",
+    "shortTitle": "Member Hub",
+    "route": "/dashboard",
+    "category": "Member Tier",
+    "desc": "Personal reading sanctuary hub wireframe featuring student profile header, hub view tabs, 4 KPI activity cards, currently borrowed books with return/renew controls, hold queue rank, and pod booking.",
+    "sections": [
+      "1. Navigation Bar (Member Hub Active)",
+      "2. Member Profile Header",
+      "3. Hub Views & 4 KPI Cards",
+      "4. Currently Borrowed Books",
+      "5. Active Hold Queues & Pod Booking",
+      "6. Wishlist Strip",
+      "7. Footer"
+    ],
+    "filename": "08_LibraMind_Member_Hub_Blueprint.svg"
+  },
+  {
+    "pageNumber": 9,
+    "id": "librarian",
+    "name": "9. Librarian Circulation & Barcode Desk",
+    "shortTitle": "Librarian Desk",
+    "route": "/librarian",
+    "category": "Staff Tier",
+    "desc": "Staff circulation desk wireframe with operation tabs, barcode input & camera scanner viewfinder [X], student ID lookup & fine check, 14-day checkout dispatcher, and daily audit ledger.",
+    "sections": [
+      "1. Navigation Bar (Staff Active)",
+      "2. Desk Operations Tab Bar",
+      "3. Barcode Scanner Station [X]",
+      "4. Student Verification Card",
+      "5. Checkout Dispatcher",
+      "6. Today's Circulation Ledger",
+      "7. Footer"
+    ],
+    "filename": "09_LibraMind_Librarian_Desk_Blueprint.svg"
+  },
+  {
+    "pageNumber": 10,
+    "id": "admin",
+    "name": "10. Administrator Central Control Console",
+    "shortTitle": "Admin Console",
+    "route": "/admin",
+    "category": "Admin Tier",
+    "desc": "Central administrator control wireframe with admin operation tabs, 4 vital system health metrics, user role management & elevation table, rapid cataloging actions, and security audit log stream.",
+    "sections": [
+      "1. Navigation Bar (Admin Shield)",
+      "2. Admin Console Tabs",
+      "3. System Vital Health Cards",
+      "4. User Role Management Table",
+      "5. Cataloging Action Triggers",
+      "6. Security Audit Log Stream",
+      "7. Footer"
+    ],
+    "filename": "10_LibraMind_Admin_Console_Blueprint.svg"
+  },
+  {
+    "pageNumber": 11,
+    "id": "analytics",
+    "name": "11. Circulation Analytics & Demand Forecasting",
+    "shortTitle": "Circulation Analytics",
+    "route": "/analytics",
+    "category": "Admin Tier",
+    "desc": "Operational circulation analytics wireframe with KPI cards, 12-month loan velocity line-graph [X], popular categories horizontal bar chart, and hourly seat demand heatmap.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Analytics Date Controls",
+      "3. Key KPI Metric Cards",
+      "4. 12-Month Circulation Line Graph [X]",
+      "5. Most Borrowed Categories Bar Chart",
+      "6. Hourly Seat Occupancy Heatmap",
+      "7. Footer"
+    ],
+    "filename": "11_LibraMind_Circulation_Analytics_Blueprint.svg"
+  },
+  {
+    "pageNumber": 12,
+    "id": "login",
+    "name": "12. Reader & Staff Authentication Portal",
+    "shortTitle": "Authentication Portal",
+    "route": "/login",
+    "category": "Public Tier",
+    "desc": "Authentication and onboarding wireframe with two-column layout: left branding illustration box [X] & 4 feature checklist items; right card with sign-in/register tabs, form inputs, and 1-click role demo switchers.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Branding Illustration Box [X]",
+      "3. Feature Checklist",
+      "4. Sign In / Register Tabbed Card",
+      "5. Form Fields (Email, Password, Remember)",
+      "6. 1-Click Demo Role Switcher",
+      "7. Footer"
+    ],
+    "filename": "12_LibraMind_Authentication_Portal_Blueprint.svg"
+  },
+  {
+    "pageNumber": 13,
+    "id": "forgot-password",
+    "name": "13. Password Recovery & Security Reset Portal",
+    "shortTitle": "Password Recovery",
+    "route": "/forgot-password",
+    "category": "Public Tier",
+    "desc": "Cryptographic account recovery wireframe featuring single-use SHA-256 token verification, rate-limit protection, account enumeration defense, and secure new password form.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Recovery Header & Notice",
+      "3. Email Dispatch Card",
+      "4. Rate Limiting & Verification Feedback",
+      "5. 3-Step Security Token Lifecycle Flow",
+      "6. Footer"
+    ],
+    "filename": "13_LibraMind_Password_Recovery_Blueprint.svg"
+  },
+  {
+    "pageNumber": 14,
+    "id": "reservations",
+    "name": "14. Book Reservations & Waiting List Queue Hub",
+    "shortTitle": "Book Reservations Hub",
+    "route": "/reservations",
+    "category": "Member Tier",
+    "desc": "Dedicated circulation hold & waiting list queue hub wireframe with 4 status KPI cards, status filter tabs, active queue rank indicators, 48-hour front-desk pickup countdown, and cancel/claim triggers.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Reservations Header & Actions",
+      "3. 4-Column Queue KPI Cards",
+      "4. Status Filter Tabs & Search Bar",
+      "5. Active Hold & Queue Cards (Ready, Waiting, Completed)",
+      "6. Footer"
+    ],
+    "filename": "14_LibraMind_Book_Reservations_Hub_Blueprint.svg"
+  },
+  {
+    "pageNumber": 15,
+    "id": "register",
+    "name": "15. Scholar & Student Registration Portal",
+    "shortTitle": "Scholar Registration",
+    "route": "/register",
+    "category": "Public Tier",
+    "desc": "New patron folio enrollment wireframe with full credentials input, department selector, reading interest tag pills, Continue with GitHub SSO, and 4-step onboarding lifecycle diagram.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Registration Header",
+      "3. Enrollment Form & Reading Interest Pills",
+      "4. GitHub SSO & Policy Agreement",
+      "5. 4-Step Registration to Access Flow",
+      "6. Footer"
+    ],
+    "filename": "15_LibraMind_Scholar_Registration_Blueprint.svg"
+  },
+  {
+    "pageNumber": 16,
+    "id": "about",
+    "name": "16. About LibraMind Sanctuary & Philosophy",
+    "shortTitle": "About & Sanctuary Vision",
+    "route": "/about",
+    "category": "Public Tier",
+    "desc": "Institutional vision & philosophy wireframe featuring architectural atrium illustration [X], three core pillars, four benchmark metrics counters, and Board of Curators faculty grid.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. About Hero & Mission",
+      "3. Sanctuary Mission & Pillars",
+      "4. Archive Benchmarks (120k+ Volumes)",
+      "5. Board of Curators & Faculty",
+      "6. Footer"
+    ],
+    "filename": "16_LibraMind_About___Sanctuary_Vision_Blueprint.svg"
+  },
+  {
+    "pageNumber": 17,
+    "id": "contact",
+    "name": "17. Help Center & Circulation Desk",
+    "shortTitle": "Circulation Help Desk",
+    "route": "/contact",
+    "category": "Public Tier",
+    "desc": "Patron assistance and circulation help desk wireframe with three contact modality cards, interactive inquiry dispatch ticket form, and FAQ accordion.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Help Desk Header",
+      "3. Contact Channels (Circulation, Reference, IT)",
+      "4. Dispatch Intake Form",
+      "5. FAQ Accordion",
+      "6. Footer"
+    ],
+    "filename": "17_LibraMind_Circulation_Help_Desk_Blueprint.svg"
+  },
+  {
+    "pageNumber": 18,
+    "id": "terms",
+    "name": "18. Library Code of Conduct & Policies",
+    "shortTitle": "Borrowing Code & Policies",
+    "route": "/terms",
+    "category": "Public Tier",
+    "desc": "Official library borrowing rules and circulation charter wireframe with patron tier allowances table, reservation queue protocols, and silent study etiquette.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Charter Header",
+      "3. Circulation Matrix Table",
+      "4. Reservation Hold & Queue Protocols (§1)",
+      "5. Sanctuary Code & Study Ethics (§2)",
+      "6. Footer"
+    ],
+    "filename": "18_LibraMind_Borrowing_Code___Policies_Blueprint.svg"
+  },
+  {
+    "pageNumber": 19,
+    "id": "notifications",
+    "name": "19. Patron Notice Center & Dispatches",
+    "shortTitle": "Patron Notice Center",
+    "route": "/notifications",
+    "category": "Member Tier",
+    "desc": "Central patron notice & dispatch wireframe with status filter pills, urgent due date countdown cards, reservation hold ready pick-up passes, and delivery preference toggles.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Notice Header",
+      "3. Filter Controls (Due Dates, Holds, Broadcasts)",
+      "4. Dispatch Feed Cards",
+      "5. Preference Toggles",
+      "6. Footer"
+    ],
+    "filename": "19_LibraMind_Patron_Notice_Center_Blueprint.svg"
+  },
+  {
+    "pageNumber": 20,
+    "id": "reset-password",
+    "name": "20. Security Password Reset Portal",
+    "shortTitle": "Password Reset Portal",
+    "route": "/reset-password",
+    "category": "Security Tier",
+    "desc": "Cryptographic reset authentication wireframe featuring token validation status badge, new password inputs with eye toggles, 100% password complexity gauge, and automated audit trail card.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. Security Reset Header",
+      "3. Reset Form Card & Strength Meter",
+      "4. Security Audit Trail Callout",
+      "5. Footer"
+    ],
+    "filename": "20_LibraMind_Password_Reset_Portal_Blueprint.svg"
+  },
+  {
+    "pageNumber": 21,
+    "id": "not-found",
+    "name": "21. Historical Archive Not Found 404",
+    "shortTitle": "404 Folio Not Found",
+    "route": "/not-found",
+    "category": "Utility Tier",
+    "desc": "Classical 404 Folio Unresolved error wireframe with missing manuscript [X] bookplate illustration, rescue search input, and four recovery hub shortcut tiles.",
+    "sections": [
+      "1. Navigation Bar",
+      "2. 404 Status Header",
+      "3. Missing Folio Illustration & Search Bar",
+      "4. Rescue Hub Tiles (Home, Catalog, Oracle, Seats)",
+      "5. Footer"
+    ],
+    "filename": "21_LibraMind_404_Folio_Not_Found_Blueprint.svg"
+  }
+]

@@ -21,6 +21,7 @@ export default function Catalog({
   const [sortBy, setSortBy] = useState('title_asc');
   const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [userBorrowedBookIds, setUserBorrowedBookIds] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
 
   // Add Book state for Admin / Librarian
@@ -98,7 +99,8 @@ export default function Catalog({
         q: search,
         category: selectedCategory,
         availability,
-        sort: sortBy
+        sort: sortBy,
+        ...(availability === 'my_loans' && user ? { userId: user.id } : {})
       });
       setBooks(data.books || []);
       setCategories(data.categories || []);
@@ -119,13 +121,28 @@ export default function Catalog({
     }
   }, [user]);
 
+  const fetchUserLoans = useCallback(async () => {
+    if (!user) {
+      setUserBorrowedBookIds(new Set());
+      return;
+    }
+    try {
+      const loansData = await api.getLoans();
+      const active = (loansData || []).filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
+      setUserBorrowedBookIds(new Set(active.map(l => l.book_id)));
+    } catch (err) {
+      console.error('User loans fetch error', err);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchBooks();
   }, [fetchBooks]);
 
   useEffect(() => {
     fetchWishlist();
-  }, [fetchWishlist]);
+    fetchUserLoans();
+  }, [fetchWishlist, fetchUserLoans]);
 
   const handleToggleWishlist = async (bookId) => {
     if (!user) {
@@ -149,6 +166,39 @@ export default function Catalog({
       }
     } catch (err) {
       showToast(err.message, true);
+    }
+  };
+
+  const handleQuickBorrow = async (book) => {
+    if (!user) {
+      onNavigate('login');
+      return;
+    }
+    try {
+      const res = await api.checkoutBook({ book_id: book.id });
+      showToast(`Success! Checked out "${book.title}" (Copy: ${res.copyCode}). Due in 14 days.`);
+      fetchBooks();
+      fetchUserLoans();
+    } catch (err) {
+      showToast(err.message || 'Checkout failed', true);
+    }
+  };
+
+  const handleQuickReturn = async (book) => {
+    if (!user) return;
+    try {
+      const loansData = await api.getLoans();
+      const active = (loansData || []).find(l => l.book_id === book.id && (l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue'));
+      if (!active) {
+        showToast('Active loan not found for this volume', true);
+        return;
+      }
+      await api.returnBook(active.id);
+      showToast(`Returned "${book.title}". You can now directly borrow this book a second time!`);
+      fetchBooks();
+      fetchUserLoans();
+    } catch (err) {
+      showToast(err.message || 'Return failed', true);
     }
   };
 
@@ -528,27 +578,29 @@ export default function Catalog({
             />
           </div>
 
-          {/* Availability Toggle (Maximalist Primary Stamps) */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {/* Availability Toggle */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             {[
-              { id: 'all', label: 'All Items' },
-              { id: 'available', label: 'Available Only' },
+              { id: 'all', label: 'All Volumes' },
+              { id: 'available', label: 'Available In Stacks' },
+              { id: 'borrowed', label: 'Borrowed Books / On Loan' },
+              ...(user ? [{ id: 'my_loans', label: `My Borrowed Copies (${userBorrowedBookIds.size})` }] : []),
               { id: 'unavailable', label: 'In Waiting' }
             ].map(opt => (
               <button
                 key={opt.id}
                 onClick={() => setAvailability(opt.id)}
                 style={{
-                  padding: '9px 14px',
-                  border: '1px solid var(--editorial-border)',
-                  backgroundColor: availability === opt.id ? 'var(--editorial-border)' : '#FFFFFF',
-                  color: 'var(--editorial-text)',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.03em',
+                  padding: '7px 14px',
+                  border: availability === opt.id ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
+                  backgroundColor: availability === opt.id ? 'var(--editorial-green)' : '#FFFFFF',
+                  color: availability === opt.id ? '#FFFFFF' : 'var(--editorial-text)',
+                  fontSize: '0.80rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)',
+                  letterSpacing: '0.02em',
                   cursor: 'pointer',
-                  boxShadow: availability === opt.id ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
+                  transition: 'all 0.15s ease'
                 }}
               >
                 {opt.label}
@@ -663,12 +715,15 @@ export default function Catalog({
               key={book.id}
               book={book}
               onViewDetails={onViewBookDetails}
+              onBorrow={handleQuickBorrow}
+              onReturn={handleQuickReturn}
               onReserve={handleQuickReserve}
               onToggleWishlist={handleToggleWishlist}
               isWishlisted={wishlistIds.has(book.id)}
               onToggleCompare={handleToggleCompare}
               isCompared={compareBookIds.includes(book.id)}
               onAddToPlanner={handleAddToPlanner}
+              isBorrowedByUser={userBorrowedBookIds.has(book.id)}
             />
           ))}
         </div>

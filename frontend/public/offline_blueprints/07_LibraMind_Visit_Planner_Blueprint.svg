@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-7" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-7" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-7)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 7 OF 21: LIBRARY VISIT PLANNER &amp; ROUTE · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-7)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/visit-planner</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#000000" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. PLANNER HEADER -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="120" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. VISIT PLANNER HEADER</text>
+
+      <g transform="translate(40, 32)">
+        <text x="0" y="20" font-size="18" font-weight="bold">Intelligent Library Visit Planner &amp; Stack Route Guide</text>
+        <text x="0" y="38" font-size="9.5" fill="#666666">Organize your physical library visit: select books to pick up, choose study blocks, and generate an optimal floor waypoint itinerary.</text>
+      </g>
+    </g>
+
+    <!-- 3. STEP 1: VISIT INTENT SELECTOR -->
+    <g transform="translate(0, 210)">
+      <rect width="860" height="210" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="180" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">3. STEP 1: VISIT INTENT</text>
+
+      <g transform="translate(40, 34)">
+        <text x="0" y="16" font-size="12" font-weight="bold">WHAT IS THE PRIMARY PURPOSE OF YOUR VISIT TODAY?</text>
+        <g transform="translate(0, 26)">
+          
+            <g transform="translate(0, 0)">
+              <rect width="250" height="115" rx="8" fill="#000000" stroke="#000000" stroke-width="1.6" />
+              <text x="18" y="28" font-size="12" font-weight="bold" fill="#FFFFFF">Quick Book Pickup</text>
+              <text x="18" y="52" font-size="9" fill="#DDDDDD" width="210">Pre-held items ready at desk, rapid checkout under 10 min.</text>
+              <rect x="18" y="78" width="90" height="20" rx="4" fill="#FFFFFF" />
+              <text x="28" y="92" font-size="8.5" font-weight="bold" fill="#000000">✓ Selected</text>
+            </g>
+          
+            <g transform="translate(268, 0)">
+              <rect width="250" height="115" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <text x="18" y="28" font-size="12" font-weight="bold" fill="#000000">Deep Focus Study Session</text>
+              <text x="18" y="52" font-size="9" fill="#666666" width="210">Reserved quiet pod, ambient reading, power &amp; wifi access.</text>
+              <rect x="18" y="78" width="90" height="20" rx="4" fill="#EEEEEE" />
+              <text x="28" y="92" font-size="8.5" font-weight="bold" fill="#000000">Select Intent</text>
+            </g>
+          
+            <g transform="translate(536, 0)">
+              <rect width="250" height="115" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <text x="18" y="28" font-size="12" font-weight="bold" fill="#000000">Browse Stacks &amp; Discover</text>
+              <text x="18" y="52" font-size="9" fill="#666666" width="210">Leisurely shelf traversal, AI recommendations guide.</text>
+              <rect x="18" y="78" width="90" height="20" rx="4" fill="#EEEEEE" />
+              <text x="28" y="92" font-size="8.5" font-weight="bold" fill="#000000">Select Intent</text>
+            </g>
+          
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. STEP 2 &amp; 3: BOOK CHECKLIST &amp; OPTIMAL ROUTE MAP -->
+    <g transform="translate(0, 420)">
+      <rect width="860" height="480" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">4. WAYPOINT ROUTE GENERATOR</text>
+
+      <g transform="translate(40, 34)">
+        <!-- Left: Selected Volumes Checklist (300px) -->
+        <g transform="translate(0, 0)">
+          <rect width="280" height="410" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="24" font-size="10.5" font-weight="bold">YOUR PICKUP &amp; SHELF LIST</text>
+
+          
+            <g transform="translate(16, 40)">
+              <rect width="248" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+              <text x="12" y="22" font-size="10" font-weight="bold">[1] The Midnight Library</text>
+              <text x="12" y="40" font-size="9" fill="#555555">Stack F-07 (Level 2)</text>
+              <rect x="12" y="52" width="110" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="0.8" />
+              <text x="20" y="64" font-size="8" font-weight="bold">Ready at Desk</text>
+            </g>
+          
+            <g transform="translate(16, 130)">
+              <rect width="248" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+              <text x="12" y="22" font-size="10" font-weight="bold">[2] Klara and the Sun</text>
+              <text x="12" y="40" font-size="9" fill="#555555">Stack B-04 (Level 1)</text>
+              <rect x="12" y="52" width="110" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="0.8" />
+              <text x="20" y="64" font-size="8" font-weight="bold">On Open Shelf</text>
+            </g>
+          
+            <g transform="translate(16, 220)">
+              <rect width="248" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+              <text x="12" y="22" font-size="10" font-weight="bold">[3] Designing Data Apps</text>
+              <text x="12" y="40" font-size="9" fill="#555555">Stack D-12 (Level 2)</text>
+              <rect x="12" y="52" width="110" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="0.8" />
+              <text x="20" y="64" font-size="8" font-weight="bold">On Open Shelf</text>
+            </g>
+          
+
+          <rect x="16" y="340" width="248" height="36" rx="6" fill="#000000" />
+          <text x="64" y="362" font-size="10.5" font-weight="bold" fill="#FFFFFF">Optimize Floor Path</text>
+        </g>
+
+        <!-- Right: Optimal Floor Route Map Schematic (480px) -->
+        <g transform="translate(300, 0)">
+          <rect width="480" height="410" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+          <text x="20" y="24" font-size="11" font-weight="bold">OPTIMAL WAYPOINT NAVIGATION PATH</text>
+          <text x="20" y="40" font-size="8.5" fill="#666666">Estimated Total Distance: 84 meters · Est. Duration: 14 mins</text>
+
+          <!-- Floor Plan Layout with Numbered Waypoint Path -->
+          <g transform="translate(20, 55)">
+            <rect width="440" height="330" rx="6" fill="#FAFAFA" stroke="#000000" stroke-width="1.4" />
+
+            <!-- Path Line -->
+            <path d="M 40 280 L 100 240 L 220 180 L 340 120 L 400 60" fill="none" stroke="#000000" stroke-width="2.5" stroke-dasharray="6,4" />
+
+            <!-- Waypoint 1 -->
+            <g transform="translate(40, 280)">
+              <circle r="14" fill="#000000" />
+              <text x="-4" y="4" font-size="11" font-weight="bold" fill="#FFFFFF">1</text>
+              <text x="20" y="5" font-size="9" font-weight="bold">Library Entrance</text>
+            </g>
+
+            <!-- Waypoint 2 -->
+            <g transform="translate(100, 240)">
+              <circle r="14" fill="#000000" />
+              <text x="-4" y="4" font-size="11" font-weight="bold" fill="#FFFFFF">2</text>
+              <text x="20" y="5" font-size="9" font-weight="bold">Hold Pickup Desk</text>
+            </g>
+
+            <!-- Waypoint 3 -->
+            <g transform="translate(220, 180)">
+              <circle r="14" fill="#000000" />
+              <text x="-4" y="4" font-size="11" font-weight="bold" fill="#FFFFFF">3</text>
+              <text x="20" y="5" font-size="9" font-weight="bold">Stack B-04 (Level 1)</text>
+            </g>
+
+            <!-- Waypoint 4 -->
+            <g transform="translate(340, 120)">
+              <circle r="14" fill="#000000" />
+              <text x="-4" y="4" font-size="11" font-weight="bold" fill="#FFFFFF">4</text>
+              <text x="-120" y="5" font-size="9" font-weight="bold">Stack F-07 (Level 2)</text>
+            </g>
+
+            <!-- Waypoint 5 -->
+            <g transform="translate(400, 60)">
+              <circle r="14" fill="#000000" />
+              <text x="-4" y="4" font-size="11" font-weight="bold" fill="#FFFFFF">5</text>
+              <text x="-90" y="5" font-size="9" font-weight="bold">Self-Checkout</text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. STEP 4: PRINTABLE VISIT ITINERARY CARD -->
+    <g transform="translate(0, 900)">
+      <rect width="860" height="385" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">5. PRINTABLE ITINERARY</text>
+
+      <g transform="translate(40, 34)">
+        <rect width="780" height="315" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.6" />
+
+        <g transform="translate(24, 20)">
+          <text x="0" y="16" font-size="15" font-weight="bold">TODAY'S PHYSICAL VISIT SLIP &amp; WAYPOINT ITINERARY</text>
+          <text x="0" y="34" font-size="9" fill="#555555">Valid for entry &amp; barcode scans: Sunday, Nov 1, 2026 · Member ID: #STU-8841</text>
+
+          <g transform="translate(0, 50)">
+            <rect width="730" height="160" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+            <g transform="translate(20, 20)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">WAYPOINT 1 (14:00):</text>
+              <text x="140" y="14" font-size="9.5">Proceed to Circulation Desk Shelf #3 for pre-held "The Midnight Library".</text>
+
+              <text x="0" y="44" font-size="9.5" font-weight="bold">WAYPOINT 2 (14:08):</text>
+              <text x="140" y="44" font-size="9.5">Take East Stairway to Level 1, Aisle 04 to locate "Klara and the Sun".</text>
+
+              <text x="0" y="74" font-size="9.5" font-weight="bold">WAYPOINT 3 (14:15):</text>
+              <text x="140" y="74" font-size="9.5">Check-in at Study Pod #03 in Window Garden for 3-hour focus session.</text>
+
+              <text x="0" y="104" font-size="9.5" font-weight="bold">WAYPOINT 4 (17:00):</text>
+              <text x="140" y="104" font-size="9.5">Self-checkout scans at East Exit Scanner Station.</text>
+            </g>
+          </g>
+
+          <g transform="translate(0, 225)">
+            <rect width="210" height="40" rx="6" fill="#000000" />
+            <text x="36" y="25" font-size="11" font-weight="bold" fill="#FFFFFF">Print Itinerary (PDF)</text>
+
+            <rect x="230" y="0" width="180" height="40" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+            <text x="256" y="25" font-size="11" font-weight="bold">Save to Mobile Hub</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

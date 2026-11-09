@@ -30,6 +30,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
   const [selectedPageId, setSelectedPageId] = useState(initialPage);
   const [zoom, setZoom] = useState(1);
   const [viewMode, setViewMode] = useState('svg'); // 'svg' or 'jpg'
+  const [modalCategory, setModalCategory] = useState('all');
 
   useEffect(() => {
     if (initialPage) {
@@ -182,6 +183,30 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               </div>
             )}
 
+            {/* Open Standalone Offline Website */}
+            <a
+              href="/LibraMind_Offline_Website_&_Blueprints.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: '#FAF8F5',
+                color: 'var(--editorial-accent)',
+                border: '1px solid var(--editorial-accent)',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
+              title="Open standalone self-contained offline website and blueprint viewer (Works with server closed)"
+            >
+              🌐 Standalone Offline Website
+            </a>
+
             {/* Download All 21 ZIP Package */}
             <button
               onClick={downloadAllBlueprintsZIP}
@@ -247,6 +272,83 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           </div>
         </div>
 
+        {/* Category Filter & Mobile Page Selector Bar */}
+        <div
+          style={{
+            padding: '6px 20px',
+            backgroundColor: '#EDEDED',
+            borderBottom: '1px solid #DEDEDE',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            flexWrap: 'wrap'
+          }}
+        >
+          {/* Category Filter Chips */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <span style={{ fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#555555', whiteSpace: 'nowrap' }}>
+              Tier Filter:
+            </span>
+            {[
+              { id: 'all', label: 'All 21 Pages' },
+              { id: 'public', label: 'Public (13)' },
+              { id: 'member', label: 'Member (3)' },
+              { id: 'staff_admin', label: 'Staff & Admin (3)' },
+              { id: 'security_util', label: 'System (2)' }
+            ].map(cat => {
+              const active = modalCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setModalCategory(cat.id)}
+                  style={{
+                    backgroundColor: active ? '#000000' : '#FFFFFF',
+                    color: active ? '#FFFFFF' : '#333333',
+                    border: '1px solid #CCCCCC',
+                    padding: '3px 9px',
+                    borderRadius: '12px',
+                    fontSize: '0.72rem',
+                    fontWeight: active ? 700 : 500,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Jump Dropdown (Ideal for mobile phones) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#555555', textTransform: 'uppercase' }}>Jump to:</span>
+            <select
+              value={selectedPageId}
+              onChange={(e) => {
+                setSelectedPageId(e.target.value);
+                if (e.target.value !== 'home') setViewMode('svg');
+              }}
+              style={{
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                padding: '3px 8px',
+                borderRadius: '4px',
+                border: '1px solid #CCCCCC',
+                backgroundColor: '#FFFFFF',
+                color: '#111111',
+                cursor: 'pointer'
+              }}
+            >
+              {BLUEPRINT_PAGES.map(p => (
+                <option key={p.id} value={p.id}>
+                  Page {p.pageNumber}: {p.shortTitle} ({p.category})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* 21-Page Navigation Tab Bar */}
         <div
           style={{
@@ -264,7 +366,14 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           <span style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#333333', whiteSpace: 'nowrap', marginRight: '4px' }}>
             All 21 Pages:
           </span>
-          {BLUEPRINT_PAGES.map((page) => {
+          {BLUEPRINT_PAGES.filter(p => {
+            if (modalCategory === 'all') return true;
+            if (modalCategory === 'public') return p.category === 'Public Tier';
+            if (modalCategory === 'member') return p.category === 'Member Tier';
+            if (modalCategory === 'staff_admin') return p.category === 'Staff Tier' || p.category === 'Admin Tier';
+            if (modalCategory === 'security_util') return p.category === 'Security Tier' || p.category === 'Utility Tier';
+            return true;
+          }).map((page) => {
             const isSelected = page.id === selectedPageId;
             return (
               <button

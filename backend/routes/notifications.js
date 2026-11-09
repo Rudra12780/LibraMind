@@ -7,6 +7,39 @@ const router = express.Router();
 // Get notifications for current user
 router.get('/', authenticateToken, (req, res) => {
   try {
+    // Automatic Expiry Warning Check: Alert member if any active loan is approaching due date (within 3 days or today)
+    const activeLoans = db.prepare(`
+      SELECT l.id, l.due_date, b.title as book_title
+      FROM loans l
+      JOIN books b ON l.book_id = b.id
+      WHERE l.user_id = ? AND l.status IN ('active', 'borrowed')
+    `).all(req.user.id);
+
+    const now = new Date();
+    for (const loan of activeLoans) {
+      const due = new Date(loan.due_date);
+      const diffMs = due - now;
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays <= 3 && diffDays >= 0) {
+        // Only insert if not already notified for this loan in the last 24 hours
+        const existingWarning = db.prepare(`
+          SELECT id FROM notifications
+          WHERE user_id = ? AND type = 'due' AND message LIKE ? AND created_at >= datetime('now', '-1 day')
+        `).get(req.user.id, `%${loan.book_title}%`);
+
+        if (!existingWarning) {
+          const daysText = diffDays === 0 ? 'today' : (diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`);
+          db.prepare(`
+            INSERT INTO notifications (user_id, title, message, type, link)
+            VALUES (?, '⚠️ Loan Expiry Approaching: Return Date Near', ?, 'due', '/dashboard')
+          `).run(
+            req.user.id,
+            `Your borrowing period for "${loan.book_title}" will expire ${daysText} (${due.toLocaleDateString()}). Please return or renew this volume on time to avoid overdue circulation penalties.`
+          );
+        }
+      }
+    }
+
     const notifications = db.prepare(`
       SELECT * FROM notifications
       WHERE user_id = ?

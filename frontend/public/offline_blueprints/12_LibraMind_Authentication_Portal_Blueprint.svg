@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-12" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-12" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-12)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 12 OF 21: AUTHENTICATION PORTAL · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-12)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/login</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#000000" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. AUTHENTICATION SANCTUARY CONTAINER -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="1195" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. AUTHENTICATION SANCTUARY</text>
+
+      <g transform="translate(40, 42)">
+        <!-- Left Side: Brand Narrative &amp; Visual Illustration Box (360px) -->
+        <g transform="translate(0, 40)">
+          <text x="0" y="26" font-size="22" font-weight="bold">Welcome to LibraMind</text>
+          <text x="0" y="48" font-size="12" fill="#555555">Your biophilic reading sanctuary &amp; smart library</text>
+
+          <!-- Large [X] Illustration Box -->
+          <g transform="translate(0, 70)">
+            <rect width="340" height="230" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+            <line x1="0" y1="0" x2="340" y2="230" stroke="#777777" stroke-width="1.4" />
+            <line x1="0" y1="230" x2="340" y2="0" stroke="#777777" stroke-width="1.4" />
+            <rect x="115" y="100" width="110" height="30" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+            <text x="128" y="120" font-size="11" font-weight="bold">SANCTUARY [X]</text>
+          </g>
+
+          <!-- 4 Features Checklist -->
+          <g transform="translate(0, 330)">
+            
+              <g transform="translate(0, 0)">
+                <circle cx="10" cy="10" r="10" fill="#000000" />
+                <text x="6" y="14" font-size="10" font-weight="bold" fill="#FFFFFF">✓</text>
+                <text x="30" y="14" font-size="10" font-weight="bold">AI Semantic Search &amp; Mood Recommendations</text>
+              </g>
+            
+              <g transform="translate(0, 36)">
+                <circle cx="10" cy="10" r="10" fill="#000000" />
+                <text x="6" y="14" font-size="10" font-weight="bold" fill="#FFFFFF">✓</text>
+                <text x="30" y="14" font-size="10" font-weight="bold">Real-Time Interactive Study Seat Reservation</text>
+              </g>
+            
+              <g transform="translate(0, 72)">
+                <circle cx="10" cy="10" r="10" fill="#000000" />
+                <text x="6" y="14" font-size="10" font-weight="bold" fill="#FFFFFF">✓</text>
+                <text x="30" y="14" font-size="10" font-weight="bold">4-Tier Physical Shelf Waypoint Navigation</text>
+              </g>
+            
+              <g transform="translate(0, 108)">
+                <circle cx="10" cy="10" r="10" fill="#000000" />
+                <text x="6" y="14" font-size="10" font-weight="bold" fill="#FFFFFF">✓</text>
+                <text x="30" y="14" font-size="10" font-weight="bold">Self-Service Loans, Returns &amp; Renewals</text>
+              </g>
+            
+          </g>
+        </g>
+
+        <!-- Right Side: Authentication Form Card (390px) -->
+        <g transform="translate(390, 40)">
+          <rect width="390" height="800" rx="12" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+          
+          <g transform="translate(28, 28)">
+            <!-- Sign In / Register Tabs -->
+            <g transform="translate(0, 0)">
+              <rect width="334" height="42" rx="6" fill="#F0F0F0" />
+              <rect width="165" height="38" rx="5" fill="#000000" y="2" x="2" />
+              <text x="56" y="25" font-size="11" font-weight="bold" fill="#FFFFFF">Sign In</text>
+              <text x="210" y="25" font-size="11" font-weight="bold" fill="#000000">Register</text>
+            </g>
+
+            <text x="0" y="75" font-size="18" font-weight="bold">Sign In to Your Account</text>
+            <text x="0" y="94" font-size="9.5" fill="#666666">Access loans, reservations, and personal study pods.</text>
+
+            <!-- Email Field -->
+            <g transform="translate(0, 115)">
+              <text x="0" y="12" font-size="9.5" font-weight="bold">EMAIL ADDRESS</text>
+              <rect x="0" y="20" width="334" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <text x="14" y="46" font-size="11" fill="#444444">rudra.student@smartlib.edu</text>
+            </g>
+
+            <!-- Password Field -->
+            <g transform="translate(0, 195)">
+              <text x="0" y="12" font-size="9.5" font-weight="bold">PASSWORD</text>
+              <rect x="0" y="20" width="334" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <text x="14" y="46" font-size="14" font-family="monospace">••••••••••••</text>
+            </g>
+
+            <!-- Remember me &amp; Forgot -->
+            <g transform="translate(0, 275)">
+              <rect width="14" height="14" rx="3" fill="#000000" />
+              <text x="3" y="11" font-size="9" fill="#FFFFFF">✓</text>
+              <text x="22" y="11" font-size="9">Remember me</text>
+              <text x="240" y="11" font-size="9" font-weight="bold">Forgot password?</text>
+            </g>
+
+            <!-- Primary Sign In Button -->
+            <g transform="translate(0, 310)">
+              <rect width="334" height="46" rx="6" fill="#000000" />
+              <text x="96" y="28" font-size="12" font-weight="bold" fill="#FFFFFF">Sign In to LibraMind</text>
+            </g>
+
+            <!-- Demo Quick Login Switcher -->
+            <g transform="translate(0, 385)">
+              <line x1="0" y1="0" x2="334" y2="0" stroke="#CCCCCC" stroke-width="1" />
+              <text x="80" y="22" font-size="9" font-weight="bold" fill="#666666">OR TEST WITH 1-CLICK DEMO ROLES:</text>
+
+              <g transform="translate(0, 36)">
+                <!-- Student Demo -->
+                <rect width="334" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="23" font-size="10" font-weight="bold">Student Demo (Rudra Patel)</text>
+                <text x="270" y="23" font-size="9" font-weight="bold">Sign In →</text>
+              </g>
+
+              <g transform="translate(0, 84)">
+                <!-- Librarian Demo -->
+                <rect width="334" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="23" font-size="10" font-weight="bold">Librarian Staff (Sarah Jenkins)</text>
+                <text x="270" y="23" font-size="9" font-weight="bold">Sign In →</text>
+              </g>
+
+              <g transform="translate(0, 132)">
+                <!-- Admin Demo -->
+                <rect width="334" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="23" font-size="10" font-weight="bold">Administrator Portal (Security Root)</text>
+                <text x="270" y="23" font-size="9" font-weight="bold">Sign In →</text>
+              </g>
+            </g>
+
+            <!-- Security Badge -->
+            <g transform="translate(0, 595)">
+              <rect width="334" height="40" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1" />
+              <text x="32" y="24" font-size="8.5" fill="#555555">🔒 256-Bit SSL Encryption · Session Resilience Active</text>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

@@ -165,6 +165,15 @@ function initSchema() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS otps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      phone TEXT NOT NULL,
+      otp_code TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Partial unique index to strictly prevent double-booking the same seat, date, and slot
     CREATE UNIQUE INDEX IF NOT EXISTS idx_seat_active_reservation 
     ON seat_reservations (seat_id, date, time_slot) 
@@ -182,6 +191,28 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_password_resets_hash ON password_resets (token_hash);
     CREATE INDEX IF NOT EXISTS idx_password_resets_user_exp ON password_resets (user_id, expires_at);
   `);
+
+  // Migration: Add user profile & penalty QR fields
+  const userCols = db.pragma('table_info(users)').map(c => c.name);
+  if (!userCols.includes('phone')) db.exec("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''");
+  if (!userCols.includes('first_name')) db.exec("ALTER TABLE users ADD COLUMN first_name TEXT DEFAULT ''");
+  if (!userCols.includes('last_name')) db.exec("ALTER TABLE users ADD COLUMN last_name TEXT DEFAULT ''");
+  if (!userCols.includes('gender')) db.exec("ALTER TABLE users ADD COLUMN gender TEXT DEFAULT ''");
+  if (!userCols.includes('bio')) db.exec("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''");
+  if (!userCols.includes('profile_photo')) db.exec("ALTER TABLE users ADD COLUMN profile_photo TEXT DEFAULT ''");
+  if (!userCols.includes('is_profile_completed')) db.exec("ALTER TABLE users ADD COLUMN is_profile_completed INTEGER DEFAULT 0");
+  if (!userCols.includes('penalty_qr_code')) db.exec("ALTER TABLE users ADD COLUMN penalty_qr_code TEXT DEFAULT ''");
+  if (!userCols.includes('penalty_amount')) db.exec("ALTER TABLE users ADD COLUMN penalty_amount REAL DEFAULT 0");
+  if (!userCols.includes('penalty_reason')) db.exec("ALTER TABLE users ADD COLUMN penalty_reason TEXT DEFAULT ''");
+  if (!userCols.includes('penalty_status')) db.exec("ALTER TABLE users ADD COLUMN penalty_status TEXT DEFAULT 'none'");
+  if (!userCols.includes('return_warning_active')) db.exec("ALTER TABLE users ADD COLUMN return_warning_active INTEGER DEFAULT 0");
+  if (!userCols.includes('return_warning_message')) db.exec("ALTER TABLE users ADD COLUMN return_warning_message TEXT DEFAULT ''");
+  if (!userCols.includes('return_warning_loan_id')) db.exec("ALTER TABLE users ADD COLUMN return_warning_loan_id INTEGER");
+  if (!userCols.includes('return_warning_book_title')) db.exec("ALTER TABLE users ADD COLUMN return_warning_book_title TEXT DEFAULT ''");
+
+  const loanCols = db.pragma('table_info(loans)').map(c => c.name);
+  if (!loanCols.includes('warning_sent')) db.exec("ALTER TABLE loans ADD COLUMN warning_sent INTEGER DEFAULT 0");
+  if (!loanCols.includes('warning_sent_at')) db.exec("ALTER TABLE loans ADD COLUMN warning_sent_at DATETIME");
 }
 
 initSchema();

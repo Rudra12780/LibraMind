@@ -187,7 +187,17 @@ router.post('/login', (req, res) => {
         email: user.email,
         role: user.role,
         membership_id: user.membership_id,
-        interests: user.interests || ''
+        interests: user.interests || '',
+        phone: user.phone || '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        gender: user.gender || '',
+        bio: user.bio || '',
+        profile_photo: user.profile_photo || '',
+        is_profile_completed: user.is_profile_completed || 0,
+        penalty_qr_code: user.penalty_qr_code || '',
+        penalty_amount: user.penalty_amount || 0,
+        penalty_status: user.penalty_status || 'none'
       }
     });
   } catch (err) {
@@ -300,16 +310,207 @@ router.post('/github', (req, res) => {
   }
 });
 
+// Send Mobile OTP
+router.post('/send-otp', (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone || typeof phone !== 'string' || phone.trim().length < 6) {
+      return res.status(400).json({ error: 'Valid phone number is required.' });
+    }
+
+    const cleanPhone = phone.trim();
+    // Generate a 6-digit verification code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Expire old OTPs for this phone
+    db.prepare('UPDATE otps SET used = 1 WHERE phone = ?').run(cleanPhone);
+
+    // Save new OTP record (valid for 10 minutes)
+    db.prepare(`
+      INSERT INTO otps (phone, otp_code, expires_at, used)
+      VALUES (?, ?, datetime('now', '+10 minutes'), 0)
+    `).run(cleanPhone, otpCode);
+
+    res.json({
+      success: true,
+      message: `OTP code sent successfully to ${cleanPhone}`,
+      otp: otpCode // returned for instant automated testing & demo convenience
+    });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
+  }
+});
+
+// Verify Mobile OTP & Sign In / Register
+router.post('/verify-otp', (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ error: 'Both phone number and OTP code are required.' });
+    }
+
+    const cleanPhone = phone.trim();
+    const cleanOtp = otp.toString().trim();
+
+    // Verify OTP against database or universal demo fallback
+    const otpRecord = db.prepare(`
+      SELECT * FROM otps
+      WHERE phone = ? AND otp_code = ? AND used = 0 AND datetime('now') <= datetime(expires_at)
+      ORDER BY id DESC LIMIT 1
+    `).get(cleanPhone, cleanOtp);
+
+    const isValid = cleanOtp === '123456' || Boolean(otpRecord);
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Use test code 123456 or request a new code.' });
+    }
+
+    // Mark OTP as used
+    if (otpRecord) {
+      db.prepare('UPDATE otps SET used = 1 WHERE id = ?').run(otpRecord.id);
+    }
+
+    // Check if user exists with this phone
+    let user = db.prepare('SELECT * FROM users WHERE phone = ?').get(cleanPhone);
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const membership_id = `STU-${randomNum}`;
+      const tempEmail = `member_${cleanPhone.replace(/[^0-9]/g, '')}@student.libramind.edu`;
+      const salt = bcrypt.genSaltSync(10);
+      const dummyPasswordHash = bcrypt.hashSync('Student@123', salt);
+
+      const insertRes = db.prepare(`
+        INSERT INTO users (
+          name, email, password_hash, role, membership_id, phone,
+          interests, is_profile_completed
+        ) VALUES (?, ?, ?, 'student', ?, ?, 'General Reading', 0)
+      `).run('New Scholar', tempEmail, dummyPasswordHash, membership_id, cleanPhone);
+
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(insertRes.lastInsertRowid);
+      logAudit(user.id, 'USER_REGISTERED_OTP', `Registered student with phone ${cleanPhone}`);
+    } else {
+      logAudit(user.id, 'USER_LOGIN_OTP', `Logged in via verified mobile OTP ${cleanPhone}`);
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        membership_id: user.membership_id
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Mobile verification successful',
+      token,
+      isProfileCompleted: Boolean(user.is_profile_completed),
+      isNewUser,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        membership_id: user.membership_id,
+        phone: user.phone || '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        gender: user.gender || '',
+        bio: user.bio || '',
+        profile_photo: user.profile_photo || '',
+        interests: user.interests || '',
+        is_profile_completed: user.is_profile_completed || 0,
+        penalty_qr_code: user.penalty_qr_code || '',
+        penalty_amount: user.penalty_amount || 0,
+        penalty_status: user.penalty_status || 'none'
+      }
+    });
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    res.status(500).json({ error: 'Failed to verify OTP. Please try again.' });
+  }
+});
+
+// Update Completed Profile Details (Photo, First Name, Last Name, Full Name, Gender, Bio, Favorite Categories)
+router.put('/profile', authenticateToken, (req, res) => {
+  try {
+    const {
+      first_name = '',
+      last_name = '',
+      name = '',
+      gender = '',
+      bio = '',
+      profile_photo = '',
+      interests = ''
+    } = req.body;
+
+    const computedName = (name && name.trim()) || `${first_name} ${last_name}`.trim() || 'Library Member';
+
+    db.prepare(`
+      UPDATE users SET
+        first_name = ?,
+        last_name = ?,
+        name = ?,
+        gender = ?,
+        bio = ?,
+        profile_photo = ?,
+        interests = ?,
+        is_profile_completed = 1
+      WHERE id = ?
+    `).run(
+      first_name.trim(),
+      last_name.trim(),
+      computedName,
+      gender.trim(),
+      bio.trim(),
+      profile_photo,
+      interests.trim(),
+      req.user.id
+    );
+
+    const updatedUser = db.prepare(`
+      SELECT id, name, email, role, membership_id, interests, phone,
+             first_name, last_name, gender, bio, profile_photo,
+             is_profile_completed, penalty_qr_code, penalty_amount, penalty_status
+      FROM users WHERE id = ?
+    `).get(req.user.id);
+
+    logAudit(req.user.id, 'PROFILE_COMPLETED', `Completed user profile for ${updatedUser.name}`);
+
+    res.json({
+      success: true,
+      message: 'Profile completed successfully!',
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Failed to update profile.' });
+  }
+});
+
 // Get current user profile
 router.get('/me', authenticateToken, (req, res) => {
   try {
-    const user = db.prepare('SELECT id, name, email, role, membership_id, interests, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare(`
+      SELECT id, name, email, role, membership_id, interests, created_at,
+             phone, first_name, last_name, gender, bio, profile_photo,
+             is_profile_completed, penalty_qr_code, penalty_amount, penalty_reason, penalty_status
+      FROM users WHERE id = ?
+    `).get(req.user.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Get active loan count and unread notification count
-    const activeLoans = db.prepare("SELECT COUNT(*) as count FROM loans WHERE user_id = ? AND status = 'active'").get(req.user.id);
+    const activeLoans = db.prepare("SELECT COUNT(*) as count FROM loans WHERE user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(req.user.id);
     const unreadNotifs = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0').get(req.user.id);
     const activeReservations = db.prepare("SELECT COUNT(*) as count FROM reservations WHERE user_id = ? AND status IN ('waiting', 'ready_for_pickup')").get(req.user.id);
 
@@ -324,6 +525,10 @@ router.get('/me', authenticateToken, (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user profile' });
   }
+});
+
+router.get('/profile', authenticateToken, (req, res) => {
+  return res.redirect(307, '/api/auth/me');
 });
 
 // Update user reading interests

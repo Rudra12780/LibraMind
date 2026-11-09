@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-16" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-16" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-16)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 16 OF 21: ABOUT LIBRAMIND SANCTUARY · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-16)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/about</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#000000" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. ABOUT HERO &amp; MISSION -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. ABOUT HERO</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">ABOUT LIBRAMIND ARCHIVES &amp; SANCTUARY</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Bridging nineteenth-century classical library scholarship with twentieth-first-century AI discovery.</text>
+      </g>
+    </g>
+
+    <!-- 3. MISSION STATEMENT &amp; VISION CONTAINER -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. SANCTUARY MISSION</text>
+
+      <rect width="764" height="280" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Left Side: Architectural Illustration Placeholder [X] -->
+      <g transform="translate(24, 24)">
+        <rect width="250" height="232" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <line x1="0" y1="0" x2="250" y2="232" stroke="#000000" stroke-width="1.2" />
+        <line x1="250" y1="0" x2="0" y2="232" stroke="#000000" stroke-width="1.2" />
+        <rect x="50" y="98" width="150" height="36" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="60" y="120" font-size="9" font-weight="bold">SANCTUARY ATRIUM [X]</text>
+      </g>
+
+      <!-- Right Side: Narrative Copy &amp; Values -->
+      <g transform="translate(298, 24)">
+        <text x="0" y="16" font-size="14" font-weight="bold">THE FOUNDING CHARTER OF LIBRAMIND</text>
+        <line x1="0" y1="26" x2="440" y2="26" stroke="#000000" stroke-width="1.2" />
+
+        <text x="0" y="52" font-size="10" fill="#333333">Established to cultivate deep focus, serendipitous intellectual discovery,</text>
+        <text x="0" y="70" font-size="10" fill="#333333">and open academic equity. LibraMind pairs classical physical stacks</text>
+        <text x="0" y="88" font-size="10" fill="#333333">with neural TF-IDF retrieval algorithms and live circulation intelligence.</text>
+
+        <!-- 3 Feature Bullets -->
+        <g transform="translate(0, 110)">
+          <circle cx="8" cy="8" r="4" fill="#000000" />
+          <text x="22" y="12" font-size="9.5" font-weight="bold">Biophilic Calm &amp; Silent Architecture</text>
+          <text x="22" y="26" font-size="8.5" fill="#666666">Designed for uninterrupted scholarly reading with natural lighting.</text>
+
+          <circle cx="8" cy="46" r="4" fill="#000000" />
+          <text x="22" y="50" font-size="9.5" font-weight="bold">Algorithmic TF-IDF Book Oracle</text>
+          <text x="22" y="64" font-size="8.5" fill="#666666">Mathematical keyword vectorization across volume abstracts &amp; call numbers.</text>
+
+          <circle cx="8" cy="84" r="4" fill="#000000" />
+          <text x="22" y="88" font-size="9.5" font-weight="bold">Cryptographic Role-Based Security</text>
+          <text x="22" y="102" font-size="8.5" fill="#666666">Zero-trust patron privacy, salted password hashes, and instant audit trails.</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. COLLECTION BENCHMARK METRICS STRIP -->
+    <g transform="translate(48, 480)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. ARCHIVE BENCHMARKS</text>
+
+      <rect width="764" height="130" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- 4 Metric Cards -->
+      <g transform="translate(20, 20)">
+        <!-- Metric 1 -->
+        <g transform="translate(0, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">120,000+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">PHYSICAL VOLUMES</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Dewey &amp; LoC Indexed</text>
+        </g>
+
+        <!-- Metric 2 -->
+        <g transform="translate(186, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">450+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">STUDY PODS &amp; DESKS</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Silent &amp; Collaborative</text>
+        </g>
+
+        <!-- Metric 3 -->
+        <g transform="translate(372, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">14,200+</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">SCHOLAR PATRONS</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Students, Faculty &amp; Fellows</text>
+        </g>
+
+        <!-- Metric 4 -->
+        <g transform="translate(558, 0)">
+          <rect width="168" height="90" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="20" y="38" font-size="22" font-weight="bold">99.98%</text>
+          <text x="20" y="58" font-size="9.5" font-weight="bold">DIGITAL AVAILABILITY</text>
+          <text x="20" y="72" font-size="8" fill="#666666">Always-On Local Offline Fallback</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. BOARD OF CURATORS &amp; LEADERSHIP -->
+    <g transform="translate(48, 635)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">5. BOARD OF CURATORS</text>
+
+      <text x="0" y="14" font-size="13" font-weight="bold">CURATORIAL BOARD &amp; LIBRARY FACULTY</text>
+
+      <g transform="translate(0, 26)">
+        <!-- Curator 1 -->
+        <g transform="translate(0, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">DR. ELEANOR VANE</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Chief Archival Curator</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Specialist in Classical Manuscripts &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Bibliographic Preservation Systems</text>
+        </g>
+
+        <!-- Curator 2 -->
+        <g transform="translate(262, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">MARCUS HOLLOWAY</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Head of Information Architecture</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Pioneer in Algorithmic Cataloguing &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Semantic Knowledge Graphs</text>
+        </g>
+
+        <!-- Curator 3 -->
+        <g transform="translate(524, 0)">
+          <rect width="240" height="240" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="60" y="18" width="120" height="110" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <line x1="60" y1="18" x2="180" y2="128" stroke="#000000" stroke-width="1" />
+          <line x1="180" y1="18" x2="60" y2="128" stroke="#000000" stroke-width="1" />
+          <text x="120" y="152" font-size="11" font-weight="bold" text-anchor="middle">SOPHIA STERLING</text>
+          <text x="120" y="168" font-size="9" fill="#555555" text-anchor="middle">Director of Patron Experience</text>
+          <line x1="30" y1="182" x2="210" y2="182" stroke="#DDDDDD" stroke-width="1" />
+          <text x="120" y="202" font-size="8" fill="#777777" text-anchor="middle">Lead Architect of Study Sanctuaries &amp;</text>
+          <text x="120" y="216" font-size="8" fill="#777777" text-anchor="middle">Ergonomic Silent Reading Pods</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // ABOUT &amp; MISSION BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 16 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

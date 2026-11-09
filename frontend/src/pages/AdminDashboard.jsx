@@ -2140,7 +2140,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 background: adminConfirmModal.isDanger
                   ? 'linear-gradient(135deg, #6E1B24 0%, #8C2A35 100%)'
                   : 'linear-gradient(135deg, #1E3A2B 0%, #2A4D3B 100%)',
-                border: '1.5px solid #C29B38',
+                border: '1px solid var(--editorial-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

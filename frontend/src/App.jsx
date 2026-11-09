@@ -7,6 +7,8 @@ import AdminNavbar from './components/AdminNavbar';
 import UserNavbar from './components/UserNavbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import VisualBlueprintModal from './components/VisualBlueprintModal';
+// PresentationModal removed per user request
 
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
@@ -24,7 +26,9 @@ import NotificationsPage from './pages/NotificationsPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ReservationsPage from './pages/ReservationsPage';
+import ProfileCompletion from './pages/ProfileCompletion';
 import NotFound from './pages/NotFound';
+import { api } from './api';
 
 // Code-split heavy dashboard pages to optimize initial bundle size
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
@@ -33,7 +37,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 
 function AppContent() {
-  const { user, loading, adminVerified } = useAuth();
+  const { user, loading, adminVerified, login, logout, reloadProfile } = useAuth();
   const [activePage, setActivePage] = useState('home');
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [catalogQuery, setCatalogQuery] = useState('');
@@ -43,6 +47,33 @@ function AppContent() {
   const [adminTab, setAdminTab] = useState('overview');
   const [userTab, setUserTab] = useState('all');
   const [userStats, setUserStats] = useState({ loanCount: 0, holdCount: 0, seatCount: 0, wishlistCount: 0 });
+  const [visualBlueprintModal, setVisualBlueprintModal] = useState({ isOpen: false, pageId: 'home' });
+  const [presentationModalOpen, setPresentationModalOpen] = useState(false);
+  const [showPenaltyModal, setShowPenaltyModal] = useState(true);
+  const [payingPenalty, setPayingPenalty] = useState(false);
+
+  const handleOpenPresentation = () => {
+    // disabled per user request
+  };
+
+  const handlePayPenalty = async () => {
+    setPayingPenalty(true);
+    try {
+      await api.payPenaltyQr();
+      if (reloadProfile) {
+        await reloadProfile();
+      }
+      setShowPenaltyModal(false);
+    } catch (err) {
+      alert(err.message || 'Payment simulation failed');
+    } finally {
+      setPayingPenalty(false);
+    }
+  };
+
+  const handleOpenBlueprints = (pageId = 'home') => {
+    setVisualBlueprintModal({ isOpen: true, pageId: pageId || 'home' });
+  };
 
   // Role-based protection: Students cannot enter staff or admin pages
   useEffect(() => {
@@ -79,7 +110,10 @@ function AppContent() {
         }
       }
 
-      if (cleanPath.startsWith('books/') || cleanPath.startsWith('book-details/') || cleanPath === 'book-details') {
+      if (cleanPath === 'presentation' || cleanPath === 'ppt' || cleanPath === 'download-ppt' || cleanPath === 'slides') {
+        // disabled per user request
+        setActivePage('home');
+      } else if (cleanPath.startsWith('books/') || cleanPath.startsWith('book-details/') || cleanPath === 'book-details') {
         setActivePage('book-details');
       } else if (cleanPath === '' || cleanPath === 'home') {
         // Main landing page opens by default at http://localhost:5000
@@ -139,6 +173,8 @@ function AppContent() {
         setActivePage('about');
       } else if (cleanPath === 'help' || cleanPath === 'contact' || cleanPath === 'support') {
         setActivePage('contact');
+      } else if (cleanPath === 'complete-profile' || cleanPath === 'profile-completion') {
+        setActivePage('complete-profile');
       } else if (cleanPath === 'terms' || cleanPath === 'policies' || cleanPath === 'borrowing-rules') {
         setActivePage('terms');
       } else if (cleanPath === 'reservations' || cleanPath === 'my-reservations' || cleanPath === 'holds' || cleanPath === 'waiting-list') {
@@ -178,6 +214,18 @@ function AppContent() {
 
   const navigate = (page, params = {}) => {
     let cleanPage = (page || 'home').toString().replace(/^\/+/, '') || 'home';
+    
+    // Direct Blueprint modal interception
+    if (cleanPage === 'blueprints' || cleanPage === 'blueprint' || cleanPage === 'wireframes' || cleanPage === 'visual-blueprints') {
+      handleOpenBlueprints(params.page || params.pageId || 'home');
+      return;
+    }
+
+    // Direct Presentation modal interception
+    if (cleanPage === 'presentation' || cleanPage === 'ppt' || cleanPage === 'download-ppt' || cleanPage === 'slides') {
+      handleOpenPresentation();
+      return;
+    }
     
     // Normalize aliases
     if (cleanPage === 'books') cleanPage = 'catalog';
@@ -359,6 +407,8 @@ function AppContent() {
           activeTab={librarianTab}
           onSelectTab={setLibrarianTab}
           onNavigate={navigate}
+          onOpenBlueprints={handleOpenBlueprints}
+          onOpenPresentation={handleOpenPresentation}
         />
       ) : isAdminPortal ? (
         <AdminNavbar
@@ -366,12 +416,16 @@ function AppContent() {
           activeTab={activePage === 'analytics' ? 'analytics' : adminTab}
           onSelectTab={setAdminTab}
           onNavigate={navigate}
+          onOpenBlueprints={handleOpenBlueprints}
+          onOpenPresentation={handleOpenPresentation}
         />
       ) : isUserPortal ? (
         <UserNavbar
           activeTab={userTab}
           onSelectTab={setUserTab}
           onNavigate={navigate}
+          onOpenBlueprints={handleOpenBlueprints}
+          onOpenPresentation={handleOpenPresentation}
           loanCount={userStats.loanCount}
           holdCount={userStats.holdCount}
           seatCount={userStats.seatCount}
@@ -382,6 +436,8 @@ function AppContent() {
         <Navbar
           activePage={activePage}
           onNavigate={navigate}
+          onOpenBlueprints={handleOpenBlueprints}
+          onOpenPresentation={handleOpenPresentation}
           compareCount={compareBookIds.length}
         />
       )}
@@ -397,6 +453,7 @@ function AppContent() {
           <Home
             onNavigate={navigate}
             onViewBookDetails={viewBookDetails}
+            onOpenBlueprints={handleOpenBlueprints}
           />
         )}
 
@@ -459,6 +516,10 @@ function AppContent() {
             onUpdateStats={setUserStats}
             onNavigate={navigate}
             onViewBookDetails={viewBookDetails}
+            compareBookIds={compareBookIds}
+            onAddToCompare={handleToggleCompare}
+            onRemoveCompareBook={handleRemoveCompareBook}
+            onClearCompare={handleClearCompare}
           />
         )}
 
@@ -513,16 +574,161 @@ function AppContent() {
           <Register onNavigate={navigate} />
         )}
 
+        {activePage === 'complete-profile' && (
+          <ProfileCompletion onNavigate={navigate} />
+        )}
+
         {activePage === 'not-found' && (
           <NotFound onNavigate={navigate} />
         )}
         </Suspense>
       </main>
 
+      {/* Persistent Student Penalty QR Code Enforcement Modal */}
+      {user && user.role === 'student' && user.penalty_status === 'pending' && user.penalty_qr_code && showPenaltyModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(37, 40, 32, 0.75)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            className="bio-card"
+            style={{
+              width: '460px',
+              maxWidth: '100%',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 'var(--radius-sm)',
+              padding: '32px 28px',
+              border: '2px solid #DC2626',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <div
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                backgroundColor: '#FEE2E2',
+                color: '#DC2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                fontSize: '1.5rem',
+                fontWeight: 700
+              }}
+            >
+              ⚠️
+            </div>
+
+            <span className="editorial-kicker" style={{ color: '#DC2626', letterSpacing: '0.08em' }}>
+              CIRCULATION PENALTY ACTIVE
+            </span>
+
+            <h3
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '1.45rem',
+                color: 'var(--editorial-text)',
+                margin: '4px 0 8px',
+                fontWeight: 800
+              }}
+            >
+              Loan Overdue Penalty Notice
+            </h3>
+
+            <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, marginBottom: '18px' }}>
+              Your borrowed volume reached 15 days without return. A circulation fine of{' '}
+              <strong style={{ color: '#DC2626', fontSize: '1rem' }}>${(user.penalty_amount || 15.0).toFixed(2)}</strong> has been issued.
+              Book borrowing is temporarily blocked until this fine is paid.
+            </p>
+
+            {/* Pure SVG QR Code */}
+            <div
+              style={{
+                padding: '12px',
+                backgroundColor: '#F9FAFB',
+                borderRadius: '8px',
+                border: '1.5px solid var(--editorial-border)',
+                display: 'inline-block',
+                marginBottom: '16px',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <img
+                src={user.penalty_qr_code}
+                alt="Penalty QR Code"
+                style={{ width: '210px', height: '210px', display: 'block', margin: '0 auto' }}
+              />
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginTop: '6px', display: 'block', fontWeight: 600 }}>
+                Scan with any UPI / Scholar Wallet app
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={handlePayPenalty}
+                disabled={payingPenalty}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: '#16A34A',
+                  borderColor: '#16A34A',
+                  fontSize: '0.92rem',
+                  fontWeight: 700
+                }}
+              >
+                {payingPenalty ? 'Processing Payment...' : `💳 Simulate Scan & Pay Fine ($${(user.penalty_amount || 15.0).toFixed(2)})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPenaltyModal(false)}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.78rem', padding: '8px' }}
+              >
+                Dismiss &amp; Browse Site / Study Pods
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginTop: '12px', marginBottom: 0 }}>
+              * You may continue browsing the library catalog and reserving study pods freely. Book borrowing privileges will restore immediately upon fine payment.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main Website Footer (Hidden inside Librarian and Admin Portals for dedicated workspace feel) */}
       {!isLibrarianPortal && !isAdminPortal && (
-        <Footer onNavigate={navigate} />
+        <Footer
+          onNavigate={navigate}
+          onOpenBlueprints={handleOpenBlueprints}
+        />
       )}
+
+      {/* Global Visual Blueprint Specification Modal (Available from entire website) */}
+      <VisualBlueprintModal
+        isOpen={visualBlueprintModal.isOpen}
+        onClose={() => setVisualBlueprintModal(prev => ({ ...prev, isOpen: false }))}
+        initialPage={visualBlueprintModal.pageId}
+      />
+
+      
     </div>
   );
 }

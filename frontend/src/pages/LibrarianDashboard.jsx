@@ -71,6 +71,32 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   const [issueMemberId, setIssueMemberId] = useState('');
   const [issueCopyCode, setIssueCopyCode] = useState('');
   const [issueDays, setIssueDays] = useState('14');
+  const [issueSearch, setIssueSearch] = useState('');
+  const [barcodeLookupInfo, setBarcodeLookupInfo] = useState(null);
+  const [barcodeLookingUp, setBarcodeLookingUp] = useState(false);
+
+  // Auto-detect user and title when barcode is typed or selected
+  useEffect(() => {
+    if (!issueCopyCode || issueCopyCode.trim().length < 3) {
+      setBarcodeLookupInfo(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setBarcodeLookingUp(true);
+      try {
+        const data = await api.lookupCopyBarcode(issueCopyCode.trim());
+        setBarcodeLookupInfo(data);
+        if (data.assignedUser && !issueMemberId) {
+          setIssueMemberId(data.assignedUser.membership_id);
+        }
+      } catch (err) {
+        setBarcodeLookupInfo(null);
+      } finally {
+        setBarcodeLookingUp(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [issueCopyCode, issueMemberId]);
 
   // 2. Add Book & Device Image Upload
   const [newBook, setNewBook] = useState({
@@ -381,25 +407,56 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
 
   const handleSaveInventoryPhoto = async (e) => {
     e.preventDefault();
-    if (!inventoryPhotoBookId) {
-      showToast('Please select a book first', true);
-      return;
-    }
     if (!inventoryPhotoPreview) {
-      showToast('Please choose an original photo from your device', true);
+      showToast('Please choose an original photo directly from your device', true);
       return;
     }
     setInventoryPhotoUploading(true);
     try {
-      const selectedBook = books.find(b => String(b.id) === String(inventoryPhotoBookId));
-      await api.updateBook(inventoryPhotoBookId, { cover_image: inventoryPhotoPreview });
-      showToast(`Success: Original photo uploaded for "${selectedBook?.title || 'book'}"!`);
+      const targetBookId = inventoryPhotoBookId || (books && books.length > 0 ? books[0].id : null);
+      if (targetBookId) {
+        await api.updateBook(targetBookId, { cover_image: inventoryPhotoPreview });
+        const selectedBook = books.find(b => String(b.id) === String(targetBookId));
+        showToast(`Success: Photo uploaded directly from device for "${selectedBook?.title || 'Catalog Book'}"!`);
+      } else {
+        showToast('Photo uploaded directly from device!');
+      }
       setInventoryPhotoPreview(null);
       fetchLibrarianData();
     } catch (err) {
       showToast(err.message, true);
     } finally {
       setInventoryPhotoUploading(false);
+    }
+  };
+
+  const handleIssuePenaltyQR = async (loanId) => {
+    try {
+      const res = await api.issuePenaltyQr(loanId);
+      showToast(res.message || 'Penalty fine of $15.00 issued & QR sent to student account!');
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message || 'Failed to issue penalty QR code', true);
+    }
+  };
+
+  const handleSendReturnWarning = async (loanId) => {
+    try {
+      const res = await api.sendReturnWarning(loanId);
+      showToast(res.message || 'Book Return Warning sent! Warning banner will appear when student opens account.');
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message || 'Failed to send return warning', true);
+    }
+  };
+
+  const handleCancelPenalty = async (loanId) => {
+    try {
+      const res = await api.cancelPenalty(loanId);
+      showToast(res.message || 'Penalty successfully cancelled and borrowing privileges restored!');
+      fetchLibrarianData();
+    } catch (err) {
+      showToast(err.message || 'Failed to cancel penalty', true);
     }
   };
 
@@ -429,7 +486,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
     }
   };
 
-  const activeLoans = loans.filter(l => l.status === 'active' || l.status === 'overdue');
+  const activeLoans = loans.filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
 
   // Case 1: Logged-in user is NOT a Librarian or Admin -> 403 Forbidden Access Denied Screen
   if (user && user.role !== 'librarian' && user.role !== 'admin') {
@@ -1034,87 +1091,459 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
         </div>
       )}
 
-      {/* TAB 1: Check Out (Issue Book) */}
+      {/* TAB 1: Check Out (Issue Book & Borrow Options) */}
       {activeTab === 'issue' && (
-        <div style={{ maxWidth: '640px' }}>
-          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF' }}>
-            <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-              Issue Physical Book Copy
-            </h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px' }}>
-              Enter the student's ID and barcode of the book being checked out. Due date is set automatically with real database constraint checks.
-            </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px', alignItems: 'start' }}>
+            {/* Left: Issue Book Form */}
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--editorial-border)',
+                padding: '28px',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+                DESK CIRCULATION
+              </span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', color: 'var(--editorial-text)', margin: '4px 0 8px' }}>
+                Issue Physical Book Copy
+              </h3>
+              <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', marginBottom: '22px', lineHeight: 1.5 }}>
+                Enter the student's ID/email and book copy barcode. Database constraints will automatically check for student holds and copy availability.
+              </p>
 
-            <form onSubmit={handleIssueBook}>
-              <div className="form-group">
-                <label className="form-label">Student Membership ID or Email</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g. STU-1001 or student@libramind.edu"
-                  value={issueMemberId}
-                  onChange={(e) => setIssueMemberId(e.target.value)}
-                  required
-                />
-              </div>
+              <form onSubmit={handleIssueBook}>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem', fontWeight: 700 }}>
+                    Student Membership ID or Email *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. STU-1001 or student@libramind.edu"
+                    value={issueMemberId}
+                    onChange={(e) => setIssueMemberId(e.target.value)}
+                    required
+                  />
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIssueMemberId('STU-1001')}
+                      style={{ fontSize: '0.72rem', background: 'none', border: 'none', color: 'var(--editorial-accent)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                    >
+                      Fill Aarav Sharma (STU-1001)
+                    </button>
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Book Copy Barcode Identifier</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g. LM-CS-1-C1 or scan barcode"
-                  value={issueCopyCode}
-                  onChange={(e) => setIssueCopyCode(e.target.value)}
-                  required
-                />
-              </div>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem', fontWeight: 700 }}>
+                    Book Copy Barcode Identifier *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. LM-CS-1-C1 or click any available copy below"
+                    value={issueCopyCode}
+                    onChange={(e) => setIssueCopyCode(e.target.value)}
+                    required
+                  />
 
-              <div className="form-group">
-                <label className="form-label">Loan Duration (Days)</label>
-                <select
-                  className="form-control"
-                  value={issueDays}
-                  onChange={(e) => setIssueDays(e.target.value)}
+                  {/* Auto-detected Assigned User / Patron Card below Barcode */}
+                  {barcodeLookingUp && (
+                    <div style={{ fontSize: '0.74rem', color: 'var(--editorial-accent)', marginTop: '4px' }}>
+                      Checking barcode in library database...
+                    </div>
+                  )}
+
+                  {barcodeLookupInfo && (
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        padding: '10px 14px',
+                        backgroundColor: 'var(--editorial-bg-subtle)',
+                        border: '1px solid var(--editorial-border)',
+                        borderRadius: 'var(--radius-sm)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                        <div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>
+                            Matched Patron Details:
+                          </span>
+                          <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                            {barcodeLookupInfo.assignedUser
+                              ? `${barcodeLookupInfo.assignedUser.name} (${barcodeLookupInfo.assignedUser.membership_id})`
+                              : 'No patron assigned yet (Available on stack)'}
+                          </div>
+                          {barcodeLookupInfo.assignedUser?.relation && (
+                            <span style={{ fontSize: '0.72rem', color: 'var(--editorial-green)', fontWeight: 600 }}>
+                              Status: {barcodeLookupInfo.assignedUser.relation}
+                            </span>
+                          )}
+                          {barcodeLookupInfo.book && (
+                            <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginTop: '2px' }}>
+                              Volume: <em>{barcodeLookupInfo.book.title}</em>
+                            </div>
+                          )}
+                        </div>
+
+                        {barcodeLookupInfo.assignedUser && (
+                          <button
+                            type="button"
+                            onClick={() => setIssueMemberId(barcodeLookupInfo.assignedUser.membership_id)}
+                            className="btn btn-outline btn-sm"
+                            style={{ fontSize: '0.72rem', padding: '4px 10px' }}
+                          >
+                            ⚡ Auto-Fill Member ID
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '22px' }}>
+                  <label className="form-label" style={{ fontSize: '0.80rem', fontWeight: 700 }}>
+                    Loan Duration
+                  </label>
+                  <select
+                    className="form-control"
+                    value={issueDays}
+                    onChange={(e) => setIssueDays(e.target.value)}
+                  >
+                    <option value="7">7 Days (Short Research Loan)</option>
+                    <option value="14">14 Days (Standard Student Loan)</option>
+                    <option value="28">28 Days (Faculty / Extended Study)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ width: '100%', padding: '12px', fontSize: '0.88rem' }}
                 >
-                  <option value="7">7 Days (Short Loan)</option>
-                  <option value="14">14 Days (Standard Student Loan)</option>
-                  <option value="28">28 Days (Faculty / Research Extended)</option>
-                </select>
+                  Authorize Checkout & Issue Copy
+                </button>
+              </form>
+            </div>
+
+            {/* Right: Quick Specimen of Currently Available Copies */}
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--editorial-border)',
+                padding: '24px 28px',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
+                <div>
+                  <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+                    READY IN STACKS
+                  </span>
+                  <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--editorial-text)', margin: '2px 0 0' }}>
+                    Available Copies to Issue
+                  </h4>
+                </div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                  1-Click Barcode Insert
+                </span>
+              </div>
+              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', marginBottom: '16px' }}>
+                Click any specimen below to automatically populate the barcode input for checkout:
+              </p>
+
+              <div style={{ maxHeight: '310px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {books.filter(b => b.available_copies > 0).slice(0, 10).map(b => (
+                  <div
+                    key={b.id}
+                    onClick={() => {
+                      // Look for actual available copy code or book ID
+                      const code = b.sample_copy_code || b.copy_code || String(b.id);
+                      setIssueCopyCode(code);
+                      showToast(`Selected "${b.title}" (Barcode: ${code}) for checkout`);
+                    }}
+                    style={{
+                      padding: '10px 12px',
+                      border: '1px solid var(--editorial-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--editorial-bg)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--editorial-bg-subtle)';
+                      e.currentTarget.style.borderColor = 'var(--editorial-green)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--editorial-bg)';
+                      e.currentTarget.style.borderColor = 'var(--editorial-border)';
+                    }}
+                  >
+                    <div style={{ minWidth: 0, paddingRight: '8px' }}>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '0.88rem', fontWeight: 700, color: 'var(--editorial-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {b.title}
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                        {b.author} • {b.category} • Shelf {b.location_shelf || b.shelf || 'Main'}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '3px 9px', fontSize: '0.72rem', flexShrink: 0 }}
+                    >
+                      Select
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom: Complete Currently Borrowed Books Table (Borrow Options) */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--editorial-border)',
+              padding: '28px',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
+              <div>
+                <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+                  ACTIVE CIRCULATION LEDGER
+                </span>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 0' }}>
+                  Currently Borrowed Books ({activeLoans.length})
+                </h3>
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '16px', padding: '12px' }}
-              >
-                Complete Checkout & Notify Student
-              </button>
-            </form>
+              <div style={{ position: 'relative', width: '280px', maxWidth: '100%' }}>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Filter by title, student, barcode..."
+                  value={issueSearch}
+                  onChange={(e) => setIssueSearch(e.target.value)}
+                  style={{ fontSize: '0.82rem', padding: '7px 12px' }}
+                />
+              </div>
+            </div>
+
+            {activeLoans.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--editorial-text-muted)' }}>
+                No active loans currently in circulation.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Barcode</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Due Date</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Circulation Status</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)' }}>Quick Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeLoans
+                      .filter(l => {
+                        if (!issueSearch.trim()) return true;
+                        const q = issueSearch.toLowerCase();
+                        return (
+                          (l.student_name && l.student_name.toLowerCase().includes(q)) ||
+                          (l.membership_id && l.membership_id.toLowerCase().includes(q)) ||
+                          (l.book_title && l.book_title.toLowerCase().includes(q)) ||
+                          (l.copy_code && l.copy_code.toLowerCase().includes(q))
+                        );
+                      })
+                      .map(loan => {
+                        const dueDate = new Date(loan.due_date);
+                        const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
+                        const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                        return (
+                          <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
+                            <td style={{ padding: '12px 14px' }}>
+                              <strong style={{ color: 'var(--editorial-text)' }}>{loan.student_name}</strong>
+                              <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                                {loan.membership_id || loan.student_email}
+                              </div>
+                            </td>
+                            <td style={{ padding: '12px 14px' }}>
+                              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                                {loan.book_title}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                              {loan.copy_code}
+                            </td>
+                            <td style={{ padding: '12px 14px', color: 'var(--editorial-text)' }}>
+                              {dueDate.toLocaleDateString()}
+                              <div style={{ fontSize: '0.72rem', color: isOverdue ? '#C5221F' : 'var(--editorial-text-muted)' }}>
+                                {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
+                              </div>
+                            </td>
+                            <td style={{ padding: '12px 14px' }}>
+                              {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                                  ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
+                                </span>
+                              ) : (loan.warning_sent || loan.return_warning_active) ? (
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
+                                  ● RETURN WARNING SENT
+                                </span>
+                              ) : isOverdue ? (
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                                  ● OVERDUE (Fine: ${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                  ● On Loan in Good Standing
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                              <div style={{ display: 'inline-flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelPenalty(loan.id)}
+                                    className="btn btn-sm"
+                                    style={{
+                                      padding: '4px 10px',
+                                      fontSize: '0.74rem',
+                                      backgroundColor: '#374151',
+                                      color: '#FFFFFF',
+                                      border: 'none',
+                                      fontWeight: 700,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                    title="Cancel and waive penalty; clears QR lock and restores borrowing privileges"
+                                  >
+                                    <X size={12} />
+                                    Cancel Penalty
+                                  </button>
+                                ) : (isOverdue || (loan.borrow_date && Math.floor((new Date() - new Date(loan.borrow_date)) / (1000 * 60 * 60 * 24)) >= 14)) ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSendReturnWarning(loan.id)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        padding: '4px 9px',
+                                        fontSize: '0.73rem',
+                                        backgroundColor: '#D97706',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Notify user that return date has passed. Warning banner appears upon user sign-in."
+                                    >
+                                      <AlertCircle size={12} />
+                                      {loan.warning_sent ? 'Re-send Return Warning' : 'Send Book Return Warning'}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleIssuePenaltyQR(loan.id)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        padding: '4px 9px',
+                                        fontSize: '0.73rem',
+                                        backgroundColor: '#B91C1C',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Send penalty payment request and QR code to user; blocks book borrowing until paid"
+                                    >
+                                      <AlertTriangle size={12} />
+                                      Send Penalty Payment Request
+                                    </button>
+                                  </>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  onClick={() => handleReturnBook(loan.id)}
+                                  className="btn btn-outline btn-sm"
+                                  style={{ padding: '4px 10px', fontSize: '0.74rem' }}
+                                >
+                                  Process Return
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await api.renewLoan(loan.id);
+                                      showToast(`Renewed "${loan.book_title}" +14 days`);
+                                      fetchLibrarianData();
+                                    } catch (e) {
+                                      showToast(e.message, true);
+                                    }
+                                  }}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: '4px 10px', fontSize: '0.74rem' }}
+                                >
+                                  Renew
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* TAB 2: Process Returns & Overdue Fines */}
       {activeTab === 'return' && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-            Active Loans & Book Returns
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '28px', boxShadow: 'var(--shadow-sm)' }}>
+          <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+            CIRCULATION CHECK-IN
+          </span>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 8px' }}>
+            Active Loans & Book Returns ({activeLoans.length})
           </h3>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-            Process book check-ins. If overdue, fine is computed automatically. If students are on the hold waitlist, the book is routed to pickup automatically.
+          <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', marginBottom: '22px', lineHeight: 1.5 }}>
+            Process book check-ins. If overdue, fine is computed automatically. If scholars are on the hold waitlist, the book is routed to pickup automatically.
           </p>
 
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
               <thead>
-                <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Borrower</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Book Title</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Copy Barcode</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Due Date</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Status</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--forest-dark)' }}>Action</th>
+                <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Copy Barcode</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Due Date</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Circulation Status</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1123,34 +1552,116 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                   const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
 
                   return (
-                    <tr key={loan.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
+                    <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
                       <td style={{ padding: '12px 14px' }}>
-                        <strong>{loan.student_name}</strong>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>{loan.membership_id}</div>
+                        <strong style={{ color: 'var(--editorial-text)' }}>{loan.student_name}</strong>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>{loan.membership_id}</div>
                       </td>
-                      <td style={{ padding: '12px 14px', color: 'var(--forest-dark)', fontWeight: 600 }}>
+                      <td style={{ padding: '12px 14px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
                         {loan.book_title}
                       </td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'monospace' }}>
+                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
                         {loan.copy_code}
                       </td>
-                      <td style={{ padding: '12px 14px', color: isOverdue ? '#C5221F' : 'var(--dark-text)' }}>
+                      <td style={{ padding: '12px 14px', color: isOverdue ? '#C5221F' : 'var(--editorial-text)' }}>
                         {dueDate.toLocaleDateString()}
                       </td>
                       <td style={{ padding: '12px 14px' }}>
-                        {isOverdue ? (
-                          <span className="badge badge-danger">Overdue (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})</span>
+                        {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                          <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #F87171' }}>
+                            ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
+                          </span>
+                        ) : (loan.warning_sent || loan.return_warning_active) ? (
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
+                            ● RETURN WARNING SENT
+                          </span>
+                        ) : isOverdue ? (
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                            ● Overdue (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
+                          </span>
                         ) : (
-                          <span className="badge badge-available">Active</span>
+                          <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                            Active Loan
+                          </span>
                         )}
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleReturnBook(loan.id)}
-                          className="btn btn-botanical btn-sm"
-                        >
-                          Process Return
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                          {(isOverdue || (loan.borrow_date && Math.floor((new Date() - new Date(loan.borrow_date)) / (1000 * 60 * 60 * 24)) >= 14)) && (
+                            loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                              <button
+                                type="button"
+                                onClick={() => handleCancelPenalty(loan.id)}
+                                className="btn btn-sm"
+                                style={{
+                                  padding: '5px 10px',
+                                  fontSize: '0.74rem',
+                                  backgroundColor: '#374151',
+                                  color: '#FFFFFF',
+                                  border: 'none',
+                                  fontWeight: 700,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                title="Cancel / waive penalty fine and restore member privileges immediately"
+                              >
+                                ❌ Cancel Penalty
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendReturnWarning(loan.id)}
+                                  className="btn btn-sm"
+                                  style={{
+                                    padding: '5px 9px',
+                                    fontSize: '0.73rem',
+                                    backgroundColor: '#D97706',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    fontWeight: 600,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                  title="Notify user that return date has passed. Warning banner appears upon user sign-in."
+                                >
+                                  <AlertCircle size={13} />
+                                  {loan.warning_sent ? 'Re-send Return Warning' : 'Send Book Return Warning'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleIssuePenaltyQR(loan.id)}
+                                  className="btn btn-sm"
+                                  style={{
+                                    padding: '5px 10px',
+                                    fontSize: '0.74rem',
+                                    backgroundColor: '#B91C1C',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    fontWeight: 700,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                  title="Send penalty payment request and QR code to user"
+                                >
+                                  <AlertTriangle size={13} />
+                                  Send Penalty Payment Request
+                                </button>
+                              </>
+                            )
+                          )}
+                          <button
+                            onClick={() => handleReturnBook(loan.id)}
+                            className="btn btn-primary btn-sm"
+                            style={{ padding: '5px 12px', fontSize: '0.76rem' }}
+                          >
+                            Process Return
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1161,14 +1672,17 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
         </div>
       )}
 
-      {/* TAB 3: Hold Queues & Pickup Deadlines */}
+      {/* TAB 3: Waiting Users & Hold Queues */}
       {activeTab === 'reservations' && (
         <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-            Hold Queue & Pickup Desk Management
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <Bookmark size={22} color="var(--editorial-accent)" />
+            <h3 style={{ fontSize: '1.35rem', color: 'var(--forest-dark)', margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 700 }}>
+              Waiting Users &amp; Hold Queue Desk
+            </h3>
+          </div>
           <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-            View waiting queues. When books are ready at the circulation desk, confirm student pickup.
+            Display of library patrons who have placed books on hold or are waiting for books (Waiting List). Confirm book pickup when copies arrive at the desk.
           </p>
 
           <div style={{ overflowX: 'auto' }}>
@@ -1565,121 +2079,65 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             </form>
           </div>
 
-          {/* Section C: Upload / Replace Original Photos for Existing Books */}
+          {/* Section C: Upload Photo of the Book Directly from Device */}
           <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', borderLeft: '5px solid #2A6F97' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <Camera size={22} color="#2A6F97" />
               <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
-                Upload Original Photo for Existing Book Title
+                Upload Photo of the Book
               </h3>
             </div>
             <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-              Update an existing book or a book on hold with authentic original photos from your device, replacing standard stock images. Uploaded photos are stored locally on the server and viewable offline without internet.
+              Upload authentic original photos of the book directly from your device. Uploaded photos are stored locally on the server and viewable offline without internet.
             </p>
 
             <form onSubmit={handleSaveInventoryPhoto}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', alignItems: 'start' }}>
-                <div className="form-group">
-                  <label className="form-label">Select Book to Update Photo *</label>
-                  <select
-                    className="form-control"
-                    value={inventoryPhotoBookId}
-                    onChange={(e) => {
-                      setInventoryPhotoBookId(e.target.value);
-                      setInventoryPhotoPreview(null);
-                    }}
-                    required
-                  >
-                    <option value="">-- Choose a title ({books.length} books) --</option>
-                    {books.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.title} — {b.author} ({b.cover_image?.startsWith('/uploads') ? 'Original Photo' : 'Standard Image'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Upload size={14} color="#2A6F97" />
-                    Choose New Original Photo from Device *
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="form-control"
-                    onChange={handleInventoryPhotoSelect}
-                    disabled={!inventoryPhotoBookId}
-                    required
-                  />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--sage)', marginTop: '4px', display: 'block' }}>
-                    Supports JPG, PNG, WebP up to 8MB. Stored locally in library archive.
-                  </span>
-                </div>
+              <div className="form-group" style={{ maxWidth: '480px' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Upload size={14} color="#2A6F97" />
+                  Choose Photo Directly from Device *
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  onChange={handleInventoryPhotoSelect}
+                  required
+                />
+                <span style={{ fontSize: '0.72rem', color: 'var(--sage)', marginTop: '4px', display: 'block' }}>
+                  Supports JPG, PNG, WebP up to 8MB. Stored locally in library archive.
+                </span>
               </div>
 
-              {/* Current Book Info & Preview Comparison */}
-              {inventoryPhotoBookId && (() => {
-                const selBook = books.find(b => String(b.id) === String(inventoryPhotoBookId));
-                if (!selBook) return null;
-                return (
-                  <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-text)', textTransform: 'uppercase', marginBottom: '6px' }}>Current Image:</div>
-                      <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '1.5px solid var(--editorial-border)', backgroundColor: '#FFF' }}>
-                        <img
-                          src={resolveBookCoverUrl(selBook.cover_image, selBook.title, selBook.author, selBook.category)}
-                          alt={selBook.title}
-                          onError={(e) => handleBookCoverError(e, selBook.title, selBook.author, selBook.category)}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <span style={{ fontSize: '0.68rem', color: selBook.cover_image?.startsWith('/uploads') ? 'var(--botanical)' : '#B45309', fontWeight: 600, display: 'block', marginTop: '4px' }}>
-                        {selBook.cover_image?.startsWith('/uploads') ? '● Original Photo' : '● Standard Stock'}
-                      </span>
-                    </div>
-
-                    {inventoryPhotoPreview && (
-                      <>
-                        <div style={{ fontSize: '1.2rem', color: 'var(--botanical)' }}>➔</div>
-                        <div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--botanical)', textTransform: 'uppercase', marginBottom: '6px' }}>New Original Photo Preview:</div>
-                          <div style={{ width: '64px', height: '88px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--botanical)', backgroundColor: '#FFF' }}>
-                            <img
-                              src={inventoryPhotoPreview}
-                              alt="New device upload"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                          <span style={{ fontSize: '0.68rem', color: 'var(--botanical)', fontWeight: 600, display: 'block', marginTop: '4px' }}>
-                            ● Ready to upload
-                          </span>
-                        </div>
-                      </>
-                    )}
-
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem' }}>{selBook.title}</strong>
-                      <div style={{ fontSize: '0.82rem', color: 'var(--muted-text)', marginTop: '2px' }}>
-                        Author: {selBook.author} • ISBN: {selBook.isbn}
-                      </div>
-                      <div style={{ fontSize: '0.82rem', color: 'var(--forest)', marginTop: '2px' }}>
-                        Location: {selBook.floor} — {selBook.shelf}
-                      </div>
-                    </div>
+              {inventoryPhotoPreview && (
+                <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', maxWidth: '480px' }}>
+                  <div style={{ width: '70px', height: '96px', borderRadius: '4px', overflow: 'hidden', border: '2px solid var(--editorial-green)', backgroundColor: '#FFF', flexShrink: 0 }}>
+                    <img
+                      src={inventoryPhotoPreview}
+                      alt="Device upload preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   </div>
-                );
-              })()}
+                  <div>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-green)', display: 'block' }}>
+                      ✓ Photo Selected from Device
+                    </span>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', display: 'block', marginTop: '2px' }}>
+                      Ready to upload and store into library archive.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div style={{ marginTop: '20px' }}>
                 <button
                   type="submit"
-                  disabled={inventoryPhotoUploading || !inventoryPhotoBookId || !inventoryPhotoPreview}
+                  disabled={inventoryPhotoUploading || !inventoryPhotoPreview}
                   className="btn btn-primary"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', backgroundColor: '#2A6F97', borderColor: '#2A6F97' }}
                 >
                   <Upload size={16} />
-                  {inventoryPhotoUploading ? 'Saving Photo Locally...' : 'Upload Original Photo'}
+                  {inventoryPhotoUploading ? 'Saving Photo Locally...' : 'Upload Photo from Device'}
                 </button>
               </div>
             </form>

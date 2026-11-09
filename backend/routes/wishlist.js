@@ -29,7 +29,7 @@ router.post('/:bookId', authenticateToken, (req, res) => {
     const existing = db.prepare('SELECT id FROM wishlist WHERE user_id = ? AND book_id = ?').get(req.user.id, bookId);
 
     if (existing) {
-      return res.status(400).json({ error: 'Book already in your wishlist' });
+      return res.json({ message: 'Book is in your wishlist', isWishlisted: true });
     }
 
     db.prepare('INSERT INTO wishlist (user_id, book_id) VALUES (?, ?)').run(req.user.id, bookId);

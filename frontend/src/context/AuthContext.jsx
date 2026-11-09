@@ -14,6 +14,10 @@ export function AuthProvider({ children }) {
       api.getProfile()
         .then(userData => {
           setUser(userData);
+          if (userData && userData.role === 'admin') {
+            sessionStorage.setItem('libramind_admin_verified', 'true');
+            setAdminVerified(true);
+          }
         })
         .catch(err => {
           console.error('Failed to load profile:', err);
@@ -33,7 +37,7 @@ export function AuthProvider({ children }) {
     setToken(res.token);
     setUser(res.user);
 
-    if (adminPortal && res.user.role === 'admin') {
+    if (res.user && res.user.role === 'admin') {
       sessionStorage.setItem('libramind_admin_verified', 'true');
       setAdminVerified(true);
     } else {
@@ -49,8 +53,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('libramind_token', res.token);
     setToken(res.token);
     setUser(res.user);
-    sessionStorage.removeItem('libramind_admin_verified');
-    setAdminVerified(false);
+    if (res.user && res.user.role === 'admin') {
+      sessionStorage.setItem('libramind_admin_verified', 'true');
+      setAdminVerified(true);
+    } else {
+      sessionStorage.removeItem('libramind_admin_verified');
+      setAdminVerified(false);
+    }
     return res;
   };
 
@@ -59,8 +68,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('libramind_token', res.token);
     setToken(res.token);
     setUser(res.user);
-    sessionStorage.removeItem('libramind_admin_verified');
-    setAdminVerified(false);
+    if (res.user && res.user.role === 'admin') {
+      sessionStorage.setItem('libramind_admin_verified', 'true');
+      setAdminVerified(true);
+    } else {
+      sessionStorage.removeItem('libramind_admin_verified');
+      setAdminVerified(false);
+    }
     return res;
   };
 
@@ -88,6 +102,19 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const setAuthSession = (newToken, newUser) => {
+    localStorage.setItem('libramind_token', newToken);
+    setToken(newToken);
+    setUser(newUser);
+    if (newUser && newUser.role === 'admin') {
+      sessionStorage.setItem('libramind_admin_verified', 'true');
+      setAdminVerified(true);
+    } else {
+      sessionStorage.removeItem('libramind_admin_verified');
+      setAdminVerified(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -96,6 +123,7 @@ export function AuthProvider({ children }) {
       adminVerified,
       setAdminVerified,
       login,
+      setAuthSession,
       loginWithGithub,
       register,
       logout,

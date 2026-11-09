@@ -15,11 +15,13 @@ import {
   Bookmark,
   Check,
   AlertCircle,
+  AlertTriangle,
   GitCompare,
   Compass,
   CheckCircle2,
   Upload,
-  Camera
+  Camera,
+  RotateCcw
 } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
@@ -47,6 +49,7 @@ export default function BookDetails({
   const [reserving, setReserving] = useState(false);
   const [returning, setReturning] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [penaltyStatus, setPenaltyStatus] = useState(null);
 
   const fetchBookDetails = useCallback(async () => {
     if (!bookId) {
@@ -86,7 +89,12 @@ export default function BookDetails({
   useEffect(() => {
     fetchBookDetails();
     checkWishlist();
-  }, [fetchBookDetails, checkWishlist]);
+    if (user) {
+      api.getPenaltyStatus().then(setPenaltyStatus).catch(() => {});
+    } else {
+      setPenaltyStatus(null);
+    }
+  }, [fetchBookDetails, checkWishlist, user]);
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ msg, isError });
@@ -135,7 +143,7 @@ export default function BookDetails({
     }
   };
 
-  const handleSelfCheckout = async () => {
+  const handleSelfCheckout = async (specificCopyCode = null) => {
     if (!user) {
       setPendingActionName('borrow this book');
       setShowAuthModal(true);
@@ -143,7 +151,8 @@ export default function BookDetails({
     }
     setBorrowing(true);
     try {
-      const res = await api.checkoutBook({ book_id: book.id });
+      const payload = specificCopyCode && typeof specificCopyCode === 'string' ? { copy_code: specificCopyCode } : { book_id: book.id };
+      const res = await api.checkoutBook(payload);
       showToast(`Success! Checked out copy ${res.copyCode}. Due: ${new Date(res.dueDate).toLocaleDateString()}`);
       setUserLoan({
         id: res.loanId,
@@ -169,12 +178,35 @@ export default function BookDetails({
     setReturning(true);
     try {
       await api.returnBook(userLoan.id);
-      showToast(`Book successfully returned! Thank you.`);
+      showToast(`Book successfully returned! You can now borrow it again directly.`);
       setUserLoan(null);
       setBook(prev => prev ? ({ ...prev, available_copies: prev.available_copies + 1 }) : prev);
       fetchBookDetails();
     } catch (err) {
       showToast(err.message, true);
+    } finally {
+      setReturning(false);
+    }
+  };
+
+  const handleReturnAndReborrow = async () => {
+    if (!userLoan || !userLoan.id) return;
+    setReturning(true);
+    try {
+      const oldLoanId = userLoan.id;
+      await api.returnBook(oldLoanId);
+      const res = await api.checkoutBook({ book_id: book.id });
+      showToast(`Success! Returned previous copy and directly checked out copy ${res.copyCode} for a fresh 14 days.`);
+      setUserLoan({
+        id: res.loanId,
+        due_date: res.dueDate,
+        copy_code: res.copyCode,
+        status: 'active'
+      });
+      fetchBookDetails();
+    } catch (err) {
+      showToast(err.message || 'Direct re-borrow failed', true);
+      fetchBookDetails();
     } finally {
       setReturning(false);
     }
@@ -538,6 +570,7 @@ export default function BookDetails({
                       Renew (+14d)
                     </button>
                   </div>
+
                   <button
                     onClick={() => onNavigate('dashboard', { tab: 'loans' })}
                     className="btn btn-primary btn-sm"
@@ -553,6 +586,21 @@ export default function BookDetails({
                   >
                     <BookOpen size={14} /> Open My Loans Hub →
                   </button>
+
+                  <div
+                    style={{
+                      fontSize: '0.74rem',
+                      color: 'var(--editorial-text-muted)',
+                      backgroundColor: 'rgba(38, 61, 50, 0.05)',
+                      padding: '6px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px dashed var(--editorial-border)',
+                      lineHeight: 1.4,
+                      textAlign: 'center'
+                    }}
+                  >
+                    🔒 <strong>1 Copy Rule:</strong> Only 1 copy allowed at a time. Return your copy to borrow this title again.
+                  </div>
                 </div>
               </div>
             ) : userReservation ? (
@@ -593,72 +641,138 @@ export default function BookDetails({
                   <Bookmark size={12} /> View in My Reservations Hub →
                 </button>
               </div>
-            ) : isAvailable ? (
-              <>
-                <button
-                  onClick={handleSelfCheckout}
-                  disabled={borrowing}
-                  className="btn btn-botanical"
-                  style={{ width: '100%' }}
-                >
-                  <BookOpen size={18} /> {borrowing ? 'Checking out...' : 'Check Out / Borrow Now'}
-                </button>
-                <button
-                  onClick={handleReserve}
-                  disabled={reserving}
-                  className="btn btn-outline"
-                  style={{ width: '100%' }}
-                >
-                  <Bookmark size={16} /> {reserving ? 'Placing Hold...' : 'Place Hold for Front Desk Pickup'}
-                </button>
-              </>
             ) : (
               <div>
-                <div style={{ textAlign: 'center', marginBottom: '8px', padding: '6px 10px', backgroundColor: 'rgba(217, 119, 6, 0.08)', borderRadius: '8px', border: '1px solid rgba(217, 119, 6, 0.2)' }}>
-                  <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Currently Unavailable
-                  </span>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--muted-text)' }}>
-                    All copies are on loan. Reserve your place in line to automatically claim the next returned copy.
-                  </p>
-                </div>
-                <button
-                  onClick={handleReserve}
-                  disabled={reserving}
-                  className="btn btn-primary"
-                  style={{ width: '100%' }}
-                >
-                  <Bookmark size={18} /> {reserving ? 'Joining Waiting List...' : `Join Waiting List (#${(book.waitingQueueCount || 0) + 1})`}
-                </button>
+                {penaltyStatus?.isBlocked && (
+                  <div
+                    style={{
+                      padding: '12px 14px',
+                      backgroundColor: '#FFF7F5',
+                      border: '1.5px solid #FCA5A5',
+                      borderRadius: 'var(--radius-sm)',
+                      marginBottom: '14px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C5221F', fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase' }}>
+                      <AlertTriangle size={15} /> Account Hold Active
+                    </div>
+                    <p style={{ margin: '4px 0 8px', fontSize: '0.78rem', color: 'var(--editorial-text-muted)', lineHeight: 1.45 }}>
+                      Unpaid circulation penalty of ${penaltyStatus.unpaidFines.toFixed(2)}. Borrowing and hold queues are restricted until settled.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('dashboard')}
+                      className="btn btn-primary btn-sm"
+                      style={{ width: '100%', fontSize: '0.76rem', padding: '6px' }}
+                    >
+                      Pay Penalty in Reading Room →
+                    </button>
+                  </div>
+                )}
+
+                {isAvailable ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <button
+                      onClick={handleSelfCheckout}
+                      disabled={borrowing || Boolean(penaltyStatus?.isBlocked)}
+                      className="btn btn-primary"
+                      style={{ width: '100%', opacity: penaltyStatus?.isBlocked ? 0.6 : 1 }}
+                      title={penaltyStatus?.isBlocked ? 'Account hold active due to unpaid penalty' : 'Check out volume'}
+                    >
+                      <BookOpen size={16} /> {borrowing ? 'Checking out...' : penaltyStatus?.isBlocked ? 'Check Out Blocked (Penalty Due)' : 'Check Out / Borrow Now'}
+                    </button>
+                    <button
+                      onClick={handleReserve}
+                      disabled={reserving || Boolean(penaltyStatus?.isBlocked)}
+                      className="btn btn-outline"
+                      style={{ width: '100%', opacity: penaltyStatus?.isBlocked ? 0.6 : 1 }}
+                      title={penaltyStatus?.isBlocked ? 'Account hold active due to unpaid penalty' : 'Place hold'}
+                    >
+                      <Bookmark size={15} /> {reserving ? 'Placing Hold...' : penaltyStatus?.isBlocked ? 'Hold Blocked (Penalty Due)' : 'Place Hold for Front Desk Pickup'}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ textAlign: 'center', marginBottom: '8px', padding: '6px 10px', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        All Copies On Loan
+                      </span>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--editorial-text-muted)' }}>
+                        All physical copies are currently in member hands. Join the hold queue to claim the next returned copy.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleReserve}
+                      disabled={reserving || Boolean(penaltyStatus?.isBlocked)}
+                      className="btn btn-primary"
+                      style={{ width: '100%', opacity: penaltyStatus?.isBlocked ? 0.6 : 1 }}
+                    >
+                      <Bookmark size={16} /> {reserving ? 'Joining Waiting List...' : penaltyStatus?.isBlocked ? 'Queue Blocked (Penalty Due)' : `Join Waiting List (#${(book.waitingQueueCount || 0) + 1})`}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {/* My Shelf & Literary Research Options */}
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '14px 16px',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span
+                  style={{
+                    fontSize: '0.70rem',
+                    fontWeight: 700,
+                    color: 'var(--editorial-accent)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em'
+                  }}
+                >
+                  📚 My Shelf &amp; Tools
+                </span>
+                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>
+                  Patron Desk
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleToggleWishlist}
+                  className={`btn btn-sm ${isWishlisted ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
+                >
+                  <Heart size={14} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'currentColor'} />
+                  {isWishlisted ? 'In Wishlist' : 'Wishlist'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleCompare}
+                  className={`btn btn-sm ${compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
+                >
+                  <GitCompare size={14} />
+                  {compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}
+                </button>
+              </div>
+
               <button
+                type="button"
                 onClick={handleTogglePlanner}
                 className={`btn btn-sm ${isInPlanner ? 'btn-primary' : 'btn-outline'}`}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
               >
-                <Compass size={14} /> {isInPlanner ? 'In Visit Planner' : 'Add to Visit'}
-              </button>
-
-              <button
-                onClick={handleToggleCompare}
-                className={`btn btn-sm ${compareBookIds.includes(book.id) ? 'btn-primary' : 'btn-outline'}`}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-              >
-                <GitCompare size={14} /> {compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}
+                <Compass size={14} />
+                {isInPlanner ? '✓ Saved in Visit Itinerary' : 'Add to Visit Itinerary'}
               </button>
             </div>
-
-            <button
-              onClick={handleToggleWishlist}
-              className="btn btn-outline btn-sm"
-              style={{ width: '100%' }}
-            >
-              <Heart size={15} fill={isWishlisted ? '#C5221F' : 'none'} color={isWishlisted ? '#C5221F' : 'var(--forest)'} />
-              {isWishlisted ? 'Saved in Wishlist' : 'Save to Wishlist'}
-            </button>
 
             {/* Librarian Desk Actions */}
             {isLibrarianOrAdmin && (
@@ -855,28 +969,94 @@ export default function BookDetails({
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Status
                     </th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      Circulation Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {book.copies && book.copies.map(copy => (
-                    <tr key={copy.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
-                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
-                        {copy.copy_code}
-                      </td>
-                      <td style={{ padding: '12px 16px', color: 'var(--editorial-text-muted)' }}>
-                        {copy.condition}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        {copy.status === 'available' ? (
-                          <span className="badge badge-available">Available on Shelf</span>
-                        ) : copy.status === 'borrowed' ? (
-                          <span className="badge badge-borrowed">Currently Borrowed</span>
-                        ) : (
-                          <span className="badge badge-reserved">Reserved for Member</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {book.copies && book.copies.map(copy => {
+                    const isMyCopy = userLoan && (userLoan.copy_code === copy.copy_code || userLoan.copy_id === copy.id);
+
+                    return (
+                      <tr key={copy.id} style={{ borderBottom: '1px solid var(--editorial-border)', backgroundColor: isMyCopy ? 'var(--editorial-bg-subtle)' : 'transparent' }}>
+                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                          {copy.copy_code}
+                        </td>
+                        <td style={{ padding: '12px 16px', color: 'var(--editorial-text-muted)' }}>
+                          {copy.condition}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {isMyCopy ? (
+                            <span className="badge" style={{ backgroundColor: 'var(--editorial-green)', color: '#FFFFFF', fontWeight: 700 }}>
+                              ✓ In Your Possession
+                            </span>
+                          ) : copy.status === 'available' ? (
+                            <span className="badge badge-available">Available on Shelf</span>
+                          ) : copy.status === 'borrowed' ? (
+                            <span className="badge badge-borrowed">Currently Borrowed</span>
+                          ) : (
+                            <span className="badge badge-reserved">Reserved for Member</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                          {isMyCopy ? (
+                            <button
+                              type="button"
+                              onClick={handleReturnBook}
+                              disabled={returning}
+                              className="btn btn-secondary btn-sm"
+                              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                            >
+                              {returning ? 'Returning...' : '✓ Return This Copy'}
+                            </button>
+                          ) : copy.status === 'available' ? (
+                            userLoan ? (
+                              <span
+                                className="badge"
+                                style={{
+                                  backgroundColor: 'var(--editorial-bg-subtle)',
+                                  color: 'var(--editorial-text-muted)',
+                                  border: '1px solid var(--editorial-border)',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 600,
+                                  cursor: 'not-allowed'
+                                }}
+                                title="You already have an active loan for this book (only 1 copy allowed at a time). Return your copy to borrow this title again."
+                              >
+                                1 Copy Held (Max 1)
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSelfCheckout(copy.copy_code)}
+                                disabled={borrowing || Boolean(penaltyStatus?.isBlocked)}
+                                className="btn btn-primary btn-sm"
+                                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                                title={penaltyStatus?.isBlocked ? 'Account hold active due to unpaid penalty' : 'Check out this physical copy'}
+                              >
+                                {borrowing ? 'Checking out...' : 'Borrow Copy'}
+                              </button>
+                            )
+                          ) : copy.status === 'reserved' && userReservation && userReservation.status === 'ready_for_pickup' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSelfCheckout(copy.copy_code)}
+                              disabled={borrowing}
+                              className="btn btn-primary btn-sm"
+                              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                            >
+                              Claim &amp; Check Out
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                              In Circulation
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

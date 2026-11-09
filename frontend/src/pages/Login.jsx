@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Shield, User, Key, AlertCircle, Sparkles, CheckCircle2, ArrowRight, X } from 'lucide-react';
+import { api } from '../api';
+import { BookOpen, Shield, User, Key, AlertCircle, Sparkles, CheckCircle2, ArrowRight, X, Phone, MessageSquare } from 'lucide-react';
 
 export default function Login({ onNavigate }) {
-  const { user, login, loginWithGithub, adminVerified } = useAuth();
+  const { user, login, logout, loginWithGithub, setAuthSession, adminVerified } = useAuth();
+  const [authMethod, setAuthMethod] = useState('password'); // 'password' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Mobile OTP States
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpHint, setOtpHint] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   // GitHub Modal State
   const [showGithubModal, setShowGithubModal] = useState(false);
@@ -16,14 +26,62 @@ export default function Login({ onNavigate }) {
   const [githubEmail, setGithubEmail] = useState('dev.reader@github.com');
   const [githubLoading, setGithubLoading] = useState(false);
 
-  // Auto-redirect if already authenticated
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'admin' && adminVerified) onNavigate('admin');
-      else if (user.role === 'librarian') onNavigate('librarian');
-      else onNavigate('dashboard');
+  const handleDestination = (userObj) => {
+    if (!userObj) return;
+    if (userObj.role === 'admin') {
+      onNavigate('admin');
+    } else if (userObj.role === 'librarian') {
+      onNavigate('librarian');
+    } else {
+      onNavigate('dashboard');
     }
-  }, [user, adminVerified, onNavigate]);
+  };
+
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!phone || phone.trim().length < 6) {
+      setError('Please enter a valid mobile number');
+      return;
+    }
+    setError('');
+    setSendingOtp(true);
+    try {
+      const res = await api.sendOtp(phone.trim());
+      setOtpSent(true);
+      if (res.otp) {
+        setOtpHint(`Test code sent! Auto-fill test OTP: ${res.otp} (or 123456)`);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP code');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!otp || otp.trim().length < 4) {
+      setError('Please enter the 6-digit verification code');
+      return;
+    }
+    setError('');
+    setVerifyingOtp(true);
+    try {
+      const res = await api.verifyOtp(phone.trim(), otp.trim());
+      if (setAuthSession) {
+        setAuthSession(res.token, res.user);
+      }
+      if (!res.isProfileCompleted) {
+        onNavigate('complete-profile');
+      } else {
+        handleDestination(res.user);
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid verification code');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,8 +90,7 @@ export default function Login({ onNavigate }) {
 
     try {
       const res = await login(email, password, false);
-      if (res.user.role === 'librarian') onNavigate('librarian');
-      else onNavigate('dashboard');
+      handleDestination(res.user);
     } catch (err) {
       setError(err.message || 'Invalid credentials');
     } finally {
@@ -48,8 +105,7 @@ export default function Login({ onNavigate }) {
     setLoading(true);
     try {
       const res = await login(demoEmail, demoPass, false);
-      if (res.user.role === 'librarian') onNavigate('librarian');
-      else onNavigate('dashboard');
+      handleDestination(res.user);
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -157,6 +213,50 @@ export default function Login({ onNavigate }) {
           </p>
         </div>
 
+        {user && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--editorial-bg-subtle)',
+              border: '1px solid var(--editorial-border)',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                Active Session: {user.name} ({user.role.toUpperCase()})
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                Click below to switch to another role or continue.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => handleDestination(user)}
+                className="btn btn-primary btn-sm"
+                style={{ fontSize: '0.76rem', padding: '5px 12px' }}
+              >
+                Go to Hub →
+              </button>
+              <button
+                type="button"
+                onClick={async () => { await logout(); }}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.76rem', padding: '5px 10px' }}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div
             style={{
@@ -224,63 +324,186 @@ export default function Login({ onNavigate }) {
           <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--editorial-border)' }} />
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label className="form-label">
-              Email, Username, or Membership ID
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="e.g. reader@libramind.edu or STU-1001"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="username"
-              required
-            />
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '22px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => onNavigate('forgot-password')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--editorial-accent)',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-              >
-                Forgot Password?
-              </button>
-            </div>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
+        {/* Method Toggle: Card/Email vs Mobile Number & OTP */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
           <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-            style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
+            type="button"
+            onClick={() => { setAuthMethod('password'); setError(''); }}
+            className={`btn btn-sm ${authMethod === 'password' ? 'btn-primary' : 'btn-outline'}`}
+            style={{ fontWeight: 600, padding: '10px 12px', fontSize: '0.82rem' }}
           >
-            {loading ? 'Authenticating...' : 'Sign In to Sanctuary →'}
+            💳 Card / Email Sign-In
           </button>
-        </form>
+          <button
+            type="button"
+            onClick={() => { setAuthMethod('otp'); setError(''); }}
+            className={`btn btn-sm ${authMethod === 'otp' ? 'btn-primary' : 'btn-outline'}`}
+            style={{ fontWeight: 600, padding: '10px 12px', fontSize: '0.82rem' }}
+          >
+            📱 Mobile OTP Sign-In
+          </button>
+        </div>
+
+        {authMethod === 'password' ? (
+          <form onSubmit={handleSubmit}>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label">
+                Email, Username, or Membership ID
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. reader@libramind.edu or STU-1001"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                required
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('forgot-password')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--editorial-accent)',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+              style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
+            >
+              {loading ? 'Authenticating...' : 'Sign In to Sanctuary →'}
+            </button>
+          </form>
+        ) : (
+          <div>
+            <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Phone size={14} color="var(--editorial-accent)" />
+                  Mobile Number *
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    placeholder="e.g. +91 98765 43210 or 9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={otpSent}
+                    required
+                  />
+                  {!otpSent && (
+                    <button
+                      type="submit"
+                      disabled={sendingOtp || !phone.trim()}
+                      className="btn btn-primary"
+                      style={{ flexShrink: 0, padding: '10px 16px', fontSize: '0.84rem' }}
+                    >
+                      {sendingOtp ? 'Sending...' : 'Send OTP'}
+                    </button>
+                  )}
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginTop: '4px', display: 'block' }}>
+                  An authentication SMS OTP code will be dispatched to this mobile device.
+                </span>
+              </div>
+
+              {otpSent && (
+                <>
+                  <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <MessageSquare size={14} color="var(--editorial-green)" />
+                        Enter 6-Digit OTP Code *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={sendingOtp}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--editorial-accent)',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          padding: 0
+                        }}
+                      >
+                        Resend Code
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      className="form-control"
+                      placeholder="e.g. 123456"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                      autoFocus
+                      required
+                      style={{ letterSpacing: '0.25em', fontSize: '1.2rem', textAlign: 'center', fontWeight: 700 }}
+                    />
+                    {otpHint && (
+                      <div
+                        onClick={() => setOtp('123456')}
+                        style={{
+                          marginTop: '6px',
+                          fontSize: '0.75rem',
+                          color: 'var(--editorial-green)',
+                          backgroundColor: 'rgba(38, 61, 50, 0.06)',
+                          padding: '6px 10px',
+                          borderRadius: 'var(--radius-sm)',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                      >
+                        ⚡ {otpHint} (Click to auto-fill)
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={verifyingOtp || otp.length < 4}
+                    style={{ width: '100%', padding: '13px', fontSize: '0.96rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  >
+                    {verifyingOtp ? 'Verifying OTP...' : 'Confirm OTP & Complete Profile →'}
+                  </button>
+                </>
+              )}
+            </form>
+          </div>
+        )}
 
         {/* 1-Click Quick Demo Login for All 3 Roles */}
         <div style={{ marginTop: '26px', paddingTop: '20px', borderTop: '1px solid var(--editorial-border)' }}>
@@ -366,7 +589,7 @@ export default function Login({ onNavigate }) {
               }}
             >
               <span>Admin: <strong>Dr. Eleanor Vance</strong> (ADM-9001)</span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>Member View →</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--editorial-green)', fontWeight: 700 }}>Admin Console →</span>
             </button>
           </div>
         </div>

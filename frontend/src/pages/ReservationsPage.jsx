@@ -28,16 +28,22 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
+  const [penaltyStatus, setPenaltyStatus] = useState(null);
 
   const fetchReservations = useCallback(async () => {
     if (!user) {
       setLoading(false);
+      setPenaltyStatus(null);
       return;
     }
     setLoading(true);
     try {
-      const data = await api.getReservations();
+      const [data, penalty] = await Promise.all([
+        api.getReservations(),
+        api.getPenaltyStatus().catch(() => null)
+      ]);
       setReservations(Array.isArray(data) ? data : []);
+      if (penalty) setPenaltyStatus(penalty);
     } catch (err) {
       console.error('Failed to load reservations:', err);
       showToast(err.message || 'Failed to load reservations', true);
@@ -263,6 +269,40 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
             </button>
           </div>
         </div>
+
+        {/* Penalty Hold Warning if Patron Blocked */}
+        {penaltyStatus?.isBlocked && (
+          <div
+            style={{
+              padding: '16px 20px',
+              backgroundColor: '#FFF7F5',
+              border: '1.5px solid #FCA5A5',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}
+          >
+            <div>
+              <strong style={{ color: '#C5221F', fontSize: '0.84rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
+                ● Account Hold Active • Reservations Restricted
+              </strong>
+              <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text-muted)' }}>
+                You have an outstanding circulation penalty of ${penaltyStatus.unpaidFines.toFixed(2)}. In accordance with Athenaeum policy, placing new book holds is restricted until settled.
+              </span>
+            </div>
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="btn btn-primary btn-sm"
+              style={{ fontSize: '0.78rem', padding: '7px 14px' }}
+            >
+              Pay Penalty in Reading Room →
+            </button>
+          </div>
+        )}
 
         {/* Metrics Row */}
         <div
@@ -798,7 +838,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                 height: '54px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #6E1B24 0%, #8C2A35 100%)',
-                border: '1.5px solid #C29B38',
+                border: '1px solid var(--editorial-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

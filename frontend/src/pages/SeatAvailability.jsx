@@ -34,6 +34,7 @@ export default function SeatAvailability({ onNavigate }) {
   const [seatSlots, setSeatSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
+  const [penaltyStatus, setPenaltyStatus] = useState(null);
 
   const timeSlots = [
     '08:00 - 11:00 (Morning Focus)',
@@ -72,10 +73,17 @@ export default function SeatAvailability({ onNavigate }) {
   }, [selectedFloor, selectedSection, selectedDate, selectedSlot]);
 
   const fetchMyBookings = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setPenaltyStatus(null);
+      return;
+    }
     try {
-      const bookings = await api.getMySeatBookings();
+      const [bookings, penalty] = await Promise.all([
+        api.getMySeatBookings().catch(() => []),
+        api.getPenaltyStatus().catch(() => null)
+      ]);
       setMyBookings(bookings || []);
+      if (penalty) setPenaltyStatus(penalty);
     } catch (err) {
       console.error('Bookings load error', err);
     }
@@ -828,6 +836,37 @@ export default function SeatAvailability({ onNavigate }) {
                 </div>
               </div>
 
+              {/* Penalty Hold Warning if Patron Blocked */}
+              {penaltyStatus?.isBlocked && (
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#FFF7F5',
+                    border: '1.5px solid #FCA5A5',
+                    borderRadius: 'var(--radius-sm)',
+                    margin: '0 24px 14px'
+                  }}
+                >
+                  <div style={{ color: '#C5221F', fontWeight: 700, fontSize: '0.80rem', textTransform: 'uppercase' }}>
+                    ● Study Pod Booking Restricted
+                  </div>
+                  <p style={{ margin: '4px 0 8px', fontSize: '0.78rem', color: 'var(--editorial-text-muted)', lineHeight: 1.45 }}>
+                    You have an outstanding circulation penalty of ${penaltyStatus.unpaidFines.toFixed(2)}. In accordance with Athenaeum policy, seat bookings are locked until settled.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSeat(null);
+                      onNavigate('dashboard');
+                    }}
+                    className="btn btn-primary btn-sm"
+                    style={{ width: '100%', fontSize: '0.76rem', padding: '6px' }}
+                  >
+                    Pay Penalty in Reading Room →
+                  </button>
+                </div>
+              )}
+
               {/* Modal Fixed Footer Actions */}
               <div
                 style={{
@@ -848,11 +887,11 @@ export default function SeatAvailability({ onNavigate }) {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-botanical"
-                  style={{ flex: 2, padding: '10px' }}
-                  disabled={loadingSlots || (seatSlots.find(s => s.slot === bookingSlot) && !seatSlots.find(s => s.slot === bookingSlot)?.isAvailable)}
+                  className="btn btn-primary"
+                  style={{ flex: 2, padding: '10px', opacity: penaltyStatus?.isBlocked ? 0.6 : 1 }}
+                  disabled={loadingSlots || Boolean(penaltyStatus?.isBlocked) || (seatSlots.find(s => s.slot === bookingSlot) && !seatSlots.find(s => s.slot === bookingSlot)?.isAvailable)}
                 >
-                  Confirm Reservation ({bookingSlot.split(' ')[0]})
+                  {penaltyStatus?.isBlocked ? 'Booking Restricted (Penalty Due)' : `Confirm Reservation (${bookingSlot.split(' ')[0]})`}
                 </button>
               </div>
             </form>

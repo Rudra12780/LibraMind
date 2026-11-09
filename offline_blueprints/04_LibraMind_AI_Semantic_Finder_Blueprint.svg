@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-4" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-4" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-4)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 4 OF 21: AI SEMANTIC BOOK FINDER · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-4)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/ai-finder</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#000000" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. AI HERO HEADER -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="150" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="160" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. AI ENGINE HEADER</text>
+
+      <g transform="translate(40, 32)">
+        <text x="0" y="24" font-size="20" font-weight="bold" fill="#000000">AI Semantic Book Matcher &amp; Recommendation Engine</text>
+        <rect x="0" y="38" width="480" height="8" rx="2" fill="#666666" />
+        <rect x="0" y="52" width="360" height="8" rx="2" fill="#888888" />
+        
+        <!-- Engine Status Badge -->
+        <g transform="translate(620, 8)">
+          <rect width="160" height="50" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+          <text x="14" y="20" font-size="8.5" fill="#666666">NEURAL MATCH MODEL</text>
+          <text x="14" y="38" font-size="11" font-weight="bold">LibraMind v2.4 Active</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 3. NATURAL LANGUAGE PROMPT INPUT &amp; MOOD CHIPS -->
+    <g transform="translate(0, 240)">
+      <rect width="860" height="230" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="210" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">3. NATURAL PROMPT INPUT</text>
+
+      <g transform="translate(40, 32)">
+        <!-- Multi-line Prompt Box -->
+        <rect width="780" height="85" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+        <text x="20" y="28" font-size="11" fill="#444444">"I want a contemplative novel about solitude, memory, and parallel lives in a cozy atmospheric setting..."</text>
+        <rect x="20" y="44" width="450" height="7" rx="2" fill="#CCCCCC" />
+
+        <g transform="translate(580, 42)">
+          <rect width="180" height="34" rx="6" fill="#000000" />
+          <text x="36" y="22" font-size="10.5" font-weight="bold" fill="#FFFFFF">Find AI Matches</text>
+        </g>
+
+        <!-- Curated Mood Chips -->
+        <g transform="translate(0, 105)">
+          <text x="0" y="16" font-size="9.5" font-weight="bold">EXPLORE CURATED INSPIRATIONS:</text>
+          <g transform="translate(0, 26)">
+            
+              <g transform="translate(0, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">Deep Philosophy</text>
+              </g>
+            
+              <g transform="translate(130, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">AI &amp; Digital Consciousness</text>
+              </g>
+            
+              <g transform="translate(260, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">Cozy Biophilic Fiction</text>
+              </g>
+            
+              <g transform="translate(390, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">Climate Futures</text>
+              </g>
+            
+              <g transform="translate(520, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">Architecture &amp; Space</text>
+              </g>
+            
+              <g transform="translate(650, 0)">
+                <rect width="122" height="26" rx="13" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="14" y="17" font-size="8.5" font-weight="bold">Surprise Me</text>
+              </g>
+            
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. AI REASONING &amp; 3-COLUMN MATCH RESULTS -->
+    <g transform="translate(0, 470)">
+      <rect width="860" height="815" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">4. SEMANTIC RECOMMENDATIONS</text>
+
+      <g transform="translate(40, 32)">
+        <!-- Reasoning Gauge Card -->
+        <rect width="780" height="60" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+        <text x="20" y="24" font-size="10.5" font-weight="bold">AI CONFIDENCE SCORE: 98% MATCH FOR YOUR INQUIRY</text>
+        <rect x="20" y="34" width="740" height="10" rx="5" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+        <rect x="20" y="34" width="715" height="10" rx="5" fill="#000000" />
+
+        <!-- 3 Match Cards -->
+        <g transform="translate(0, 80)">
+          
+            <g transform="translate(0, 0)">
+              <rect width="248" height="640" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <!-- Cover Placeholder [X] -->
+              <g transform="translate(18, 18)">
+                <rect width="212" height="260" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" rx="6" />
+                <line x1="0" y1="0" x2="212" y2="260" stroke="#777777" stroke-width="1.2" />
+                <line x1="0" y1="260" x2="212" y2="0" stroke="#777777" stroke-width="1.2" />
+                <rect x="80" y="115" width="52" height="24" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="3" />
+                <text x="96" y="132" font-size="11" font-weight="bold">[X]</text>
+              </g>
+
+              <!-- Match Pill -->
+              <g transform="translate(18, 292)">
+                <rect width="100" height="22" rx="11" fill="#000000" />
+                <text x="14" y="15" font-size="9" font-weight="bold" fill="#FFFFFF">98% AI Match</text>
+              </g>
+
+              <!-- Title &amp; Author -->
+              <g transform="translate(18, 326)">
+                <text x="0" y="16" font-size="14" font-weight="bold">The Midnight Library</text>
+                <text x="0" y="32" font-size="10.5" fill="#555555">by Matt Haig</text>
+
+                <!-- AI Rationale Box -->
+                <g transform="translate(0, 48)">
+                  <rect width="212" height="110" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1" />
+                  <text x="10" y="18" font-size="8.5" font-weight="bold">WHY AI SELECTED THIS:</text>
+                  <text x="10" y="36" font-size="8.5" fill="#444444" width="190">Explores infinite parallel lives, regret, and choices in a mystical sanctuary.</text>
+                  <rect x="10" y="70" width="190" height="6" rx="2" fill="#CCCCCC" />
+                  <rect x="10" y="82" width="150" height="6" rx="2" fill="#CCCCCC" />
+                </g>
+
+                <!-- Action Button -->
+                <rect x="0" y="180" width="212" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+                <text x="64" y="204" font-size="10.5" font-weight="bold">Borrow Volume</text>
+              </g>
+            </g>
+          
+            <g transform="translate(268, 0)">
+              <rect width="248" height="640" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <!-- Cover Placeholder [X] -->
+              <g transform="translate(18, 18)">
+                <rect width="212" height="260" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" rx="6" />
+                <line x1="0" y1="0" x2="212" y2="260" stroke="#777777" stroke-width="1.2" />
+                <line x1="0" y1="260" x2="212" y2="0" stroke="#777777" stroke-width="1.2" />
+                <rect x="80" y="115" width="52" height="24" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="3" />
+                <text x="96" y="132" font-size="11" font-weight="bold">[X]</text>
+              </g>
+
+              <!-- Match Pill -->
+              <g transform="translate(18, 292)">
+                <rect width="100" height="22" rx="11" fill="#000000" />
+                <text x="14" y="15" font-size="9" font-weight="bold" fill="#FFFFFF">94% AI Match</text>
+              </g>
+
+              <!-- Title &amp; Author -->
+              <g transform="translate(18, 326)">
+                <text x="0" y="16" font-size="14" font-weight="bold">Klara and the Sun</text>
+                <text x="0" y="32" font-size="10.5" fill="#555555">by Kazuo Ishiguro</text>
+
+                <!-- AI Rationale Box -->
+                <g transform="translate(0, 48)">
+                  <rect width="212" height="110" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1" />
+                  <text x="10" y="18" font-size="8.5" font-weight="bold">WHY AI SELECTED THIS:</text>
+                  <text x="10" y="36" font-size="8.5" fill="#444444" width="190">Deeply contemplative exploration of artificial empathy, memory, and love.</text>
+                  <rect x="10" y="70" width="190" height="6" rx="2" fill="#CCCCCC" />
+                  <rect x="10" y="82" width="150" height="6" rx="2" fill="#CCCCCC" />
+                </g>
+
+                <!-- Action Button -->
+                <rect x="0" y="180" width="212" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+                <text x="64" y="204" font-size="10.5" font-weight="bold">Borrow Volume</text>
+              </g>
+            </g>
+          
+            <g transform="translate(536, 0)">
+              <rect width="248" height="640" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+              <!-- Cover Placeholder [X] -->
+              <g transform="translate(18, 18)">
+                <rect width="212" height="260" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" rx="6" />
+                <line x1="0" y1="0" x2="212" y2="260" stroke="#777777" stroke-width="1.2" />
+                <line x1="0" y1="260" x2="212" y2="0" stroke="#777777" stroke-width="1.2" />
+                <rect x="80" y="115" width="52" height="24" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="3" />
+                <text x="96" y="132" font-size="11" font-weight="bold">[X]</text>
+              </g>
+
+              <!-- Match Pill -->
+              <g transform="translate(18, 292)">
+                <rect width="100" height="22" rx="11" fill="#000000" />
+                <text x="14" y="15" font-size="9" font-weight="bold" fill="#FFFFFF">91% AI Match</text>
+              </g>
+
+              <!-- Title &amp; Author -->
+              <g transform="translate(18, 326)">
+                <text x="0" y="16" font-size="14" font-weight="bold">The Overstory</text>
+                <text x="0" y="32" font-size="10.5" fill="#555555">by Richard Powers</text>
+
+                <!-- AI Rationale Box -->
+                <g transform="translate(0, 48)">
+                  <rect width="212" height="110" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1" />
+                  <text x="10" y="18" font-size="8.5" font-weight="bold">WHY AI SELECTED THIS:</text>
+                  <text x="10" y="36" font-size="8.5" fill="#444444" width="190">Biophilic monument intertwining human lives with the majestic wisdom of trees.</text>
+                  <rect x="10" y="70" width="190" height="6" rx="2" fill="#CCCCCC" />
+                  <rect x="10" y="82" width="150" height="6" rx="2" fill="#CCCCCC" />
+                </g>
+
+                <!-- Action Button -->
+                <rect x="0" y="180" width="212" height="38" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+                <text x="64" y="204" font-size="10.5" font-weight="bold">Borrow Volume</text>
+              </g>
+            </g>
+          
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

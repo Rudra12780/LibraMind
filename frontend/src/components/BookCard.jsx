@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, BookOpen, Heart, GitCompare, Compass, ArrowRight } from 'lucide-react';
+import { MapPin, BookOpen, Heart, GitCompare, Compass, ArrowRight, Bookmark, RotateCcw } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
 export { getOfflineBookCover, handleBookCoverError };
@@ -8,11 +8,14 @@ export default function BookCard({
   book,
   onViewDetails,
   onReserve,
+  onBorrow,
+  onReturn,
   onToggleWishlist,
   isWishlisted,
   onToggleCompare,
   isCompared,
-  onAddToPlanner
+  onAddToPlanner,
+  isBorrowedByUser = false
 }) {
   const isAvailable = book.available_copies > 0;
   const offlineFallback = React.useMemo(() => getOfflineBookCover(book.title, book.author, book.category), [book.title, book.author, book.category]);
@@ -74,7 +77,24 @@ export default function BookCard({
         />
 
         {/* Availability Badge */}
-        <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
+        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start', zIndex: 2 }}>
+          {isBorrowedByUser && (
+            <span
+              style={{
+                fontSize: '0.64rem',
+                fontWeight: 700,
+                backgroundColor: 'var(--editorial-green)',
+                color: '#FFFFFF',
+                padding: '2px 8px',
+                borderRadius: '2px',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                boxShadow: '0 2px 4px rgba(37, 40, 32, 0.18)'
+              }}
+            >
+              ★ In Your Folio
+            </span>
+          )}
           {isAvailable ? (
             <span
               className="badge badge-available"
@@ -97,89 +117,6 @@ export default function BookCard({
             >
               ● All Copies On Loan
             </span>
-          )}
-        </div>
-
-        {/* Action icons on top right */}
-        <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {onToggleWishlist && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleWishlist(book.id);
-              }}
-              title={isWishlisted ? "Remove from Reading List" : "Save to Reading List"}
-              aria-label="Save to Wishlist"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: 'var(--radius-sm)',
-                backgroundColor: isWishlisted ? 'var(--editorial-accent)' : '#FFFFFF',
-                border: '1px solid var(--editorial-border)',
-                boxShadow: 'var(--shadow-sm)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Heart size={14} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'var(--editorial-text)'} strokeWidth={2} />
-            </button>
-          )}
-
-          {onToggleCompare && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleCompare(book.id);
-              }}
-              title={isCompared ? "In Comparison Matrix" : "Add to Comparison"}
-              aria-label="Add to Compare"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: 'var(--radius-sm)',
-                backgroundColor: isCompared ? 'var(--editorial-green)' : '#FFFFFF',
-                color: isCompared ? '#FFFFFF' : 'var(--editorial-text)',
-                border: '1px solid var(--editorial-border)',
-                boxShadow: 'var(--shadow-sm)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <GitCompare size={14} strokeWidth={2} />
-            </button>
-          )}
-
-          {onAddToPlanner && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToPlanner(book.id);
-              }}
-              title="Add to Visit Itinerary"
-              aria-label="Add to Visit Planner"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: 'var(--radius-sm)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--editorial-text)',
-                border: '1px solid var(--editorial-border)',
-                boxShadow: 'var(--shadow-sm)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Compass size={14} strokeWidth={2} />
-            </button>
           )}
         </div>
       </div>
@@ -242,6 +179,117 @@ export default function BookCard({
             <span style={{ color: 'var(--editorial-text-muted)' }}>{book.shelf}</span>
           </div>
           <ArrowRight size={13} color="var(--editorial-text-muted)" />
+        </div>
+
+        {/* ── Editorial Action Bar (Borrow / Reserve / Manage) ── */}
+        <div style={{ marginTop: '10px' }}>
+          {isBorrowedByUser ? (
+            <div style={{ display: 'grid', gridTemplateColumns: onReturn ? '1fr 1fr' : '1fr', gap: '8px' }}>
+              {onReturn ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReturn(book);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{
+                    fontSize: '0.76rem',
+                    padding: '6px 10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px'
+                  }}
+                  title="Return this copy so you can borrow it again or choose another title"
+                >
+                  <RotateCcw size={13} strokeWidth={2.2} />
+                  <span>Return Copy</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails && onViewDetails(book.id);
+                }}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.76rem', padding: '6px 10px' }}
+              >
+                Volume Details →
+              </button>
+            </div>
+          ) : isAvailable ? (
+            <div style={{ display: 'grid', gridTemplateColumns: onBorrow ? '1fr auto' : '1fr', gap: '8px' }}>
+              {onBorrow && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBorrow(book);
+                  }}
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    fontSize: '0.78rem',
+                    padding: '6px 12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <BookOpen size={13} strokeWidth={2.2} />
+                  <span>Borrow Volume</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails && onViewDetails(book.id);
+                }}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              >
+                Details →
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: onReserve ? '1fr auto' : '1fr', gap: '8px' }}>
+              {onReserve && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReserve(book.id);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{
+                    fontSize: '0.78rem',
+                    padding: '6px 12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Bookmark size={13} strokeWidth={2.2} />
+                  <span>Place Hold</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails && onViewDetails(book.id);
+                }}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              >
+                Details →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </article>

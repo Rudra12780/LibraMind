@@ -37,6 +37,9 @@ export const api = {
   // Auth
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
+  sendOtp: (phone) => request('/auth/send-otp', { method: 'POST', body: { phone } }),
+  verifyOtp: (phone, otp) => request('/auth/verify-otp', { method: 'POST', body: { phone, otp } }),
+  updateProfile: (profileData) => request('/auth/profile', { method: 'PUT', body: profileData }),
   githubLogin: (body) => request('/auth/github', { method: 'POST', body }),
   forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
   verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
@@ -73,6 +76,17 @@ export const api = {
   returnBook: (loanId) => request(`/loans/${loanId}/return`, { method: 'POST' }),
   renewLoan: (loanId) => request(`/loans/${loanId}/renew`, { method: 'POST' }),
   payFine: (loanId) => request(`/loans/${loanId}/pay-fine`, { method: 'POST' }),
+  payFines: (body = {}) => request('/loans/pay-fines', { method: 'POST', body }),
+  getPenaltyStatus: () => request('/loans/penalty-status'),
+  lookupCopyBarcode: (barcode) => request(`/loans/copy-lookup/${encodeURIComponent(barcode)}`),
+  sendReturnWarning: (loanId) => request(`/loans/${loanId}/send-return-warning`, { method: 'POST' }),
+  sendPenaltyRequest: (loanId) => request(`/loans/${loanId}/send-penalty-request`, { method: 'POST' }),
+  issuePenaltyQr: (loanId) => request(`/loans/${loanId}/issue-penalty-qr`, { method: 'POST' }),
+  cancelPenalty: (loanId) => request(`/loans/${loanId}/cancel-penalty`, { method: 'POST' }),
+  waiveUserPenalty: (userId) => request(`/loans/waive-user-penalty/${userId}`, { method: 'POST' }),
+  dismissReturnWarning: () => request('/loans/dismiss-return-warning', { method: 'POST' }),
+  payPenaltyQr: () => request('/loans/pay-penalty-qr', { method: 'POST' }),
+  getUserPenalty: () => request('/loans/user-penalty'),
 
   // Reservations
   getReservations: (params = {}) => {

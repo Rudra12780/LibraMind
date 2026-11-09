@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
 import VisualBlueprintModal from '../components/VisualBlueprintModal';
-import { getOfflineBookCover } from '../utils/offlineCovers';
+import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 import {
   BLUEPRINT_PAGES,
   getThumbnailSVG,
@@ -38,7 +38,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-export default function Home({ onNavigate, onViewBookDetails }) {
+export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }) {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -49,12 +49,13 @@ export default function Home({ onNavigate, onViewBookDetails }) {
   const [loading, setLoading] = useState(true);
   const [showVisualBlueprintModal, setShowVisualBlueprintModal] = useState(false);
   const [selectedBlueprintPage, setSelectedBlueprintPage] = useState('home');
+  const [blueprintCategory, setBlueprintCategory] = useState('all');
 
   useEffect(() => {
     Promise.all([
-      api.getBooks({ limit: 8, sort: 'popularity' }),
-      api.getBooks({ limit: 4, sort: 'recent' }),
-      api.getBooks({ category: 'Novels & Fiction', limit: 4 }),
+      api.getBooks({ limit: 8, sort: 'random' }),
+      api.getBooks({ limit: 4, sort: 'random' }),
+      api.getBooks({ limit: 4, sort: 'random' }),
       api.getSeats()
     ])
       .then(([popData, recentData, trendData, seatsData]) => {
@@ -82,7 +83,7 @@ export default function Home({ onNavigate, onViewBookDetails }) {
         api.getReservations().catch(() => []),
         api.getWishlist().catch(() => [])
       ]).then(([loansData, resData, wishData]) => {
-        const activeL = (loansData || []).filter(l => l.status === 'active' || l.status === 'overdue');
+        const activeL = (loansData || []).filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
         const activeR = (resData || []).filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
         setMemberStats({
           loans: activeL.length,
@@ -154,7 +155,7 @@ export default function Home({ onNavigate, onViewBookDetails }) {
             {/* Left Column: Headline, Narrative & Search */}
             <div>
               <div className="editorial-kicker">
-                <Feather size={14} /> Vol. XXIV · The Literary Review &amp; Archives · Autumn Edition
+                <Feather size={14} /> The Literary Review &amp; Archives · Autumn Edition
               </div>
 
               <h1
@@ -303,6 +304,7 @@ export default function Home({ onNavigate, onViewBookDetails }) {
                   <img
                     src={bookOfTheWeek.cover_image || getOfflineBookCover(bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
                     alt={bookOfTheWeek.title}
+                    onError={(e) => handleBookCoverError(e, bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
                     className="editorial-zoom-img"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -419,6 +421,7 @@ export default function Home({ onNavigate, onViewBookDetails }) {
               <img
                 src={bookOfTheWeek.cover_image || getOfflineBookCover(bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
                 alt={bookOfTheWeek.title}
+                onError={(e) => handleBookCoverError(e, bookOfTheWeek.title, bookOfTheWeek.author, bookOfTheWeek.category)}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
@@ -750,56 +753,155 @@ export default function Home({ onNavigate, onViewBookDetails }) {
             </div>
           </div>
 
-          {/* Grid of First 4 Blueprints Showcase */}
+          {/* Category Tabs for All 21 Blueprints */}
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '20px',
-              marginBottom: '28px'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap',
+              marginBottom: '24px',
+              borderBottom: '1px solid var(--editorial-border)',
+              paddingBottom: '14px'
             }}
           >
-            {BLUEPRINT_PAGES.slice(0, 4).map((page) => (
-              <div
-                key={page.id}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--editorial-border)',
-                  boxShadow: 'var(--shadow-sm)',
-                  overflow: 'hidden',
-                  cursor: 'pointer'
-                }}
-                onClick={() => {
-                  setSelectedBlueprintPage(page.id);
-                  setShowVisualBlueprintModal(true);
-                }}
-              >
-                <div style={{ height: '220px', backgroundColor: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
-                  <div
-                    style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
-                  />
-                </div>
-                <div style={{ padding: '14px 16px', borderTop: '1px solid var(--editorial-border)' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                    PAGE 0{page.pageNumber} · {page.category}
-                  </div>
-                  <h4 style={{ margin: '4px 0 0', fontSize: '0.94rem' }}>{page.shortTitle}</h4>
-                </div>
-              </div>
-            ))}
+            {[
+              { id: 'all', label: 'All Blueprints (21)' },
+              { id: 'public', label: 'Public Tier (13)' },
+              { id: 'member', label: 'Member Tier (3)' },
+              { id: 'staff_admin', label: 'Staff & Governance (3)' },
+              { id: 'security_util', label: 'Security & Utility (2)' }
+            ].map(tab => {
+              const isActive = blueprintCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setBlueprintCategory(tab.id)}
+                  style={{
+                    backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
+                    color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                    border: isActive ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '6px 14px',
+                    fontSize: '0.80rem',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isActive ? 'var(--shadow-sm)' : 'none'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ textAlign: 'center' }}>
+          {/* Grid of All Matching Blueprints (Never Missing Any Page) */}
+          {(() => {
+            const filteredPages = BLUEPRINT_PAGES.filter(p => {
+              if (blueprintCategory === 'all') return true;
+              if (blueprintCategory === 'public') return p.category === 'Public Tier';
+              if (blueprintCategory === 'member') return p.category === 'Member Tier';
+              if (blueprintCategory === 'staff_admin') return p.category === 'Staff Tier' || p.category === 'Admin Tier';
+              if (blueprintCategory === 'security_util') return p.category === 'Security Tier' || p.category === 'Utility Tier';
+              return true;
+            });
+
+            return (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: '20px',
+                  marginBottom: '28px'
+                }}
+              >
+                {filteredPages.map((page) => (
+                  <div
+                    key={page.id}
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--editorial-border)',
+                      boxShadow: 'var(--shadow-sm)',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                    }}
+                    onClick={() => {
+                      if (onOpenBlueprints) onOpenBlueprints(page.id);
+                      else {
+                        setSelectedBlueprintPage(page.id);
+                        setShowVisualBlueprintModal(true);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                      e.currentTarget.style.borderColor = 'var(--editorial-accent)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                      e.currentTarget.style.borderColor = 'var(--editorial-border)';
+                    }}
+                  >
+                    <div style={{ height: '220px', backgroundColor: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', overflow: 'hidden' }}>
+                      <div
+                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
+                      />
+                    </div>
+                    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--editorial-border)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                          PAGE {String(page.pageNumber).padStart(2, '0')} · {page.category}
+                        </span>
+                        <span style={{ fontSize: '0.64rem', fontFamily: 'monospace', color: 'var(--editorial-text-muted)' }}>
+                          {page.route}
+                        </span>
+                      </div>
+                      <h4 style={{ margin: '2px 0 8px', fontSize: '0.94rem', color: 'var(--editorial-text)' }}>
+                        {page.shortTitle}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--editorial-text-muted)', lineHeight: 1.45, marginBottom: '12px' }}>
+                        {page.desc.substring(0, 85)}...
+                      </p>
+                      <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px dashed var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>
+                          Inspect Blueprint →
+                        </span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>
+                          {page.sections.length} Wireframe Sections
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <button
               onClick={() => {
-                setSelectedBlueprintPage('home');
-                setShowVisualBlueprintModal(true);
+                if (onOpenBlueprints) onOpenBlueprints('home');
+                else {
+                  setSelectedBlueprintPage('home');
+                  setShowVisualBlueprintModal(true);
+                }
               }}
               className="btn btn-outline"
             >
               Open Full 21-Page Interactive Blueprint Viewer →
+            </button>
+            <button
+              onClick={printAllBlueprints}
+              className="btn btn-secondary"
+            >
+              Print 21 Blueprint Sheets (Word Ready)
             </button>
           </div>
         </div>
@@ -865,88 +967,6 @@ export default function Home({ onNavigate, onViewBookDetails }) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* 10. EDITORIAL FOOTER                                            */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <footer
-        style={{
-          backgroundColor: 'var(--editorial-bg-subtle)',
-          borderTop: '1px solid var(--editorial-border)',
-          padding: '60px 0 40px'
-        }}
-      >
-        <div className="container">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '36px',
-              marginBottom: '48px'
-            }}
-          >
-            <div>
-              <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', marginBottom: '12px' }}>LibraMind</h4>
-              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6 }}>
-                The Literary Review &amp; Modern Smart Library Platform. Preserving knowledge and empowering minds since 1892.
-              </p>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                Navigation
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem' }}>
-                <li><a onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>Home Sanctuary</a></li>
-                <li><a onClick={() => onNavigate('catalog')} style={{ cursor: 'pointer' }}>Explore Books</a></li>
-                <li><a onClick={() => onNavigate('ai-finder')} style={{ cursor: 'pointer' }}>AI Book Oracle</a></li>
-                <li><a onClick={() => onNavigate('seats')} style={{ cursor: 'pointer' }}>Study Pod Map</a></li>
-                <li><a onClick={() => onNavigate('visit-planner')} style={{ cursor: 'pointer' }}>Plan Your Visit</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                Policies &amp; Support
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem' }}>
-                <li><a onClick={() => onNavigate('about')} style={{ cursor: 'pointer' }}>About Our Mission</a></li>
-                <li><a onClick={() => onNavigate('contact')} style={{ cursor: 'pointer' }}>Help &amp; Circulation Desk</a></li>
-                <li><a onClick={() => onNavigate('terms')} style={{ cursor: 'pointer' }}>Borrowing Code &amp; Terms</a></li>
-                <li><a onClick={() => onNavigate('notifications')} style={{ cursor: 'pointer' }}>Announcements</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                Sanctuary Hours
-              </div>
-              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, margin: 0 }}>
-                Main Reading Rooms: Mon – Sun, 08:00 – 22:00<br />
-                Silent Stacks (Level 3): 24/7 Access for Fellows<br />
-                Reference Desk: Mon – Fri, 09:00 – 18:00
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderTop: '1px solid var(--editorial-border)',
-              paddingTop: '24px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '12px',
-              fontSize: '0.78rem',
-              color: 'var(--editorial-text-muted)'
-            }}
-          >
-            <span>© 1892 – 2026 LibraMind Athenaeum. All rights reserved.</span>
-            <span>Designed in Editorial Style for Readers and Scholars worldwide.</span>
-          </div>
-        </div>
-      </footer>
-
       {/* Visual Blueprint Modal */}
       <VisualBlueprintModal
         isOpen={showVisualBlueprintModal}
@@ -956,3 +976,4 @@ export default function Home({ onNavigate, onViewBookDetails }) {
     </div>
   );
 }
+  

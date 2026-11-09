@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-3" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-3" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-3)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 3 OF 21: BOOK DETAILS &amp; 4-TIER SHELF MAP · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-3)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/book-details</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#000000" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. BREADCRUMB &amp; HERO DETAILS -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="490" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="180" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. BOOK SPECIMEN VIEW</text>
+
+      <!-- Breadcrumbs -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="12" font-size="9.5" fill="#555555">Home &gt; Catalog &gt; Literature &gt; The Midnight Library</text>
+      </g>
+
+      <g transform="translate(40, 50)">
+        <!-- Left: Large Cover Box [X] -->
+        <g transform="translate(0, 0)">
+          <rect width="250" height="350" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+          <line x1="0" y1="0" x2="250" y2="350" stroke="#777777" stroke-width="1.4" />
+          <line x1="0" y1="350" x2="250" y2="0" stroke="#777777" stroke-width="1.4" />
+          <rect x="75" y="155" width="100" height="30" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+          <text x="88" y="174" font-size="11" font-weight="bold">[ COVER: X ]</text>
+
+          <!-- Barcode Box below Cover -->
+          <g transform="translate(0, 365)">
+            <rect width="250" height="50" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+            <text x="12" y="18" font-size="8.5" font-weight="bold">ITEM BARCODE: LIBRA-8472-F</text>
+            <rect x="12" y="26" width="226" height="16" fill="#EEEEEE" stroke="#000000" stroke-width="0.8" />
+            <text x="40" y="38" font-size="8" font-family="monospace">|||| | ||||| || |||||| | ||||</text>
+          </g>
+        </g>
+
+        <!-- Right: Book Specifications -->
+        <g transform="translate(285, 0)">
+          <rect width="110" height="22" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1.2" />
+          <text x="14" y="15" font-size="9.5" font-weight="bold">Fiction &amp; Mind</text>
+
+          <text x="0" y="52" font-size="22" font-weight="bold" fill="#000000">The Midnight Library</text>
+          <text x="0" y="74" font-size="13" font-weight="bold" fill="#555555">by Matt Haig · Published 2020</text>
+
+          <!-- 5 Stars Outlines -->
+          <g transform="translate(0, 86)">
+            
+              <polygon points="8,1 10,6 15,6 11,9 13,14 8,11 3,14 5,9 1,6 6,6" transform="translate(0, 0)" fill="#000000" stroke="#000000" stroke-width="0.8" />
+            
+              <polygon points="8,1 10,6 15,6 11,9 13,14 8,11 3,14 5,9 1,6 6,6" transform="translate(18, 0)" fill="#000000" stroke="#000000" stroke-width="0.8" />
+            
+              <polygon points="8,1 10,6 15,6 11,9 13,14 8,11 3,14 5,9 1,6 6,6" transform="translate(36, 0)" fill="#000000" stroke="#000000" stroke-width="0.8" />
+            
+              <polygon points="8,1 10,6 15,6 11,9 13,14 8,11 3,14 5,9 1,6 6,6" transform="translate(54, 0)" fill="#000000" stroke="#000000" stroke-width="0.8" />
+            
+              <polygon points="8,1 10,6 15,6 11,9 13,14 8,11 3,14 5,9 1,6 6,6" transform="translate(72, 0)" fill="#000000" stroke="#000000" stroke-width="0.8" />
+            
+            <text x="100" y="11" font-size="9.5" font-weight="bold">4.8 / 5.0 (2,410 Reviews)</text>
+          </g>
+
+          <!-- Book Synopsis Placeholder Lines -->
+          <g transform="translate(0, 115)">
+            <rect x="0" y="0" width="480" height="8" rx="2" fill="#333333" />
+            <rect x="0" y="14" width="460" height="8" rx="2" fill="#666666" />
+            <rect x="0" y="28" width="470" height="8" rx="2" fill="#777777" />
+            <rect x="0" y="42" width="410" height="8" rx="2" fill="#888888" />
+            <rect x="0" y="56" width="360" height="8" rx="2" fill="#888888" />
+          </g>
+
+          <!-- Metadata Grid Box -->
+          <g transform="translate(0, 195)">
+            <rect width="490" height="80" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+            <g transform="translate(20, 18)">
+              <text x="0" y="12" font-size="9" fill="#666666">PAGES</text>
+              <text x="0" y="28" font-size="11" font-weight="bold">304 pgs</text>
+            </g>
+            <g transform="translate(140, 18)">
+              <text x="0" y="12" font-size="9" fill="#666666">LANGUAGE</text>
+              <text x="0" y="28" font-size="11" font-weight="bold">English</text>
+            </g>
+            <g transform="translate(260, 18)">
+              <text x="0" y="12" font-size="9" fill="#666666">COPIES</text>
+              <text x="0" y="28" font-size="11" font-weight="bold">3 Total (2 Avail)</text>
+            </g>
+            <g transform="translate(380, 18)">
+              <text x="0" y="12" font-size="9" fill="#666666">LOAN PERIOD</text>
+              <text x="0" y="28" font-size="11" font-weight="bold">14 Days</text>
+            </g>
+          </g>
+
+          <!-- Primary Actions -->
+          <g transform="translate(0, 305)">
+            <rect width="210" height="42" rx="6" fill="#000000" />
+            <text x="44" y="26" font-size="11" font-weight="bold" fill="#FFFFFF">Borrow / Hold Copy</text>
+
+            <rect x="225" y="0" width="130" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+            <text x="250" y="26" font-size="11" font-weight="bold">+ Wishlist</text>
+
+            <rect x="370" y="0" width="120" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+            <text x="395" y="26" font-size="11" font-weight="bold">Compare</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 3. 4-TIER INTERACTIVE SHELF LOCATION MAP -->
+    <g transform="translate(0, 580)">
+      <rect width="860" height="340" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">3. 4-TIER SHELF WAYPOINT</text>
+
+      <g transform="translate(40, 34)">
+        <text x="0" y="16" font-size="13" font-weight="bold" fill="#000000">Physical Shelf Waypoint &amp; Stack Navigator</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Exact step-by-step route to locate this physical volume in the biophilic library.</text>
+
+        <!-- 4 Connected Waypoint Boxes -->
+        <g transform="translate(0, 50)">
+          <!-- Tier 1: Floor -->
+          <g transform="translate(0, 0)">
+            <rect width="180" height="110" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+            <text x="14" y="24" font-size="9" fill="#666666">STEP 1: FLOOR LEVEL</text>
+            <text x="14" y="48" font-size="13" font-weight="bold">Level 2</text>
+            <text x="14" y="66" font-size="9.5" fill="#333333">Quiet Fiction Wing</text>
+            <rect x="14" y="80" width="100" height="16" rx="4" fill="#EEEEEE" />
+            <text x="24" y="92" font-size="8.5" font-weight="bold">East Stairs Entry</text>
+          </g>
+
+          <line x1="180" y1="55" x2="200" y2="55" stroke="#000000" stroke-width="2" marker-end="url(#arrow)" />
+          <polygon points="200,55 194,51 194,59" fill="#000000" />
+
+          <!-- Tier 2: Aisle -->
+          <g transform="translate(200, 0)">
+            <rect width="180" height="110" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+            <text x="14" y="24" font-size="9" fill="#666666">STEP 2: AISLE / ZONE</text>
+            <text x="14" y="48" font-size="13" font-weight="bold">Aisle 04</text>
+            <text x="14" y="66" font-size="9.5" fill="#333333">Novels &amp; Modern Prose</text>
+            <rect x="14" y="80" width="110" height="16" rx="4" fill="#EEEEEE" />
+            <text x="24" y="92" font-size="8.5" font-weight="bold">Row 4 - Left Side</text>
+          </g>
+
+          <polygon points="400,55 394,51 394,59" fill="#000000" />
+
+          <!-- Tier 3: Stack -->
+          <g transform="translate(400, 0)">
+            <rect width="180" height="110" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+            <text x="14" y="24" font-size="9" fill="#666666">STEP 3: SHELF STACK</text>
+            <text x="14" y="48" font-size="13" font-weight="bold">Stack F-07</text>
+            <text x="14" y="66" font-size="9.5" fill="#333333">Dewey Call: 823.92 HAI</text>
+            <rect x="14" y="80" width="110" height="16" rx="4" fill="#EEEEEE" />
+            <text x="24" y="92" font-size="8.5" font-weight="bold">Oakwood Shelf Stacks</text>
+          </g>
+
+          <polygon points="600,55 594,51 594,59" fill="#000000" />
+
+          <!-- Tier 4: Bay / Bin -->
+          <g transform="translate(600, 0)">
+            <rect width="180" height="110" rx="6" fill="#000000" stroke="#000000" stroke-width="1.6" />
+            <text x="14" y="24" font-size="9" fill="#CCCCCC">STEP 4: EXACT BIN</text>
+            <text x="14" y="48" font-size="13" font-weight="bold" fill="#FFFFFF">Bay 3, Shelf B</text>
+            <text x="14" y="66" font-size="9.5" fill="#EEEEEE">Eye-level shelf rack</text>
+            <rect x="14" y="80" width="120" height="16" rx="4" fill="#FFFFFF" />
+            <text x="20" y="92" font-size="8.5" font-weight="bold" fill="#000000">Target Location</text>
+          </g>
+        </g>
+
+        <!-- Floor Plan Route Diagram Miniature -->
+        <g transform="translate(0, 180)">
+          <rect width="780" height="65" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.2" />
+          <text x="16" y="20" font-size="9" font-weight="bold">MAP COORDINATES: [X: 42.8, Y: 11.4] · PROXIMITY SENSOR ID: SANCTUARY-L2-F07</text>
+          <line x1="16" y1="38" x2="760" y2="38" stroke="#777777" stroke-width="1.5" stroke-dasharray="6,4" />
+          <circle cx="40" cy="38" r="6" fill="#000000" />
+          <text x="32" y="55" font-size="8">Entrance</text>
+          <circle cx="280" cy="38" r="6" fill="#666666" />
+          <text x="260" y="55" font-size="8">Aisle 04</text>
+          <circle cx="580" cy="38" r="8" fill="#000000" />
+          <text x="560" y="55" font-size="8" font-weight="bold">Stack F-07 (HERE)</text>
+          <circle cx="740" cy="38" r="6" fill="#CCCCCC" />
+          <text x="710" y="55" font-size="8">Checkout</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. PHYSICAL COPIES &amp; SIMILAR BOOKS -->
+    <g transform="translate(0, 920)">
+      <rect width="860" height="365" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">4. COPIES &amp; RELATED</text>
+
+      <g transform="translate(40, 32)">
+        <text x="0" y="16" font-size="12" font-weight="bold">PHYSICAL COPY AVAILABILITY LEDGER</text>
+        <!-- Table -->
+        <g transform="translate(0, 26)">
+          <rect width="780" height="26" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="14" y="17" font-size="9" font-weight="bold">COPY CODE</text>
+          <text x="180" y="17" font-size="9" font-weight="bold">SHELF LOCATION</text>
+          <text x="380" y="17" font-size="9" font-weight="bold">STATUS</text>
+          <text x="540" y="17" font-size="9" font-weight="bold">RETURN DUE</text>
+          <text x="680" y="17" font-size="9" font-weight="bold">ACTION</text>
+
+          
+            <g transform="translate(0, 26)">
+              <rect width="780" height="30" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1" />
+              <text x="14" y="20" font-size="9" font-family="monospace">LIBRA-8472-C1</text>
+              <text x="180" y="20" font-size="9">Stack F-07, Bay 3</text>
+              <rect x="380" y="6" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+              <text x="390" y="19" font-size="8.5" font-weight="bold">Available</text>
+              <text x="540" y="20" font-size="9">—</text>
+              <rect x="680" y="5" width="80" height="20" rx="4" fill="#000000" />
+              <text x="696" y="19" font-size="8.5" font-weight="bold" fill="#FFFFFF">Borrow</text>
+            </g>
+          
+            <g transform="translate(0, 56)">
+              <rect width="780" height="30" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1" />
+              <text x="14" y="20" font-size="9" font-family="monospace">LIBRA-8472-C2</text>
+              <text x="180" y="20" font-size="9">Stack F-07, Bay 3</text>
+              <rect x="380" y="6" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+              <text x="390" y="19" font-size="8.5" font-weight="bold">Available</text>
+              <text x="540" y="20" font-size="9">—</text>
+              <rect x="680" y="5" width="80" height="20" rx="4" fill="#000000" />
+              <text x="696" y="19" font-size="8.5" font-weight="bold" fill="#FFFFFF">Borrow</text>
+            </g>
+          
+            <g transform="translate(0, 86)">
+              <rect width="780" height="30" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1" />
+              <text x="14" y="20" font-size="9" font-family="monospace">LIBRA-8472-C3</text>
+              <text x="180" y="20" font-size="9">Circulation Loan</text>
+              <rect x="380" y="6" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+              <text x="390" y="19" font-size="8.5" font-weight="bold">Borrowed</text>
+              <text x="540" y="20" font-size="9">Nov 12, 2026</text>
+              <rect x="680" y="5" width="80" height="20" rx="4" fill="#000000" />
+              <text x="696" y="19" font-size="8.5" font-weight="bold" fill="#FFFFFF">Hold Queue</text>
+            </g>
+          
+        </g>
+
+        <!-- Similar Books Strip -->
+        <g transform="translate(0, 155)">
+          <text x="0" y="16" font-size="12" font-weight="bold">READERS ALSO EXPLORED</text>
+          <g transform="translate(0, 26)">
+            
+              <g transform="translate(0, 0)">
+                <rect width="186" height="100" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.3" />
+                <g transform="translate(10, 10)">
+                  <rect width="55" height="80" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                  <line x1="0" y1="0" x2="55" y2="80" stroke="#777777" stroke-width="1" />
+                  <line x1="0" y1="80" x2="55" y2="0" stroke="#777777" stroke-width="1" />
+                  <text x="20" y="44" font-size="9" font-weight="bold">[X]</text>
+                </g>
+                <g transform="translate(75, 14)">
+                  <rect width="95" height="8" rx="2" fill="#222222" />
+                  <rect width="70" height="6" rx="2" fill="#666666" y="14" />
+                  <rect width="80" height="6" rx="2" fill="#888888" y="24" />
+                  <rect width="90" height="22" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" y="46" />
+                  <text x="14" y="61" font-size="8" font-weight="bold">View Specimen</text>
+                </g>
+              </g>
+            
+              <g transform="translate(198, 0)">
+                <rect width="186" height="100" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.3" />
+                <g transform="translate(10, 10)">
+                  <rect width="55" height="80" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                  <line x1="0" y1="0" x2="55" y2="80" stroke="#777777" stroke-width="1" />
+                  <line x1="0" y1="80" x2="55" y2="0" stroke="#777777" stroke-width="1" />
+                  <text x="20" y="44" font-size="9" font-weight="bold">[X]</text>
+                </g>
+                <g transform="translate(75, 14)">
+                  <rect width="95" height="8" rx="2" fill="#222222" />
+                  <rect width="70" height="6" rx="2" fill="#666666" y="14" />
+                  <rect width="80" height="6" rx="2" fill="#888888" y="24" />
+                  <rect width="90" height="22" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" y="46" />
+                  <text x="14" y="61" font-size="8" font-weight="bold">View Specimen</text>
+                </g>
+              </g>
+            
+              <g transform="translate(396, 0)">
+                <rect width="186" height="100" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.3" />
+                <g transform="translate(10, 10)">
+                  <rect width="55" height="80" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                  <line x1="0" y1="0" x2="55" y2="80" stroke="#777777" stroke-width="1" />
+                  <line x1="0" y1="80" x2="55" y2="0" stroke="#777777" stroke-width="1" />
+                  <text x="20" y="44" font-size="9" font-weight="bold">[X]</text>
+                </g>
+                <g transform="translate(75, 14)">
+                  <rect width="95" height="8" rx="2" fill="#222222" />
+                  <rect width="70" height="6" rx="2" fill="#666666" y="14" />
+                  <rect width="80" height="6" rx="2" fill="#888888" y="24" />
+                  <rect width="90" height="22" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" y="46" />
+                  <text x="14" y="61" font-size="8" font-weight="bold">View Specimen</text>
+                </g>
+              </g>
+            
+              <g transform="translate(594, 0)">
+                <rect width="186" height="100" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.3" />
+                <g transform="translate(10, 10)">
+                  <rect width="55" height="80" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                  <line x1="0" y1="0" x2="55" y2="80" stroke="#777777" stroke-width="1" />
+                  <line x1="0" y1="80" x2="55" y2="0" stroke="#777777" stroke-width="1" />
+                  <text x="20" y="44" font-size="9" font-weight="bold">[X]</text>
+                </g>
+                <g transform="translate(75, 14)">
+                  <rect width="95" height="8" rx="2" fill="#222222" />
+                  <rect width="70" height="6" rx="2" fill="#666666" y="14" />
+                  <rect width="80" height="6" rx="2" fill="#888888" y="24" />
+                  <rect width="90" height="22" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" y="46" />
+                  <text x="14" y="61" font-size="8" font-weight="bold">View Specimen</text>
+                </g>
+              </g>
+            
+          </g>
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

@@ -31,6 +31,7 @@ async function migrate() {
       'wishlist',
       'visit_planner',
       'password_resets',
+      'otps',
       'audit_logs'
     ];
 
@@ -59,6 +60,8 @@ async function migrate() {
     // Ensure Indexes
     await db.collection('users').createIndex({ email: 1 }, { unique: true }).catch(() => {});
     await db.collection('users').createIndex({ membership_id: 1 }, { unique: true }).catch(() => {});
+    await db.collection('users').createIndex({ phone: 1 }).catch(() => {});
+    await db.collection('otps').createIndex({ phone: 1 }).catch(() => {});
     await db.collection('books').createIndex({ isbn: 1 }, { unique: true }).catch(() => {});
     await db.collection('book_copies').createIndex({ copy_code: 1 }, { unique: true }).catch(() => {});
     await db.collection('seats').createIndex({ seat_number: 1 }, { unique: true }).catch(() => {});

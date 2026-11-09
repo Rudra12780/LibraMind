@@ -46,7 +46,8 @@ router.get('/', (req, res) => {
 
     let query = `
       SELECT b.*,
-        (SELECT COUNT(*) FROM loans l WHERE l.book_id = b.id) as total_borrowed_count
+        (SELECT COUNT(*) FROM loans l WHERE l.book_id = b.id) as total_borrowed_count,
+        (SELECT bc.copy_code FROM book_copies bc WHERE bc.book_id = b.id AND bc.status = 'available' LIMIT 1) as sample_copy_code
       FROM books b
       WHERE 1=1
     `;
@@ -66,10 +67,28 @@ router.get('/', (req, res) => {
     }
 
     // Availability filter
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let tokenUserId = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.id) tokenUserId = decoded.id;
+      } catch (e) {}
+    }
+
     if (availability === 'available') {
       query += ` AND b.available_copies > 0`;
     } else if (availability === 'unavailable') {
       query += ` AND b.available_copies = 0`;
+    } else if (availability === 'borrowed' || availability === 'on_loan') {
+      query += ` AND (b.available_copies < b.total_copies OR EXISTS (SELECT 1 FROM loans l WHERE l.book_id = b.id AND l.status IN ('active', 'borrowed', 'overdue')) OR EXISTS (SELECT 1 FROM book_copies bc WHERE bc.book_id = b.id AND bc.status = 'borrowed'))`;
+    } else if (availability === 'my_loans') {
+      const targetUserId = tokenUserId || req.query.userId;
+      if (targetUserId) {
+        query += ` AND EXISTS (SELECT 1 FROM loans l WHERE l.book_id = b.id AND l.user_id = ? AND l.status IN ('active', 'borrowed', 'overdue'))`;
+        params.push(targetUserId);
+      }
     }
 
     // Sorting
@@ -85,6 +104,9 @@ router.get('/', (req, res) => {
         break;
       case 'popularity':
         query += ` ORDER BY total_borrowed_count DESC`;
+        break;
+      case 'random':
+        query += ` ORDER BY RANDOM()`;
         break;
       case 'title_asc':
       default:
@@ -139,7 +161,7 @@ router.get('/:id', (req, res) => {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded && decoded.id) {
-          userLoan = db.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'overdue')").get(req.params.id, decoded.id) || null;
+          userLoan = db.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(req.params.id, decoded.id) || null;
           userReservation = db.prepare("SELECT * FROM reservations WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup')").get(req.params.id, decoded.id) || null;
           const vp = db.prepare("SELECT id FROM visit_planner WHERE book_id = ? AND user_id = ?").get(req.params.id, decoded.id);
           inVisitPlanner = Boolean(vp);

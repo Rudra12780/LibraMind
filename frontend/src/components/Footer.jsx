@@ -1,131 +1,127 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, MapPin, Clock, ShieldCheck, Heart, Layers, Shield, Sparkles } from 'lucide-react';
+import { BookOpen, MapPin, Clock, ShieldCheck, Heart, Layers, Shield, Sparkles, ArrowRight } from 'lucide-react';
 
-export default function Footer({ onNavigate }) {
+export default function Footer({ onNavigate, onOpenBlueprints }) {
   const { user } = useAuth();
 
   return (
     <footer
       style={{
-        backgroundColor: '#1C0F0A',
-        color: '#E8DCBE',
-        borderTop: '1.5px solid #C29B38',
+        backgroundColor: 'var(--editorial-bg-subtle)',
+        borderTop: '1px solid var(--editorial-border)',
         marginTop: 'auto',
-        position: 'relative',
-        overflow: 'hidden'
+        color: 'var(--editorial-text)',
+        position: 'relative'
       }}
     >
-      {/* Classical Stamped Gold Inlay Fillet */}
-      <div
-        style={{
-          height: '3px',
-          background: 'linear-gradient(90deg, #8C6615 0%, #D4AF37 50%, #8C6615 100%)',
-          width: '100%'
-        }}
-      />
-
-      <div className="container" style={{ padding: '48px 24px 32px' }}>
+      <div className="container" style={{ padding: '56px 24px 36px', maxWidth: '1360px' }}>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '36px',
-            marginBottom: '40px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: '40px',
+            marginBottom: '44px'
           }}
         >
-          {/* Col 1: Brand & Philosophy */}
+          {/* Col 1: Brand & Editorial Colophon */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <div
+              onClick={() => onNavigate('home')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '14px', cursor: 'pointer' }}
+            >
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #2A1810 0%, #3D2214 100%)',
-                  border: '1.5px solid #C29B38',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'var(--editorial-green)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)'
+                  color: '#FFFFFF',
+                  boxShadow: 'var(--shadow-sm)'
                 }}
               >
-                <BookOpen size={20} color="#D4AF37" strokeWidth={2.2} />
+                <BookOpen size={18} strokeWidth={2.2} />
               </div>
               <span
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  fontSize: '1.50rem',
+                  fontSize: '1.45rem',
                   fontWeight: 800,
-                  color: '#FFFDF9',
-                  letterSpacing: '-0.01em'
+                  color: 'var(--editorial-text)',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1
                 }}
               >
                 LibraMind
               </span>
             </div>
-            <p style={{ fontSize: '0.88rem', color: '#D4C8B5', lineHeight: 1.7, marginBottom: '16px' }}>
-              An authentic Classical Smart Library sanctuary combining vintage archival curation, quiet study pods, accession barcode tracking, and intelligent literary recommendations.
+
+            <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', lineHeight: 1.65, marginBottom: '16px' }}>
+              The Literary Review &amp; Modern Smart Library Platform. Combining historic archival curation, biophilic study carrels, physical shelf mapping, and intelligent literary discovery.
             </p>
-            <div style={{ display: 'flex', gap: '8px', fontSize: '0.76rem', color: '#C29B38', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+
+            <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               <span>Estd. 1892</span>
               <span>•</span>
-              <span>Athenaeum Archives</span>
+              <span>Archival Collections</span>
               <span>•</span>
-              <span>Rare Volumes</span>
+              <span>Athenaeum Edition</span>
             </div>
           </div>
 
-          {/* Col 2: Navigation Links (Role-Based) */}
+          {/* Col 2: Navigation Links (Role-Adaptive) */}
           <div>
-            <h4 style={{ color: '#D4AF37', fontSize: '0.94rem', marginBottom: '14px', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
               {user?.role === 'admin'
                 ? 'Master Governance'
                 : user?.role === 'librarian'
                 ? 'Circulation Suite'
-                : 'Archival Navigation'}
-            </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem' }}>
+                : 'Library Chambers'}
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '0.86rem' }}>
               {user?.role === 'admin' ? (
                 <>
                   <li>
                     <button
                       onClick={() => onNavigate('admin', { tab: 'overview' })}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Console Overview
+                      → Admin Console Overview
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('admin', { tab: 'users' })}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → User Management
+                      → Patron &amp; Staff Records
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('analytics')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Archival Analytics
+                      → Circulation Analytics
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('dashboard')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Patron Reading Sanctuary
+                      → Patron Reading Room View
                     </button>
                   </li>
                 </>
@@ -134,41 +130,31 @@ export default function Footer({ onNavigate }) {
                   <li>
                     <button
                       onClick={() => onNavigate('librarian', { tab: 'issue' })}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Check Out Desk
+                      → Circulation Issue Desk
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('librarian', { tab: 'return' })}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Returns &amp; Overdue Ledger
+                      → Return &amp; Overdue Ledger
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('librarian', { tab: 'inventory' })}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      → Catalog Inventory
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate('catalog')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
-                    >
-                      → Public Stacks
+                      → Physical Stacks Inventory
                     </button>
                   </li>
                 </>
@@ -177,19 +163,19 @@ export default function Footer({ onNavigate }) {
                   <li>
                     <button
                       onClick={() => onNavigate('catalog')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      Browse Classical Stacks
+                      Explore Library Stacks
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('ai-finder')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
                       AI Literary Oracle
                     </button>
@@ -197,121 +183,153 @@ export default function Footer({ onNavigate }) {
                   <li>
                     <button
                       onClick={() => onNavigate('seats')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      Reserve Reading Pods
+                      Reserve Study Carrels
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => onNavigate('visit-planner')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
                       Plan Stacks Itinerary
                     </button>
                   </li>
                   <li>
                     <button
-                      onClick={() => onNavigate('dashboard')}
-                      style={{ background: 'none', border: 'none', color: '#D4C8B5', cursor: 'pointer', padding: 0, fontSize: '0.86rem', transition: 'color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#D4C8B5'}
+                      onClick={() => onNavigate(user ? 'dashboard' : 'login')}
+                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
                     >
-                      My Sanctuary Hub
+                      Personal Reading Room
                     </button>
                   </li>
                 </>
               )}
+              <li>
+                <button
+                  onClick={() => onOpenBlueprints ? onOpenBlueprints('home') : onNavigate('home')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--editorial-accent)',
+                    cursor: 'pointer',
+                    padding: 0,
+                    fontSize: '0.86rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-green)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+                  title="View all 21 website architectural wireframe blueprints"
+                >
+                  <Layers size={13} />
+                  <span>📐 Website Blueprints (21 Pages)</span>
+                </button>
+              </li>
             </ul>
           </div>
 
-          {/* Col 3: Hours & Location */}
+          {/* Col 3: Sanctuary Hours & Desk */}
           <div>
-            <h4 style={{ color: '#D4AF37', fontSize: '0.94rem', marginBottom: '14px', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
               Sanctuary Hours
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem', color: '#D4C8B5' }}>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <Clock size={16} color="#C29B38" style={{ marginTop: '3px', flexShrink: 0 }} />
+                <Clock size={16} color="var(--editorial-accent)" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 600, color: '#FFFDF9' }}>Mon – Fri: 08:00 – 22:00</div>
-                  <div style={{ fontSize: '0.80rem', color: '#B3A28E' }}>Sat – Sun: 09:00 – 20:00</div>
+                  <div style={{ fontWeight: 600, color: 'var(--editorial-text)' }}>Mon – Fri: 08:00 – 22:00</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>Sat – Sun: 09:00 – 20:00</div>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <MapPin size={16} color="#C29B38" style={{ marginTop: '3px', flexShrink: 0 }} />
+                <MapPin size={16} color="var(--editorial-accent)" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 600, color: '#FFFDF9' }}>Athenaeum Central Wing</div>
-                  <div style={{ fontSize: '0.80rem', color: '#B3A28E' }}>Building 4, University Quadrangle</div>
+                  <div style={{ fontWeight: 600, color: 'var(--editorial-text)' }}>Athenaeum Central Quadrangle</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>Building 4, Humanities Courtyard</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Col 4: Archival Guarantee */}
+          {/* Col 4: Archival Guarantee Box */}
           <div>
-            <h4 style={{ color: '#D4AF37', fontSize: '0.94rem', marginBottom: '14px', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
               Archival Standards
-            </h4>
+            </div>
             <div
               style={{
-                backgroundColor: 'rgba(42, 24, 16, 0.6)',
-                border: '1px solid #C29B38',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '14px',
+                padding: '16px 18px',
                 fontSize: '0.84rem',
                 lineHeight: 1.6,
-                color: '#D4C8B5'
+                color: 'var(--editorial-text-muted)',
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
-              Every physical volume in our classical stacks is preserved under controlled climate conditions and cataloged with unique barcode accession stamps.
+              Every physical volume in our classical stacks is preserved under controlled climate conditions and cataloged with floor, section, shelf, and barcode accession stamps.
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Policies */}
+        {/* Bottom Colophon Bar */}
         <div
           style={{
-            borderTop: '1px solid rgba(194, 155, 56, 0.25)',
-            paddingTop: '20px',
+            borderTop: '1px solid var(--editorial-border)',
+            paddingTop: '22px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '12px',
+            gap: '14px',
             fontSize: '0.80rem',
-            color: '#B3A28E'
+            color: 'var(--editorial-text-muted)'
           }}
         >
           <div>
-            © 1892 – 2026 LibraMind Athenaeum Smart Library. All literary rights reserved.
+            © 1892 – 2026 LibraMind Athenaeum &amp; Literary Review. All literary rights reserved.
           </div>
-          <div style={{ display: 'flex', gap: '18px' }}>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => onOpenBlueprints ? onOpenBlueprints('home') : onNavigate('home')}
+              style={{ background: 'none', border: 'none', color: 'var(--editorial-accent)', cursor: 'pointer', fontSize: '0.80rem', padding: 0, fontWeight: 700 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-green)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+            >
+              📐 All 21 Blueprints
+            </button>
             <button
               onClick={() => onNavigate('terms')}
-              style={{ background: 'none', border: 'none', color: '#B3A28E', cursor: 'pointer', fontSize: '0.80rem' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#B3A28E'}
+              style={{ background: 'none', border: 'none', color: 'var(--editorial-text-muted)', cursor: 'pointer', fontSize: '0.80rem', padding: 0 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text-muted)'}
             >
               Circulation Policies
             </button>
             <button
-              onClick={() => onNavigate('help')}
-              style={{ background: 'none', border: 'none', color: '#B3A28E', cursor: 'pointer', fontSize: '0.80rem' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#B3A28E'}
+              onClick={() => onNavigate('contact')}
+              style={{ background: 'none', border: 'none', color: 'var(--editorial-text-muted)', cursor: 'pointer', fontSize: '0.80rem', padding: 0 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text-muted)'}
             >
               Reference Desk Help
             </button>
             <button
               onClick={() => onNavigate('about')}
-              style={{ background: 'none', border: 'none', color: '#B3A28E', cursor: 'pointer', fontSize: '0.80rem' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#B3A28E'}
+              style={{ background: 'none', border: 'none', color: 'var(--editorial-text-muted)', cursor: 'pointer', fontSize: '0.80rem', padding: 0 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text-muted)'}
             >
               About the Athenaeum
             </button>

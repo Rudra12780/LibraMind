@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const db = require('../db/database');
 const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
+const { checkUserPenaltyStatus } = require('../utils/penalties');
 
 const router = express.Router();
 
@@ -129,6 +130,17 @@ router.post('/', authenticateToken, (req, res) => {
     const book_id = req.body.book_id || req.body.bookId;
     if (!book_id) {
       return res.status(400).json({ error: 'Book ID is required' });
+    }
+
+    // Check circulation penalty & account hold
+    const penaltyStatus = checkUserPenaltyStatus(req.user.id);
+    if (penaltyStatus.isBlocked) {
+      return res.status(403).json({
+        error: `Cannot place book hold: Your account is blocked due to unpaid circulation penalties ($${penaltyStatus.unpaidFines.toFixed(2)}) or overdue loans. Please settle your fines in your Reading Room to unblock reservations.`,
+        penaltyBlocked: true,
+        unpaidFines: penaltyStatus.unpaidFines,
+        overdueCount: penaltyStatus.overdueCount
+      });
     }
 
     const reserveTx = db.transaction(() => {

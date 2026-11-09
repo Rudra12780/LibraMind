@@ -509,8 +509,8 @@ button {
   display: none !important;
 }
 
-/* Breakpoint for Navbars: When screen <= 1180px, hide desktop links and show mobile hamburger */
-@media (max-width: 1180px) {
+/* Breakpoint for Navbars: When screen <= 1220px, hide desktop links and show mobile hamburger */
+@media (max-width: 1220px) {
   .desktop-nav,
   .usernav-desktop,
   .portal-desktop-only {
@@ -521,6 +521,18 @@ button {
   .usernav-mobile-btn,
   .portal-mobile-menu-btn {
     display: flex !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .patron-chip-text {
+    display: none !important;
+  }
+  .navbar-subtitle {
+    display: none !important;
+  }
+  .header-logout-btn {
+    display: none !important;
   }
 }
 
