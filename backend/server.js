@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const db = require('./db/database');
+const fs = require('fs');
+
+const { connect } = require('./db/mongoose');
 
 const authRoutes = require('./routes/auth');
 const booksRoutes = require('./routes/books');
@@ -14,8 +16,6 @@ const analyticsRoutes = require('./routes/analytics');
 const wishlistRoutes = require('./routes/wishlist');
 const visitPlannerRoutes = require('./routes/visitPlanner');
 const { startScheduler, runSchedulerCycle } = require('./scheduler');
-
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -33,7 +33,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, postman, same-origin)
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -44,7 +43,7 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static local uploads serving (allows full offline image access without internet)
+// Static local uploads serving
 app.use('/uploads', express.static(uploadsDir));
 
 // API Routes
@@ -59,9 +58,9 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/visit-planner', visitPlannerRoutes);
 
-// On-demand scheduler trigger endpoint for testing or manual cron invocation
-app.post('/api/notifications/run-cron', (req, res) => {
-  const result = runSchedulerCycle();
+// On-demand scheduler trigger endpoint
+app.post('/api/notifications/run-cron', async (req, res) => {
+  const result = await runSchedulerCycle();
   res.json({
     message: 'Scheduled reminder and expiry cycle completed',
     result
@@ -94,6 +93,45 @@ app.get('/api/download-blueprints', (req, res) => {
   }
 });
 
+// Direct Complete 21-Page Blueprints Consolidated PDF Download Endpoint
+app.get(['/api/download-blueprints-pdf', '/api/download-pdf'], (req, res) => {
+  const pdfUploads = path.join(uploadsDir, 'LibraMind_Complete_21_Architectural_Blueprints.pdf');
+  const pdfRoot = path.join(__dirname, '..', 'LibraMind_Complete_21_Architectural_Blueprints.pdf');
+  const targetPdf = fs.existsSync(pdfUploads) ? pdfUploads : pdfRoot;
+  if (fs.existsSync(targetPdf)) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(targetPdf, 'LibraMind_Complete_21_Architectural_Blueprints.pdf');
+  } else {
+    res.status(404).json({ error: 'Blueprints PDF file not found' });
+  }
+});
+
+// Direct All-in-One Single Page Composite Blueprint PDF Download Endpoint
+app.get('/api/download-one-page-pdf', (req, res) => {
+  const pdfUploads = path.join(uploadsDir, 'LibraMind_All_In_One_Page_Composite_Blueprint.pdf');
+  const pdfRoot = path.join(__dirname, '..', 'LibraMind_All_In_One_Page_Composite_Blueprint.pdf');
+  const targetPdf = fs.existsSync(pdfUploads) ? pdfUploads : pdfRoot;
+  if (fs.existsSync(targetPdf)) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(targetPdf, 'LibraMind_All_In_One_Page_Composite_Blueprint.pdf');
+  } else {
+    res.status(404).json({ error: 'One-page composite PDF file not found' });
+  }
+});
+
+// Direct Design Thinking Wireframe Photo PDF Download Endpoint
+app.get(['/api/download-photo-pdf', '/api/download-wireframe-pdf'], (req, res) => {
+  const pdfUploads = path.join(uploadsDir, 'LibraMind_Design_Thinking_Wireframe.pdf');
+  const pdfRoot = path.join(__dirname, '..', 'LibraMind_Design_Thinking_Wireframe.pdf');
+  const targetPdf = fs.existsSync(pdfUploads) ? pdfUploads : pdfRoot;
+  if (fs.existsSync(targetPdf)) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(targetPdf, 'LibraMind_Design_Thinking_Wireframe.pdf');
+  } else {
+    res.status(404).json({ error: 'Photo wireframe PDF file not found' });
+  }
+});
+
 // Standalone Offline Website & Blueprint Viewer Download Endpoint
 app.get('/api/download-offline-viewer', (req, res) => {
   const htmlRoot = path.join(__dirname, '..', 'LibraMind_Offline_Website_&_Blueprints.html');
@@ -111,6 +149,7 @@ app.get('/api/download-offline-viewer', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
+    database: 'MongoDB',
     system: 'LibraMind AI Smart Library System',
     timestamp: new Date().toISOString()
   });
@@ -124,7 +163,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Serve frontend build if dist exists (so http://localhost:5000/ and /admin@1234 work seamlessly)
+// Serve frontend build if dist exists
 const staticPath = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(staticPath)) {
   app.use(express.static(staticPath));
@@ -136,8 +175,21 @@ if (fs.existsSync(staticPath)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`LibraMind Backend Server listening on http://localhost:${PORT}`);
-  // Start the background scheduler
-  startScheduler(3 * 60 * 1000);
-});
+// Connect to MongoDB and start server
+async function startServer() {
+  try {
+    await connect();
+    app.listen(PORT, () => {
+      console.log(`LibraMind Backend Server listening on http://localhost:${PORT}`);
+      startScheduler(3 * 60 * 1000);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+  }
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;

@@ -1,35 +1,66 @@
 const express = require('express');
-const db = require('../db/database');
+const VisitPlanner = require('../models/VisitPlanner');
+const Book = require('../models/Book');
+const Reservation = require('../models/Reservation');
+const Seat = require('../models/Seat');
 const { authenticateToken } = require('../middleware/auth');
+const { buildIdFilter, serializeDoc } = require('../utils/idHelper');
 
 const router = express.Router();
 
 // Get current user's visit planner list with location & seat availability summary
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const items = db.prepare(`
-      SELECT vp.id as planner_id, vp.visited, vp.notes, vp.created_at as added_at,
-             b.id as book_id, b.title, b.author, b.isbn, b.category, b.cover_image,
-             b.floor, b.section, b.shelf, b.rack,
-             b.total_copies, b.available_copies,
-             (SELECT COUNT(*) FROM reservations r WHERE r.book_id = b.id AND r.status = 'waiting') as waitlist_count
-      FROM visit_planner vp
-      JOIN books b ON vp.book_id = b.id
-      WHERE vp.user_id = ?
-      ORDER BY b.floor ASC, b.section ASC, b.shelf ASC
-    `).all(req.user.id);
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const items = await VisitPlanner.find(userFilter)
+      .populate('book_id')
+      .sort({ created_at: -1 });
 
-    // Compute whether reservation is required for each book
-    const enrichedItems = items.map(item => ({
-      ...item,
-      visited: Boolean(item.visited),
-      requiresReservation: item.available_copies === 0,
-      statusLabel: item.available_copies > 0
-        ? `${item.available_copies} of ${item.total_copies} available on shelf`
-        : `All copies on loan (${item.waitlist_count} waiting - reservation required)`
-    }));
+    const enrichedItems = await Promise.all(
+      items
+        .filter(item => Boolean(item.book_id))
+        .map(async (item) => {
+          const b = item.book_id;
+          const bFilter = buildIdFilter(b._id, 'book_id', 'sqlite_book_id');
+          const waitlistCount = await Reservation.countDocuments({
+            ...bFilter,
+            status: 'waiting'
+          });
 
-    // Group items by floor and section for practical navigation
+          return {
+            planner_id: item._id.toString(),
+            visited: Boolean(item.visited),
+            notes: item.notes || '',
+            added_at: item.created_at,
+            book_id: b._id.toString(),
+            title: b.title,
+            author: b.author,
+            isbn: b.isbn,
+            category: b.category,
+            cover_image: b.cover_image,
+            floor: b.floor || 'Floor 1',
+            section: b.section || 'Main Hall',
+            shelf: b.shelf || 'Shelf A-1',
+            rack: b.rack || 'Rack 01',
+            total_copies: b.total_copies,
+            available_copies: b.available_copies,
+            waitlist_count: waitlistCount,
+            requiresReservation: b.available_copies === 0,
+            statusLabel: b.available_copies > 0
+              ? `${b.available_copies} of ${b.total_copies} available on shelf`
+              : `All copies on loan (${waitlistCount} waiting - reservation required)`
+          };
+        })
+    );
+
+    // Sort by floor, section, shelf
+    enrichedItems.sort((a, b) => {
+      if (a.floor !== b.floor) return a.floor.localeCompare(b.floor);
+      if (a.section !== b.section) return a.section.localeCompare(b.section);
+      return a.shelf.localeCompare(b.shelf);
+    });
+
+    // Group items by floor and section
     const groupedByFloorMap = {};
     for (const item of enrichedItems) {
       if (!groupedByFloorMap[item.floor]) {
@@ -49,15 +80,27 @@ router.get('/', authenticateToken, (req, res) => {
       }))
     }));
 
-    // Check study-seat availability summary for the library
-    const seatSummary = db.prepare(`
-      SELECT floor,
-             COUNT(*) as total_seats,
-             SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_seats
-      FROM seats
-      GROUP BY floor
-      ORDER BY floor ASC
-    `).all();
+    // Study seats summary by floor
+    const seatSummary = await Seat.aggregate([
+      {
+        $group: {
+          _id: '$floor',
+          total_seats: { $sum: 1 },
+          available_seats: {
+            $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          floor: '$_id',
+          total_seats: 1,
+          available_seats: 1
+        }
+      },
+      { $sort: { floor: 1 } }
+    ]);
 
     res.json({
       items: enrichedItems,
@@ -76,25 +119,37 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Add book to visit planner
-router.post('/:bookId', authenticateToken, (req, res) => {
+router.post('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const bookId = parseInt(req.params.bookId);
-    const book = db.prepare('SELECT id, title, floor, shelf FROM books WHERE id = ?').get(bookId);
-    if (!book) {
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
+    if (!targetBook) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     const { notes = '' } = req.body;
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
 
-    db.prepare(`
-      INSERT INTO visit_planner (user_id, book_id, visited, notes)
-      VALUES (?, ?, 0, ?)
-      ON CONFLICT(user_id, book_id) DO UPDATE SET notes = excluded.notes
-    `).run(req.user.id, bookId, notes);
+    let plannerItem = await VisitPlanner.findOne({
+      ...userFilter,
+      book_id: targetBook._id
+    });
+
+    if (plannerItem) {
+      plannerItem.notes = notes;
+      await plannerItem.save();
+    } else {
+      await VisitPlanner.create({
+        user_id: req.user.id,
+        book_id: targetBook._id,
+        visited: 0,
+        notes,
+        created_at: new Date()
+      });
+    }
 
     res.status(201).json({
-      message: `"${book.title}" added to your Visit Planner (${book.floor}, ${book.shelf})`,
-      bookId
+      message: `"${targetBook.title}" added to your Visit Planner (${targetBook.floor}, ${targetBook.shelf})`,
+      bookId: targetBook._id.toString()
     });
   } catch (err) {
     console.error('Add visit planner error:', err);
@@ -102,43 +157,62 @@ router.post('/:bookId', authenticateToken, (req, res) => {
   }
 });
 
-// Toggle visited / found state
-router.put('/:bookId/toggle', authenticateToken, (req, res) => {
+// Toggle visited state
+router.put('/:bookId/toggle', authenticateToken, async (req, res) => {
   try {
-    const bookId = parseInt(req.params.bookId);
-    const current = db.prepare('SELECT visited FROM visit_planner WHERE user_id = ? AND book_id = ?').get(req.user.id, bookId);
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
+    if (!targetBook) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
 
-    if (!current) {
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const plannerItem = await VisitPlanner.findOne({
+      ...userFilter,
+      book_id: targetBook._id
+    });
+
+    if (!plannerItem) {
       return res.status(404).json({ error: 'Book is not in your visit planner' });
     }
 
-    const newStatus = current.visited ? 0 : 1;
-    db.prepare('UPDATE visit_planner SET visited = ? WHERE user_id = ? AND book_id = ?').run(newStatus, req.user.id, bookId);
+    plannerItem.visited = plannerItem.visited ? 0 : 1;
+    await plannerItem.save();
 
     res.json({
-      message: newStatus ? 'Marked as found / visited' : 'Marked as unvisited',
-      visited: Boolean(newStatus)
+      message: plannerItem.visited ? 'Marked as found / visited' : 'Marked as unvisited',
+      visited: Boolean(plannerItem.visited)
     });
   } catch (err) {
+    console.error('Toggle visit planner error:', err);
     res.status(500).json({ error: 'Failed to toggle visit status' });
   }
 });
 
 // Remove single book from visit planner
-router.delete('/:bookId', authenticateToken, (req, res) => {
+router.delete('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const bookId = parseInt(req.params.bookId);
-    db.prepare('DELETE FROM visit_planner WHERE user_id = ? AND book_id = ?').run(req.user.id, bookId);
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+
+    if (targetBook) {
+      await VisitPlanner.deleteOne({
+        ...userFilter,
+        book_id: targetBook._id
+      });
+    }
+
     res.json({ message: 'Removed from visit planner' });
   } catch (err) {
+    console.error('Remove visit planner error:', err);
     res.status(500).json({ error: 'Failed to remove from visit planner' });
   }
 });
 
 // Clear entire visit planner
-router.delete('/', authenticateToken, (req, res) => {
+router.delete('/', authenticateToken, async (req, res) => {
   try {
-    db.prepare('DELETE FROM visit_planner WHERE user_id = ?').run(req.user.id);
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    await VisitPlanner.deleteMany(userFilter);
     res.json({ message: 'Visit planner cleared' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to clear visit planner' });

@@ -62,12 +62,12 @@ export default function NotificationsPage({ onNavigate }) {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '4px 10px',
-                backgroundColor: 'var(--editorial-border)',
-                color: 'var(--editorial-text)',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                color: 'var(--editorial-accent)',
                 border: '1px solid var(--editorial-border)',
-                boxShadow: 'var(--shadow-sm)',
+                borderRadius: 'var(--radius-full)',
                 fontSize: '0.78rem',
-                fontWeight: 900,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 marginBottom: '8px'
@@ -75,10 +75,10 @@ export default function NotificationsPage({ onNavigate }) {
             >
               <Bell size={15} strokeWidth={2.4} /> Notification Center
             </div>
-            <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', margin: '4px 0 6px' }}>
+            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 6px' }}>
               Your Activity & Notices
             </h1>
-            <p style={{ color: 'var(--editorial-text)', opacity: 0.85, margin: 0, fontSize: '0.94rem', fontWeight: 500 }}>
+            <p style={{ color: 'var(--editorial-text-muted)', margin: 0, fontSize: '0.94rem', fontWeight: 400 }}>
               Review borrowing receipts, hold pickup alerts, due date countdowns, and desk notices.
             </p>
           </div>
@@ -110,10 +110,10 @@ export default function NotificationsPage({ onNavigate }) {
               key={f.id}
               onClick={() => setFilterType(f.id)}
               style={{
-                backgroundColor: filterType === f.id ? 'var(--editorial-border)' : '#FFFFFF',
-                color: 'var(--editorial-text)',
-                border: '1px solid var(--editorial-border)',
-                boxShadow: filterType === f.id ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)',
+                backgroundColor: filterType === f.id ? 'var(--editorial-green)' : '#FFFFFF',
+                color: filterType === f.id ? '#FFFFFF' : 'var(--editorial-text)',
+                border: filterType === f.id ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
                 padding: '5px 12px',
                 fontSize: '0.78rem',
                 fontWeight: 800,

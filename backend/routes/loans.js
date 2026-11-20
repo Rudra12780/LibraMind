@@ -1,20 +1,51 @@
 const express = require('express');
-const db = require('../db/database');
+const mongoose = require('mongoose');
+
+const Loan = require('../models/Loan');
+const Book = require('../models/Book');
+const BookCopy = require('../models/BookCopy');
+const User = require('../models/User');
+const Reservation = require('../models/Reservation');
+const Notification = require('../models/Notification');
+
 const { authenticateToken, requireRole, logAudit } = require('../middleware/auth');
 const { DAILY_FINE_RATE, refreshLoanStatuses, checkUserPenaltyStatus } = require('../utils/penalties');
 const { generateQRCodeSVG } = require('../utils/qrGenerator');
+const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
 const router = express.Router();
 
-const MAX_LOANS_PER_STUDENT = 10; // Generous limit for student research & reading
+const MAX_LOANS_PER_STUDENT = 10;
 const MAX_RENEWALS = 2;
 const LOAN_DURATION_DAYS = 14;
 
-// Get current user's penalty and account block status
-router.get('/penalty-status', authenticateToken, (req, res) => {
+// Bulletproof Notification Dispatcher - Guarantees notification never throws or aborts transaction
+async function safeCreateNotification(data) {
   try {
-    const status = checkUserPenaltyStatus(req.user.id);
-    const user = db.prepare('SELECT penalty_status, penalty_amount, penalty_reason, penalty_qr_code FROM users WHERE id = ?').get(req.user.id);
+    let targetUserId = data.user_id;
+    if (!targetUserId) return null;
+    if (!mongoose.Types.ObjectId.isValid(String(targetUserId))) {
+      const u = await User.findOne(buildIdFilter(targetUserId));
+      if (u) targetUserId = u._id;
+      else return null;
+    }
+    return await Notification.create({
+      ...data,
+      user_id: new mongoose.Types.ObjectId(String(targetUserId)),
+      link: data.link || '',
+      created_at: data.created_at || new Date()
+    });
+  } catch (err) {
+    console.warn('safeCreateNotification suppressed error:', err.message);
+    return null;
+  }
+}
+
+// Get current user's penalty and account block status
+router.get('/penalty-status', authenticateToken, async (req, res) => {
+  try {
+    const status = await checkUserPenaltyStatus(req.user.id);
+    const user = await User.findOne(buildIdFilter(req.user.id));
     const hasPendingPenalty = user?.penalty_status === 'pending' && user?.penalty_amount > 0;
 
     res.json({
@@ -32,65 +63,64 @@ router.get('/penalty-status', authenticateToken, (req, res) => {
 });
 
 // Barcode copy lookup: returns physical copy, parent book, and associated/waiting patron
-router.get('/copy-lookup/:barcode', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.get('/copy-lookup/:barcode', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
     const rawBarcode = req.params.barcode ? req.params.barcode.trim() : '';
     if (!rawBarcode) {
       return res.status(400).json({ error: 'Barcode is required' });
     }
 
-    const copy = db.prepare('SELECT * FROM book_copies WHERE UPPER(copy_code) = UPPER(?)').get(rawBarcode);
+    const copy = await BookCopy.findOne({ copy_code: new RegExp(`^${rawBarcode}$`, 'i') });
     if (!copy) {
       return res.status(404).json({ error: `Physical copy barcode "${rawBarcode}" not found.` });
     }
 
-    const book = db.prepare('SELECT id, title, author, category, isbn, cover_image, available_copies, total_copies FROM books WHERE id = ?').get(copy.book_id);
-
+    const book = await Book.findOne(buildIdFilter(copy.book_id));
     let assignedUser = null;
 
     // Check active loan on this copy
-    const activeLoan = db.prepare(`
-      SELECT l.*, u.name, u.email, u.membership_id, u.phone
-      FROM loans l
-      JOIN users u ON l.user_id = u.id
-      WHERE l.copy_id = ? AND l.status IN ('active', 'borrowed', 'overdue')
-    `).get(copy.id);
+    const cFilter = buildIdFilter(copy._id, 'copy_id', 'sqlite_copy_id');
+    const activeLoan = await Loan.findOne({
+      ...cFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
+    }).populate('user_id');
 
-    if (activeLoan) {
+    if (activeLoan && activeLoan.user_id) {
+      const u = activeLoan.user_id;
       assignedUser = {
-        id: activeLoan.user_id,
-        name: activeLoan.name,
-        email: activeLoan.email,
-        membership_id: activeLoan.membership_id,
-        phone: activeLoan.phone,
+        id: u._id.toString(),
+        name: u.name,
+        email: u.email,
+        membership_id: u.membership_id,
+        phone: u.phone,
         relation: `Active Borrower (Due ${new Date(activeLoan.due_date).toLocaleDateString()})`
       };
-    } else {
+    } else if (book) {
       // Check hold reservation on this book
-      const hold = db.prepare(`
-        SELECT r.*, u.name, u.email, u.membership_id, u.phone
-        FROM reservations r
-        JOIN users u ON r.user_id = u.id
-        WHERE r.book_id = ? AND r.status IN ('ready_for_pickup', 'waiting')
-        ORDER BY CASE WHEN r.status = 'ready_for_pickup' THEN 1 ELSE 2 END, r.queue_position ASC, r.reservation_date ASC
-        LIMIT 1
-      `).get(copy.book_id);
+      const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+      const hold = await Reservation.findOne({
+        ...bFilter,
+        status: { $in: ['ready_for_pickup', 'waiting'] }
+      })
+        .populate('user_id')
+        .sort({ queue_position: 1, reservation_date: 1 });
 
-      if (hold) {
+      if (hold && hold.user_id) {
+        const u = hold.user_id;
         assignedUser = {
-          id: hold.user_id,
-          name: hold.name,
-          email: hold.email,
-          membership_id: hold.membership_id,
-          phone: hold.phone,
+          id: u._id.toString(),
+          name: u.name,
+          email: u.email,
+          membership_id: u.membership_id,
+          phone: u.phone,
           relation: hold.status === 'ready_for_pickup' ? 'Ready for Pickup Hold' : `Waiting List (Queue #${hold.queue_position || 1})`
         };
       }
     }
 
     res.json({
-      copy,
-      book,
+      copy: serializeDoc(copy),
+      book: serializeDoc(book),
       assignedUser
     });
   } catch (err) {
@@ -100,73 +130,97 @@ router.get('/copy-lookup/:barcode', authenticateToken, requireRole(['admin', 'li
 });
 
 // 1. Send Book Return Warning to Patron (Librarian/Admin)
-router.post('/:id/send-return-warning', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.post('/:id/send-return-warning', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const loan = db.prepare(`
-      SELECT l.*, b.title as book_title, u.id as member_id, u.name as member_name, u.email as member_email
-      FROM loans l
-      JOIN books b ON l.book_id = b.id
-      JOIN users u ON l.user_id = u.id
-      WHERE l.id = ?
-    `).get(loanId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
 
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
-    const warningMsg = `Your book return date for "${loan.book_title}" has passed. The physical volume must be returned to the library desk immediately to avoid circulation penalty assessment.`;
+    if (loan.status === 'returned' || loan.return_date) {
+      return res.status(400).json({ error: 'This volume has already been returned. Cannot send return warning.' });
+    }
 
-    const tx = db.transaction(() => {
-      // Set active return warning on student account
-      db.prepare(`
-        UPDATE users SET
-          return_warning_active = 1,
-          return_warning_message = ?,
-          return_warning_loan_id = ?,
-          return_warning_book_title = ?
-        WHERE id = ?
-      `).run(warningMsg, loan.id, loan.book_title, loan.member_id);
+    let member = loan.user_id;
+    if (!member || !member._id) {
+      member = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
 
-      // Mark loan warning sent
-      db.prepare(`
-        UPDATE loans SET
-          warning_sent = 1,
-          warning_sent_at = datetime('now')
-        WHERE id = ?
-      `).run(loan.id);
+    const bookTitle = book?.title || 'Book';
+    const warningMsg = `Your book return date for "${bookTitle}" has passed. The physical volume must be returned to the library desk immediately to avoid circulation penalty assessment.`;
 
-      // Send high-priority notification to student
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, '⚠️ Urgent: Book Return Date Passed', ?, 'due', '/dashboard')
-      `).run(loan.member_id, warningMsg);
+    if (member && member._id) {
+      try {
+        await User.updateOne(
+          { _id: member._id },
+          {
+            $set: {
+              return_warning_active: 1,
+              return_warning_message: warningMsg,
+              return_warning_loan_id: loan.sqlite_id || 0,
+              return_warning_book_title: bookTitle
+            }
+          }
+        );
+      } catch (uErr) {
+        console.warn('User warning status update error:', uErr.message);
+      }
+    }
 
-      logAudit(req.user.id, 'RETURN_WARNING_SENT', `Sent return warning to student ${loan.member_name} (${loan.member_email}) for volume "${loan.book_title}"`);
-    });
+    try {
+      await Loan.updateOne(
+        { _id: loan._id },
+        {
+          $set: {
+            warning_sent: 1,
+            warning_sent_at: new Date()
+          }
+        }
+      );
+    } catch (lErr) {
+      console.warn('Loan warning status update error:', lErr.message);
+    }
 
-    tx();
+    if (member && member._id) {
+      await safeCreateNotification({
+        user_id: member._id,
+        title: '⚠️ Urgent: Book Return Date Passed',
+        message: warningMsg,
+        type: 'due',
+        link: '/dashboard',
+        created_at: new Date()
+      });
+    }
+
+    try {
+      logAudit(req.user.id, 'RETURN_WARNING_SENT', `Sent return warning to student ${member?.name || 'Patron'} (${member?.email || ''}) for volume "${bookTitle}"`);
+    } catch (_) {}
 
     res.json({
       success: true,
-      message: `Book Return Warning sent to ${loan.member_name}. A warning banner will appear when they sign in.`,
-      loanId: loan.id,
-      userId: loan.member_id
+      message: `Book Return Warning sent to ${member?.name || 'Patron'}. A warning banner will appear when they sign in.`,
+      loanId: loan._id.toString(),
+      userId: member ? member._id.toString() : null
     });
   } catch (err) {
     console.error('Send return warning error:', err);
-    res.status(500).json({ error: 'Failed to send return warning' });
+    res.status(500).json({ error: err.message || 'Failed to send return warning' });
   }
 });
 
 // Dismiss Return Warning (Student upon login acknowledgment)
-router.post('/dismiss-return-warning', authenticateToken, (req, res) => {
+router.post('/dismiss-return-warning', authenticateToken, async (req, res) => {
   try {
-    db.prepare(`
-      UPDATE users SET
-        return_warning_active = 0
-      WHERE id = ?
-    `).run(req.user.id);
+    await User.updateOne(buildIdFilter(req.user.id), {
+      $set: { return_warning_active: 0 }
+    });
     res.json({ success: true, message: 'Warning acknowledged' });
   } catch (err) {
     console.error('Dismiss return warning error:', err);
@@ -175,74 +229,68 @@ router.post('/dismiss-return-warning', authenticateToken, (req, res) => {
 });
 
 // 2. Issue penalty and send QR code to user / Send Penalty Payment Request (Librarian/Admin)
-router.post(['/:id/issue-penalty-qr', '/:id/send-penalty-request'], authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.post(['/:id/issue-penalty-qr', '/:id/send-penalty-request'], authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const loan = db.prepare(`
-      SELECT l.*, b.title as book_title, u.name as member_name, u.email as member_email
-      FROM loans l
-      JOIN books b ON l.book_id = b.id
-      JOIN users u ON l.user_id = u.id
-      WHERE l.id = ?
-    `).get(loanId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
 
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
+    let member = loan.user_id;
+    if (!member || !member._id) {
+      member = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
+
     const borrowDate = new Date(loan.borrow_date);
     const now = new Date();
     const daysElapsed = Math.floor((now - borrowDate) / (1000 * 60 * 60 * 24));
-    
-    // Standard fine for 15+ days: $15.00 base penalty
     const penaltyAmount = Math.max(15.0, (daysElapsed - 14) * 2.0);
 
-    // Generate pure vector SVG QR code data URL
-    const qrPayload = `libramind://fine-pay?user=${loan.user_id}&loan=${loan.id}&amount=${penaltyAmount.toFixed(2)}&issued=${now.toISOString()}`;
+    const qrPayload = `libramind://fine-pay?user=${member ? member._id : loan.user_id}&loan=${loan._id}&amount=${penaltyAmount.toFixed(2)}&issued=${now.toISOString()}`;
     const qrDataUrl = generateQRCodeSVG(qrPayload);
 
-    // Update user record
-    db.prepare(`
-      UPDATE users SET
-        penalty_qr_code = ?,
-        penalty_amount = ?,
-        penalty_reason = ?,
-        penalty_status = 'pending',
-        return_warning_active = 0
-      WHERE id = ?
-    `).run(
-      qrDataUrl,
-      penaltyAmount,
-      `Circulation overdue penalty: "${loan.book_title}" reached ${Math.max(15, daysElapsed)} days on loan.`,
-      loan.user_id
-    );
+    const bookTitle = book?.title || 'Book';
 
-    // Also update loan fine amount and status to overdue
-    db.prepare(`
-      UPDATE loans SET
-        status = 'overdue',
-        fine_amount = ?,
-        fine_paid = 0
-      WHERE id = ?
-    `).run(penaltyAmount, loan.id);
+    if (member) {
+      member.penalty_qr_code = qrDataUrl;
+      member.penalty_amount = penaltyAmount;
+      member.penalty_reason = `Circulation overdue penalty: "${bookTitle}" reached ${Math.max(15, daysElapsed)} days on loan.`;
+      member.penalty_status = 'pending';
+      member.return_warning_active = 0;
+      await member.save();
+    }
 
-    // Send high-priority notification to student
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Circulation Penalty Issued: QR Payment Required', ?, 'overdue', '/dashboard')
-    `).run(
-      loan.user_id,
-      `Your loan for "${loan.book_title}" has exceeded 14 days. A circulation fine of $${penaltyAmount.toFixed(2)} has been issued. Please scan your penalty QR code to restore borrowing privileges.`
-    );
+    loan.status = 'overdue';
+    loan.fine_amount = penaltyAmount;
+    loan.fine_paid = 0;
+    await loan.save();
 
-    logAudit(req.user.id, 'PENALTY_QR_ISSUED', `Issued $${penaltyAmount.toFixed(2)} penalty QR code to student ${loan.member_name} (${loan.member_email}) for loan #${loan.id}`);
+    if (member) {
+      await Notification.create({
+        user_id: member._id,
+        title: 'Circulation Penalty Issued: QR Payment Required',
+        message: `Your loan for "${bookTitle}" has exceeded 14 days. A circulation fine of $${penaltyAmount.toFixed(2)} has been issued. Please scan your penalty QR code to restore borrowing privileges.`,
+        type: 'overdue',
+        link: '/dashboard',
+        created_at: new Date()
+      });
+    }
+
+    logAudit(req.user.id, 'PENALTY_QR_ISSUED', `Issued $${penaltyAmount.toFixed(2)} penalty QR code to student ${member?.name} (${member?.email}) for loan #${loan._id}`);
 
     res.json({
       success: true,
-      message: `Penalty fine of $${penaltyAmount.toFixed(2)} issued. QR code sent to student ${loan.member_name}.`,
+      message: `Penalty fine of $${penaltyAmount.toFixed(2)} issued. QR code sent to student ${member?.name || 'patron'}.`,
       penaltyAmount,
       qrCode: qrDataUrl,
-      userId: loan.user_id
+      userId: member ? member._id.toString() : null
     });
   } catch (err) {
     console.error('Issue penalty QR error:', err);
@@ -251,60 +299,57 @@ router.post(['/:id/issue-penalty-qr', '/:id/send-penalty-request'], authenticate
 });
 
 // Cancel / Waive penalty for a specific loan (Librarian/Admin)
-router.post('/:id/cancel-penalty', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.post('/:id/cancel-penalty', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const loan = db.prepare(`
-      SELECT l.*, b.title as book_title, u.id as member_id, u.name as member_name, u.email as member_email
-      FROM loans l
-      JOIN books b ON l.book_id = b.id
-      JOIN users u ON l.user_id = u.id
-      WHERE l.id = ?
-    `).get(loanId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
 
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
-    const cancelTx = db.transaction(() => {
-      // 1. Clear penalty on user record
-      db.prepare(`
-        UPDATE users SET
-          penalty_status = 'none',
-          penalty_qr_code = NULL,
-          penalty_amount = 0,
-          penalty_reason = NULL
-        WHERE id = ?
-      `).run(loan.member_id);
+    let member = loan.user_id;
+    if (!member || !member._id) {
+      member = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
 
-      // 2. Clear loan fine and mark fine_paid = 1
-      db.prepare(`
-        UPDATE loans SET
-          fine_amount = 0,
-          fine_paid = 1
-        WHERE id = ?
-      `).run(loan.id);
+    const bookTitle = book?.title || 'Book';
 
-      // 3. Send notification to student confirming cancellation
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, 'Circulation Penalty Cancelled', ?, 'announcement', '/dashboard')
-      `).run(
-        loan.member_id,
-        `Your overdue circulation penalty for "${loan.book_title}" has been cancelled/waived by library staff. Your borrowing privileges are fully restored.`
-      );
+    if (member) {
+      member.penalty_status = 'none';
+      member.penalty_qr_code = '';
+      member.penalty_amount = 0;
+      member.penalty_reason = '';
+      await member.save();
+    }
 
-      // 4. Audit log
-      logAudit(req.user.id, 'PENALTY_CANCELLED', `Librarian cancelled overdue penalty on loan #${loan.id} for patron ${loan.member_name} (${loan.member_email})`);
-    });
+    loan.fine_amount = 0;
+    loan.fine_paid = 1;
+    await loan.save();
 
-    cancelTx();
+    if (member) {
+      await Notification.create({
+        user_id: member._id,
+        title: 'Circulation Penalty Cancelled',
+        message: `Your overdue circulation penalty for "${bookTitle}" has been cancelled/waived by library staff. Your borrowing privileges are fully restored.`,
+        type: 'announcement',
+        link: '/dashboard',
+        created_at: new Date()
+      });
+    }
+
+    logAudit(req.user.id, 'PENALTY_CANCELLED', `Librarian cancelled overdue penalty on loan #${loan._id} for patron ${member?.name} (${member?.email})`);
 
     res.json({
       success: true,
-      message: `Penalty on "${loan.book_title}" successfully cancelled for ${loan.member_name}. Borrowing privileges restored.`,
-      userId: loan.member_id,
-      loanId: loan.id
+      message: `Penalty on "${bookTitle}" successfully cancelled for ${member?.name || 'patron'}. Borrowing privileges restored.`,
+      userId: member ? member._id.toString() : null,
+      loanId: loan._id.toString()
     });
   } catch (err) {
     console.error('Cancel penalty error:', err);
@@ -312,49 +357,152 @@ router.post('/:id/cancel-penalty', authenticateToken, requireRole(['admin', 'lib
   }
 });
 
-// Waive all penalties for a user (Librarian/Admin)
-router.post('/waive-user-penalty/:userId', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+// Approve / Confirm penalty (Librarian/Admin - Requirement 10)
+router.post(['/:id/penalty/approve', '/penalties/:id/approve'], authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const member = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
+
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan record not found' });
+    }
+
+    let member = loan.user_id;
+    if (!member || !member._id) {
+      member = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
+
+    const bookTitle = book?.title || 'Book';
+    const fineAmount = loan.fine_amount || member?.penalty_amount || 15.0;
+
+    loan.penalty_status = 'confirmed';
+    await loan.save();
+
+    if (member) {
+      member.penalty_status = 'confirmed';
+      await member.save();
+
+      await Notification.create({
+        user_id: member._id,
+        title: 'Circulation Penalty Confirmed by Librarian',
+        message: `Your penalty fine of $${fineAmount.toFixed(2)} for overdue loan "${bookTitle}" has been reviewed and confirmed by library staff. Please settle this fine via QR code to clear your circulation hold.`,
+        type: 'overdue',
+        link: '/dashboard',
+        created_at: new Date()
+      });
+    }
+
+    logAudit(req.user.id, 'PENALTY_CONFIRMED', `Librarian confirmed circulation penalty of $${fineAmount.toFixed(2)} for patron ${member?.name} (${member?.email}) on volume "${bookTitle}"`);
+
+    res.json({
+      success: true,
+      message: `Penalty on "${bookTitle}" successfully confirmed for ${member?.name || 'patron'}.`,
+      loanId: loan._id.toString(),
+      fineAmount
+    });
+  } catch (err) {
+    console.error('Approve penalty error:', err);
+    res.status(500).json({ error: 'Failed to approve penalty' });
+  }
+});
+
+// Decline / Waive penalty with reason (Librarian/Admin - Requirement 10)
+router.post(['/:id/penalty/decline', '/penalties/:id/decline'], authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+  try {
+    const { reason = 'Penalty declined and waived upon librarian administrative review' } = req.body;
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
+
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan record not found' });
+    }
+
+    let member = loan.user_id;
+    if (!member || !member._id) {
+      member = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
+
+    const bookTitle = book?.title || 'Book';
+
+    loan.fine_amount = 0;
+    loan.fine_paid = 1;
+    loan.penalty_status = 'declined';
+    await loan.save();
+
+    if (member) {
+      member.penalty_status = 'none';
+      member.penalty_qr_code = '';
+      member.penalty_amount = 0;
+      member.penalty_reason = '';
+      await member.save();
+
+      await Notification.create({
+        user_id: member._id,
+        title: 'Circulation Penalty Declined & Waived',
+        message: `Your circulation penalty for "${bookTitle}" was reviewed and declined by library staff. Reason: ${reason}. Full borrowing privileges have been restored.`,
+        type: 'announcement',
+        link: '/dashboard',
+        created_at: new Date()
+      });
+    }
+
+    logAudit(req.user.id, 'PENALTY_DECLINED', `Librarian declined penalty on loan #${loan._id} for patron ${member?.name}. Reason: ${reason}`);
+
+    res.json({
+      success: true,
+      message: `Penalty on "${bookTitle}" successfully declined and waived for ${member?.name || 'patron'}. Borrowing privileges restored.`,
+      loanId: loan._id.toString()
+    });
+  } catch (err) {
+    console.error('Decline penalty error:', err);
+    res.status(500).json({ error: 'Failed to decline penalty' });
+  }
+});
+
+// Waive all penalties for a user (Librarian/Admin)
+router.post('/waive-user-penalty/:userId', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+  try {
+    const member = await User.findOne(buildIdFilter(req.params.userId));
     if (!member) {
       return res.status(404).json({ error: 'Patron not found' });
     }
 
-    const waiveTx = db.transaction(() => {
-      db.prepare(`
-        UPDATE users SET
-          penalty_status = 'none',
-          penalty_qr_code = NULL,
-          penalty_amount = 0,
-          penalty_reason = NULL
-        WHERE id = ?
-      `).run(userId);
+    member.penalty_status = 'none';
+    member.penalty_qr_code = '';
+    member.penalty_amount = 0;
+    member.penalty_reason = '';
+    await member.save();
 
-      db.prepare(`
-        UPDATE loans SET
-          fine_amount = 0,
-          fine_paid = 1
-        WHERE user_id = ? AND (fine_paid = 0 OR fine_paid IS NULL)
-      `).run(userId);
-
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, 'Circulation Penalty Waived', ?, 'announcement', '/dashboard')
-      `).run(
-        userId,
-        `All outstanding circulation penalties on your account have been waived by library staff. Full borrowing privileges are restored.`
-      );
-
-      logAudit(req.user.id, 'PENALTY_WAIVED_USER', `Librarian waived all circulation penalties for patron ${member.name} (${member.email})`);
+    const uFilter = buildIdFilter(member._id, 'user_id', 'sqlite_user_id');
+    await Loan.updateMany(uFilter, {
+      $set: { fine_amount: 0, fine_paid: 1 }
     });
 
-    waiveTx();
+    await Notification.create({
+      user_id: member._id,
+      title: 'Circulation Penalty Waived',
+      message: 'All outstanding circulation penalties on your account have been waived by library staff. Full borrowing privileges are restored.',
+      type: 'announcement',
+      link: '/dashboard',
+      created_at: new Date()
+    });
+
+    logAudit(req.user.id, 'PENALTY_WAIVED_USER', `Librarian waived all circulation penalties for patron ${member.name} (${member.email})`);
 
     res.json({
       success: true,
       message: `All circulation penalties waived for ${member.name}. Account is in good standing.`,
-      userId
+      userId: member._id.toString()
     });
   } catch (err) {
     console.error('Waive user penalty error:', err);
@@ -363,44 +511,37 @@ router.post('/waive-user-penalty/:userId', authenticateToken, requireRole(['admi
 });
 
 // Pay / clear penalty via QR code
-router.post('/pay-penalty-qr', authenticateToken, (req, res) => {
+router.post('/pay-penalty-qr', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const user = db.prepare('SELECT id, name, email, penalty_amount, penalty_status FROM users WHERE id = ?').get(userId);
-
+    const user = await User.findOne(buildIdFilter(req.user.id));
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const fineAmount = user.penalty_amount || 0;
 
-    // Clear penalty on user
-    db.prepare(`
-      UPDATE users SET
-        penalty_status = 'paid',
-        penalty_qr_code = NULL,
-        penalty_amount = 0,
-        penalty_reason = NULL
-      WHERE id = ?
-    `).run(userId);
+    user.penalty_status = 'paid';
+    user.penalty_qr_code = '';
+    user.penalty_amount = 0;
+    user.penalty_reason = '';
+    await user.save();
 
-    // Clear fines on user's active/overdue loans
-    db.prepare(`
-      UPDATE loans SET
-        fine_paid = 1
-      WHERE user_id = ? AND fine_amount > 0 AND (fine_paid = 0 OR fine_paid IS NULL)
-    `).run(userId);
-
-    // Notify user of clearance
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, 'Penalty Cleared & Privileges Restored', ?, 'due', '/dashboard')
-    `).run(
-      userId,
-      `Your penalty fine of $${fineAmount > 0 ? fineAmount.toFixed(2) : '15.00'} has been successfully settled. Your book borrowing privileges have been fully restored!`
+    const uFilter = buildIdFilter(user._id, 'user_id', 'sqlite_user_id');
+    await Loan.updateMany(
+      { ...uFilter, fine_amount: { $gt: 0 } },
+      { $set: { fine_paid: 1 } }
     );
 
-    logAudit(userId, 'PENALTY_QR_PAID', `Settled penalty fine of $${fineAmount.toFixed(2)} via QR scan`);
+    await Notification.create({
+      user_id: user._id,
+      title: 'Penalty Cleared & Privileges Restored',
+      message: `Your penalty fine of $${fineAmount > 0 ? fineAmount.toFixed(2) : '15.00'} has been successfully settled. Your book borrowing privileges have been fully restored!`,
+      type: 'due',
+      link: '/dashboard',
+      created_at: new Date()
+    });
+
+    logAudit(user._id.toString(), 'PENALTY_QR_PAID', `Settled penalty fine of $${fineAmount.toFixed(2)} via QR scan`);
 
     res.json({
       success: true,
@@ -414,13 +555,9 @@ router.post('/pay-penalty-qr', authenticateToken, (req, res) => {
 });
 
 // Get authenticated user's current penalty details
-router.get('/user-penalty', authenticateToken, (req, res) => {
+router.get('/user-penalty', authenticateToken, async (req, res) => {
   try {
-    const user = db.prepare(`
-      SELECT id, name, penalty_status, penalty_amount, penalty_reason, penalty_qr_code
-      FROM users WHERE id = ?
-    `).get(req.user.id);
-
+    const user = await User.findOne(buildIdFilter(req.user.id));
     res.json({
       penaltyStatus: user?.penalty_status || 'none',
       penaltyAmount: user?.penalty_amount || 0,
@@ -434,17 +571,14 @@ router.get('/user-penalty', authenticateToken, (req, res) => {
 });
 
 // Pay fine for specific loan ID
-router.post('/:id/pay-fine', authenticateToken, (req, res) => {
+router.post('/:id/pay-fine', authenticateToken, async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const userId = req.user.id;
-
-    const loan = db.prepare('SELECT * FROM loans WHERE id = ?').get(loanId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id));
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
-    if (req.user.role === 'student' && loan.user_id !== userId) {
+    if (req.user.role === 'student' && String(loan.user_id) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Not authorized to settle fines for another member' });
     }
 
@@ -452,11 +586,11 @@ router.post('/:id/pay-fine', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'No outstanding fine on this volume' });
     }
 
-    db.prepare('UPDATE loans SET fine_paid = 1 WHERE id = ?').run(loanId);
+    loan.fine_paid = 1;
+    await loan.save();
 
-    logAudit(userId, 'FINE_PAID', `Paid circulation fine of $${loan.fine_amount.toFixed(2)} on loan #${loanId}`);
-
-    const postStatus = checkUserPenaltyStatus(loan.user_id);
+    logAudit(req.user.id, 'FINE_PAID', `Paid circulation fine of $${loan.fine_amount.toFixed(2)} on loan #${loan._id}`);
+    const postStatus = await checkUserPenaltyStatus(loan.user_id);
 
     res.json({
       message: `Fine of $${loan.fine_amount.toFixed(2)} successfully settled.`,
@@ -471,55 +605,46 @@ router.post('/:id/pay-fine', authenticateToken, (req, res) => {
 });
 
 // Pay outstanding circulation fines & clear account hold
-router.post('/pay-fines', authenticateToken, (req, res) => {
+router.post('/pay-fines', authenticateToken, async (req, res) => {
   try {
     const { loan_id, payment_method = 'Campus Scholar Card' } = req.body;
-    const userId = req.user.id;
+    await refreshLoanStatuses();
 
-    refreshLoanStatuses();
-
-    let query = `
-      SELECT id, fine_amount, book_id, copy_id
-      FROM loans
-      WHERE user_id = ? AND fine_amount > 0 AND (fine_paid = 0 OR fine_paid IS NULL)
-    `;
-    const params = [userId];
+    const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const query = {
+      ...uFilter,
+      fine_amount: { $gt: 0 },
+      $or: [{ fine_paid: 0 }, { fine_paid: null }]
+    };
 
     if (loan_id) {
-      query += ` AND id = ?`;
-      params.push(loan_id);
+      Object.assign(query, buildIdFilter(loan_id));
     }
 
-    const unpaidLoans = db.prepare(query).all(...params);
-
+    const unpaidLoans = await Loan.find(query);
     if (unpaidLoans.length === 0) {
       return res.status(400).json({ error: 'No outstanding fines found to settle.' });
     }
 
     let totalPaid = 0.0;
-    const payTx = db.transaction(() => {
-      const updateStmt = db.prepare('UPDATE loans SET fine_paid = 1 WHERE id = ?');
-      for (const l of unpaidLoans) {
-        totalPaid += l.fine_amount;
-        updateStmt.run(l.id);
-      }
+    for (const l of unpaidLoans) {
+      totalPaid += l.fine_amount;
+      l.fine_paid = 1;
+      await l.save();
+    }
 
-      // Add audit log
-      logAudit(userId, 'FINE_PAID', `Paid circulation penalty of $${totalPaid.toFixed(2)} via ${payment_method}`);
+    logAudit(req.user.id, 'FINE_PAID', `Paid circulation penalty of $${totalPaid.toFixed(2)} via ${payment_method}`);
 
-      // Add confirmation notification
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, 'Circulation Penalty Settled', ?, 'due', '/dashboard')
-      `).run(
-        userId,
-        `Payment of $${totalPaid.toFixed(2)} received. Your circulation hold has been cleared, and all borrowing, reservation, and study seat privileges are fully restored.`
-      );
+    await Notification.create({
+      user_id: req.user.id,
+      title: 'Circulation Penalty Settled',
+      message: `Payment of $${totalPaid.toFixed(2)} received. Your circulation hold has been cleared, and all borrowing, reservation, and study seat privileges are fully restored.`,
+      type: 'due',
+      link: '/dashboard',
+      created_at: new Date()
     });
 
-    payTx();
-
-    const postStatus = checkUserPenaltyStatus(userId);
+    const postStatus = await checkUserPenaltyStatus(req.user.id);
 
     res.json({
       message: `Successfully paid $${totalPaid.toFixed(2)} in circulation penalties.`,
@@ -534,71 +659,71 @@ router.post('/pay-fines', authenticateToken, (req, res) => {
 });
 
 // Get loans (filtered by authenticated user role)
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    refreshLoanStatuses();
+    await refreshLoanStatuses();
     const { status, userId } = req.query;
 
-    let query = `
-      SELECT l.*,
-        b.title as book_title,
-        b.author as book_author,
-        b.cover_image,
-        b.isbn,
-        b.category,
-        b.floor,
-        b.shelf,
-        b.total_copies,
-        b.available_copies,
-        bc.copy_code,
-        bc.condition as copy_condition,
-        u.name as student_name,
-        u.email as student_email,
-        u.membership_id,
-        u.penalty_status,
-        u.penalty_amount,
-        u.penalty_qr_code,
-        u.return_warning_active,
-        u.return_warning_message,
-        l.warning_sent,
-        l.warning_sent_at
-      FROM loans l
-      JOIN books b ON l.book_id = b.id
-      JOIN book_copies bc ON l.copy_id = bc.id
-      JOIN users u ON l.user_id = u.id
-      WHERE 1=1
-    `;
-    const params = [];
-
-    // Students only see their own loans
+    const query = {};
     if (req.user.role === 'student') {
-      query += ` AND l.user_id = ?`;
-      params.push(req.user.id);
+      Object.assign(query, buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id'));
     } else if (userId) {
-      query += ` AND l.user_id = ?`;
-      params.push(userId);
+      Object.assign(query, buildIdFilter(userId, 'user_id', 'sqlite_user_id'));
     }
 
     if (status && status !== 'all') {
       if (status === 'borrowed' || status === 'active') {
-        query += ` AND l.status IN ('active', 'borrowed', 'overdue')`;
+        query.status = { $in: ['active', 'borrowed', 'overdue'] };
       } else {
-        query += ` AND l.status = ?`;
-        params.push(status);
+        query.status = status;
       }
     }
 
-    query += ` ORDER BY l.borrow_date DESC`;
+    const rawLoans = await Loan.find(query)
+      .populate('book_id')
+      .populate('copy_id')
+      .populate('user_id')
+      .sort({ borrow_date: -1 });
 
-    const rawLoans = db.prepare(query).all(...params);
-    const loans = rawLoans.map(l => ({
-      ...l,
-      // Provide robust status values matching both 'active' and 'borrowed' conventions
-      status: l.status,
-      borrow_status: l.status === 'active' ? 'borrowed' : l.status,
-      db_status: l.status,
-      is_active: l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue'
-    }));
+    const loans = rawLoans.map(l => {
+      const b = l.book_id;
+      const bc = l.copy_id;
+      const u = l.user_id;
+      const lObj = serializeDoc(l);
+
+      const resolvedBookId = b?._id ? b._id.toString() : (b?.id !== undefined ? String(b.id) : (l.sqlite_book_id !== undefined ? String(l.sqlite_book_id) : String(l.book_id || '')));
+
+      return {
+        ...lObj,
+        book_id: resolvedBookId,
+        book_title: b?.title || 'Unknown Title',
+        book_author: b?.author || '',
+        cover_image: b?.cover_image || '',
+        isbn: b?.isbn || '',
+        category: b?.category || '',
+        floor: b?.floor || 'Floor 1',
+        shelf: b?.shelf || 'Shelf A-1',
+        total_copies: b?.total_copies || 1,
+        available_copies: b?.available_copies || 0,
+        copy_code: bc?.copy_code || '',
+        copy_condition: bc?.condition || 'Good',
+        student_name: u?.name || 'Reader',
+        student_email: u?.email || '',
+        membership_id: u?.membership_id || '',
+        penalty_status: u?.penalty_status || 'none',
+        penalty_amount: u?.penalty_amount || 0,
+        penalty_qr_code: u?.penalty_qr_code || '',
+        return_warning_active: u?.return_warning_active || 0,
+        return_warning_message: u?.return_warning_message || '',
+        warning_sent: l.warning_sent || 0,
+        warning_sent_at: l.warning_sent_at || null,
+        status: l.status,
+        borrow_status: l.status === 'active' ? 'borrowed' : l.status,
+        db_status: l.status,
+        is_active: l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue'
+      };
+    });
+
     res.json(loans);
   } catch (err) {
     console.error('Fetch loans error:', err);
@@ -607,7 +732,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Issue book to member (Librarian / Admin)
-router.post('/issue', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.post('/issue', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
     const membership_id = req.body.membership_id || req.body.membershipId;
     const book_id = req.body.book_id || req.body.bookId;
@@ -618,19 +743,23 @@ router.post('/issue', authenticateToken, requireRole(['admin', 'librarian']), (r
       return res.status(400).json({ error: 'Membership ID and Book/Copy details are required' });
     }
 
-    // 1. Find user
-    const member = db.prepare('SELECT id, name, email, role FROM users WHERE membership_id = ? OR email = ?').get(membership_id.trim(), membership_id.trim());
+    const cleanMemberId = membership_id.trim();
+    const member = await User.findOne({
+      $or: [
+        { membership_id: cleanMemberId },
+        { email: cleanMemberId.toLowerCase() }
+      ]
+    });
+
     if (!member) {
       return res.status(404).json({ error: 'Member not found with provided ID' });
     }
 
-    // Check circulation penalty & account hold
-    const penaltyStatus = checkUserPenaltyStatus(member.id);
-    const userPenalty = db.prepare('SELECT penalty_status, penalty_amount FROM users WHERE id = ?').get(member.id);
-    const hasUnpaidPenalty = penaltyStatus.isBlocked || (userPenalty && (userPenalty.penalty_status === 'pending' || userPenalty.penalty_amount > 0));
+    const penaltyStatus = await checkUserPenaltyStatus(member._id);
+    const hasUnpaidPenalty = penaltyStatus.isBlocked || (member.penalty_status === 'pending' && member.penalty_amount > 0);
 
     if (hasUnpaidPenalty) {
-      const fineToPay = (userPenalty && userPenalty.penalty_amount > 0) ? userPenalty.penalty_amount : penaltyStatus.unpaidFines;
+      const fineToPay = member.penalty_amount > 0 ? member.penalty_amount : penaltyStatus.unpaidFines;
       return res.status(403).json({
         error: `Cannot issue book: Member ${member.name} has an active circulation hold due to unpaid penalties ($${fineToPay.toFixed(2)}) or overdue loans. Penalties must be settled before borrowing.`,
         penaltyBlocked: true,
@@ -639,109 +768,117 @@ router.post('/issue', authenticateToken, requireRole(['admin', 'librarian']), (r
       });
     }
 
-    // Check active loan limit
-    const activeCount = db.prepare("SELECT COUNT(*) as count FROM loans WHERE user_id = ? AND status IN ('active', 'overdue')").get(member.id);
-    if (activeCount.count >= MAX_LOANS_PER_STUDENT) {
+    const uFilter = buildIdFilter(member._id, 'user_id', 'sqlite_user_id');
+    const activeCount = await Loan.countDocuments({
+      ...uFilter,
+      status: { $in: ['active', 'overdue'] }
+    });
+
+    if (activeCount >= MAX_LOANS_PER_STUDENT) {
       return res.status(400).json({ error: `Member reached maximum borrowing limit of ${MAX_LOANS_PER_STUDENT} books.` });
+    }
+
+    let copy = null;
+    if (copy_code) {
+      copy = await BookCopy.findOne({ copy_code: new RegExp(`^${copy_code.trim()}$`, 'i') });
+    }
+    if (!copy && book_id) {
+      const bFilter = buildIdFilter(book_id, 'book_id', 'sqlite_book_id');
+      copy = await BookCopy.findOne({ ...bFilter, status: 'available' });
+    }
+
+    if (!copy) {
+      return res.status(400).json({ error: 'No physical copy found for this book' });
+    }
+
+    if (copy.status !== 'available') {
+      return res.status(400).json({ error: `Physical copy ${copy.copy_code} is currently ${copy.status}. Cannot issue.` });
+    }
+
+    const book = await Book.findOne(buildIdFilter(copy.book_id));
+    if (!book) {
+      return res.status(404).json({ error: 'Parent book not found' });
+    }
+
+    // Single active copy rule: A member cannot borrow the same book twice concurrently
+    const bFilter = buildIdFilter(copy.book_id, 'book_id', 'sqlite_book_id');
+    const existingActiveLoan = await Loan.findOne({
+      ...bFilter,
+      ...uFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
+    });
+
+    if (existingActiveLoan) {
+      return res.status(400).json({
+        error: `Member ${member.name} already has an active borrowed copy of "${book.title}". Under library circulation rules, a member cannot borrow the same book twice concurrently. Please return the previous copy first.`
+      });
     }
 
     const now = new Date();
     const dueDate = new Date(now.getTime() + parseInt(loan_days) * 24 * 60 * 60 * 1000);
 
-    const issueTx = db.transaction(() => {
-      // Find copy atomically inside transaction
-      let copy;
-      if (copy_code) {
-        copy = db.prepare('SELECT * FROM book_copies WHERE UPPER(copy_code) = UPPER(?)').get(copy_code.trim());
-        if (!copy && !isNaN(Number(copy_code.trim()))) {
-          copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(Number(copy_code.trim()));
-        }
-      }
-      if (!copy && book_id) {
-        copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(book_id);
-      }
-
-      if (!copy) {
-        throw new Error('No physical copy found for this book');
-      }
-
-      if (copy.status !== 'available') {
-        throw new Error(`Physical copy ${copy.copy_code} is currently ${copy.status}. Cannot issue.`);
-      }
-
-      const book = db.prepare('SELECT * FROM books WHERE id = ?').get(copy.book_id);
-
-      // Create loan record
-      const loanRes = db.prepare(`
-        INSERT INTO loans (book_id, copy_id, user_id, borrow_date, due_date, status)
-        VALUES (?, ?, ?, ?, ?, 'active')
-      `).run(book.id, copy.id, member.id, now.toISOString(), dueDate.toISOString());
-
-      // Update copy status
-      db.prepare("UPDATE book_copies SET status = 'borrowed' WHERE id = ?").run(copy.id);
-
-      // Decrement available copies
-      db.prepare('UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?').run(book.id);
-
-      // Create notification for student
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, 'borrow', '/dashboard')
-      `).run(
-        member.id,
-        'Book Borrowed',
-        `You have checked out "${book.title}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`
-      );
-
-      // Audit log
-      logAudit(req.user.id, 'LOAN_ISSUED', `Issued "${book.title}" [${copy.copy_code}] to ${member.name} (${member.email})`);
-
-      return {
-        loanId: loanRes.lastInsertRowid,
-        bookTitle: book.title,
-        copyCode: copy.copy_code,
-        memberName: member.name
-      };
+    const loan = await Loan.create({
+      book_id: book._id,
+      copy_id: copy._id,
+      user_id: member._id,
+      borrow_date: now,
+      due_date: dueDate,
+      status: 'active',
+      created_at: now
     });
 
-    const result = issueTx();
+    copy.status = 'borrowed';
+    await copy.save();
+
+    book.available_copies = Math.max(0, book.available_copies - 1);
+    await book.save();
+
+    await Notification.create({
+      user_id: member._id,
+      title: 'Book Borrowed',
+      message: `You have checked out "${book.title}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`,
+      type: 'borrow',
+      link: '/dashboard',
+      created_at: now
+    });
+
+    logAudit(req.user.id, 'LOAN_ISSUED', `Issued "${book.title}" [${copy.copy_code}] to ${member.name} (${member.email})`);
 
     res.status(201).json({
       message: 'Book issued successfully',
-      loanId: result.loanId,
-      bookTitle: result.bookTitle,
-      copyCode: result.copyCode,
-      memberName: result.memberName,
+      loanId: loan._id.toString(),
+      bookTitle: book.title,
+      copyCode: copy.copy_code,
+      memberName: member.name,
       dueDate: dueDate.toISOString()
     });
   } catch (err) {
+    console.error('Issue book error:', err);
     res.status(400).json({ error: err.message || 'Failed to issue book' });
   }
 });
 
-// Student Self-Checkout (direct checkout of available copy or pickup of ready reservation)
-router.post('/checkout', authenticateToken, (req, res) => {
+// Student Self-Checkout
+router.post('/checkout', authenticateToken, async (req, res) => {
   try {
-    const book_id = req.body.book_id || req.body.bookId;
-    const copy_code = req.body.copy_code || req.body.copyCode;
+    const rawBookId = req.body.book_id || req.body.bookId;
+    const rawCopyCode = req.body.copy_code || req.body.copyCode;
     const loan_days = req.body.loan_days || req.body.loanDays || LOAN_DURATION_DAYS;
 
-    if (!book_id && !copy_code) {
+    if (!rawBookId && !rawCopyCode) {
       return res.status(400).json({ error: 'Book ID or copy code is required' });
     }
 
-    const member = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(req.user.id);
+    const member = await User.findOne(buildIdFilter(req.user.id));
     if (!member) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Check circulation penalty & account hold
-    const penaltyStatus = checkUserPenaltyStatus(member.id);
-    const userPenalty = db.prepare('SELECT penalty_status, penalty_amount FROM users WHERE id = ?').get(member.id);
-    const hasUnpaidPenalty = penaltyStatus.isBlocked || (userPenalty && (userPenalty.penalty_status === 'pending' || userPenalty.penalty_amount > 0));
+    const penaltyStatus = await checkUserPenaltyStatus(member._id);
+    const hasUnpaidPenalty = penaltyStatus.isBlocked || (member.penalty_status === 'pending' && member.penalty_amount > 0);
 
     if (hasUnpaidPenalty) {
-      const fineToPay = (userPenalty && userPenalty.penalty_amount > 0) ? userPenalty.penalty_amount : penaltyStatus.unpaidFines;
+      const fineToPay = member.penalty_amount > 0 ? member.penalty_amount : penaltyStatus.unpaidFines;
       return res.status(403).json({
         error: `Cannot borrow books: Your account has an outstanding circulation penalty fine of $${fineToPay.toFixed(2)}. Please scan and pay the fine using your penalty QR code to restore borrowing privileges.`,
         penaltyBlocked: true,
@@ -750,110 +887,139 @@ router.post('/checkout', authenticateToken, (req, res) => {
       });
     }
 
-    // Check limit
-    const activeCount = db.prepare("SELECT COUNT(*) as count FROM loans WHERE user_id = ? AND status IN ('active', 'overdue')").get(member.id);
-    if (activeCount.count >= MAX_LOANS_PER_STUDENT) {
+    const uFilter = buildIdFilter(member._id, 'user_id', 'sqlite_user_id');
+    const activeCount = await Loan.countDocuments({
+      ...uFilter,
+      status: { $in: ['active', 'overdue'] }
+    });
+
+    if (activeCount >= MAX_LOANS_PER_STUDENT) {
       return res.status(400).json({ error: `You have reached the maximum borrowing limit of ${MAX_LOANS_PER_STUDENT} books.` });
     }
 
+    let copy = null;
+    if (rawCopyCode) {
+      copy = await BookCopy.findOne({ copy_code: new RegExp(`^${rawCopyCode.trim()}$`, 'i') });
+    }
+    if (!copy && rawBookId) {
+      const targetBook = await Book.findOne(buildIdFilter(rawBookId));
+      if (targetBook) {
+        const bFilter = buildIdFilter(targetBook._id, 'book_id', 'sqlite_book_id');
+        const userHold = await Reservation.findOne({
+          ...bFilter,
+          ...uFilter,
+          status: 'ready_for_pickup'
+        });
+
+        if (userHold) {
+          copy = await BookCopy.findOne({ ...bFilter, status: 'reserved' });
+          userHold.status = 'fulfilled';
+          await userHold.save();
+        } else {
+          copy = await BookCopy.findOne({ ...bFilter, status: 'available' });
+        }
+      }
+    }
+
+    if (!copy) {
+      return res.status(400).json({ error: 'No physical copies currently available for checkout.' });
+    }
+
+    if (copy.status !== 'available' && copy.status !== 'reserved') {
+      return res.status(400).json({ error: `Copy ${copy.copy_code} is not available for checkout (Status: ${copy.status}).` });
+    }
+
+    // Only 1 copy of a book at a time per user
+    const bFilter = buildIdFilter(copy.book_id, 'book_id', 'sqlite_book_id');
+    const currentActiveLoan = await Loan.findOne({
+      ...bFilter,
+      ...uFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
+    });
+
+    if (currentActiveLoan) {
+      return res.status(400).json({
+        error: 'You already have an active borrowed copy of this book. Under library circulation policy, you can only borrow one copy of a title at a time. Once you return your current copy, you may borrow it again.'
+      });
+    }
+
+    const book = await Book.findOne(buildIdFilter(copy.book_id));
     const now = new Date();
     const dueDate = new Date(now.getTime() + parseInt(loan_days) * 24 * 60 * 60 * 1000);
 
-    const checkoutTx = db.transaction(() => {
-      let copy;
-      if (copy_code) {
-        copy = db.prepare('SELECT * FROM book_copies WHERE UPPER(copy_code) = UPPER(?)').get(copy_code.trim());
-      }
-      if (!copy && book_id) {
-        // First check if user had a ready reservation for this book
-        const userHold = db.prepare("SELECT id FROM reservations WHERE book_id = ? AND user_id = ? AND status = 'ready_for_pickup'").get(book_id, member.id);
-        if (userHold) {
-          copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'reserved' LIMIT 1").get(book_id);
-          // Mark hold fulfilled
-          db.prepare("UPDATE reservations SET status = 'fulfilled' WHERE id = ?").run(userHold.id);
-        } else {
-          copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(book_id);
-        }
-      }
-
-      if (!copy) {
-        throw new Error('No physical copies currently available for checkout.');
-      }
-
-      if (copy.status !== 'available' && copy.status !== 'reserved') {
-        throw new Error(`Copy ${copy.copy_code} is not available for checkout (Status: ${copy.status}).`);
-      }
-
-      // Member can borrow only ONE copy of a book at a time (cannot take a second copy simultaneously)
-      const currentActiveLoan = db.prepare(`
-        SELECT id, copy_id FROM loans
-        WHERE book_id = ? AND user_id = ? AND status IN ('active', 'overdue')
-      `).get(copy.book_id, member.id);
-
-      if (currentActiveLoan) {
-        throw new Error('You already have an active loan for this book (only 1 copy allowed at a time). Please return your current copy before borrowing again.');
-      }
-
-      const book = db.prepare('SELECT * FROM books WHERE id = ?').get(copy.book_id);
-
-      const loanRes = db.prepare(`
-        INSERT INTO loans (book_id, copy_id, user_id, borrow_date, due_date, status)
-        VALUES (?, ?, ?, ?, ?, 'active')
-      `).run(book.id, copy.id, member.id, now.toISOString(), dueDate.toISOString());
-
-      db.prepare("UPDATE book_copies SET status = 'borrowed' WHERE id = ?").run(copy.id);
-      db.prepare('UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?').run(book.id);
-
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, 'Checkout Confirmed', ?, 'borrow', '/dashboard')
-      `).run(
-        member.id,
-        `Successfully checked out "${book.title}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`
-      );
-
-      logAudit(member.id, 'BOOK_CHECKOUT', `Student checked out "${book.title}" [${copy.copy_code}]`);
-
-      return {
-        loanId: loanRes.lastInsertRowid,
-        bookTitle: book.title,
-        copyCode: copy.copy_code
-      };
+    const loan = await Loan.create({
+      book_id: book._id,
+      copy_id: copy._id,
+      user_id: member._id,
+      borrow_date: now,
+      due_date: dueDate,
+      status: 'active',
+      created_at: now
     });
 
-    const result = checkoutTx();
+    copy.status = 'borrowed';
+    await copy.save();
+
+    book.available_copies = Math.max(0, book.available_copies - 1);
+    await book.save();
+
+    await Notification.create({
+      user_id: member._id,
+      title: 'Checkout Confirmed',
+      message: `Successfully checked out "${book.title}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`,
+      type: 'borrow',
+      link: '/dashboard',
+      created_at: now
+    });
+
+    logAudit(member._id.toString(), 'BOOK_CHECKOUT', `Student checked out "${book.title}" [${copy.copy_code}]`);
 
     res.status(201).json({
       message: 'Checkout successful',
-      loanId: result.loanId,
-      bookTitle: result.bookTitle,
-      copyCode: result.copyCode,
+      loanId: loan._id.toString(),
+      bookTitle: book.title,
+      copyCode: copy.copy_code,
       dueDate: dueDate.toISOString()
     });
   } catch (err) {
+    console.error('Checkout error:', err);
     res.status(400).json({ error: err.message || 'Checkout failed' });
   }
 });
 
-// Return book handler (supports both POST and PUT)
-function handleBookReturn(req, res) {
+// Return book handler
+async function handleBookReturn(req, res) {
   try {
-    const loanId = req.params.id;
-    const loan = db.prepare(`
-      SELECT l.*, b.title as book_title, bc.copy_code, u.name as member_name, u.email as member_email
-      FROM loans l
-      JOIN books b ON l.book_id = b.id
-      JOIN book_copies bc ON l.copy_id = bc.id
-      JOIN users u ON l.user_id = u.id
-      WHERE l.id = ?
-    `).get(loanId);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('copy_id')
+      .populate('user_id');
 
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
-    if (loan.status === 'returned') {
-      return res.status(400).json({ error: 'This book has already been returned' });
+    if (loan.status === 'returned' || loan.return_date) {
+      return res.json({
+        success: true,
+        message: 'This volume has already been marked as returned.',
+        fineAmount: loan.fine_amount || 0,
+        status: 'returned',
+        alreadyReturned: true
+      });
+    }
+
+    let book = loan.book_id;
+    if (!book || !book._id) {
+      book = await Book.findOne(buildIdFilter(loan.book_id || loan.sqlite_book_id));
+    }
+    let user = loan.user_id;
+    if (!user || !user._id) {
+      user = await User.findOne(buildIdFilter(loan.user_id || loan.sqlite_user_id));
+    }
+    let copy = loan.copy_id;
+    if (!copy || !copy._id) {
+      copy = await BookCopy.findOne(buildIdFilter(loan.copy_id || loan.sqlite_copy_id));
     }
 
     const now = new Date();
@@ -865,87 +1031,143 @@ function handleBookReturn(req, res) {
       fine = daysOverdue * DAILY_FINE_RATE;
     }
 
-    const returnTx = db.transaction(() => {
-      // Mark loan as returned
-      db.prepare(`
-        UPDATE loans SET
-          status = 'returned',
-          return_date = ?,
-          fine_amount = ?
-        WHERE id = ?
-      `).run(now.toISOString(), fine, loanId);
+    loan.status = 'returned';
+    loan.return_date = now;
+    loan.fine_amount = fine;
+    try {
+      await Loan.updateOne(
+        { _id: loan._id },
+        {
+          $set: {
+            status: 'returned',
+            return_date: now,
+            fine_amount: fine
+          }
+        }
+      );
+    } catch (saveErr) {
+      console.warn('Loan updateOne warning:', saveErr.message);
+    }
 
-      // Check if there is an active reservation waiting for this book
-      const nextReservation = db.prepare(`
-        SELECT * FROM reservations
-        WHERE book_id = ? AND status = 'waiting'
-        ORDER BY queue_position ASC, reservation_date ASC
-        LIMIT 1
-      `).get(loan.book_id);
+    const bookTitle = book?.title || 'Book';
+    const targetBookId = book?._id || loan.book_id;
+    const bFilter = targetBookId ? buildIdFilter(targetBookId, 'book_id', 'sqlite_book_id') : null;
 
-      if (nextReservation) {
-        // Mark physical copy as reserved
-        db.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(loan.copy_id);
+    // Check if there is an active reservation waiting for this specific book (FIFO order - Requirement 4 & 8)
+    let nextReservation = null;
+    if (bFilter) {
+      try {
+        nextReservation = await Reservation.findOne({
+          ...bFilter,
+          status: 'waiting'
+        }).sort({ queue_position: 1, reservation_date: 1 });
+      } catch (rFindErr) {
+        console.warn('Reservation query warning on return:', rFindErr.message);
+      }
+    }
 
-        // Update reservation to ready_for_pickup with 48h deadline
-        const pickupDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
-        db.prepare(`
-          UPDATE reservations SET
-            status = 'ready_for_pickup',
-            pickup_deadline = ?
-          WHERE id = ?
-        `).run(pickupDeadline, nextReservation.id);
+    if (nextReservation && copy) {
+      try {
+        await BookCopy.updateOne({ _id: copy._id }, { $set: { status: 'reserved' } });
+      } catch (_) {}
 
-        // Notify reserved student
-        db.prepare(`
-          INSERT INTO notifications (user_id, title, message, type, link)
-          VALUES (?, ?, ?, 'pickup', '/dashboard')
-        `).run(
-          nextReservation.user_id,
-          'Book Ready for Pickup!',
-          `Your reserved book "${loan.book_title}" is ready at the desk! Please pick it up by ${new Date(pickupDeadline).toLocaleString()}.`
+      const pickupDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+      try {
+        nextReservation.status = 'ready_for_pickup';
+        nextReservation.pickup_deadline = pickupDeadline;
+        await Reservation.updateOne(
+          { _id: nextReservation._id },
+          {
+            $set: {
+              status: 'ready_for_pickup',
+              pickup_deadline: pickupDeadline
+            }
+          }
         );
-      } else {
-        // No reservations, make available
-        db.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(loan.copy_id);
-        db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
+      } catch (resUpErr) {
+        console.warn('Reservation update ready_for_pickup warning:', resUpErr.message);
       }
 
-      // Notify borrower of return confirmation
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, 'return', '/dashboard')
-      `).run(
-        loan.user_id,
-        'Book Return Confirmed',
-        `"${loan.book_title}" has been returned. ${fine > 0 ? `Outstanding fine: $${fine.toFixed(2)}` : 'Thank you!'}`
-      );
+      await safeCreateNotification({
+        user_id: nextReservation.user_id,
+        title: 'Book Ready for Pickup!',
+        message: `Your reserved book "${bookTitle}" is ready at the desk! Please pick it up by ${pickupDeadline.toLocaleString()}.`,
+        type: 'pickup',
+        link: '/dashboard',
+        created_at: now
+      });
 
-      logAudit(req.user.id, 'BOOK_RETURNED', `Returned "${loan.book_title}" from ${loan.member_name}. Fine: $${fine}`);
-    });
+      // Notify librarians about FIFO allocation (Requirement 8)
+      try {
+        const librarians = await User.find({ role: { $in: ['librarian', 'admin'] } });
+        const waitingPatron = await User.findOne(buildIdFilter(nextReservation.user_id));
+        for (const lib of librarians) {
+          await safeCreateNotification({
+            user_id: lib._id,
+            title: '📖 Book Returned: Routed to Waiting Patron (FIFO)',
+            message: `"${bookTitle}" was returned by ${user?.name || 'patron'}. Automatically routed to next eligible waiting patron: ${waitingPatron?.name || 'Patron'} (Queue #1). Pickup deadline set to 48 hours.`,
+            type: 'pickup',
+            link: '/librarian?tab=reservations',
+            created_at: now
+          });
+        }
+      } catch (notifErr) {
+        console.warn('Failed to dispatch librarian return notification:', notifErr.message);
+      }
+    } else {
+      if (copy) {
+        try {
+          copy.status = 'available';
+          await copy.save();
+        } catch (_) {
+          await BookCopy.updateOne({ _id: copy._id }, { $set: { status: 'available' } });
+        }
+      }
+      if (book) {
+        try {
+          await Book.updateOne({ _id: book._id }, { $inc: { available_copies: 1 } });
+        } catch (_) {}
+      }
+    }
 
-    returnTx();
+    if (user && user._id) {
+      await safeCreateNotification({
+        user_id: user._id,
+        title: 'Book Return Confirmed',
+        message: `"${bookTitle}" has been returned. ${fine > 0 ? `Outstanding fine: $${fine.toFixed(2)}` : 'Thank you!'}`,
+        type: 'return',
+        link: '/dashboard',
+        created_at: now
+      });
+    }
+
+    try {
+      logAudit(req.user.id, 'BOOK_RETURNED', `Returned "${bookTitle}" from ${user?.name || 'Reader'}. Fine: $${fine}`);
+    } catch (_) {}
 
     res.json({
+      success: true,
       message: 'Book returned successfully',
       fineAmount: fine,
       status: 'returned'
     });
   } catch (err) {
     console.error('Return book error:', err);
-    res.status(500).json({ error: 'Failed to process book return' });
+    res.status(500).json({ error: err.message || 'Failed to process book return' });
   }
 }
 
-// Allow students to self-return; admins/librarians can return on behalf of any member
-function handleBookReturnWithOwnerCheck(req, res) {
-  // Students may only return their own loans; staff may return any loan
+async function handleBookReturnWithOwnerCheck(req, res) {
   if (req.user.role === 'student') {
-    const loan = db.prepare('SELECT user_id FROM loans WHERE id = ?').get(req.params.id);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id));
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
-    if (loan.user_id !== req.user.id) {
+    const matchesUser =
+      String(loan.user_id) === String(req.user.id) ||
+      (loan.sqlite_user_id && String(loan.sqlite_user_id) === String(req.user.id)) ||
+      (req.user.sqlite_id && String(loan.sqlite_user_id) === String(req.user.sqlite_id));
+    if (!matchesUser) {
       return res.status(403).json({ error: 'You can only return your own borrowed books.' });
     }
   }
@@ -956,14 +1178,14 @@ router.post('/:id/return', authenticateToken, handleBookReturnWithOwnerCheck);
 router.put('/:id/return', authenticateToken, handleBookReturnWithOwnerCheck);
 
 // Renew loan
-router.post('/:id/renew', authenticateToken, (req, res) => {
+router.post('/:id/renew', authenticateToken, async (req, res) => {
   try {
-    const loan = db.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
+    const loan = await Loan.findOne(buildIdFilter(req.params.id));
     if (!loan) {
       return res.status(404).json({ error: 'Loan not found' });
     }
 
-    if (req.user.role === 'student' && loan.user_id !== req.user.id) {
+    if (req.user.role === 'student' && String(loan.user_id) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Not authorized to renew this loan' });
     }
 
@@ -971,8 +1193,7 @@ router.post('/:id/renew', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'Cannot renew a returned loan' });
     }
 
-    // Check penalty block
-    const penaltyStatus = checkUserPenaltyStatus(loan.user_id);
+    const penaltyStatus = await checkUserPenaltyStatus(loan.user_id);
     if (penaltyStatus.isBlocked) {
       return res.status(403).json({
         error: `Cannot renew loan: Your account is blocked due to unpaid circulation penalties ($${penaltyStatus.unpaidFines.toFixed(2)}) or overdue loans. Please settle your fines first.`,
@@ -985,57 +1206,41 @@ router.post('/:id/renew', authenticateToken, (req, res) => {
       return res.status(400).json({ error: `Maximum of ${MAX_RENEWALS} renewals reached for this item.` });
     }
 
-    // Check if book has pending reservations from others
-    const waitingRes = db.prepare("SELECT COUNT(*) as count FROM reservations WHERE book_id = ? AND status = 'waiting'").get(loan.book_id);
-    if (waitingRes.count > 0) {
+    const bFilter = buildIdFilter(loan.book_id, 'book_id', 'sqlite_book_id');
+    const waitingRes = await Reservation.countDocuments({
+      ...bFilter,
+      status: 'waiting'
+    });
+
+    if (waitingRes > 0) {
       return res.status(400).json({ error: 'Cannot renew: Other students are currently waiting for this book.' });
     }
 
     const currentDue = new Date(loan.due_date);
     const newDue = new Date(currentDue.getTime() + LOAN_DURATION_DAYS * 24 * 60 * 60 * 1000);
 
-    db.prepare(`
-      UPDATE loans SET
-        due_date = ?,
-        renewal_count = renewal_count + 1,
-        status = 'active'
-      WHERE id = ?
-    `).run(newDue.toISOString(), loan.id);
+    loan.due_date = newDue;
+    loan.renewal_count = (loan.renewal_count || 0) + 1;
+    loan.status = 'active';
+    await loan.save();
 
-    // Notify user
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, 'borrow', '/dashboard')
-    `).run(
-      loan.user_id,
-      'Loan Renewed',
-      `Your loan has been renewed by ${LOAN_DURATION_DAYS} days. New due date: ${newDue.toLocaleDateString()}.`
-    );
+    await Notification.create({
+      user_id: loan.user_id,
+      title: 'Loan Renewed',
+      message: `Your loan has been renewed by ${LOAN_DURATION_DAYS} days. New due date: ${newDue.toLocaleDateString()}.`,
+      type: 'borrow',
+      link: '/dashboard',
+      created_at: new Date()
+    });
 
     res.json({
       message: 'Loan renewed successfully',
       newDueDate: newDue.toISOString(),
-      renewalsRemaining: MAX_RENEWALS - (loan.renewal_count + 1)
+      renewalsRemaining: MAX_RENEWALS - loan.renewal_count
     });
   } catch (err) {
+    console.error('Renew error:', err);
     res.status(500).json({ error: 'Failed to renew loan' });
-  }
-});
-
-// Pay fine
-router.post('/:id/pay-fine', authenticateToken, (req, res) => {
-  try {
-    const loan = db.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
-    if (!loan) {
-      return res.status(404).json({ error: 'Loan not found' });
-    }
-
-    db.prepare('UPDATE loans SET fine_paid = 1 WHERE id = ?').run(loan.id);
-    logAudit(req.user.id, 'FINE_PAID', `Fine of $${loan.fine_amount} paid for loan ID ${loan.id}`);
-
-    res.json({ message: 'Fine cleared successfully' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to pay fine' });
   }
 });
 

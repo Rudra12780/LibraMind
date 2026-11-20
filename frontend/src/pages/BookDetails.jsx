@@ -46,6 +46,7 @@ export default function BookDetails({
   const [userLoan, setUserLoan] = useState(null);
   const [userReservation, setUserReservation] = useState(null);
   const [borrowing, setBorrowing] = useState(false);
+  const [borrowingCopyCode, setBorrowingCopyCode] = useState(null);
   const [reserving, setReserving] = useState(false);
   const [returning, setReturning] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -80,7 +81,7 @@ export default function BookDetails({
     if (!user) return;
     try {
       const list = await api.getWishlist();
-      setIsWishlisted(list.some(item => item.id === parseInt(bookId)));
+      setIsWishlisted(list.some(item => String(item.id) === String(bookId) || String(item._id) === String(bookId) || item.id === bookId));
     } catch (err) {
       console.error('Wishlist check error', err);
     }
@@ -121,6 +122,8 @@ export default function BookDetails({
         setBook(prev => prev ? ({ ...prev, available_copies: Math.max(0, prev.available_copies - 1) }) : prev);
       }
       fetchBookDetails();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -138,6 +141,8 @@ export default function BookDetails({
       showToast('Reservation hold cancelled');
       setUserReservation(null);
       fetchBookDetails();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -150,6 +155,7 @@ export default function BookDetails({
       return;
     }
     setBorrowing(true);
+    setBorrowingCopyCode(specificCopyCode);
     try {
       const payload = specificCopyCode && typeof specificCopyCode === 'string' ? { copy_code: specificCopyCode } : { book_id: book.id };
       const res = await api.checkoutBook(payload);
@@ -163,10 +169,13 @@ export default function BookDetails({
       setUserReservation(null);
       setBook(prev => prev ? ({ ...prev, available_copies: Math.max(0, prev.available_copies - 1) }) : prev);
       fetchBookDetails();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message, true);
     } finally {
       setBorrowing(false);
+      setBorrowingCopyCode(null);
     }
   };
 
@@ -182,6 +191,8 @@ export default function BookDetails({
       setUserLoan(null);
       setBook(prev => prev ? ({ ...prev, available_copies: prev.available_copies + 1 }) : prev);
       fetchBookDetails();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -528,8 +539,101 @@ export default function BookDetails({
               gap: '12px'
             }}
           >
-            {/* User Active Loan Status Banner */}
-            {userLoan ? (
+            {!user ? (
+              /* Unauthenticated / Guest Reading Mode Card */
+              <div
+                style={{
+                  padding: '22px 18px',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  gap: '12px'
+                }}
+              >
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(38, 61, 50, 0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--editorial-green)'
+                  }}
+                >
+                  <BookOpen size={22} strokeWidth={2.2} />
+                </div>
+
+                <div>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'var(--editorial-accent)'
+                    }}
+                  >
+                    BIBLIOGRAPHIC PREVIEW
+                  </span>
+                  <h4
+                    style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontSize: '1.20rem',
+                      fontWeight: 700,
+                      color: 'var(--editorial-text)',
+                      margin: '4px 0 6px'
+                    }}
+                  >
+                    Guest Reading Mode
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: '0.84rem',
+                      color: 'var(--editorial-text-muted)',
+                      lineHeight: 1.5,
+                      margin: 0
+                    }}
+                  >
+                    You are exploring this archival volume as a guest scholar. Sign in to your member folio to check out physical copies, join hold queues, or save books to your personal collection.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('login')}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '0.86rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>Sign In to Borrow Volumes</span>
+                    <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('register')}
+                    className="btn btn-outline btn-sm"
+                    style={{ width: '100%', padding: '8px 14px', fontSize: '0.82rem' }}
+                  >
+                    Create Free Student Account
+                  </button>
+                </div>
+              </div>
+            ) : userLoan ? (
+              /* User Active Loan Status Banner */
               <div
                 style={{
                   padding: '14px 16px',
@@ -547,17 +651,25 @@ export default function BookDetails({
                   Due date: <strong>{new Date(userLoan.due_date).toLocaleDateString()}</strong>
                   {userLoan.status === 'overdue' && <span style={{ color: '#C5221F', fontWeight: 700, marginLeft: '6px' }}>(OVERDUE)</span>}
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                     <button
                       onClick={handleReturnBook}
                       disabled={returning}
                       className="btn btn-secondary btn-sm"
                       style={{
-                        backgroundColor: 'var(--warm-beige)',
-                        color: 'var(--forest-dark)',
+                        backgroundColor: 'var(--editorial-accent)',
+                        color: '#FFFFFF',
                         fontWeight: 700,
-                        padding: '8px 10px'
+                        padding: '8px 6px',
+                        minWidth: 0,
+                        width: '100%',
+                        fontSize: '0.80rem',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        textAlign: 'center',
+                        boxSizing: 'border-box'
                       }}
                     >
                       {returning ? 'Returning...' : '✓ Return Book'}
@@ -565,7 +677,18 @@ export default function BookDetails({
                     <button
                       onClick={handleRenewLoan}
                       className="btn btn-outline btn-sm"
-                      style={{ fontWeight: 600, padding: '8px 10px' }}
+                      style={{
+                        fontWeight: 600,
+                        padding: '8px 6px',
+                        minWidth: 0,
+                        width: '100%',
+                        fontSize: '0.80rem',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        textAlign: 'center',
+                        boxSizing: 'border-box'
+                      }}
                     >
                       Renew (+14d)
                     </button>
@@ -623,13 +746,13 @@ export default function BookDetails({
                     ? `Held at desk until ${userReservation.pickup_deadline ? new Date(userReservation.pickup_deadline).toLocaleDateString() : 'within 48h'}.`
                     : `Position #${userReservation.queue_position}. You will receive a notification when a copy becomes available.`}
                 </p>
-                <div style={{ display: 'flex', gap: '8px' }} className="book-action-row">
+                <div style={{ display: 'grid', gridTemplateColumns: userReservation.status === 'ready_for_pickup' ? '1fr 1fr' : '1fr', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                   {userReservation.status === 'ready_for_pickup' && (
-                    <button onClick={handleSelfCheckout} disabled={borrowing} className="btn btn-botanical btn-sm" style={{ flex: 1 }}>
+                    <button onClick={handleSelfCheckout} disabled={borrowing} className="btn btn-botanical btn-sm" style={{ width: '100%', minWidth: 0, padding: '8px 6px', fontSize: '0.78rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {borrowing ? 'Checking out...' : 'Claim & Check Out'}
                     </button>
                   )}
-                  <button onClick={handleCancelReserve} className="btn btn-outline btn-sm" style={{ flex: 1, color: '#C5221F', borderColor: '#C5221F' }}>
+                  <button onClick={handleCancelReserve} className="btn btn-outline btn-sm" style={{ width: '100%', minWidth: 0, padding: '8px 6px', fontSize: '0.78rem', color: '#C5221F', borderColor: '#C5221F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     Cancel Hold
                   </button>
                 </div>
@@ -714,65 +837,95 @@ export default function BookDetails({
               </div>
             )}
 
-            {/* My Shelf & Literary Research Options */}
-            <div
-              style={{
-                marginTop: '16px',
-                padding: '14px 16px',
-                backgroundColor: 'var(--editorial-bg-subtle)',
-                border: '1px solid var(--editorial-border)',
-                borderRadius: 'var(--radius-sm)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span
-                  style={{
-                    fontSize: '0.70rem',
-                    fontWeight: 700,
-                    color: 'var(--editorial-accent)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em'
-                  }}
-                >
-                  📚 My Shelf &amp; Tools
-                </span>
-                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>
-                  Patron Desk
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-                <button
-                  type="button"
-                  onClick={handleToggleWishlist}
-                  className={`btn btn-sm ${isWishlisted ? 'btn-primary' : 'btn-outline'}`}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
-                >
-                  <Heart size={14} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'currentColor'} />
-                  {isWishlisted ? 'In Wishlist' : 'Wishlist'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleToggleCompare}
-                  className={`btn btn-sm ${compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'btn-primary' : 'btn-outline'}`}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
-                >
-                  <GitCompare size={14} />
-                  {compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleTogglePlanner}
-                className={`btn btn-sm ${isInPlanner ? 'btn-primary' : 'btn-outline'}`}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
+            {/* My Shelf & Literary Research Options (Signed-in Patrons Only) */}
+            {user && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  padding: '14px 16px',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)'
+                }}
               >
-                <Compass size={14} />
-                {isInPlanner ? '✓ Saved in Visit Itinerary' : 'Add to Visit Itinerary'}
-              </button>
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span
+                    style={{
+                      fontSize: '0.70rem',
+                      fontWeight: 700,
+                      color: 'var(--editorial-accent)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em'
+                    }}
+                  >
+                    📚 My Shelf &amp; Tools
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>
+                    Patron Desk
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
+                  <button
+                    type="button"
+                    onClick={handleToggleWishlist}
+                    className={`btn btn-sm ${isWishlisted ? 'btn-primary' : 'btn-outline'}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      fontSize: '0.78rem',
+                      width: '100%',
+                      minWidth: 0,
+                      padding: '8px 4px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      textAlign: 'center',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <Heart size={13} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'currentColor'} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleCompare}
+                    className={`btn btn-sm ${compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'btn-primary' : 'btn-outline'}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      fontSize: '0.78rem',
+                      width: '100%',
+                      minWidth: 0,
+                      padding: '8px 4px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      textAlign: 'center',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <GitCompare size={13} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'In Compare' : 'Compare Volume'}</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleTogglePlanner}
+                  className={`btn btn-sm ${isInPlanner ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.80rem' }}
+                >
+                  <Compass size={14} />
+                  {isInPlanner ? '✓ Saved in Visit Itinerary' : 'Add to Visit Itinerary'}
+                </button>
+              </div>
+            )}
 
             {/* Librarian Desk Actions */}
             {isLibrarianOrAdmin && (
@@ -969,9 +1122,11 @@ export default function BookDetails({
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Status
                     </th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      Circulation Action
-                    </th>
+                    {user && (
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        Circulation Action
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -999,61 +1154,63 @@ export default function BookDetails({
                             <span className="badge badge-reserved">Reserved for Member</span>
                           )}
                         </td>
-                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                          {isMyCopy ? (
-                            <button
-                              type="button"
-                              onClick={handleReturnBook}
-                              disabled={returning}
-                              className="btn btn-secondary btn-sm"
-                              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                            >
-                              {returning ? 'Returning...' : '✓ Return This Copy'}
-                            </button>
-                          ) : copy.status === 'available' ? (
-                            userLoan ? (
-                              <span
-                                className="badge"
-                                style={{
-                                  backgroundColor: 'var(--editorial-bg-subtle)',
-                                  color: 'var(--editorial-text-muted)',
-                                  border: '1px solid var(--editorial-border)',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 600,
-                                  cursor: 'not-allowed'
-                                }}
-                                title="You already have an active loan for this book (only 1 copy allowed at a time). Return your copy to borrow this title again."
+                        {user && (
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            {isMyCopy ? (
+                              <button
+                                type="button"
+                                onClick={handleReturnBook}
+                                disabled={returning}
+                                className="btn btn-secondary btn-sm"
+                                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
                               >
-                                1 Copy Held (Max 1)
-                              </span>
-                            ) : (
+                                {returning ? 'Returning...' : '✓ Return This Copy'}
+                              </button>
+                            ) : copy.status === 'available' ? (
+                              userLoan ? (
+                                <span
+                                  className="badge"
+                                  style={{
+                                    backgroundColor: 'var(--editorial-bg-subtle)',
+                                    color: 'var(--editorial-text-muted)',
+                                    border: '1px solid var(--editorial-border)',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 600,
+                                    cursor: 'not-allowed'
+                                  }}
+                                  title="You already have an active loan for this book (only 1 copy allowed at a time). Return your copy to borrow this title again."
+                                >
+                                  1 Copy Held (Max 1)
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelfCheckout(copy.copy_code)}
+                                  disabled={borrowing || Boolean(penaltyStatus?.isBlocked)}
+                                  className="btn btn-primary btn-sm"
+                                  style={{ fontSize: '0.75rem', padding: '4px 10px', minWidth: '95px' }}
+                                  title={penaltyStatus?.isBlocked ? 'Account hold active due to unpaid penalty' : 'Check out this physical copy'}
+                                >
+                                  {Boolean(borrowing && borrowingCopyCode === copy.copy_code) ? 'Checking out...' : 'Borrow Copy'}
+                                </button>
+                              )
+                            ) : copy.status === 'reserved' && userReservation && userReservation.status === 'ready_for_pickup' ? (
                               <button
                                 type="button"
                                 onClick={() => handleSelfCheckout(copy.copy_code)}
-                                disabled={borrowing || Boolean(penaltyStatus?.isBlocked)}
+                                disabled={borrowing}
                                 className="btn btn-primary btn-sm"
                                 style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                                title={penaltyStatus?.isBlocked ? 'Account hold active due to unpaid penalty' : 'Check out this physical copy'}
                               >
-                                {borrowing ? 'Checking out...' : 'Borrow Copy'}
+                                Claim &amp; Check Out
                               </button>
-                            )
-                          ) : copy.status === 'reserved' && userReservation && userReservation.status === 'ready_for_pickup' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleSelfCheckout(copy.copy_code)}
-                              disabled={borrowing}
-                              className="btn btn-primary btn-sm"
-                              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                            >
-                              Claim &amp; Check Out
-                            </button>
-                          ) : (
-                            <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
-                              In Circulation
-                            </span>
-                          )}
-                        </td>
+                            ) : (
+                              <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                                In Circulation
+                              </span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

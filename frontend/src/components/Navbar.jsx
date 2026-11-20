@@ -30,24 +30,69 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
   };
 
   const isItemActive = (id) => {
-    if (id === 'home' && activePage === 'home') return true;
+    if (id === 'authors') return false;
+    if (id === 'rules') return activePage === 'terms';
+    if (id === 'genres') return false;
+    if (id === 'heritage') return false;
     if (id === 'catalog' && (activePage === 'catalog' || activePage === 'book-details')) return true;
     if (id === 'ai-finder' && activePage === 'ai-finder') return true;
     if (id === 'seats' && activePage === 'seats') return true;
     if (id === 'compare' && activePage === 'compare') return true;
     if (id === 'visit-planner' && activePage === 'visit-planner') return true;
     if (id === 'reservations' && activePage === 'reservations') return true;
+    if (id === 'terms' && activePage === 'terms') return true;
+    if (id === 'about' && activePage === 'about') return true;
+    if (id === 'contact' && activePage === 'contact') return true;
     return false;
   };
 
+  const getHomeTarget = () => {
+    if (!user) return 'home';
+    if (user.role === 'admin') return 'admin';
+    if (user.role === 'librarian') return 'librarian';
+    return 'dashboard';
+  };
+
+  const scrollToLandingSection = (sectionId) => {
+    setMobileOpen(false);
+    if (activePage === 'home') {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+    onNavigate('home', { scrollTo: sectionId });
+  };
+
+  const handleLogoClick = () => {
+    setMobileOpen(false);
+    if (activePage === 'home') {
+      const el = document.getElementById('hero-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+    onNavigate('home', { scrollTo: 'hero-section' });
+  };
+
   const navItems = [
-    { id: 'home', label: 'Home', action: () => { setMobileOpen(false); onNavigate('home'); } },
     { id: 'catalog', label: 'Books', action: () => { setMobileOpen(false); onNavigate('catalog'); } },
     { id: 'ai-finder', label: 'AI Oracle', action: () => { setMobileOpen(false); onNavigate('ai-finder'); } },
     { id: 'seats', label: 'Study Pods', action: () => { setMobileOpen(false); onNavigate('seats'); } },
     { id: 'compare', label: `Compare${compareCount > 0 ? ` (${compareCount})` : ''}`, action: () => { setMobileOpen(false); onNavigate('compare'); } },
     { id: 'visit-planner', label: 'Plan Visit', action: () => { setMobileOpen(false); onNavigate('visit-planner'); } },
     { id: 'reservations', label: 'Hold Queues', action: () => { setMobileOpen(false); onNavigate('reservations'); } }
+  ];
+
+  const publicNavItems = [
+    { id: 'authors', label: 'Authors', action: () => scrollToLandingSection('authors-section') },
+    { id: 'rules', label: 'Direct Rules', action: () => scrollToLandingSection('rules-section') },
+    { id: 'genres', label: 'Genres', action: () => scrollToLandingSection('genres-section') },
+    { id: 'heritage', label: 'Heritage', action: () => scrollToLandingSection('heritage-section') },
+    { id: 'about', label: 'About', action: () => scrollToLandingSection('about-section') },
+    { id: 'contact', label: 'Help Desk', action: () => { setMobileOpen(false); onNavigate('contact'); } }
   ];
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() || 'U';
@@ -91,7 +136,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
       >
         {/* Editorial Brand Logo */}
         <div
-          onClick={() => onNavigate('home')}
+          onClick={handleLogoClick}
           style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flexShrink: 0 }}
         >
           <div
@@ -151,7 +196,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
           style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 1.3vw, 18px)' }}
           className="desktop-nav"
         >
-          {navItems.map(item => {
+          {(user ? navItems : publicNavItems).map(item => {
             const active = isItemActive(item.id);
             return (
               <button
@@ -367,7 +412,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
               EDITORIAL CATALOGUE &amp; CHAMBERS
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-              {navItems.map(item => {
+              {(user ? navItems : publicNavItems).map(item => {
                 const active = isItemActive(item.id);
                 return (
                   <button

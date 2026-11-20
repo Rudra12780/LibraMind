@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
-const db = require('../db/database');
+const AuditLog = require('../models/AuditLog');
+const { buildIdFilter } = require('../utils/idHelper');
+const mongoose = require('mongoose');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'libramind-biophilic-secret-key-2026';
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
@@ -34,14 +36,29 @@ function requireRole(allowedRoles) {
   };
 }
 
-function logAudit(userId, action, details, ipAddress = null) {
+async function logAudit(userId, action, details, ipAddress = null) {
   try {
-    const stmt = db.prepare(`
-      INSERT INTO audit_logs (user_id, action, details, ip_address)
-      VALUES (?, ?, ?, ?)
-    `);
-    stmt.run(userId || null, action, details, ipAddress);
+    let mongoUserId = null;
+    let sqliteId = null;
+
+    if (userId) {
+      if (mongoose.Types.ObjectId.isValid(String(userId))) {
+        mongoUserId = new mongoose.Types.ObjectId(String(userId));
+      } else if (!isNaN(Number(userId))) {
+        sqliteId = Number(userId);
+      }
+    }
+
+    await AuditLog.create({
+      user_id: mongoUserId,
+      sqlite_user_id: sqliteId,
+      action: action || 'UNKNOWN',
+      details: details || '',
+      ip_address: ipAddress || '',
+      timestamp: new Date()
+    });
   } catch (err) {
+    // Non-blocking for audit logging
     console.error('Audit log failed:', err.message);
   }
 }

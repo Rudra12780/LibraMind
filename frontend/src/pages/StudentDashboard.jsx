@@ -212,6 +212,21 @@ export default function StudentDashboard({
 
   useEffect(() => {
     fetchData();
+
+    const handleDataUpdate = () => {
+      fetchData();
+    };
+    window.addEventListener('libramind:data-updated', handleDataUpdate);
+    let bc;
+    try {
+      bc = new BroadcastChannel('libramind_sync');
+      bc.onmessage = () => fetchData();
+    } catch (e) {}
+
+    return () => {
+      window.removeEventListener('libramind:data-updated', handleDataUpdate);
+      if (bc) bc.close();
+    };
   }, [fetchData]);
 
   const showToast = (content, isError = false) => {
@@ -274,6 +289,8 @@ export default function StudentDashboard({
         isError: false
       });
       fetchData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE' }); bc.close(); } catch(e){}
     } catch (err) {
       console.error('Return book error:', err);
       setReturnError(err.message || 'Failed to process return. Please visit the front desk.');

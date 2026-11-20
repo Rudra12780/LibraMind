@@ -1,50 +1,84 @@
 const express = require('express');
-const db = require('../db/database');
+const Wishlist = require('../models/Wishlist');
+const Book = require('../models/Book');
 const { authenticateToken } = require('../middleware/auth');
+const { buildIdFilter, serializeDoc } = require('../utils/idHelper');
 
 const router = express.Router();
 
 // Get user wishlist
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const items = db.prepare(`
-      SELECT w.id as wishlist_id, w.created_at as added_at,
-        b.*
-      FROM wishlist w
-      JOIN books b ON w.book_id = b.id
-      WHERE w.user_id = ?
-      ORDER BY w.created_at DESC
-    `).all(req.user.id);
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const items = await Wishlist.find(userFilter)
+      .populate('book_id')
+      .sort({ created_at: -1 });
 
-    res.json(items);
+    const formatted = items
+      .filter(item => Boolean(item.book_id))
+      .map(item => {
+        const bookObj = serializeDoc(item.book_id);
+        return {
+          wishlist_id: item._id.toString(),
+          added_at: item.created_at,
+          ...bookObj
+        };
+      });
+
+    res.json(formatted);
   } catch (err) {
+    console.error('Fetch wishlist error:', err);
     res.status(500).json({ error: 'Failed to fetch wishlist' });
   }
 });
 
 // Add book to wishlist
-router.post('/:bookId', authenticateToken, (req, res) => {
+router.post('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const bookId = req.params.bookId;
-    const existing = db.prepare('SELECT id FROM wishlist WHERE user_id = ? AND book_id = ?').get(req.user.id, bookId);
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
+    if (!targetBook) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const existing = await Wishlist.findOne({
+      ...userFilter,
+      book_id: targetBook._id
+    });
 
     if (existing) {
       return res.json({ message: 'Book is in your wishlist', isWishlisted: true });
     }
 
-    db.prepare('INSERT INTO wishlist (user_id, book_id) VALUES (?, ?)').run(req.user.id, bookId);
+    await Wishlist.create({
+      user_id: req.user.id,
+      book_id: targetBook._id,
+      created_at: new Date()
+    });
+
     res.status(201).json({ message: 'Added to wishlist' });
   } catch (err) {
+    console.error('Add to wishlist error:', err);
     res.status(500).json({ error: 'Failed to add to wishlist' });
   }
 });
 
 // Remove from wishlist
-router.delete('/:bookId', authenticateToken, (req, res) => {
+router.delete('/:bookId', authenticateToken, async (req, res) => {
   try {
-    db.prepare('DELETE FROM wishlist WHERE user_id = ? AND book_id = ?').run(req.user.id, req.params.bookId);
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+
+    if (targetBook) {
+      await Wishlist.deleteOne({
+        ...userFilter,
+        book_id: targetBook._id
+      });
+    }
+
     res.json({ message: 'Removed from wishlist' });
   } catch (err) {
+    console.error('Remove from wishlist error:', err);
     res.status(500).json({ error: 'Failed to remove from wishlist' });
   }
 });

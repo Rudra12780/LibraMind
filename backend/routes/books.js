@@ -2,10 +2,75 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
-const db = require('../db/database');
+const mongoose = require('mongoose');
+
+const Book = require('../models/Book');
+const BookCopy = require('../models/BookCopy');
+const Loan = require('../models/Loan');
+const Reservation = require('../models/Reservation');
+const Wishlist = require('../models/Wishlist');
+const VisitPlanner = require('../models/VisitPlanner');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+
 const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
+const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
+
+let sqliteDb = null;
+try {
+  sqliteDb = require('../db/database');
+} catch (e) {
+  console.warn('SQLite fallback unavailable in books route:', e.message);
+}
 
 const router = express.Router();
+
+function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', sort = 'title_asc', limit = 200, offset = 0 } = {}) {
+  if (!sqliteDb) return null;
+  try {
+    let sql = 'SELECT * FROM books WHERE 1=1';
+    const params = [];
+    if (q && q.trim()) {
+      sql += ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR description LIKE ? OR category LIKE ?)';
+      const term = `%${q.trim()}%`;
+      params.push(term, term, term, term, term);
+    }
+    if (category && category !== 'All') {
+      sql += ' AND category = ?';
+      params.push(category);
+    }
+    if (availability === 'available') {
+      sql += ' AND available_copies > 0';
+    } else if (availability === 'unavailable') {
+      sql += ' AND available_copies = 0';
+    }
+    if (sort === 'title_desc') sql += ' ORDER BY title DESC';
+    else if (sort === 'year_desc') sql += ' ORDER BY publication_year DESC';
+    else if (sort === 'year_asc') sql += ' ORDER BY publication_year ASC';
+    else sql += ' ORDER BY title ASC';
+
+    sql += ' LIMIT ? OFFSET ?';
+    params.push(parseInt(limit) || 80, parseInt(offset) || 0);
+
+    const books = sqliteDb.prepare(sql).all(...params);
+    const categories = sqliteDb.prepare('SELECT DISTINCT category FROM books ORDER BY category ASC').all().map(c => c.category);
+    return {
+      books: books.map(b => ({
+        ...b,
+        _id: b.id,
+        location_floor: b.floor || 'Floor 1',
+        location_shelf: b.shelf || 'Shelf A-1',
+        location_rack: b.rack || 'Rack 01',
+        location_section: b.section || 'Main Hall'
+      })),
+      categories,
+      count: books.length
+    };
+  } catch (err) {
+    console.error('Error executing queryBooksFromSqlite:', err);
+    return null;
+  }
+}
 
 // Helper to save uploaded device images locally for 100% offline access
 function saveBase64ImageLocally(dataUrl) {
@@ -32,41 +97,85 @@ function saveBase64ImageLocally(dataUrl) {
   }
 }
 
-// Public: Get catalog with search, filter, sort
-router.get('/', (req, res) => {
+// High-performance Category In-Memory Cache
+let cachedCategories = null;
+let cachedCategoriesTime = 0;
+const catalogResponseCache = new Map();
+const CACHE_TTL_MS = 25 * 1000; // 25-second server cache for snappy response times
+
+async function getCachedCategories() {
+  const now = Date.now();
+  if (cachedCategories && (now - cachedCategoriesTime < 5 * 60 * 1000)) {
+    return cachedCategories;
+  }
+  let cats = [];
+  try {
+    if (mongoose.connection.readyState === 1) {
+      cats = await Book.distinct('category');
+    }
+  } catch (e) {}
+  if ((!cats || cats.length === 0) && sqliteDb) {
+    try {
+      cats = sqliteDb.prepare('SELECT DISTINCT category FROM books ORDER BY category ASC').all().map(c => c.category);
+    } catch (_) {}
+  }
+  cats.sort((a, b) => a.localeCompare(b));
+  cachedCategories = cats;
+  cachedCategoriesTime = now;
+  return cats;
+}
+function invalidateCategoriesCache() {
+  cachedCategories = null;
+  cachedCategoriesTime = 0;
+  catalogResponseCache.clear();
+}
+
+// Public: Get catalog with search, filter, sort, pagination
+router.get('/', async (req, res) => {
   try {
     const {
       q = '',
       category = 'All',
       availability = 'all',
       sort = 'title_asc',
-      limit = 50,
+      limit = 200,
       offset = 0
     } = req.query;
 
-    let query = `
-      SELECT b.*,
-        (SELECT COUNT(*) FROM loans l WHERE l.book_id = b.id) as total_borrowed_count,
-        (SELECT bc.copy_code FROM book_copies bc WHERE bc.book_id = b.id AND bc.status = 'available' LIMIT 1) as sample_copy_code
-      FROM books b
-      WHERE 1=1
-    `;
-    const params = [];
+    const cacheKey = `${q}_${category}_${availability}_${sort}_${limit}_${offset}`;
+    if (availability !== 'my_loans') {
+      const cached = catalogResponseCache.get(cacheKey);
+      if (cached && (Date.now() - cached.time < CACHE_TTL_MS)) {
+        res.setHeader('X-Cache', 'HIT');
+        return res.json(cached.data);
+      }
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      const sqliteResult = queryBooksFromSqlite(req.query);
+      if (sqliteResult) return res.json(sqliteResult);
+    }
+
+    const query = {};
 
     // Search filter: title, author, isbn, description, category
     if (q && q.trim()) {
-      const term = `%${q.trim()}%`;
-      query += ` AND (b.title LIKE ? OR b.author LIKE ? OR b.isbn LIKE ? OR b.description LIKE ? OR b.category LIKE ?)`;
-      params.push(term, term, term, term, term);
+      const regex = new RegExp(q.trim(), 'i');
+      query.$or = [
+        { title: regex },
+        { author: regex },
+        { isbn: regex },
+        { description: regex },
+        { category: regex }
+      ];
     }
 
     // Category filter
     if (category && category !== 'All') {
-      query += ` AND b.category = ?`;
-      params.push(category);
+      query.category = category;
     }
 
-    // Availability filter
+    // Optional user token extraction for availability filter
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     let tokenUserId = null;
@@ -78,77 +187,151 @@ router.get('/', (req, res) => {
     }
 
     if (availability === 'available') {
-      query += ` AND b.available_copies > 0`;
+      query.available_copies = { $gt: 0 };
     } else if (availability === 'unavailable') {
-      query += ` AND b.available_copies = 0`;
+      query.available_copies = 0;
     } else if (availability === 'borrowed' || availability === 'on_loan') {
-      query += ` AND (b.available_copies < b.total_copies OR EXISTS (SELECT 1 FROM loans l WHERE l.book_id = b.id AND l.status IN ('active', 'borrowed', 'overdue')) OR EXISTS (SELECT 1 FROM book_copies bc WHERE bc.book_id = b.id AND bc.status = 'borrowed'))`;
+      query.$expr = { $lt: ['$available_copies', '$total_copies'] };
     } else if (availability === 'my_loans') {
       const targetUserId = tokenUserId || req.query.userId;
       if (targetUserId) {
-        query += ` AND EXISTS (SELECT 1 FROM loans l WHERE l.book_id = b.id AND l.user_id = ? AND l.status IN ('active', 'borrowed', 'overdue'))`;
-        params.push(targetUserId);
+        const uFilter = buildIdFilter(targetUserId, 'user_id', 'sqlite_user_id');
+        const activeLoans = await Loan.find({
+          ...uFilter,
+          status: { $in: ['active', 'borrowed', 'overdue'] }
+        }).distinct('book_id');
+        query._id = { $in: activeLoans };
       }
     }
 
     // Sorting
+    let sortObj = { title: 1 };
     switch (sort) {
       case 'title_desc':
-        query += ` ORDER BY b.title DESC`;
+        sortObj = { title: -1 };
         break;
       case 'year_desc':
-        query += ` ORDER BY b.publication_year DESC`;
+        sortObj = { publication_year: -1 };
         break;
       case 'year_asc':
-        query += ` ORDER BY b.publication_year ASC`;
-        break;
-      case 'popularity':
-        query += ` ORDER BY total_borrowed_count DESC`;
-        break;
-      case 'random':
-        query += ` ORDER BY RANDOM()`;
+        sortObj = { publication_year: 1 };
         break;
       case 'title_asc':
       default:
-        query += ` ORDER BY b.title ASC`;
+        sortObj = { title: 1 };
         break;
     }
 
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit) || 50, parseInt(offset) || 0);
+    // High-performance lean query
+    const books = await Book.find(query)
+      .sort(sortObj)
+      .skip(parseInt(offset) || 0)
+      .limit(parseInt(limit) || 200)
+      .lean();
 
-    const books = db.prepare(query).all(...params).map(b => ({
-      ...b,
-      location_floor: b.floor,
-      location_shelf: b.shelf,
-      location_rack: b.rack,
-      location_section: b.section
-    }));
+    // High-performance single batch query for available copy codes (1 query instead of 50 individual queries)
+    const bookIds = books.map(b => b._id);
+    const sqliteIds = books.map(b => b.sqlite_id).filter(id => id !== undefined && id !== null);
 
-    // Get list of distinct categories for filter dropdown
-    const categories = db.prepare('SELECT DISTINCT category FROM books ORDER BY category ASC').all().map(c => c.category);
+    const copyFilterOr = [{ book_id: { $in: bookIds } }];
+    if (sqliteIds.length) {
+      copyFilterOr.push({ sqlite_book_id: { $in: sqliteIds } });
+    }
 
-    res.json({
-      books,
-      categories,
-      count: books.length
+    const availableCopies = bookIds.length > 0 ? await BookCopy.find({
+      $or: copyFilterOr,
+      status: 'available'
+    }).select('book_id sqlite_book_id copy_code').lean() : [];
+
+    const copyMap = new Map();
+    for (const c of availableCopies) {
+      if (c.book_id && !copyMap.has(String(c.book_id))) {
+        copyMap.set(String(c.book_id), c.copy_code);
+      }
+      if (c.sqlite_book_id && !copyMap.has(String(c.sqlite_book_id))) {
+        copyMap.set(String(c.sqlite_book_id), c.copy_code);
+      }
+    }
+
+    const enrichedBooks = books.map(b => {
+      const bObj = serializeDoc(b);
+      const sampleCopy = copyMap.get(String(b._id)) || (b.sqlite_id ? copyMap.get(String(b.sqlite_id)) : null);
+      return {
+        ...bObj,
+        location_floor: b.floor || 'Floor 1',
+        location_shelf: b.shelf || 'Shelf A-1',
+        location_rack: b.rack || 'Rack 01',
+        location_section: b.section || 'Main Hall',
+        sample_copy_code: sampleCopy || null
+      };
     });
+
+    const categories = await getCachedCategories();
+
+    if (availability !== 'my_loans') {
+      res.setHeader('Cache-Control', 'public, max-age=10, stale-while-revalidate=60');
+    }
+
+    const responseData = {
+      books: enrichedBooks,
+      categories,
+      count: enrichedBooks.length
+    };
+
+    if (availability !== 'my_loans') {
+      catalogResponseCache.set(cacheKey, { time: Date.now(), data: responseData });
+    }
+
+    res.json(responseData);
   } catch (err) {
     console.error('Fetch books error:', err);
+    const sqliteFallback = queryBooksFromSqlite(req.query);
+    if (sqliteFallback) {
+      return res.json(sqliteFallback);
+    }
     res.status(500).json({ error: 'Failed to retrieve book catalog' });
   }
 });
 
-// Public / Contextual: Get single book details with physical copies, queue position, and user-specific status
-router.get('/:id', (req, res) => {
+// Public / Contextual: Get single book details
+router.get('/:id', async (req, res) => {
   try {
-    const book = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
+    let book = null;
+    if (mongoose.connection.readyState === 1) {
+      book = await Book.findOne(buildIdFilter(req.params.id)).lean();
+    }
+    if (!book && sqliteDb) {
+      const sqliteBook = sqliteDb.prepare('SELECT * FROM books WHERE id = ? OR isbn = ?').get(req.params.id, req.params.id);
+      if (sqliteBook) {
+        const copies = sqliteDb.prepare('SELECT * FROM book_copies WHERE book_id = ? ORDER BY copy_code ASC').all(sqliteBook.id);
+        const waitingQueueCount = sqliteDb.prepare("SELECT count(*) as c FROM reservations WHERE book_id = ? AND status = 'waiting'").get(sqliteBook.id)?.c || 0;
+        return res.json({
+          book: {
+            ...sqliteBook,
+            _id: sqliteBook.id,
+            location_floor: sqliteBook.floor || 'Floor 1',
+            location_shelf: sqliteBook.shelf || 'Shelf A-1',
+            location_rack: sqliteBook.rack || 'Rack 01',
+            location_section: sqliteBook.section || 'Main Hall',
+            copies
+          },
+          copies,
+          waitingQueueCount,
+          isWishlisted: false,
+          activeLoan: null,
+          userActiveReservation: null
+        });
+      }
+    }
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const copies = db.prepare('SELECT * FROM book_copies WHERE book_id = ? ORDER BY copy_code ASC').all(req.params.id);
-    const waitingCount = db.prepare("SELECT COUNT(*) as count FROM reservations WHERE book_id = ? AND status = 'waiting'").get(req.params.id);
+    const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+    const [copies, waitingQueueCount] = await Promise.all([
+      BookCopy.find(bFilter).sort({ copy_code: 1 }).lean(),
+      Reservation.countDocuments({ ...bFilter, status: 'waiting' })
+    ]);
 
     let userLoan = null;
     let userReservation = null;
@@ -161,38 +344,43 @@ router.get('/:id', (req, res) => {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded && decoded.id) {
-          userLoan = db.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(req.params.id, decoded.id) || null;
-          userReservation = db.prepare("SELECT * FROM reservations WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup')").get(req.params.id, decoded.id) || null;
-          const vp = db.prepare("SELECT id FROM visit_planner WHERE book_id = ? AND user_id = ?").get(req.params.id, decoded.id);
+          const uFilter = buildIdFilter(decoded.id, 'user_id', 'sqlite_user_id');
+          const [uLoan, uRes, vp, wl] = await Promise.all([
+            Loan.findOne({ ...bFilter, ...uFilter, status: { $in: ['active', 'borrowed', 'overdue'] } }).lean(),
+            Reservation.findOne({ ...bFilter, ...uFilter, status: { $in: ['waiting', 'ready_for_pickup'] } }).lean(),
+            VisitPlanner.findOne({ ...bFilter, ...uFilter }).lean(),
+            Wishlist.findOne({ ...bFilter, ...uFilter }).lean()
+          ]);
+          userLoan = uLoan;
+          userReservation = uRes;
           inVisitPlanner = Boolean(vp);
-          const wl = db.prepare("SELECT id FROM wishlist WHERE book_id = ? AND user_id = ?").get(req.params.id, decoded.id);
           inWishlist = Boolean(wl);
         }
-      } catch (e) {
-        // Token invalid or expired, proceed with public data
-      }
+      } catch (e) {}
     }
 
+    const bObj = serializeDoc(book);
     res.json({
-      ...book,
-      location_floor: book.floor,
-      location_shelf: book.shelf,
-      location_rack: book.rack,
-      location_section: book.section,
-      copies,
-      waitingQueueCount: waitingCount ? waitingCount.count : 0,
-      userLoan,
-      userReservation,
+      ...bObj,
+      location_floor: book.floor || 'Floor 1',
+      location_shelf: book.shelf || 'Shelf A-1',
+      location_rack: book.rack || 'Rack 01',
+      location_section: book.section || 'Main Hall',
+      copies: serializeDocs(copies),
+      waitingQueueCount,
+      userLoan: serializeDoc(userLoan),
+      userReservation: serializeDoc(userReservation),
       inVisitPlanner,
       inWishlist
     });
   } catch (err) {
+    console.error('Fetch single book error:', err);
     res.status(500).json({ error: 'Failed to retrieve book details' });
   }
 });
 
-// Librarian / Admin: Add a new book (with duplicate detection & local offline image storage)
-router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+// Librarian / Admin: Add a new book
+router.post('/', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
     const {
       title, author, isbn, publisher, publication_year,
@@ -206,72 +394,71 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
       return res.status(400).json({ error: 'Title, author, ISBN, and category are required' });
     }
 
-    // 1. Prevent duplicate books: check if ISBN or Title+Author already exists
     const cleanIsbn = isbn.trim();
     const cleanTitle = title.trim();
     const cleanAuthor = author.trim();
 
-    const existing = db.prepare(`
-      SELECT * FROM books 
-      WHERE LOWER(TRIM(isbn)) = LOWER(?) 
-         OR (LOWER(TRIM(title)) = LOWER(?) AND LOWER(TRIM(author)) = LOWER(?))
-    `).get(cleanIsbn, cleanTitle, cleanAuthor);
+    const existing = await Book.findOne({
+      $or: [
+        { isbn: cleanIsbn },
+        { title: new RegExp(`^${cleanTitle}$`, 'i'), author: new RegExp(`^${cleanAuthor}$`, 'i') }
+      ]
+    });
 
     if (existing) {
       return res.status(409).json({
         error: `This book already exists in catalog: "${existing.title}" by ${existing.author} (ISBN: ${existing.isbn}). Please use "Add Copies" to increase available stock instead of creating a duplicate.`,
-        existingBook: existing
+        existingBook: serializeDoc(existing)
       });
     }
 
-    // 2. Save device image locally to allow offline access
     const localCoverImage = saveBase64ImageLocally(cover_image);
-
     const copiesCount = Math.max(1, parseInt(total_copies) || 1);
 
-    const transaction = db.transaction(() => {
-      const stmt = db.prepare(`
-        INSERT INTO books (
-          title, author, isbn, publisher, publication_year,
-          category, language, edition, description, cover_image,
-          floor, section, shelf, rack, total_copies, available_copies
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      const result = stmt.run(
-        cleanTitle, cleanAuthor, cleanIsbn, publisher ? publisher.trim() : '',
-        parseInt(publication_year) || new Date().getFullYear(),
-        category.trim(), language, edition, description, localCoverImage,
-        floor, section, shelf, rack, copiesCount, copiesCount
-      );
-
-      const bookId = result.lastInsertRowid;
-
-      // Create physical copy records
-      const copyStmt = db.prepare(`
-        INSERT INTO book_copies (book_id, copy_code, status, condition)
-        VALUES (?, ?, 'available', 'New')
-      `);
-
-      for (let i = 1; i <= copiesCount; i++) {
-        const copyCode = `LM-${category.substring(0, 2).toUpperCase()}-${bookId}-C${i}`;
-        copyStmt.run(bookId, copyCode);
-      }
-
-      logAudit(req.user.id, 'BOOK_CREATED', `Created book: "${cleanTitle}" (ISBN: ${cleanIsbn}) with ${copiesCount} copies.`);
-      return bookId;
+    const newBook = await Book.create({
+      title: cleanTitle,
+      author: cleanAuthor,
+      isbn: cleanIsbn,
+      publisher: publisher ? publisher.trim() : '',
+      publication_year: parseInt(publication_year) || new Date().getFullYear(),
+      category: category.trim(),
+      language,
+      edition,
+      description,
+      cover_image: localCoverImage,
+      floor,
+      section,
+      shelf,
+      rack,
+      total_copies: copiesCount,
+      available_copies: copiesCount,
+      created_at: new Date()
     });
 
-    const newBookId = transaction();
-    const createdBook = db.prepare('SELECT * FROM books WHERE id = ?').get(newBookId);
+    // Create physical copies
+    const copyDocs = [];
+    for (let i = 1; i <= copiesCount; i++) {
+      const copyCode = `LM-${category.substring(0, 2).toUpperCase()}-${newBook._id.toString().slice(-4).toUpperCase()}-C${i}`;
+      copyDocs.push({
+        book_id: newBook._id,
+        copy_code: copyCode,
+        status: 'available',
+        condition: 'New',
+        created_at: new Date()
+      });
+    }
+    await BookCopy.insertMany(copyDocs);
+
+    logAudit(req.user.id, 'BOOK_CREATED', `Created book: "${cleanTitle}" (ISBN: ${cleanIsbn}) with ${copiesCount} copies.`);
+    invalidateCategoriesCache();
 
     res.status(201).json({
       message: 'Book created successfully',
-      book: createdBook
+      book: serializeDoc(newBook)
     });
   } catch (err) {
     console.error('Create book error:', err);
-    if (err.message && err.message.includes('UNIQUE constraint failed: books.isbn')) {
+    if (err.code === 11000) {
       return res.status(409).json({ error: 'A book with this ISBN already exists' });
     }
     res.status(500).json({ error: 'Failed to create book' });
@@ -279,49 +466,41 @@ router.post('/', authenticateToken, requireRole(['admin', 'librarian']), (req, r
 });
 
 // Librarian / Admin: Update book details
-router.put('/:id', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.put('/:id', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
+    const book = await Book.findOne(buildIdFilter(req.params.id));
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
     const {
       title, author, isbn, publisher, publication_year,
       category, language, edition, description, cover_image,
       floor, section, shelf, rack
     } = req.body;
 
-    const book = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
-    if (!book) {
-      return res.status(404).json({ error: 'Book not found' });
-    }
-
-    // Save uploaded device image locally for 100% offline access
     const localCoverImage = cover_image !== undefined ? saveBase64ImageLocally(cover_image) : undefined;
 
-    db.prepare(`
-      UPDATE books SET
-        title = COALESCE(?, title),
-        author = COALESCE(?, author),
-        isbn = COALESCE(?, isbn),
-        publisher = COALESCE(?, publisher),
-        publication_year = COALESCE(?, publication_year),
-        category = COALESCE(?, category),
-        language = COALESCE(?, language),
-        edition = COALESCE(?, edition),
-        description = COALESCE(?, description),
-        cover_image = COALESCE(?, cover_image),
-        floor = COALESCE(?, floor),
-        section = COALESCE(?, section),
-        shelf = COALESCE(?, shelf),
-        rack = COALESCE(?, rack)
-      WHERE id = ?
-    `).run(
-      title, author, isbn, publisher, publication_year,
-      category, language, edition, description, localCoverImage,
-      floor, section, shelf, rack, req.params.id
-    );
+    if (title !== undefined) book.title = title;
+    if (author !== undefined) book.author = author;
+    if (isbn !== undefined) book.isbn = isbn;
+    if (publisher !== undefined) book.publisher = publisher;
+    if (publication_year !== undefined) book.publication_year = publication_year;
+    if (category !== undefined) book.category = category;
+    if (language !== undefined) book.language = language;
+    if (edition !== undefined) book.edition = edition;
+    if (description !== undefined) book.description = description;
+    if (localCoverImage !== undefined) book.cover_image = localCoverImage;
+    if (floor !== undefined) book.floor = floor;
+    if (section !== undefined) book.section = section;
+    if (shelf !== undefined) book.shelf = shelf;
+    if (rack !== undefined) book.rack = rack;
 
-    logAudit(req.user.id, 'BOOK_UPDATED', `Updated book ID ${req.params.id}: "${title || book.title}" (Original photo updated)`);
+    await book.save();
+    logAudit(req.user.id, 'BOOK_UPDATED', `Updated book ID ${book._id}: "${book.title}"`);
 
-    const updated = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
-    res.json({ message: 'Book updated successfully', book: updated });
+    invalidateCategoriesCache();
+    res.json({ message: 'Book updated successfully', book: serializeDoc(book) });
   } catch (err) {
     console.error('Failed to update book:', err);
     res.status(500).json({ error: 'Failed to update book' });
@@ -329,71 +508,105 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'librarian']), (req,
 });
 
 // Librarian / Admin: Delete book (only if no active loans)
-router.delete('/:id', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.delete('/:id', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const activeLoans = db.prepare("SELECT COUNT(*) as count FROM loans WHERE book_id = ? AND status = 'active'").get(req.params.id);
-    if (activeLoans.count > 0) {
-      return res.status(400).json({ error: 'Cannot delete book with active loans. Please return all borrowed copies first.' });
-    }
-
-    const book = db.prepare('SELECT title FROM books WHERE id = ?').get(req.params.id);
-    db.prepare('DELETE FROM books WHERE id = ?').run(req.params.id);
-
-    logAudit(req.user.id, 'BOOK_DELETED', `Deleted book ID ${req.params.id} (${book ? book.title : ''})`);
-    res.json({ message: 'Book deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete book' });
-  }
-});
-
-// Add physical copies to existing book (supports adding 1 or multiple copies)
-router.post('/:id/copies', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
-  try {
-    const bookId = req.params.id;
-    const { condition = 'New', count = 1 } = req.body;
-    const copiesToAdd = Math.max(1, parseInt(count) || 1);
-
-    const book = db.prepare('SELECT * FROM books WHERE id = ?').get(bookId);
+    const book = await Book.findOne(buildIdFilter(req.params.id));
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const addedCopyCodes = [];
-
-    const transaction = db.transaction(() => {
-      const existingCopies = db.prepare('SELECT COUNT(*) as count FROM book_copies WHERE book_id = ?').get(bookId);
-      let currentNum = existingCopies.count;
-
-      const insertStmt = db.prepare(`
-        INSERT INTO book_copies (book_id, copy_code, status, condition)
-        VALUES (?, ?, 'available', ?)
-      `);
-
-      for (let i = 0; i < copiesToAdd; i++) {
-        currentNum++;
-        const copyCode = `LM-${book.category.substring(0, 2).toUpperCase()}-${bookId}-C${currentNum}`;
-        insertStmt.run(bookId, copyCode, condition);
-        addedCopyCodes.push(copyCode);
-      }
-
-      db.prepare(`
-        UPDATE books SET
-          total_copies = total_copies + ?,
-          available_copies = available_copies + ?
-        WHERE id = ?
-      `).run(copiesToAdd, copiesToAdd, bookId);
+    const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+    const activeLoansCount = await Loan.countDocuments({
+      ...bFilter,
+      status: 'active'
     });
 
-    transaction();
-    logAudit(req.user.id, 'COPY_ADDED', `Added ${copiesToAdd} copies for book: "${book.title}" (${addedCopyCodes.join(', ')})`);
+    if (activeLoansCount > 0) {
+      return res.status(400).json({ error: 'Cannot delete book with active loans. Please return all borrowed copies first.' });
+    }
 
-    const updatedBook = db.prepare('SELECT * FROM books WHERE id = ?').get(bookId);
+    await BookCopy.deleteMany(bFilter);
+    await Reservation.deleteMany(bFilter);
+    await Wishlist.deleteMany(bFilter);
+    await VisitPlanner.deleteMany(bFilter);
+    await Book.deleteOne({ _id: book._id });
+
+    logAudit(req.user.id, 'BOOK_DELETED', `Deleted book: "${book.title}" (ID: ${book._id})`);
+    invalidateCategoriesCache();
+    res.json({ message: 'Book deleted successfully' });
+  } catch (err) {
+    console.error('Failed to delete book:', err);
+    res.status(500).json({ error: 'Failed to delete book' });
+  }
+});
+
+// Add physical copies to existing book
+router.post('/:id/copies', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+  try {
+    const book = await Book.findOne(buildIdFilter(req.params.id));
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    const { condition = 'New', count = 1 } = req.body;
+    const copiesToAdd = Math.max(1, parseInt(count) || 1);
+
+    const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+    const currentCount = await BookCopy.countDocuments(bFilter);
+
+    const copyDocs = [];
+    const addedCopyCodes = [];
+
+    for (let i = 1; i <= copiesToAdd; i++) {
+      const copyNum = currentCount + i;
+      const copyCode = `LM-${book.category.substring(0, 2).toUpperCase()}-${book._id.toString().slice(-4).toUpperCase()}-C${copyNum}`;
+      addedCopyCodes.push(copyCode);
+      copyDocs.push({
+        book_id: book._id,
+        copy_code: copyCode,
+        status: 'available',
+        condition,
+        created_at: new Date()
+      });
+    }
+
+    await BookCopy.insertMany(copyDocs);
+    book.total_copies += copiesToAdd;
+    book.available_copies += copiesToAdd;
+    await book.save();
+
+    // Check waiting list for this book and notify librarians (Requirement 5)
+    try {
+      const activeWaiting = await Reservation.find({
+        ...bFilter,
+        status: 'waiting'
+      }).populate('user_id').sort({ queue_position: 1, reservation_date: 1 });
+
+      if (activeWaiting.length > 0) {
+        const librarians = await User.find({ role: { $in: ['librarian', 'admin'] } });
+        const nextPatronName = activeWaiting[0].user_id?.name || 'Patron in Queue #1';
+        for (const lib of librarians) {
+          await Notification.create({
+            user_id: lib._id,
+            title: '💡 Inventory Suggestion: Waiting Patrons Eligible for Copies',
+            message: `Physical copies for "${book.title}" increased (+${copiesToAdd} newly added, ${book.available_copies} available). There are ${activeWaiting.length} patron(s) in the waiting queue. Next eligible patron: ${nextPatronName}. Review and approve waiting-list allocations in Circulation.`,
+            type: 'info',
+            link: '/librarian?tab=reservations',
+            created_at: new Date()
+          });
+        }
+      }
+    } catch (suggErr) {
+      console.error('Failed to dispatch librarian copy increase suggestion:', suggErr);
+    }
+
+    logAudit(req.user.id, 'COPY_ADDED', `Added ${copiesToAdd} copies for book: "${book.title}" (${addedCopyCodes.join(', ')})`);
 
     res.status(201).json({
       message: `Successfully added ${copiesToAdd} physical cop${copiesToAdd > 1 ? 'ies' : 'y'} to "${book.title}"!`,
       addedCount: copiesToAdd,
       copyCodes: addedCopyCodes,
-      book: updatedBook
+      book: serializeDoc(book)
     });
   } catch (err) {
     console.error('Failed to add copies:', err);
@@ -402,37 +615,32 @@ router.post('/:id/copies', authenticateToken, requireRole(['admin', 'librarian']
 });
 
 // Update physical copy status/condition
-router.put('/copies/:copyId', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.put('/copies/:copyId', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const { copyId } = req.params;
-    const { status, condition } = req.body;
-
-    const copy = db.prepare('SELECT * FROM book_copies WHERE id = ?').get(copyId);
+    const copy = await BookCopy.findOne(buildIdFilter(req.params.copyId));
     if (!copy) {
       return res.status(404).json({ error: 'Copy not found' });
     }
 
-    // Check if status changed
-    const transaction = db.transaction(() => {
-      if (status && status !== copy.status) {
-        if (copy.status === 'available' && status !== 'available') {
-          db.prepare('UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?').run(copy.book_id);
-        } else if (copy.status !== 'available' && status === 'available') {
-          db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(copy.book_id);
-        }
+    const { status, condition } = req.body;
+
+    if (status && status !== copy.status) {
+      if (copy.status === 'available' && status !== 'available') {
+        await Book.updateOne({ _id: copy.book_id }, { $inc: { available_copies: -1 } });
+      } else if (copy.status !== 'available' && status === 'available') {
+        await Book.updateOne({ _id: copy.book_id }, { $inc: { available_copies: 1 } });
       }
+      copy.status = status;
+    }
 
-      db.prepare(`
-        UPDATE book_copies SET
-          status = COALESCE(?, status),
-          condition = COALESCE(?, condition)
-        WHERE id = ?
-      `).run(status, condition, copyId);
-    });
+    if (condition) {
+      copy.condition = condition;
+    }
 
-    transaction();
+    await copy.save();
     res.json({ message: 'Physical copy updated successfully' });
   } catch (err) {
+    console.error('Failed to update copy:', err);
     res.status(500).json({ error: 'Failed to update copy' });
   }
 });

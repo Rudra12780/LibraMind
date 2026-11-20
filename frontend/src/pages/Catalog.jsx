@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../api';
 import BookCard from '../components/BookCard';
+import CircularBookCarousel from '../components/CircularBookCarousel';
 import { useAuth } from '../context/AuthContext';
-import { Search, Filter, SlidersHorizontal, BookOpen, AlertCircle, Check, BookPlus, X, PlusCircle } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, BookOpen, AlertCircle, Check, BookPlus, X, PlusCircle, RotateCcw, LayoutGrid } from 'lucide-react';
 
 export default function Catalog({
   initialQuery = '',
@@ -13,13 +14,23 @@ export default function Catalog({
   compareBookIds = []
 }) {
   const { user } = useAuth();
+  const [viewMode, setViewMode] = useState(() => (user ? 'circular' : 'grid'));
+
+  useEffect(() => {
+    if (user) {
+      setViewMode('circular');
+    }
+  }, [user]);
+
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [search, setSearch] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'All');
   const [availability, setAvailability] = useState('all'); // 'all', 'available', 'unavailable'
   const [sortBy, setSortBy] = useState('title_asc');
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [userBorrowedBookIds, setUserBorrowedBookIds] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
@@ -33,7 +44,7 @@ export default function Catalog({
     isbn: '',
     publisher: '',
     publication_year: 2024,
-    category: 'Story Books',
+    category: 'Classic Novels',
     edition: '1st Edition',
     language: 'English',
     floor: 'Floor 1',
@@ -45,6 +56,21 @@ export default function Catalog({
     cover_image: ''
   });
 
+  // In-memory instant client cache for zero-latency filter & category switching
+  const booksCache = React.useRef(new Map());
+
+  // Debounce search input by 220ms to eliminate server lag & request floods
+  useEffect(() => {
+    if (searchTerm !== search) {
+      setIsSearching(true);
+      const timer = setTimeout(() => {
+        setSearch(searchTerm);
+        setIsSearching(false);
+      }, 220);
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, search]);
+
   useEffect(() => {
     if (initialCategory) {
       setSelectedCategory(initialCategory);
@@ -53,6 +79,7 @@ export default function Catalog({
 
   useEffect(() => {
     if (initialQuery !== undefined) {
+      setSearchTerm(initialQuery);
       setSearch(initialQuery);
     }
   }, [initialQuery]);
@@ -92,30 +119,51 @@ export default function Catalog({
     }
   };
 
-  const fetchBooks = useCallback(async () => {
-    setLoading(true);
+  const fetchBooks = useCallback(async (bypassCache = false) => {
+    const cacheKey = `${search}_${selectedCategory}_${availability}_${sortBy}_${user?.id || 'guest'}`;
+    if (!bypassCache && booksCache.current.has(cacheKey)) {
+      const cached = booksCache.current.get(cacheKey);
+      setBooks(cached.books || []);
+      if (cached.categories && cached.categories.length) {
+        setCategories(cached.categories);
+      }
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const data = await api.getBooks({
         q: search,
         category: selectedCategory,
         availability,
         sort: sortBy,
+        limit: 200,
         ...(availability === 'my_loans' && user ? { userId: user.id } : {})
       });
+      booksCache.current.set(cacheKey, data);
       setBooks(data.books || []);
-      setCategories(data.categories || []);
+      if (data.categories && data.categories.length) {
+        setCategories(data.categories);
+      }
     } catch (err) {
       console.error('Failed to fetch books', err);
     } finally {
       setLoading(false);
     }
-  }, [search, selectedCategory, availability, sortBy]);
+  }, [search, selectedCategory, availability, sortBy, user]);
 
   const fetchWishlist = useCallback(async () => {
     if (!user) return;
     try {
       const items = await api.getWishlist();
-      setWishlistIds(new Set(items.map(i => i.id)));
+      const ids = new Set();
+      (items || []).forEach(i => {
+        if (i.id !== undefined) ids.add(i.id);
+        if (i.id !== undefined) ids.add(String(i.id));
+        if (i.sqlite_id !== undefined) ids.add(i.sqlite_id);
+      });
+      setWishlistIds(ids);
     } catch (err) {
       console.error('Wishlist fetch error', err);
     }
@@ -129,7 +177,18 @@ export default function Catalog({
     try {
       const loansData = await api.getLoans();
       const active = (loansData || []).filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
-      setUserBorrowedBookIds(new Set(active.map(l => l.book_id)));
+      const ids = new Set();
+      active.forEach(l => {
+        if (l.book_id !== undefined) {
+          ids.add(l.book_id);
+          ids.add(String(l.book_id));
+        }
+        if (l.sqlite_book_id !== undefined) {
+          ids.add(l.sqlite_book_id);
+          ids.add(String(l.sqlite_book_id));
+        }
+      });
+      setUserBorrowedBookIds(ids);
     } catch (err) {
       console.error('User loans fetch error', err);
     }
@@ -142,7 +201,28 @@ export default function Catalog({
   useEffect(() => {
     fetchWishlist();
     fetchUserLoans();
-  }, [fetchWishlist, fetchUserLoans]);
+
+    const handleDataUpdate = () => {
+      fetchBooks();
+      fetchUserLoans();
+      fetchWishlist();
+    };
+    window.addEventListener('libramind:data-updated', handleDataUpdate);
+    let bc;
+    try {
+      bc = new BroadcastChannel('libramind_sync');
+      bc.onmessage = () => {
+        fetchBooks();
+        fetchUserLoans();
+        fetchWishlist();
+      };
+    } catch (e) {}
+
+    return () => {
+      window.removeEventListener('libramind:data-updated', handleDataUpdate);
+      if (bc) bc.close();
+    };
+  }, [fetchBooks, fetchWishlist, fetchUserLoans]);
 
   const handleToggleWishlist = async (bookId) => {
     if (!user) {
@@ -179,6 +259,8 @@ export default function Catalog({
       showToast(`Success! Checked out "${book.title}" (Copy: ${res.copyCode}). Due in 14 days.`);
       fetchBooks();
       fetchUserLoans();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message || 'Checkout failed', true);
     }
@@ -197,6 +279,8 @@ export default function Catalog({
       showToast(`Returned "${book.title}". You can now directly borrow this book a second time!`);
       fetchBooks();
       fetchUserLoans();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId: book.id } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId: book.id }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message || 'Return failed', true);
     }
@@ -212,6 +296,8 @@ export default function Catalog({
       const res = await api.placeReservation(bookId);
       showToast(res.message || `Hold confirmed! Queue position: #${res.queuePosition}`);
       fetchBooks();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId } }));
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId }); bc.close(); } catch(e){}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -572,10 +658,32 @@ export default function Catalog({
               type="text"
               className="form-control"
               placeholder="Search by title, author, ISBN, category, or description..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{ paddingLeft: '42px', fontWeight: 600 }}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSearch('');
+                }}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--editorial-text-muted)'
+                }}
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
 
           {/* Availability Toggle */}
@@ -626,8 +734,11 @@ export default function Catalog({
         </div>
 
         {/* Category Pills Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}>
-          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em' }}>
+        <div
+          className="catalog-category-bar"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}
+        >
+          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em', flexShrink: 0 }}>
             <Filter size={14} strokeWidth={2.4} /> CATEGORIES:
           </span>
           <button
@@ -642,6 +753,7 @@ export default function Catalog({
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
               cursor: 'pointer',
+              flexShrink: 0,
               boxShadow: selectedCategory === 'All' ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
             }}
           >
@@ -662,6 +774,7 @@ export default function Catalog({
                 textTransform: 'uppercase',
                 letterSpacing: '0.03em',
                 cursor: 'pointer',
+                flexShrink: 0,
                 boxShadow: selectedCategory === cat ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
               }}
             >
@@ -671,11 +784,57 @@ export default function Catalog({
         </div>
       </div>
 
-      {/* Results Count & Grid */}
-      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.9rem', color: 'var(--muted-text)' }}>
-          Showing <strong>{books.length}</strong> {books.length === 1 ? 'book' : 'books'}
+      {/* Results Count & View Mode Switcher */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <span style={{ fontSize: '0.9rem', color: 'var(--editorial-text-muted)' }}>
+          Showing <strong>{books.length}</strong> {books.length === 1 ? 'book' : 'books'} {selectedCategory !== 'All' ? `in ${selectedCategory}` : ''}
         </span>
+
+        {/* View Mode Toggle Switcher */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '2px', boxShadow: 'var(--shadow-sm)' }}>
+          <button
+            onClick={() => setViewMode('circular')}
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.78rem',
+              fontWeight: viewMode === 'circular' ? 700 : 500,
+              backgroundColor: viewMode === 'circular' ? 'var(--editorial-green)' : 'transparent',
+              color: viewMode === 'circular' ? '#FFFFFF' : 'var(--editorial-text)',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease'
+            }}
+            title="3D Circular Bookshelf Carousel view (Wall-clock bookshelf design)"
+          >
+            <RotateCcw size={13} />
+            <span>3D Circular Bookshelf</span>
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.78rem',
+              fontWeight: viewMode === 'grid' ? 700 : 500,
+              backgroundColor: viewMode === 'grid' ? 'var(--editorial-green)' : 'transparent',
+              color: viewMode === 'grid' ? '#FFFFFF' : 'var(--editorial-text)',
+              border: 'none',
+              borderRadius: '2px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease'
+            }}
+            title="Standard Stacks Grid view"
+          >
+            <LayoutGrid size={13} />
+            <span>Standard Grid</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -693,6 +852,7 @@ export default function Catalog({
           </p>
           <button
             onClick={() => {
+              setSearchTerm('');
               setSearch('');
               setSelectedCategory('All');
               setAvailability('all');
@@ -702,30 +862,47 @@ export default function Catalog({
             Reset Filters
           </button>
         </div>
+      ) : viewMode === 'circular' ? (
+        <CircularBookCarousel
+          books={books}
+          onViewDetails={onViewBookDetails}
+          onBorrow={handleQuickBorrow}
+          onReturn={handleQuickReturn}
+          onReserve={handleQuickReserve}
+          onToggleWishlist={handleToggleWishlist}
+          wishlistIds={wishlistIds}
+          onToggleCompare={handleToggleCompare}
+          compareBookIds={compareBookIds}
+          onAddToPlanner={handleAddToPlanner}
+          userBorrowedBookIds={userBorrowedBookIds}
+        />
       ) : (
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 100%, 300px), 1fr))',
             gap: '24px'
           }}
         >
-          {books.map(book => (
-            <BookCard
-              key={book.id}
-              book={book}
-              onViewDetails={onViewBookDetails}
-              onBorrow={handleQuickBorrow}
-              onReturn={handleQuickReturn}
-              onReserve={handleQuickReserve}
-              onToggleWishlist={handleToggleWishlist}
-              isWishlisted={wishlistIds.has(book.id)}
-              onToggleCompare={handleToggleCompare}
-              isCompared={compareBookIds.includes(book.id)}
-              onAddToPlanner={handleAddToPlanner}
-              isBorrowedByUser={userBorrowedBookIds.has(book.id)}
-            />
-          ))}
+          {books.map(book => {
+            const bId = book.id !== undefined ? book.id : book._id;
+            return (
+              <BookCard
+                key={bId}
+                book={book}
+                onViewDetails={onViewBookDetails}
+                onBorrow={handleQuickBorrow}
+                onReturn={handleQuickReturn}
+                onReserve={handleQuickReserve}
+                onToggleWishlist={handleToggleWishlist}
+                isWishlisted={wishlistIds.has(bId) || wishlistIds.has(String(bId))}
+                onToggleCompare={handleToggleCompare}
+                isCompared={compareBookIds.some(id => String(id) === String(bId))}
+                onAddToPlanner={handleAddToPlanner}
+                isBorrowedByUser={userBorrowedBookIds.has(bId) || userBorrowedBookIds.has(String(bId))}
+              />
+            );
+          })}
         </div>
       )}
     </div>

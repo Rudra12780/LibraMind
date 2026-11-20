@@ -1,0 +1,428 @@
+﻿✅ MongoDB connected
+{
+  "sectionA": {
+    "totalUsers": 6,
+    "totalBooks": 69,
+    "totalCopies": 226,
+    "borrowedToday": 0,
+    "returnedToday": 0,
+    "currentlyBorrowed": 4,
+    "currentlyAvailable": 217
+  },
+  "sectionB": {
+    "totalMembers": 3,
+    "monthlyNewMembers": 0,
+    "yearlyNewMembers": 3,
+    "lastYearNewMembers": 0,
+    "currentYearNewMembers": 3,
+    "monthlyMemberGrowthChart": [
+      {
+        "members": 3,
+        "month": "2026-10"
+      }
+    ],
+    "dailyBorrowingReturningChart": [
+      {
+        "date": "2026-10-28",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-10-29",
+        "borrowed": 8,
+        "returned": 7
+      },
+      {
+        "date": "2026-10-30",
+        "borrowed": 0,
+        "returned": 3
+      },
+      {
+        "date": "2026-10-31",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-01",
+        "borrowed": 10,
+        "returned": 6
+      },
+      {
+        "date": "2026-11-02",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-03",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-04",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-05",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-06",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-07",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-08",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-09",
+        "borrowed": 0,
+        "returned": 0
+      },
+      {
+        "date": "2026-11-10",
+        "borrowed": 0,
+        "returned": 0
+      }
+    ],
+    "monthlyBorrowingTrends": [
+      {
+        "borrowed": 1,
+        "returned": 1,
+        "month": "2026-09"
+      },
+      {
+        "borrowed": 12,
+        "returned": 12,
+        "month": "2026-10"
+      },
+      {
+        "borrowed": 10,
+        "returned": 6,
+        "month": "2026-11"
+      }
+    ],
+    "yearlyBorrowingTrends": [
+      {
+        "borrowed": 23,
+        "returned": 19,
+        "year": "2026"
+      }
+    ],
+    "monthlyMemberRegistrationBarChart": [
+      {
+        "monthKey": "2026-10",
+        "label": "Oct 2026",
+        "members": 3
+      }
+    ],
+    "yearlyMemberGrowthLineChart": [
+      {
+        "year": "2026",
+        "newMembers": 3,
+        "cumulativeMembers": 3
+      }
+    ],
+    "bookWiseBorrowingBarChart": [
+      {
+        "borrowCount": 4,
+        "bookId": 34,
+        "title": "A Man Called Ove",
+        "author": "Fredrik Backman",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 3,
+        "bookId": 2,
+        "title": "The Power of Now: A Guide to Spiritual Enlightenment",
+        "author": "Eckhart Tolle",
+        "category": "Spiritual & Wisdom"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 38,
+        "title": "Where the Crawdads Sing",
+        "author": "Delia Owens",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 28,
+        "title": "The Little Prince",
+        "author": "Antoine de Saint-Exupéry",
+        "category": "Classic Novels"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 5,
+        "title": "Meditations: Thoughts on Stoicism and Inner Peace",
+        "author": "Marcus Aurelius",
+        "category": "Spiritual & Wisdom"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 35,
+        "title": "Before the Coffee Gets Cold",
+        "author": "Toshikazu Kawaguchi",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 39,
+        "title": "The Book Thief",
+        "author": "Markus Zusak",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 66,
+        "title": "Murder on the Orient Express",
+        "author": "Agatha Christie",
+        "category": "Fiction & Mystery"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 33,
+        "title": "The Midnight Library",
+        "author": "Matt Haig",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 46,
+        "title": "The House in the Cerulean Sea",
+        "author": "TJ Klune",
+        "category": "Modern Novels"
+      }
+    ],
+    "categoryWiseBorrowingPieChart": [
+      {
+        "borrowCount": 14,
+        "category": "Emotional Fiction",
+        "percentage": 60.9
+      },
+      {
+        "borrowCount": 6,
+        "category": "Spiritual & Wisdom",
+        "percentage": 26.1
+      },
+      {
+        "borrowCount": 1,
+        "category": "Fiction & Mystery",
+        "percentage": 4.3
+      },
+      {
+        "borrowCount": 1,
+        "category": "Classic Novels",
+        "percentage": 4.3
+      },
+      {
+        "borrowCount": 1,
+        "category": "Modern Novels",
+        "percentage": 4.3
+      }
+    ],
+    "overallLibraryPerformance": {
+      "circulationVelocity": {
+        "value": 1.8,
+        "unit": "%",
+        "description": "Active borrowed items relative to active collection inventory"
+      },
+      "returnEfficiency": {
+        "value": 100,
+        "unit": "%",
+        "description": "Loans returned on or before due date without overdue penalties"
+      },
+      "copyUtilization": {
+        "value": 1.8,
+        "unit": "%",
+        "description": "Percentage of total catalog copies actively checked out"
+      }
+    },
+    "yoyGrowthPercentage": {
+      "currentYtdMembers": 3,
+      "priorEquivalentYtdMembers": 0,
+      "yoyGrowthPercentage": 100,
+      "periodComparison": "Jan 1 - Nov 10 (2026 vs 2025)"
+    },
+    "yearlyMemberGrowthChart": [
+      {
+        "year": "2026",
+        "members": 3
+      }
+    ]
+  },
+  "sectionC": {
+    "monthWiseMostBorrowed": [
+      {
+        "borrowCount": 1,
+        "bookId": 42,
+        "title": "Eleanor Oliphant Is Completely Fine",
+        "author": "Gail Honeyman",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 37,
+        "title": "A Thousand Splendid Suns",
+        "author": "Khaled Hosseini",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 36,
+        "title": "The Kite Runner",
+        "author": "Khaled Hosseini",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 66,
+        "title": "Murder on the Orient Express",
+        "author": "Agatha Christie",
+        "category": "Fiction & Mystery"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 5,
+        "title": "Meditations: Thoughts on Stoicism and Inner Peace",
+        "author": "Marcus Aurelius",
+        "category": "Spiritual & Wisdom"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 39,
+        "title": "The Book Thief",
+        "author": "Markus Zusak",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 18,
+        "title": "Tuesdays with Morrie: An Old Man, a Young Man, and Life's Greatest Lesson",
+        "author": "Mitch Albom",
+        "category": "Spiritual & Wisdom"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 38,
+        "title": "Where the Crawdads Sing",
+        "author": "Delia Owens",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 40,
+        "title": "The Fault in Our Stars",
+        "author": "John Green",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 46,
+        "title": "The House in the Cerulean Sea",
+        "author": "TJ Klune",
+        "category": "Modern Novels"
+      }
+    ],
+    "monthWiseLeastBorrowed": [
+      {
+        "borrowCount": 1,
+        "bookId": 66,
+        "title": "Murder on the Orient Express",
+        "author": "Agatha Christie",
+        "category": "Fiction & Mystery"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 42,
+        "title": "Eleanor Oliphant Is Completely Fine",
+        "author": "Gail Honeyman",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 40,
+        "title": "The Fault in Our Stars",
+        "author": "John Green",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 46,
+        "title": "The House in the Cerulean Sea",
+        "author": "TJ Klune",
+        "category": "Modern Novels"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 36,
+        "title": "The Kite Runner",
+        "author": "Khaled Hosseini",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 39,
+        "title": "The Book Thief",
+        "author": "Markus Zusak",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 38,
+        "title": "Where the Crawdads Sing",
+        "author": "Delia Owens",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 37,
+        "title": "A Thousand Splendid Suns",
+        "author": "Khaled Hosseini",
+        "category": "Emotional Fiction"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 18,
+        "title": "Tuesdays with Morrie: An Old Man, a Young Man, and Life's Greatest Lesson",
+        "author": "Mitch Albom",
+        "category": "Spiritual & Wisdom"
+      },
+      {
+        "borrowCount": 1,
+        "bookId": 5,
+        "title": "Meditations: Thoughts on Stoicism and Inner Peace",
+        "author": "Marcus Aurelius",
+        "category": "Spiritual & Wisdom"
+      }
+    ],
+    "mostBorrowedOverall": {
+      "totalBorrows": 4,
+      "bookId": 34,
+      "title": "A Man Called Ove",
+      "author": "Fredrik Backman",
+      "category": "Emotional Fiction"
+    },
+    "leastBorrowedOverall": {
+      "bookId": 19,
+      "title": "1984",
+      "author": "George Orwell",
+      "category": "Classic Novels",
+      "totalBorrows": 0
+    }
+  },
+  "sectionD": {
+    "mostRequestedBooks": [],
+    "bookWiseWaitingList": [],
+    "top5HighestWaitingList": []
+  }
+}

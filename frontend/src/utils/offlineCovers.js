@@ -1,118 +1,137 @@
-// LibraMind Dedicated Offline Book Cover Generator
+// LibraMind Dedicated Athenaeum Editorial Book Cover Generator
 // Pure In-Memory SVG Vector Data URI — 100% Reliable Offline Fallback
-// Provides authentic Editorial Magazine & Book Publishing clothbound aesthetic.
+// Provides iconic Classical Athenaeum book cloth art direction: Gold Foil Borders, Deep Archival Palettes, Serif Typography & Archival Monogram.
 
-export function getOfflineBookCover(title = 'Literary Work', author = 'Author', category = 'Literature') {
-  const safeTitle = (title || 'Literary Work')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .substring(0, 36);
-  const safeAuthor = (author || 'Writer')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .substring(0, 26);
-  const safeCat = (category || 'Essays')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .substring(0, 22);
+const coverCache = new Map();
 
-  // Deterministic hash based on book title to cycle through editorial bookcloth colors
+export function getOfflineBookCover(title = 'Library Volume', author = 'Scholar', category = 'Archival Stacks') {
+  const cacheKey = `${title}_${author}_${category}`;
+  if (coverCache.has(cacheKey)) {
+    return coverCache.get(cacheKey);
+  }
+
+  const safeTitle = (title || 'Library Volume')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const safeAuthor = (author || 'Scholar')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const safeCat = (category || 'Archival Stacks')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .toUpperCase();
+
+  // Deterministic hash based on book title
   let hash = 0;
   for (let i = 0; i < (title || '').length; i++) {
     hash = (hash << 5) - hash + title.charCodeAt(i);
     hash |= 0;
   }
+  const absHash = Math.abs(hash);
+  const folioNum = String((absHash % 89) + 11).padStart(2, '0');
 
+  // Rich Athenaeum Color Harmonies
   const palettes = [
-    { cloth: '#263D32', trim: '#9B6548', highlight: '#C48A6C', accent: '#F7F4ED' }, // Oxford Editorial Green
-    { cloth: '#9B6548', trim: '#263D32', highlight: '#B87B5B', accent: '#F7F4ED' }, // Literary Terracotta
-    { cloth: '#252820', trim: '#9B6548', highlight: '#C48A6C', accent: '#EFE9DD' }, // Charcoal Typewriter Ink
-    { cloth: '#3E5046', trim: '#9B6548', highlight: '#D9D3C7', accent: '#F7F4ED' }, // Soft Forest Sage
-    { cloth: '#593D2E', trim: '#D9D3C7', highlight: '#C48A6C', accent: '#F7F4ED' }  // Warm Leather Sienna
+    { bg1: '#1F3328', bg2: '#122019', gold: '#D4AF37', accent: '#E8D5A3', lightText: '#FAF8F2' }, // Oxford Forest
+    { bg1: '#3D201A', bg2: '#24120E', gold: '#DFB15B', accent: '#EAD7AF', lightText: '#FAF8F2' }, // Terracotta Crimson
+    { bg1: '#1A2938', bg2: '#0D1722', gold: '#CBB279', accent: '#DFD1AB', lightText: '#FAF8F2' }, // Archival Sapphire
+    { bg1: '#382517', bg2: '#20140B', gold: '#D4AF37', accent: '#E8D5A3', lightText: '#FAF8F2' }, // Polished Mahogany
+    { bg1: '#2C1B30', bg2: '#190E1C', gold: '#E5C07B', accent: '#F0DAB2', lightText: '#FAF8F2' }, // Plum Velvet
+    { bg1: '#212624', bg2: '#131615', gold: '#C5A059', accent: '#DFCA99', lightText: '#FAF8F2' }  // Archival Charcoal
   ];
-  const p = palettes[Math.abs(hash) % palettes.length];
-  const accessionRef = `FOLIO-${Math.abs(hash % 900 + 100)}`;
+  const p = palettes[absHash % palettes.length];
+
+  // Graceful word wrapping for book title
+  const words = safeTitle.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    if ((cur + ' ' + w).trim().length <= 18) {
+      cur = (cur + ' ' + w).trim();
+    } else {
+      if (cur) lines.push(cur);
+      cur = w;
+    }
+  }
+  if (cur) lines.push(cur);
+  const displayLines = lines.slice(0, 4);
+  const startY = 220 - (displayLines.length - 1) * 16;
+  const titleSvg = displayLines.map((line, idx) => 
+    `<text x="200" y="${startY + idx * 32}" text-anchor="middle" fill="${p.lightText}" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" letter-spacing="-0.2">${line}</text>`
+  ).join('\n');
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
-    <defs>
-      <linearGradient id="clothGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="${p.cloth}"/>
-        <stop offset="60%" stop-color="${p.cloth}"/>
-        <stop offset="100%" stop-color="#141812"/>
-      </linearGradient>
-    </defs>
+  <defs>
+    <linearGradient id="athenaeumGrad_${absHash}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${p.bg1}"/>
+      <stop offset="100%" stop-color="${p.bg2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#athenaeumGrad_${absHash})"/>
+  
+  <!-- Outer Bookcloth Gold Border -->
+  <rect x="16" y="16" width="368" height="568" rx="4" fill="none" stroke="${p.gold}" stroke-opacity="0.45" stroke-width="1.5"/>
+  <rect x="24" y="24" width="352" height="552" rx="2" fill="none" stroke="${p.gold}" stroke-opacity="0.22" stroke-width="0.8"/>
+  
+  <!-- Corner Studs -->
+  <circle cx="24" cy="24" r="3" fill="${p.gold}" fill-opacity="0.7"/>
+  <circle cx="376" cy="24" r="3" fill="${p.gold}" fill-opacity="0.7"/>
+  <circle cx="24" cy="576" r="3" fill="${p.gold}" fill-opacity="0.7"/>
+  <circle cx="376" cy="576" r="3" fill="${p.gold}" fill-opacity="0.7"/>
+  
+  <!-- Header Ribbon -->
+  <text x="200" y="58" text-anchor="middle" fill="${p.gold}" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" letter-spacing="3.5">LIBRAMIND ATHENAEUM</text>
+  <text x="200" y="78" text-anchor="middle" fill="${p.accent}" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ ${folioNum} • ${safeCat}</text>
+  <line x1="130" y1="94" x2="270" y2="94" stroke="${p.gold}" stroke-opacity="0.5" stroke-width="1"/>
+  
+  <!-- Title Block -->
+  ${titleSvg}
+  
+  <!-- Divider -->
+  <line x1="160" y1="${startY + displayLines.length * 32 + 10}" x2="240" y2="${startY + displayLines.length * 32 + 10}" stroke="${p.gold}" stroke-opacity="0.6" stroke-width="1.2"/>
+  
+  <!-- Author -->
+  <text x="200" y="${startY + displayLines.length * 32 + 38}" text-anchor="middle" fill="${p.accent}" font-family="Georgia, serif" font-size="13" font-style="italic">by ${safeAuthor}</text>
+  
+  <!-- Archival Monogram Seal -->
+  <circle cx="200" cy="495" r="24" fill="none" stroke="${p.gold}" stroke-opacity="0.5" stroke-width="1.2"/>
+  <text x="200" y="501" text-anchor="middle" fill="${p.gold}" font-family="Georgia, serif" font-size="14" font-weight="bold">LM</text>
+  <text x="200" y="545" text-anchor="middle" fill="${p.accent}" font-family="system-ui, -apple-system, sans-serif" font-size="8" letter-spacing="2.5" opacity="0.75">ARCHIVAL SANCTUARY EDITION</text>
+</svg>`;
 
-    <!-- Editorial Book Canvas -->
-    <rect width="400" height="600" fill="url(#clothGrad)"/>
+  let dataUri = '';
+  try {
+    if (typeof btoa !== 'undefined') {
+      dataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    }
+  } catch (_) {}
 
-    <!-- Spine Ribbing Simulation on Left -->
-    <rect x="0" y="0" width="22" height="600" fill="#000000" fill-opacity="0.3"/>
-    <line x1="22" y1="0" x2="22" y2="600" stroke="${p.trim}" stroke-width="1.2" stroke-opacity="0.5"/>
+  if (!dataUri) {
+    try {
+      const base64Svg = typeof Buffer !== 'undefined' ? Buffer.from(svg).toString('base64') : null;
+      if (base64Svg) {
+        dataUri = `data:image/svg+xml;base64,${base64Svg}`;
+      }
+    } catch (_) {}
+  }
 
-    <!-- Minimal Hairline Outer Frame -->
-    <rect x="36" y="24" width="340" height="552" rx="2" fill="none" stroke="${p.trim}" stroke-width="1.5" stroke-opacity="0.8"/>
-    <rect x="42" y="30" width="328" height="540" rx="1" fill="none" stroke="#D9D3C7" stroke-width="0.6" stroke-opacity="0.6"/>
+  if (!dataUri) {
+    dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
 
-    <!-- Top Editorial Header & Folio -->
-    <g transform="translate(206, 68)">
-      <text x="0" y="0" text-anchor="middle" fill="#FFFFFF" font-family="'Inter', -apple-system, sans-serif" font-size="8" font-weight="700" letter-spacing="3.5">LIBRAMIND EDITORIAL REVIEW</text>
-      <line x1="-70" y1="12" x2="70" y2="12" stroke="${p.trim}" stroke-width="0.8"/>
-    </g>
-
-    <!-- Editorial Bookplate Inset (Cream Parchment Sheet) -->
-    <g transform="translate(56, 125)">
-      <rect x="0" y="0" width="300" height="330" rx="2" fill="#F7F4ED" stroke="#D9D3C7" stroke-width="1.2"/>
-      <rect x="6" y="6" width="288" height="318" rx="1" fill="none" stroke="${p.trim}" stroke-width="0.5" stroke-opacity="0.5"/>
-
-      <!-- Category Label -->
-      <text x="150" y="44" text-anchor="middle" fill="#9B6548" font-family="'Inter', sans-serif" font-size="9.5" font-weight="700" letter-spacing="2">
-        — ${safeCat.toUpperCase()} —
-      </text>
-
-      <line x1="60" y1="60" x2="240" y2="60" stroke="#D9D3C7" stroke-width="0.8"/>
-
-      <!-- Stamped Book Title in Serif -->
-      <text x="150" y="125" text-anchor="middle" fill="#252820" font-family="'Playfair Display', Georgia, serif" font-size="20" font-weight="700" letter-spacing="-0.2">
-        ${safeTitle}
-      </text>
-
-      <!-- Second Decorative Divider -->
-      <line x1="85" y1="180" x2="215" y2="180" stroke="#D9D3C7" stroke-width="0.8"/>
-
-      <!-- Stamped Author -->
-      <text x="150" y="215" text-anchor="middle" fill="#77766E" font-family="'Inter', sans-serif" font-size="10.5" font-weight="500" letter-spacing="1">
-        WRITTEN BY
-      </text>
-      <text x="150" y="242" text-anchor="middle" fill="#252820" font-family="'Playfair Display', Georgia, serif" font-size="15" font-weight="700" letter-spacing="0.5">
-        ${safeAuthor}
-      </text>
-
-      <!-- Colophon Mark -->
-      <text x="150" y="295" text-anchor="middle" fill="#77766E" font-family="'Inter', sans-serif" font-size="8" font-weight="600" letter-spacing="1.5">
-        ESTD. 1892 • ATHENAEUM EDITION
-      </text>
-    </g>
-
-    <!-- Bottom Accession Slip -->
-    <g transform="translate(68, 490)">
-      <rect x="0" y="0" width="276" height="54" rx="2" fill="#EFE9DD" stroke="#D9D3C7" stroke-width="1"/>
-      <text x="138" y="24" text-anchor="middle" fill="#252820" font-family="'Space Mono', monospace" font-size="9.5" font-weight="700" letter-spacing="1">${accessionRef}</text>
-      <text x="138" y="42" text-anchor="middle" fill="#77766E" font-family="'Inter', sans-serif" font-size="8" font-weight="600" letter-spacing="1.5">SANCTUARY COLLECTION</text>
-    </g>
-  </svg>`;
-
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  coverCache.set(cacheKey, dataUri);
+  return dataUri;
 }
 
 export function handleBookCoverError(e, title, author, category) {
   if (e && e.currentTarget) {
+    e.currentTarget.onerror = null; // Prevent infinite event loops
     const offlineSrc = getOfflineBookCover(title, author, category);
     if (e.currentTarget.src !== offlineSrc) {
       e.currentTarget.src = offlineSrc;
     }
   }
 }
-

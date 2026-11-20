@@ -180,12 +180,12 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                backgroundColor: 'var(--editorial-border)',
-                color: 'var(--editorial-text)',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                color: 'var(--editorial-accent)',
                 border: '1px solid var(--editorial-border)',
-                boxShadow: 'var(--shadow-sm)',
+                borderRadius: 'var(--radius-full)',
                 fontSize: '0.78rem',
-                fontWeight: 900,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 padding: '4px 10px',
@@ -194,10 +194,10 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
             >
               <Compass size={15} strokeWidth={2.4} /> Physical Stacks Navigation
             </div>
-            <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', margin: '4px 0 8px' }}>
+            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 8px' }}>
               My Library Visit Planner
             </h1>
-            <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', margin: 0, maxWidth: '640px', fontWeight: 500 }}>
+            <p style={{ color: 'var(--editorial-text-muted)', fontSize: '1rem', margin: 0, maxWidth: '640px', fontWeight: 400 }}>
               Prepare your physical visit with an organized checklist grouped by Floor and Section. Verify whether a book must be reserved and check study seat vacancies in advance.
             </p>
           </div>

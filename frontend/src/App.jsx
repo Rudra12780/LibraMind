@@ -102,22 +102,29 @@ function AppContent() {
 
       // Check for deep book IDs e.g. /books/4 or /book-details/4 or /book-details?id=4
       if (urlId) {
-        setSelectedBookId(parseInt(urlId, 10) || urlId);
+        setSelectedBookId(/^\d+$/.test(String(urlId)) ? parseInt(urlId, 10) : String(urlId));
       } else {
-        const booksMatch = cleanPath.match(/^(?:books|book-details)\/(\d+)$/);
+        const booksMatch = cleanPath.match(/^(?:books|book-details)\/([a-zA-Z0-9_-]+)$/);
         if (booksMatch && booksMatch[1]) {
-          setSelectedBookId(parseInt(booksMatch[1], 10));
+          const rawId = booksMatch[1];
+          setSelectedBookId(/^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId);
         }
       }
 
       if (cleanPath === 'presentation' || cleanPath === 'ppt' || cleanPath === 'download-ppt' || cleanPath === 'slides') {
         // disabled per user request
-        setActivePage('home');
+        setActivePage(user ? (user.role === 'admin' ? 'admin' : user.role === 'librarian' ? 'librarian' : 'dashboard') : 'home');
       } else if (cleanPath.startsWith('books/') || cleanPath.startsWith('book-details/') || cleanPath === 'book-details') {
         setActivePage('book-details');
       } else if (cleanPath === '' || cleanPath === 'home') {
-        // Main landing page opens by default at http://localhost:5000
-        setActivePage('home');
+        // When authenticated, home redirects to user dashboard; for guests it shows the public landing page
+        if (user) {
+          if (user.role === 'admin' && adminVerified) setActivePage('admin');
+          else if (user.role === 'librarian') setActivePage('librarian');
+          else setActivePage('dashboard');
+        } else {
+          setActivePage('home');
+        }
       } else if (cleanPath === 'books' || cleanPath === 'catalog') {
         setActivePage('catalog');
       } else if (cleanPath === 'ai-book-finder' || cleanPath === 'ai-finder') {
@@ -234,6 +241,13 @@ function AppContent() {
     if (cleanPage === 'help') cleanPage = 'contact';
     if (cleanPage === 'policies') cleanPage = 'terms';
 
+    // If authenticated user navigates to 'home' without an explicit scroll target, redirect to their dashboard
+    if ((cleanPage === 'home' || cleanPage === '') && user && !params.scrollTo) {
+      if (user.role === 'admin' && adminVerified) cleanPage = 'admin';
+      else if (user.role === 'librarian') cleanPage = 'librarian';
+      else cleanPage = 'dashboard';
+    }
+
     // Strict role-based navigation protection
     if (user && user.role === 'student') {
       if (['admin', 'librarian', 'analytics'].includes(cleanPage)) {
@@ -273,7 +287,12 @@ function AppContent() {
 
     setActivePage(cleanPage);
 
-    if (params.section === 'wishlist') {
+    if (params.scrollTo) {
+      setTimeout(() => {
+        const el = document.getElementById(params.scrollTo);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    } else if (params.section === 'wishlist') {
       setTimeout(() => {
         const el = document.getElementById('wishlist-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -310,13 +329,13 @@ function AppContent() {
       // Ignore in iframe / test sandbox
     }
 
-    if (params.section !== 'wishlist') {
+    if (!params.scrollTo && params.section !== 'wishlist') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const viewBookDetails = (bookId) => {
-    const validId = parseInt(bookId, 10) || bookId;
+    const validId = /^\d+$/.test(String(bookId)) ? parseInt(bookId, 10) : String(bookId);
     setSelectedBookId(validId);
     setActivePage('book-details');
     try {
@@ -327,20 +346,20 @@ function AppContent() {
 
   const handleToggleCompare = (bookId) => {
     setCompareBookIds((prev) => {
-      const numId = parseInt(bookId, 10);
-      if (prev.includes(numId)) {
-        return prev.filter((id) => id !== numId);
+      const normalizedId = /^\d+$/.test(String(bookId)) ? parseInt(bookId, 10) : String(bookId);
+      if (prev.some(id => String(id) === String(normalizedId))) {
+        return prev.filter((id) => String(id) !== String(normalizedId));
       }
       if (prev.length >= 3) {
-        return [...prev.slice(1), numId];
+        return [...prev.slice(1), normalizedId];
       }
-      return [...prev, numId];
+      return [...prev, normalizedId];
     });
   };
 
   const handleRemoveCompareBook = (bookId) => {
-    const numId = parseInt(bookId, 10);
-    setCompareBookIds((prev) => prev.filter((id) => id !== numId));
+    const normalizedId = /^\d+$/.test(String(bookId)) ? parseInt(bookId, 10) : String(bookId);
+    setCompareBookIds((prev) => prev.filter((id) => String(id) !== String(normalizedId)));
   };
 
   const handleClearCompare = () => {
@@ -348,11 +367,11 @@ function AppContent() {
   };
 
   const handleAddCompareBookById = (bookId) => {
-    const numId = parseInt(bookId, 10);
+    const normalizedId = /^\d+$/.test(String(bookId)) ? parseInt(bookId, 10) : String(bookId);
     setCompareBookIds((prev) => {
-      if (prev.includes(numId)) return prev;
-      if (prev.length >= 3) return [...prev.slice(1), numId];
-      return [...prev, numId];
+      if (prev.some(id => String(id) === String(normalizedId))) return prev;
+      if (prev.length >= 3) return [...prev.slice(1), normalizedId];
+      return [...prev, normalizedId];
     });
   };
 

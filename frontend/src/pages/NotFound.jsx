@@ -31,15 +31,15 @@ export default function NotFound({ onNavigate }) {
           <Compass size={44} strokeWidth={2.4} />
         </div>
 
-        <div style={{ fontSize: '5rem', fontWeight: 900, color: 'var(--editorial-text)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.04em' }}>
+        <div style={{ fontSize: '5rem', fontWeight: 800, fontFamily: 'var(--font-serif)', color: 'var(--editorial-accent)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.04em' }}>
           404
         </div>
 
-        <h1 style={{ fontSize: '1.8rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '14px' }}>
+        <h1 style={{ fontSize: '1.8rem', color: 'var(--editorial-text)', fontFamily: 'var(--font-serif)', fontWeight: 700, marginBottom: '14px' }}>
           Uncharted Shelf Coordinate
         </h1>
 
-        <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, marginBottom: '32px', fontWeight: 500 }}>
+        <p style={{ color: 'var(--editorial-text-muted)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '32px', fontWeight: 400 }}>
           The library section or page you are looking for has been moved, re-indexed, or does not exist in our catalog.
         </p>
 

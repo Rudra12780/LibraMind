@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, BookOpen, Heart, GitCompare, Compass, ArrowRight, Bookmark, RotateCcw } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
+import { useAuth } from '../context/AuthContext';
 
 export { getOfflineBookCover, handleBookCoverError };
 
@@ -17,6 +18,8 @@ export default function BookCard({
   onAddToPlanner,
   isBorrowedByUser = false
 }) {
+  const { user } = useAuth();
+  const bookIdentifier = book.id !== undefined ? book.id : book._id;
   const isAvailable = book.available_copies > 0;
   const offlineFallback = React.useMemo(() => getOfflineBookCover(book.title, book.author, book.category), [book.title, book.author, book.category]);
   const [imgSrc, setImgSrc] = React.useState(() => {
@@ -35,7 +38,7 @@ export default function BookCard({
   return (
     <article
       className="bio-card"
-      onClick={() => onViewDetails && onViewDetails(book.id)}
+      onClick={() => onViewDetails && onViewDetails(bookIdentifier)}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -179,11 +182,32 @@ export default function BookCard({
             <span style={{ color: 'var(--editorial-text-muted)' }}>{book.shelf}</span>
           </div>
           <ArrowRight size={13} color="var(--editorial-text-muted)" />
-        </div>
-
-        {/* ── Editorial Action Bar (Borrow / Reserve / Manage) ── */}
+        </div>        {/* ── Editorial Action Bar (Explore for Guests / Reserve / Manage for Members) ── */}
         <div style={{ marginTop: '10px' }}>
-          {isBorrowedByUser ? (
+          {!user ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails && onViewDetails(bookIdentifier);
+                }}
+                className="btn btn-primary btn-sm"
+                style={{
+                  fontSize: '0.82rem',
+                  padding: '7px 14px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  width: '100%'
+                }}
+              >
+                <BookOpen size={14} strokeWidth={2.2} />
+                <span>Explore</span>
+              </button>
+            </div>
+          ) : isBorrowedByUser ? (
             <div style={{ display: 'grid', gridTemplateColumns: onReturn ? '1fr 1fr' : '1fr', gap: '8px' }}>
               {onReturn ? (
                 <button
@@ -201,7 +225,7 @@ export default function BookCard({
                     justifyContent: 'center',
                     gap: '5px'
                   }}
-                  title="Return this copy so you can borrow it again or choose another title"
+                  title="Return this copy"
                 >
                   <RotateCcw size={13} strokeWidth={2.2} />
                   <span>Return Copy</span>
@@ -211,57 +235,45 @@ export default function BookCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onViewDetails && onViewDetails(book.id);
+                  onViewDetails && onViewDetails(bookIdentifier);
                 }}
                 className="btn btn-outline btn-sm"
                 style={{ fontSize: '0.76rem', padding: '6px 10px' }}
               >
-                Volume Details →
+                Explore →
               </button>
             </div>
           ) : isAvailable ? (
-            <div style={{ display: 'grid', gridTemplateColumns: onBorrow ? '1fr auto' : '1fr', gap: '8px' }}>
-              {onBorrow && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBorrow(book);
-                  }}
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    fontSize: '0.78rem',
-                    padding: '6px 12px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <BookOpen size={13} strokeWidth={2.2} />
-                  <span>Borrow Volume</span>
-                </button>
-              )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onViewDetails && onViewDetails(book.id);
+                  onViewDetails && onViewDetails(bookIdentifier);
                 }}
-                className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                className="btn btn-primary btn-sm"
+                style={{
+                  fontSize: '0.82rem',
+                  padding: '7px 14px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  width: '100%'
+                }}
               >
-                Details →
+                <BookOpen size={14} strokeWidth={2.2} />
+                <span>Explore</span>
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: onReserve ? '1fr auto' : '1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: onReserve ? '1fr 1fr' : '1fr', gap: '8px' }}>
               {onReserve && (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onReserve(book.id);
+                    onReserve(bookIdentifier);
                   }}
                   className="btn btn-secondary btn-sm"
                   style={{
@@ -274,19 +286,19 @@ export default function BookCard({
                   }}
                 >
                   <Bookmark size={13} strokeWidth={2.2} />
-                  <span>Place Hold</span>
+                  <span>Join Waiting List</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onViewDetails && onViewDetails(book.id);
+                  onViewDetails && onViewDetails(bookIdentifier);
                 }}
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                style={{ fontSize: '0.78rem', padding: '6px 12px', width: '100%' }}
               >
-                Details →
+                Explore →
               </button>
             </div>
           )}

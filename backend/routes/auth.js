@@ -2,9 +2,24 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const db = require('../db/database');
+const mongoose = require('mongoose');
+
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+const PasswordReset = require('../models/PasswordReset');
+const OTP = require('../models/OTP');
+const Loan = require('../models/Loan');
+const Reservation = require('../models/Reservation');
+const BookCopy = require('../models/BookCopy');
+const Book = require('../models/Book');
+const SeatReservation = require('../models/SeatReservation');
+const Wishlist = require('../models/Wishlist');
+const VisitPlanner = require('../models/VisitPlanner');
+
 const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
 const { sendPasswordResetEmail, isConfigured: isEmailConfigured } = require('../utils/emailService');
+const { sendSmsOtp, getSmsConfig } = require('../services/smsService');
+const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
 const router = express.Router();
 
@@ -25,90 +40,125 @@ function checkResetRateLimit(key, maxRequests = 5, windowMs = 15 * 60 * 1000) {
 }
 
 // Register new student/member
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, interests, adminSecret, role } = req.body;
+    const { name, email, phone, password, confirmPassword, phoneVerificationToken, interests } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required' });
+      return res.status(400).json({ error: 'Full name, email address, and password are required.' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
-    if (existing) {
-      return res.status(400).json({ error: 'User with this email already exists' });
+    if (confirmPassword && password !== confirmPassword) {
+      return res.status(400).json({ error: 'Password and Confirm Password do not match.' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid academic or personal email address.' });
+    }
+
+    const existingEmail = await User.findOne({ email: cleanEmail });
+    if (existingEmail) {
+      return res.status(400).json({ error: 'A member account with this email address already exists. Please sign in instead.' });
+    }
+
+    const cleanPhone = phone ? phone.trim() : '';
+    let isPhoneVerified = false;
+
+    if (cleanPhone) {
+      const existingPhone = await User.findOne({ phone: cleanPhone });
+      if (existingPhone) {
+        return res.status(400).json({ error: 'A member account with this mobile number already exists. Please sign in instead.' });
+      }
+
+      // Check phone verification token if provided
+      if (phoneVerificationToken) {
+        try {
+          const decoded = jwt.verify(phoneVerificationToken, JWT_SECRET);
+          if (decoded && decoded.verified && decoded.phone === cleanPhone) {
+            isPhoneVerified = true;
+          }
+        } catch (e) {
+          return res.status(400).json({ error: 'Phone verification token has expired or is invalid. Please verify via OTP again.' });
+        }
+      }
     }
 
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(password, salt);
 
-    // Public registration strictly creates verified Student membership accounts
     const assignedRole = 'student';
     const prefix = 'STU';
-
-    // Generate unique membership ID
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const membership_id = `${prefix}-${randomNum}`;
 
-    const stmt = db.prepare(`
-      INSERT INTO users (name, email, password_hash, role, membership_id, interests)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
+    let parsedInterests = 'Fiction & Literature, Philosophy & Deep Thinking';
+    if (Array.isArray(interests)) {
+      parsedInterests = interests.filter(Boolean).join(', ');
+    } else if (typeof interests === 'string' && interests.trim()) {
+      parsedInterests = interests.trim();
+    }
 
-    const result = stmt.run(
-      name.trim(),
-      email.toLowerCase().trim(),
+    const newUser = await User.create({
+      name: name.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      phone_verified: isPhoneVerified,
       password_hash,
-      assignedRole,
+      role: assignedRole,
       membership_id,
-      interests ? interests.trim() : (assignedRole === 'admin' ? 'Administration & Systems Governance' : 'Computer Science, General Reading')
-    );
+      interests: parsedInterests,
+      created_at: new Date()
+    });
 
-    const userId = result.lastInsertRowid;
+    const userId = newUser._id.toString();
 
-    // Create welcome notification
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
-      userId,
-      'Welcome to LibraMind!',
-      'Your membership is now active. Explore books and find study pods.',
-      'announcement',
-      '/catalog'
-    );
+    // Welcome notification
+    await Notification.create({
+      user_id: newUser._id,
+      title: 'Welcome to LibraMind! 🌿',
+      message: 'Your member sanctuary card is now active. Explore books, reserve study pods, and enjoy curated reading recommendations.',
+      type: 'announcement',
+      link: '/catalog',
+      created_at: new Date()
+    });
 
-    logAudit(userId, 'USER_REGISTERED', `${assignedRole === 'admin' ? 'Administrator' : 'Student'} registered with membership ${membership_id}`);
+    logAudit(userId, 'USER_REGISTERED', `Student registered with membership ${membership_id}`);
 
     const token = jwt.sign(
-      { id: userId, email: email.toLowerCase().trim(), role: assignedRole, name: name.trim(), membership_id },
+      { id: userId, email: cleanEmail, role: assignedRole, name: newUser.name, membership_id },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.status(201).json({
-      message: `${assignedRole === 'admin' ? 'Administrator' : 'Student'} registration successful`,
+      success: true,
+      message: 'Account created successfully! Welcome to LibraMind.',
       token,
       user: {
         id: userId,
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
+        name: newUser.name,
+        email: cleanEmail,
+        phone: cleanPhone,
+        phone_verified: isPhoneVerified,
         role: assignedRole,
         membership_id,
-        interests: interests || ''
+        interests: newUser.interests
       }
     });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: 'Internal server error during registration' });
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 });
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password, adminPortal } = req.body;
 
@@ -139,7 +189,14 @@ router.post('/login', (req, res) => {
       queryUser = 'student@libramind.edu';
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(membership_id) = LOWER(?)').get(queryUser, queryUser);
+    const user = await User.findOne({
+      $or: [
+        { email: queryUser },
+        { membership_id: queryUser },
+        { phone: queryUser }
+      ]
+    });
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -155,18 +212,21 @@ router.post('/login', (req, res) => {
         isMatch = true;
       }
     }
+
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    const userId = user._id.toString();
+
     if (adminPortal && user.role !== 'admin') {
-      logAudit(user.id, 'SECURITY_ALERT', `Rejected non-admin user ${user.email} (${user.role}) on Admin Gateway`);
+      logAudit(userId, 'SECURITY_ALERT', `Rejected non-admin user ${user.email} (${user.role}) on Admin Gateway`);
       return res.status(403).json({ error: 'Access Denied: Only Administrator accounts can log in through the Admin Portal.' });
     }
 
     const token = jwt.sign(
       {
-        id: user.id,
+        id: userId,
         email: user.email,
         role: user.role,
         name: user.name,
@@ -176,13 +236,13 @@ router.post('/login', (req, res) => {
       { expiresIn: '7d' }
     );
 
-    logAudit(user.id, 'USER_LOGIN', `User ${user.email} logged in`);
+    logAudit(userId, 'USER_LOGIN', `User ${user.email} logged in`);
 
     res.json({
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: userId,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -206,8 +266,8 @@ router.post('/login', (req, res) => {
   }
 });
 
-// GitHub Authentication (SSO for Students and Librarians)
-router.post('/github', (req, res) => {
+// GitHub SSO Authentication
+router.post('/github', async (req, res) => {
   try {
     const { githubUsername, email, name, role = 'student', avatarUrl } = req.body;
 
@@ -218,18 +278,15 @@ router.post('/github', (req, res) => {
     const cleanName = (name && name.trim()) ? name.trim() : (cleanUsername ? `@${cleanUsername}` : 'GitHub Reader');
     const targetRole = role === 'librarian' ? 'librarian' : 'student';
 
-    // Check if user already exists with this email or github username
-    let user = db.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)').get(cleanEmail);
+    let user = await User.findOne({ email: cleanEmail });
 
     if (user) {
-      // If user exists and is logging in as librarian via librarian portal, ensure they have staff role
       if (targetRole === 'librarian' && user.role !== 'librarian' && user.role !== 'admin') {
-        db.prepare('UPDATE users SET role = ? WHERE id = ?').run('librarian', user.id);
         user.role = 'librarian';
+        await user.save();
       }
-      logAudit(user.id, 'GITHUB_LOGIN', `User ${user.email} logged in via GitHub SSO (@${cleanUsername})`);
+      logAudit(user._id.toString(), 'GITHUB_LOGIN', `User ${user.email} logged in via GitHub SSO (@${cleanUsername})`);
     } else {
-      // Auto-provision new account for GitHub user
       const prefix = targetRole === 'librarian' ? 'LIB' : 'STU';
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       const membership_id = `${prefix}-${randomNum}`;
@@ -239,49 +296,31 @@ router.post('/github', (req, res) => {
         ? 'Catalog Management, Archival Preservation, Digital Humanities'
         : 'Open Source Software, Artificial Intelligence, Creative Writing';
 
-      const insertStmt = db.prepare(`
-        INSERT INTO users (name, email, password_hash, role, membership_id, interests)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-
-      const result = insertStmt.run(
-        cleanName,
-        cleanEmail,
-        password_hash,
-        targetRole,
-        membership_id,
-        defaultInterests
-      );
-
-      const newUserId = result.lastInsertRowid;
-
-      // Welcome notification
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(
-        newUserId,
-        `Welcome from GitHub, ${cleanName}! 🌿`,
-        `Your Bohemian Library sanctuary membership (${membership_id}) is now active with GitHub SSO.`,
-        'announcement',
-        targetRole === 'librarian' ? '/librarian' : '/catalog'
-      );
-
-      logAudit(newUserId, 'GITHUB_REGISTER', `${targetRole === 'librarian' ? 'Librarian' : 'Member'} account created via GitHub (@${cleanUsername})`);
-
-      user = {
-        id: newUserId,
+      user = await User.create({
         name: cleanName,
         email: cleanEmail,
+        password_hash,
         role: targetRole,
         membership_id,
-        interests: defaultInterests
-      };
+        interests: defaultInterests,
+        created_at: new Date()
+      });
+
+      await Notification.create({
+        user_id: user._id,
+        title: `Welcome from GitHub, ${cleanName}! 🌿`,
+        message: `Your Bohemian Library sanctuary membership (${membership_id}) is now active with GitHub SSO.`,
+        type: 'announcement',
+        link: targetRole === 'librarian' ? '/librarian' : '/catalog',
+        created_at: new Date()
+      });
+
+      logAudit(user._id.toString(), 'GITHUB_REGISTER', `${targetRole === 'librarian' ? 'Librarian' : 'Member'} account created via GitHub (@${cleanUsername})`);
     }
 
     const token = jwt.sign(
       {
-        id: user.id,
+        id: user._id.toString(),
         email: user.email,
         role: user.role,
         name: user.name,
@@ -295,7 +334,7 @@ router.post('/github', (req, res) => {
       message: `Successfully authenticated with GitHub as ${user.name}`,
       token,
       user: {
-        id: user.id,
+        id: user._id.toString(),
         name: user.name,
         email: user.email,
         role: user.role,
@@ -310,95 +349,142 @@ router.post('/github', (req, res) => {
   }
 });
 
-// Send Mobile OTP
-router.post('/send-otp', (req, res) => {
+// Send Mobile OTP via SMS Gateway
+router.post('/send-otp', async (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!phone || typeof phone !== 'string' || phone.trim().length < 6) {
-      return res.status(400).json({ error: 'Valid phone number is required.' });
+    const { phone, purpose = 'login' } = req.body;
+    if (!phone || typeof phone !== 'string' || phone.trim().length < 8) {
+      return res.status(400).json({ error: 'A valid mobile phone number (with country code, at least 8 digits) is required.' });
     }
 
     const cleanPhone = phone.trim();
-    // Generate a 6-digit verification code
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Expire old OTPs for this phone
-    db.prepare('UPDATE otps SET used = 1 WHERE phone = ?').run(cleanPhone);
+    // Check account existence based on purpose
+    const existingUser = await User.findOne({ phone: cleanPhone });
+    if (purpose === 'register') {
+      if (existingUser) {
+        return res.status(400).json({ error: 'This mobile number is already registered to an active library account. Please sign in instead.' });
+      }
+    } else if (purpose === 'login') {
+      if (!existingUser) {
+        return res.status(404).json({ error: 'No registered library account found with this phone number. Please create an account first.' });
+      }
+    }
 
-    // Save new OTP record (valid for 10 minutes)
-    db.prepare(`
-      INSERT INTO otps (phone, otp_code, expires_at, used)
-      VALUES (?, ?, datetime('now', '+10 minutes'), 0)
-    `).run(cleanPhone, otpCode);
+    // Rate limiting: 60s resend cooldown
+    const recentOtp = await OTP.findOne({ phone: cleanPhone }).sort({ created_at: -1 });
+    if (recentOtp && (Date.now() - new Date(recentOtp.created_at).getTime()) < 60 * 1000) {
+      const waitSec = Math.ceil((60 * 1000 - (Date.now() - new Date(recentOtp.created_at).getTime())) / 1000);
+      return res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting another verification code.` });
+    }
+
+    // Check 15-minute abuse rate limit (max 5 requests per phone)
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const recentCount = await OTP.countDocuments({ phone: cleanPhone, created_at: { $gte: fifteenMinsAgo } });
+    if (recentCount >= 5) {
+      return res.status(429).json({ error: 'Too many OTP requests for this number. Please wait 15 minutes before trying again.' });
+    }
+
+    // Invalidate old unused OTPs for this phone
+    await OTP.updateMany({ phone: cleanPhone, used: 0 }, { $set: { used: 1 } });
+
+    // Generate secure 6-digit code
+    const otpCode = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+
+    await OTP.create({
+      phone: cleanPhone,
+      otp_code: otpCode,
+      purpose,
+      expires_at: expiresAt,
+      used: 0,
+      created_at: new Date()
+    });
+
+    // Send real SMS via Twilio or MSG91
+    try {
+      await sendSmsOtp(cleanPhone, otpCode, purpose);
+    } catch (smsErr) {
+      console.error('SMS Gateway dispatch error:', smsErr.message);
+      // Return clear configuration/delivery error - never simulate fake success or leak OTP
+      return res.status(503).json({
+        error: smsErr.message,
+        code: smsErr.code || 'SMS_GATEWAY_ERROR',
+        provider: smsErr.provider || 'unknown',
+        missing: smsErr.missing || []
+      });
+    }
 
     res.json({
       success: true,
-      message: `OTP code sent successfully to ${cleanPhone}`,
-      otp: otpCode // returned for instant automated testing & demo convenience
+      message: `A 6-digit verification code has been dispatched via SMS to ${cleanPhone}.`,
+      purpose,
+      expiresIn: 300
     });
   } catch (err) {
     console.error('Send OTP error:', err);
-    res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
+    res.status(500).json({ error: 'Failed to process OTP request. Please try again.' });
   }
 });
 
-// Verify Mobile OTP & Sign In / Register
-router.post('/verify-otp', (req, res) => {
+// Verify Mobile OTP (For Signup Verification or Login Authentication)
+router.post('/verify-otp', async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { phone, otp, purpose = 'login' } = req.body;
     if (!phone || !otp) {
-      return res.status(400).json({ error: 'Both phone number and OTP code are required.' });
+      return res.status(400).json({ error: 'Both phone number and 6-digit verification code are required.' });
     }
 
     const cleanPhone = phone.trim();
     const cleanOtp = otp.toString().trim();
 
-    // Verify OTP against database or universal demo fallback
-    const otpRecord = db.prepare(`
-      SELECT * FROM otps
-      WHERE phone = ? AND otp_code = ? AND used = 0 AND datetime('now') <= datetime(expires_at)
-      ORDER BY id DESC LIMIT 1
-    `).get(cleanPhone, cleanOtp);
-
-    const isValid = cleanOtp === '123456' || Boolean(otpRecord);
-
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid or expired OTP code. Use test code 123456 or request a new code.' });
+    if (cleanOtp.length !== 6) {
+      return res.status(400).json({ error: 'Verification code must be exactly 6 digits.' });
     }
 
-    // Mark OTP as used
-    if (otpRecord) {
-      db.prepare('UPDATE otps SET used = 1 WHERE id = ?').run(otpRecord.id);
+    // Server-side verification: check non-expired, unused OTP record matching phone and code
+    const otpRecord = await OTP.findOne({
+      phone: cleanPhone,
+      otp_code: cleanOtp,
+      used: 0,
+      expires_at: { $gte: new Date() }
+    }).sort({ created_at: -1 });
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'Invalid or expired verification code. Please request a new code.' });
     }
 
-    // Check if user exists with this phone
-    let user = db.prepare('SELECT * FROM users WHERE phone = ?').get(cleanPhone);
-    let isNewUser = false;
+    // Mark as used immediately to prevent replay attacks
+    otpRecord.used = 1;
+    await otpRecord.save();
 
+    // If purpose is 'register': verify phone and issue a short-lived token to complete signup
+    if (purpose === 'register') {
+      const phoneVerificationToken = jwt.sign(
+        { phone: cleanPhone, verified: true, type: 'phone_verification' },
+        JWT_SECRET,
+        { expiresIn: '15m' }
+      );
+
+      return res.json({
+        success: true,
+        verified: true,
+        phone: cleanPhone,
+        phoneVerificationToken,
+        message: 'Mobile phone number verified successfully.'
+      });
+    }
+
+    // If purpose is 'login': authenticate existing user (never auto-create an account)
+    const user = await User.findOne({ phone: cleanPhone });
     if (!user) {
-      isNewUser = true;
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const membership_id = `STU-${randomNum}`;
-      const tempEmail = `member_${cleanPhone.replace(/[^0-9]/g, '')}@student.libramind.edu`;
-      const salt = bcrypt.genSaltSync(10);
-      const dummyPasswordHash = bcrypt.hashSync('Student@123', salt);
-
-      const insertRes = db.prepare(`
-        INSERT INTO users (
-          name, email, password_hash, role, membership_id, phone,
-          interests, is_profile_completed
-        ) VALUES (?, ?, ?, 'student', ?, ?, 'General Reading', 0)
-      `).run('New Scholar', tempEmail, dummyPasswordHash, membership_id, cleanPhone);
-
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(insertRes.lastInsertRowid);
-      logAudit(user.id, 'USER_REGISTERED_OTP', `Registered student with phone ${cleanPhone}`);
-    } else {
-      logAudit(user.id, 'USER_LOGIN_OTP', `Logged in via verified mobile OTP ${cleanPhone}`);
+      return res.status(404).json({ error: 'No registered library account found for this phone number. Please create an account first.' });
     }
 
+    const userId = user._id.toString();
     const token = jwt.sign(
       {
-        id: user.id,
+        id: userId,
         email: user.email,
         role: user.role,
         name: user.name,
@@ -408,29 +494,24 @@ router.post('/verify-otp', (req, res) => {
       { expiresIn: '7d' }
     );
 
+    logAudit(userId, 'USER_LOGIN_OTP', `Logged in via verified mobile OTP ${cleanPhone}`);
+
     res.json({
       success: true,
-      message: 'Mobile verification successful',
+      message: `Welcome back, ${user.name}!`,
       token,
-      isProfileCompleted: Boolean(user.is_profile_completed),
-      isNewUser,
       user: {
-        id: user.id,
+        id: userId,
         name: user.name,
         email: user.email,
         role: user.role,
         membership_id: user.membership_id,
-        phone: user.phone || '',
+        phone: user.phone || cleanPhone,
+        phone_verified: user.phone_verified || true,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        gender: user.gender || '',
-        bio: user.bio || '',
-        profile_photo: user.profile_photo || '',
         interests: user.interests || '',
-        is_profile_completed: user.is_profile_completed || 0,
-        penalty_qr_code: user.penalty_qr_code || '',
-        penalty_amount: user.penalty_amount || 0,
-        penalty_status: user.penalty_status || 'none'
+        is_profile_completed: user.is_profile_completed || 0
       }
     });
   } catch (err) {
@@ -439,8 +520,8 @@ router.post('/verify-otp', (req, res) => {
   }
 });
 
-// Update Completed Profile Details (Photo, First Name, Last Name, Full Name, Gender, Bio, Favorite Categories)
-router.put('/profile', authenticateToken, (req, res) => {
+// Update Completed Profile Details
+router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const {
       first_name = '',
@@ -454,41 +535,34 @@ router.put('/profile', authenticateToken, (req, res) => {
 
     const computedName = (name && name.trim()) || `${first_name} ${last_name}`.trim() || 'Library Member';
 
-    db.prepare(`
-      UPDATE users SET
-        first_name = ?,
-        last_name = ?,
-        name = ?,
-        gender = ?,
-        bio = ?,
-        profile_photo = ?,
-        interests = ?,
-        is_profile_completed = 1
-      WHERE id = ?
-    `).run(
-      first_name.trim(),
-      last_name.trim(),
-      computedName,
-      gender.trim(),
-      bio.trim(),
-      profile_photo,
-      interests.trim(),
-      req.user.id
+    const filter = buildIdFilter(req.user.id);
+    const updatedUser = await User.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          first_name: first_name.trim(),
+          last_name: last_name.trim(),
+          name: computedName,
+          gender: gender.trim(),
+          bio: bio.trim(),
+          profile_photo,
+          interests: interests.trim(),
+          is_profile_completed: 1
+        }
+      },
+      { new: true }
     );
 
-    const updatedUser = db.prepare(`
-      SELECT id, name, email, role, membership_id, interests, phone,
-             first_name, last_name, gender, bio, profile_photo,
-             is_profile_completed, penalty_qr_code, penalty_amount, penalty_status
-      FROM users WHERE id = ?
-    `).get(req.user.id);
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     logAudit(req.user.id, 'PROFILE_COMPLETED', `Completed user profile for ${updatedUser.name}`);
 
     res.json({
       success: true,
       message: 'Profile completed successfully!',
-      user: updatedUser
+      user: serializeDoc(updatedUser)
     });
   } catch (err) {
     console.error('Update profile error:', err);
@@ -497,32 +571,41 @@ router.put('/profile', authenticateToken, (req, res) => {
 });
 
 // Get current user profile
-router.get('/me', authenticateToken, (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = db.prepare(`
-      SELECT id, name, email, role, membership_id, interests, created_at,
-             phone, first_name, last_name, gender, bio, profile_photo,
-             is_profile_completed, penalty_qr_code, penalty_amount, penalty_reason, penalty_status
-      FROM users WHERE id = ?
-    `).get(req.user.id);
+    const user = await User.findOne(buildIdFilter(req.user.id));
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get active loan count and unread notification count
-    const activeLoans = db.prepare("SELECT COUNT(*) as count FROM loans WHERE user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(req.user.id);
-    const unreadNotifs = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0').get(req.user.id);
-    const activeReservations = db.prepare("SELECT COUNT(*) as count FROM reservations WHERE user_id = ? AND status IN ('waiting', 'ready_for_pickup')").get(req.user.id);
+    const userFilter = buildIdFilter(user._id, 'user_id', 'sqlite_user_id');
 
+    const activeLoans = await Loan.countDocuments({
+      ...userFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
+    });
+
+    const unreadNotifs = await Notification.countDocuments({
+      ...userFilter,
+      is_read: 0
+    });
+
+    const activeReservations = await Reservation.countDocuments({
+      ...userFilter,
+      status: { $in: ['waiting', 'ready_for_pickup'] }
+    });
+
+    const userData = serializeDoc(user);
     res.json({
-      ...user,
+      ...userData,
       stats: {
-        activeLoans: activeLoans.count,
-        unreadNotifications: unreadNotifs.count,
-        activeReservations: activeReservations.count
+        activeLoans,
+        unreadNotifications: unreadNotifs,
+        activeReservations
       }
     });
   } catch (err) {
+    console.error('Fetch me error:', err);
     res.status(500).json({ error: 'Failed to fetch user profile' });
   }
 });
@@ -532,10 +615,10 @@ router.get('/profile', authenticateToken, (req, res) => {
 });
 
 // Update user reading interests
-router.put('/interests', authenticateToken, (req, res) => {
+router.put('/interests', authenticateToken, async (req, res) => {
   try {
     const { interests } = req.body;
-    db.prepare('UPDATE users SET interests = ? WHERE id = ?').run(interests || '', req.user.id);
+    await User.updateOne(buildIdFilter(req.user.id), { $set: { interests: interests || '' } });
     res.json({ message: 'Interests updated successfully', interests });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update interests' });
@@ -543,22 +626,35 @@ router.put('/interests', authenticateToken, (req, res) => {
 });
 
 // Admin/Librarian: List all members
-router.get('/users', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.get('/users', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const users = db.prepare(`
-      SELECT u.id, u.name, u.email, u.role, u.membership_id, u.interests, u.created_at,
-             (SELECT COUNT(*) FROM loans l WHERE l.user_id = u.id AND l.status = 'active') as active_loans
-      FROM users u
-      ORDER BY u.created_at DESC
-    `).all();
-    res.json(users);
+    const users = await User.find({}).sort({ created_at: -1 });
+
+    // Populate active loan counts
+    const usersWithStats = await Promise.all(
+      users.map(async (u) => {
+        const uFilter = buildIdFilter(u._id, 'user_id', 'sqlite_user_id');
+        const activeLoansCount = await Loan.countDocuments({
+          ...uFilter,
+          status: 'active'
+        });
+        const serialized = serializeDoc(u);
+        return {
+          ...serialized,
+          active_loans: activeLoansCount
+        };
+      })
+    );
+
+    res.json(usersWithStats);
   } catch (err) {
+    console.error('Fetch users error:', err);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
 // Admin: Create / Add a new Librarian Staff Member
-router.post('/create-librarian', authenticateToken, requireRole(['admin']), (req, res) => {
+router.post('/create-librarian', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { name, email, password, interests } = req.body;
 
@@ -570,7 +666,8 @@ router.post('/create-librarian', authenticateToken, requireRole(['admin']), (req
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?)').get(email.trim());
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       return res.status(400).json({ error: 'A staff member or user with this email already exists' });
     }
@@ -578,41 +675,34 @@ router.post('/create-librarian', authenticateToken, requireRole(['admin']), (req
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(password, salt);
 
-    // Generate unique Librarian membership ID (e.g. LIB-5234)
     const randomNum = Math.floor(5000 + Math.random() * 4000);
     const membership_id = `LIB-${randomNum}`;
 
-    const stmt = db.prepare(`
-      INSERT INTO users (name, email, password_hash, role, membership_id, interests)
-      VALUES (?, ?, ?, 'librarian', ?, ?)
-    `);
-
-    const result = stmt.run(
-      name.trim(),
-      email.toLowerCase().trim(),
+    const newLibrarian = await User.create({
+      name: name.trim(),
+      email: cleanEmail,
       password_hash,
+      role: 'librarian',
       membership_id,
-      interests ? interests.trim() : 'Circulation Desk, Book Curation, Library Operations'
-    );
+      interests: interests ? interests.trim() : 'Circulation Desk, Book Curation, Library Operations',
+      created_at: new Date()
+    });
 
-    const newLibrarianId = result.lastInsertRowid;
+    const newLibrarianId = newLibrarian._id.toString();
 
-    // Welcome notification for the librarian
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
-      newLibrarianId,
-      'Welcome to LibraMind Staff!',
-      'Your librarian desk account is active. You have circulation, cataloging, and student management privileges.',
-      'announcement',
-      '/librarian'
-    );
+    await Notification.create({
+      user_id: newLibrarian._id,
+      title: 'Welcome to LibraMind Staff!',
+      message: 'Your librarian desk account is active. You have circulation, cataloging, and student management privileges.',
+      type: 'announcement',
+      link: '/librarian',
+      created_at: new Date()
+    });
 
     logAudit(
       req.user.id,
       'LIBRARIAN_CREATED',
-      `Admin ${req.user.name} created new Librarian account for "${name.trim()}" (${email.toLowerCase().trim()}, ID: ${membership_id})`
+      `Admin ${req.user.name} created new Librarian account for "${name.trim()}" (${cleanEmail}, ID: ${membership_id})`
     );
 
     res.status(201).json({
@@ -620,7 +710,7 @@ router.post('/create-librarian', authenticateToken, requireRole(['admin']), (req
       user: {
         id: newLibrarianId,
         name: name.trim(),
-        email: email.toLowerCase().trim(),
+        email: cleanEmail,
         role: 'librarian',
         membership_id,
         interests: interests || 'Circulation Desk, Book Curation'
@@ -633,15 +723,11 @@ router.post('/create-librarian', authenticateToken, requireRole(['admin']), (req
 });
 
 // Admin: Update user role
-router.put('/users/:id/role', authenticateToken, requireRole(['admin']), (req, res) => {
+router.put('/users/:id/role', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
-    const targetId = parseInt(req.params.id);
+    const targetId = req.params.id;
     const { role } = req.body;
     const allowedRoles = ['student', 'librarian', 'admin'];
-
-    if (isNaN(targetId)) {
-      return res.status(400).json({ error: 'Invalid user ID' });
-    }
 
     if (!role || !allowedRoles.includes(role)) {
       return res.status(400).json({ 
@@ -649,24 +735,24 @@ router.put('/users/:id/role', authenticateToken, requireRole(['admin']), (req, r
       });
     }
 
-    // Protection: Admin cannot change their own role (prevent accidental lockout/loss of access)
-    if (req.user.id === targetId && req.user.role !== role) {
+    const targetUser = await User.findOne(buildIdFilter(targetId));
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (String(req.user.id) === String(targetUser._id) && req.user.role !== role) {
       return res.status(400).json({ 
         error: 'Security restriction: You cannot modify your own administrator role.' 
       });
     }
 
-    const targetUser = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(targetId);
-    if (!targetUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
     if (targetUser.role === role) {
-      return res.json({ message: `User is already assigned to role "${role}".`, user: targetUser });
+      return res.json({ message: `User is already assigned to role "${role}".`, user: serializeDoc(targetUser) });
     }
 
     const prevRole = targetUser.role;
-    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, targetId);
+    targetUser.role = role;
+    await targetUser.save();
 
     logAudit(
       req.user.id, 
@@ -677,7 +763,7 @@ router.put('/users/:id/role', authenticateToken, requireRole(['admin']), (req, r
     res.json({
       message: `Role for "${targetUser.name}" successfully updated to ${role}.`,
       user: {
-        id: targetUser.id,
+        id: targetUser._id.toString(),
         name: targetUser.name,
         email: targetUser.email,
         role
@@ -690,56 +776,51 @@ router.put('/users/:id/role', authenticateToken, requireRole(['admin']), (req, r
 });
 
 // Admin: Delete user account
-router.delete('/users/:id', authenticateToken, requireRole(['admin']), (req, res) => {
+router.delete('/users/:id', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
-    const targetId = parseInt(req.params.id);
-    if (isNaN(targetId)) {
-      return res.status(400).json({ error: 'Invalid user ID' });
-    }
+    const targetId = req.params.id;
+    const targetUser = await User.findOne(buildIdFilter(targetId));
 
-    if (req.user.id === targetId) {
-      return res.status(400).json({ error: 'Security restriction: You cannot delete your own admin account' });
-    }
-
-    const targetUser = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(targetId);
     if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const deleteTx = db.transaction(() => {
-      // 1. Release active reservations and copies held
-      const readyHolds = db.prepare("SELECT * FROM reservations WHERE user_id = ? AND status = 'ready_for_pickup'").all(targetId);
-      for (const hold of readyHolds) {
-        const copy = db.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'reserved' LIMIT 1").get(hold.book_id);
-        if (copy) {
-          db.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(copy.id);
-          db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(hold.book_id);
-        }
+    if (String(req.user.id) === String(targetUser._id)) {
+      return res.status(400).json({ error: 'Security restriction: You cannot delete your own admin account' });
+    }
+
+    const uFilter = buildIdFilter(targetUser._id, 'user_id', 'sqlite_user_id');
+
+    // 1. Release active reservations and physical copies held
+    const readyHolds = await Reservation.find({ ...uFilter, status: 'ready_for_pickup' });
+    for (const hold of readyHolds) {
+      const copy = await BookCopy.findOne({ book_id: hold.book_id, status: 'reserved' });
+      if (copy) {
+        copy.status = 'available';
+        await copy.save();
+        await Book.updateOne({ _id: hold.book_id }, { $inc: { available_copies: 1 } });
       }
-      db.prepare('DELETE FROM reservations WHERE user_id = ?').run(targetId);
+    }
+    await Reservation.deleteMany(uFilter);
 
-      // 2. Mark active loans returned and return physical copies
-      const activeLoans = db.prepare("SELECT * FROM loans WHERE user_id = ? AND status IN ('active', 'overdue')").all(targetId);
-      for (const loan of activeLoans) {
-        db.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(loan.copy_id);
-        db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
-      }
-      db.prepare('DELETE FROM loans WHERE user_id = ?').run(targetId);
+    // 2. Mark active loans returned and return physical copies
+    const activeLoans = await Loan.find({ ...uFilter, status: { $in: ['active', 'overdue'] } });
+    for (const loan of activeLoans) {
+      await BookCopy.updateOne({ _id: loan.copy_id }, { $set: { status: 'available' } });
+      await Book.updateOne({ _id: loan.book_id }, { $inc: { available_copies: 1 } });
+    }
+    await Loan.deleteMany(uFilter);
 
-      // 3. Delete dependent records
-      db.prepare('DELETE FROM notifications WHERE user_id = ?').run(targetId);
-      db.prepare('DELETE FROM visit_planner WHERE user_id = ?').run(targetId);
-      db.prepare('DELETE FROM wishlist WHERE user_id = ?').run(targetId);
-      db.prepare('DELETE FROM seat_reservations WHERE user_id = ?').run(targetId);
+    // 3. Delete dependent records
+    await Notification.deleteMany(uFilter);
+    await VisitPlanner.deleteMany(uFilter);
+    await Wishlist.deleteMany(uFilter);
+    await SeatReservation.deleteMany(uFilter);
 
-      // 4. Delete user record
-      db.prepare('DELETE FROM users WHERE id = ?').run(targetId);
+    // 4. Delete user record
+    await User.deleteOne({ _id: targetUser._id });
 
-      // 5. Audit log
-      logAudit(req.user.id, 'USER_DELETED', `Admin removed user account "${targetUser.name}" (${targetUser.email})`);
-    });
-
-    deleteTx();
+    logAudit(req.user.id, 'USER_DELETED', `Admin removed user account "${targetUser.name}" (${targetUser.email})`);
 
     res.json({ message: `User "${targetUser.name}" has been permanently removed.` });
   } catch (err) {
@@ -748,34 +829,32 @@ router.delete('/users/:id', authenticateToken, requireRole(['admin']), (req, res
   }
 });
 
-// Librarian: Send direct message to Administration (only librarian can message ADMIN)
-router.post('/message-admin', authenticateToken, requireRole(['librarian']), (req, res) => {
+// Librarian: Send direct message to Administration
+router.post('/message-admin', authenticateToken, requireRole(['librarian']), async (req, res) => {
   try {
     const { title, message } = req.body;
     if (!title || !message) {
       return res.status(400).json({ error: 'Message title and body are required' });
     }
 
-    const admins = db.prepare("SELECT id, name, email FROM users WHERE role = 'admin'").all();
+    const admins = await User.find({ role: 'admin' });
     if (admins.length === 0) {
       return res.status(404).json({ error: 'No administrator accounts found' });
     }
 
-    const insertStmt = db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, 'announcement', '/admin')
-    `);
-
     const fullTitle = `[LIBRARIAN NOTICE] ${title.trim()}`;
     const fullMessage = `From Desk Librarian ${req.user.name} (${req.user.email}):\n${message.trim()}`;
 
-    const tx = db.transaction(() => {
-      for (const adm of admins) {
-        insertStmt.run(adm.id, fullTitle, fullMessage);
-      }
-    });
+    const notifications = admins.map(adm => ({
+      user_id: adm._id,
+      title: fullTitle,
+      message: fullMessage,
+      type: 'announcement',
+      link: '/admin',
+      created_at: new Date()
+    }));
 
-    tx();
+    await Notification.insertMany(notifications);
     logAudit(req.user.id, 'LIBRARIAN_TO_ADMIN_MESSAGE', `Librarian ${req.user.name} sent message to admin: "${title}"`);
 
     res.status(201).json({
@@ -787,22 +866,21 @@ router.post('/message-admin', authenticateToken, requireRole(['librarian']), (re
   }
 });
 
-// Admin/Librarian: Send direct message / alert to a user (Admin can message Librarians & Students)
-router.post('/users/:id/message', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+// Admin/Librarian: Send direct message / alert to a user
+router.post('/users/:id/message', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const targetId = parseInt(req.params.id);
+    const targetId = req.params.id;
     const { title, message, type = 'announcement' } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({ error: 'Message title and body are required' });
     }
 
-    const targetUser = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(targetId);
+    const targetUser = await User.findOne(buildIdFilter(targetId));
     if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Role check: Only admin can message a librarian or admin
     if (req.user.role !== 'admin' && (targetUser.role === 'librarian' || targetUser.role === 'admin')) {
       return res.status(403).json({ error: 'Only administrators can send direct messages to staff members. Please use the "Message Admin" hotline.' });
     }
@@ -822,10 +900,14 @@ router.post('/users/:id/message', authenticateToken, requireRole(['admin', 'libr
 
     const targetLink = targetUser.role === 'librarian' ? '/librarian' : (targetUser.role === 'admin' ? '/admin' : '/dashboard');
 
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(targetId, finalTitle, message.trim(), safeType, targetLink);
+    await Notification.create({
+      user_id: targetUser._id,
+      title: finalTitle,
+      message: message.trim(),
+      type: safeType,
+      link: targetLink,
+      created_at: new Date()
+    });
 
     logAudit(req.user.id, 'DIRECT_MESSAGE', `Sent message to ${targetUser.name} (${targetUser.email}, Role: ${targetUser.role}): "${finalTitle}"`);
 
@@ -839,23 +921,30 @@ router.post('/users/:id/message', authenticateToken, requireRole(['admin', 'libr
 });
 
 // Admin: Get security and operational audit logs
-router.get('/audit-logs', authenticateToken, requireRole(['admin']), (req, res) => {
+router.get('/audit-logs', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
-    const logs = db.prepare(`
-      SELECT a.*, u.name as user_name, u.email as user_email, u.role as user_role
-      FROM audit_logs a
-      LEFT JOIN users u ON a.user_id = u.id
-      ORDER BY a.timestamp DESC
-      LIMIT 100
-    `).all();
+    const logs = await AuditLog.find({})
+      .populate('user_id', 'name email role')
+      .sort({ timestamp: -1 })
+      .limit(100);
 
-    res.json(logs);
+    const formattedLogs = logs.map(l => {
+      const obj = serializeDoc(l);
+      return {
+        ...obj,
+        user_name: l.user_id?.name || null,
+        user_email: l.user_id?.email || null,
+        user_role: l.user_id?.role || null
+      };
+    });
+
+    res.json(formattedLogs);
   } catch (err) {
+    console.error('Audit logs error:', err);
     res.status(500).json({ error: 'Failed to retrieve audit logs' });
   }
 });
 
-// Helper to mask email address for display in verification
 function maskEmail(email) {
   if (!email || !email.includes('@')) return '******';
   const [local, domain] = email.split('@');
@@ -863,7 +952,7 @@ function maskEmail(email) {
   return `${local.slice(0, 2)}${'*'.repeat(Math.max(1, local.length - 3))}${local.slice(-1)}@${domain}`;
 }
 
-// Request password reset link (public with rate limiting & enumeration protection)
+// Request password reset link
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -879,34 +968,31 @@ router.post('/forgot-password', async (req, res) => {
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
-    // Rate limiting: max 8 attempts per IP per 15 min, max 4 attempts per email per 15 min
     if (!checkResetRateLimit(`ip:${clientIp}`, 8, 15 * 60 * 1000) || !checkResetRateLimit(`email:${trimmedEmail}`, 4, 15 * 60 * 1000)) {
       return res.status(429).json({
         error: 'Too many password reset requests. Please wait 15 minutes before attempting again.'
       });
     }
 
-    // Look up user
-    const user = db.prepare('SELECT id, name, email FROM users WHERE LOWER(email) = ?').get(trimmedEmail);
-
+    const user = await User.findOne({ email: trimmedEmail });
     if (user) {
-      // Generate 256-bit cryptographically secure random token
       const rawToken = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
-      // Invalidate existing active tokens
-      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL').run(user.id);
+      const uFilter = buildIdFilter(user._id, 'user_id', 'sqlite_user_id');
+      await PasswordReset.updateMany({ ...uFilter, used_at: null }, { $set: { used_at: new Date() } });
 
-      // Insert new reset token hash
-      db.prepare(`
-        INSERT INTO password_resets (user_id, token_hash, expires_at, ip_address)
-        VALUES (?, ?, ?, ?)
-      `).run(user.id, tokenHash, expiresAt, String(clientIp).slice(0, 45));
+      await PasswordReset.create({
+        user_id: user._id,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+        ip_address: String(clientIp).slice(0, 45),
+        created_at: new Date()
+      });
 
-      logAudit(user.id, 'PASSWORD_RESET_REQUESTED', `Password reset token generated for ${user.email} (expires in 30m)`);
+      logAudit(user._id.toString(), 'PASSWORD_RESET_REQUESTED', `Password reset token generated for ${user.email} (expires in 30m)`);
 
-      // Dispatch reset email
       try {
         await sendPasswordResetEmail({
           to: user.email,
@@ -919,7 +1005,6 @@ router.post('/forgot-password', async (req, res) => {
       }
     }
 
-    // Return generic message regardless of user existence to prevent account enumeration
     res.json({
       success: true,
       message: 'If an account with that email address exists in LibraMind, a secure password reset link has been dispatched. Please check your inbox and spam folder. The link will remain valid for 30 minutes.'
@@ -930,8 +1015,8 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Verify reset token validity before showing password form
-router.get('/verify-reset-token', (req, res) => {
+// Verify reset token validity
+router.get('/verify-reset-token', async (req, res) => {
   try {
     const { token } = req.query;
     if (!token || typeof token !== 'string') {
@@ -939,12 +1024,7 @@ router.get('/verify-reset-token', (req, res) => {
     }
 
     const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
-    const resetRecord = db.prepare(`
-      SELECT pr.*, u.email, u.name
-      FROM password_resets pr
-      JOIN users u ON pr.user_id = u.id
-      WHERE pr.token_hash = ?
-    `).get(tokenHash);
+    const resetRecord = await PasswordReset.findOne({ token_hash: tokenHash }).populate('user_id', 'name email');
 
     if (!resetRecord) {
       return res.status(400).json({
@@ -961,8 +1041,7 @@ router.get('/verify-reset-token', (req, res) => {
     }
 
     const now = new Date();
-    const expiresAt = new Date(resetRecord.expires_at);
-    if (now > expiresAt) {
+    if (now > new Date(resetRecord.expires_at)) {
       return res.status(400).json({
         valid: false,
         error: 'This password reset link has expired (valid for 30 minutes). Please request a fresh reset link.'
@@ -971,8 +1050,8 @@ router.get('/verify-reset-token', (req, res) => {
 
     res.json({
       valid: true,
-      maskedEmail: maskEmail(resetRecord.email),
-      userName: resetRecord.name
+      maskedEmail: maskEmail(resetRecord.user_id?.email),
+      userName: resetRecord.user_id?.name
     });
   } catch (err) {
     console.error('Verify token error:', err);
@@ -981,7 +1060,7 @@ router.get('/verify-reset-token', (req, res) => {
 });
 
 // Reset password using verified token
-router.post('/reset-password', (req, res) => {
+router.post('/reset-password', async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
 
@@ -1002,56 +1081,43 @@ router.post('/reset-password', (req, res) => {
     }
 
     const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const resetRecord = await PasswordReset.findOne({ token_hash: tokenHash }).populate('user_id');
 
-    const resetTx = db.transaction(() => {
-      const resetRecord = db.prepare(`
-        SELECT pr.*, u.id as user_id, u.email, u.name
-        FROM password_resets pr
-        JOIN users u ON pr.user_id = u.id
-        WHERE pr.token_hash = ?
-      `).get(tokenHash);
+    if (!resetRecord || !resetRecord.user_id) {
+      return res.status(400).json({ error: 'This password reset link is invalid or expired. Please request a new one.' });
+    }
 
-      if (!resetRecord) {
-        throw new Error('This password reset link is invalid or expired. Please request a new one.');
-      }
+    if (resetRecord.used_at) {
+      return res.status(400).json({ error: 'This password reset link has already been used. Please request a new link.' });
+    }
 
-      if (resetRecord.used_at) {
-        throw new Error('This password reset link has already been used. Please request a new link.');
-      }
+    if (new Date() > new Date(resetRecord.expires_at)) {
+      return res.status(400).json({ error: 'This password reset link has expired. Please request a fresh reset link.' });
+    }
 
-      if (new Date() > new Date(resetRecord.expires_at)) {
-        throw new Error('This password reset link has expired. Please request a fresh reset link.');
-      }
+    const salt = bcrypt.genSaltSync(10);
+    const newPasswordHash = bcrypt.hashSync(password, salt);
 
-      // Hash new password using bcrypt
-      const salt = bcrypt.genSaltSync(10);
-      const newPasswordHash = bcrypt.hashSync(password, salt);
+    const targetUser = resetRecord.user_id;
+    targetUser.password_hash = newPasswordHash;
+    await targetUser.save();
 
-      // Update user password
-      db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newPasswordHash, resetRecord.user_id);
+    resetRecord.used_at = new Date();
+    await resetRecord.save();
 
-      // Invalidate the reset token
-      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE id = ?').run(resetRecord.id);
+    const uFilter = buildIdFilter(targetUser._id, 'user_id', 'sqlite_user_id');
+    await PasswordReset.updateMany({ ...uFilter, used_at: null }, { $set: { used_at: new Date() } });
 
-      // Invalidate all other pending tokens for this user
-      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL').run(resetRecord.user_id);
-
-      // Security notification for user
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, 'announcement', '/dashboard')
-      `).run(
-        resetRecord.user_id,
-        'Security Alert: Password Updated',
-        'Your LibraMind account password was successfully updated. If you did not perform this action, please contact library administration immediately.'
-      );
-
-      logAudit(resetRecord.user_id, 'PASSWORD_RESET_SUCCESS', `Password successfully updated via reset token for ${resetRecord.email}`);
-
-      return { userName: resetRecord.name, email: resetRecord.email };
+    await Notification.create({
+      user_id: targetUser._id,
+      title: 'Security Alert: Password Updated',
+      message: 'Your LibraMind account password was successfully updated. If you did not perform this action, please contact library administration immediately.',
+      type: 'announcement',
+      link: '/dashboard',
+      created_at: new Date()
     });
 
-    resetTx();
+    logAudit(targetUser._id.toString(), 'PASSWORD_RESET_SUCCESS', `Password successfully updated via reset token for ${targetUser.email}`);
 
     res.json({
       success: true,

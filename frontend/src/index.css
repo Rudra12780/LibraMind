@@ -327,51 +327,79 @@ button {
 
 /* Primary = Dark Oxford Green with Crisp White Text */
 .btn-primary {
-  background-color: var(--editorial-green) !important;
-  color: #FFFFFF !important;
-  border-color: var(--editorial-green) !important;
+  background-color: var(--editorial-green);
+  color: #FFFFFF;
+  border-color: var(--editorial-green);
 }
 
 .btn-primary:hover {
-  background-color: #1a2c24 !important;
-  border-color: #1a2c24 !important;
-  box-shadow: 0 4px 12px rgba(38, 61, 50, 0.2) !important;
+  background-color: #1a2c24;
+  border-color: #1a2c24;
+  box-shadow: 0 4px 12px rgba(38, 61, 50, 0.2);
 }
 
 /* Secondary = Warm Terracotta Accent */
 .btn-secondary {
-  background-color: var(--editorial-accent) !important;
-  color: #FFFFFF !important;
-  border-color: var(--editorial-accent) !important;
+  background-color: var(--editorial-accent);
+  color: #FFFFFF;
+  border-color: var(--editorial-accent);
 }
 
 .btn-secondary:hover {
-  background-color: #84533a !important;
-  border-color: #84533a !important;
-  box-shadow: 0 4px 12px rgba(155, 101, 72, 0.22) !important;
+  background-color: #84533a;
+  border-color: #84533a;
+  box-shadow: 0 4px 12px rgba(155, 101, 72, 0.22);
 }
 
 /* Outline = Elegant Hairline Border on Cream */
 .btn-outline {
-  background-color: transparent !important;
-  border: 1px solid var(--editorial-border) !important;
-  color: var(--editorial-text) !important;
+  background-color: transparent;
+  border: 1px solid var(--editorial-border);
+  color: var(--editorial-text);
 }
 
 .btn-outline:hover {
-  background-color: var(--editorial-bg-subtle) !important;
-  border-color: var(--editorial-text) !important;
+  background-color: var(--editorial-bg-subtle);
+  border-color: var(--editorial-text);
+  color: var(--editorial-text);
+}
+
+/* Crisp White Button for High Contrast on Dark Backgrounds */
+.btn-white {
+  background-color: #FFFFFF;
+  color: var(--editorial-text);
+  border-color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-white:hover {
+  background-color: var(--editorial-bg-subtle);
+  border-color: var(--editorial-bg-subtle);
+  color: var(--editorial-green);
+}
+
+/* Light Outline for Dark Containers */
+.btn-outline-light {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #FFFFFF;
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
 }
 
 /* Botanical = Dark Oxford Green Variant */
 .btn-botanical {
-  background-color: var(--editorial-green) !important;
-  color: #FFFFFF !important;
-  border-color: var(--editorial-green) !important;
+  background-color: var(--editorial-green);
+  color: #FFFFFF;
+  border-color: var(--editorial-green);
 }
 
 .btn-botanical:hover {
-  background-color: #192720 !important;
+  background-color: #192720;
 }
 
 .btn-sm {
@@ -659,4 +687,46 @@ img, svg, canvas {
 .nav-link-editorial:hover,
 .nav-link-editorial.active {
   color: var(--editorial-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* HERO RADIAL FAN ARC SHOWCASE                                    */
+/* ═══════════════════════════════════════════════════════════════ */
+.hero-book-arc {
+  user-select: none;
+}
+
+@media (max-width: 920px) {
+  .hero-book-arc {
+    height: auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    justify-content: flex-start !important;
+    padding: 14px 16px 24px !important;
+    gap: 14px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .hero-arc-card {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    margin-left: 0 !important;
+    transform: none !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: center !important;
+  }
+}
+
+/* Mobile Category Pill Bar */
+@media (max-width: 768px) {
+  .catalog-category-bar {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .catalog-category-bar button {
+    flex-shrink: 0 !important;
+  }
 }

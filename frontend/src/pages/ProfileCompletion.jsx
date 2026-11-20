@@ -365,7 +365,13 @@ export default function ProfileCompletion({ onNavigate }) {
                   type="button"
                   onClick={() => setGender('Male')}
                   className={`btn btn-sm ${gender === 'Male' ? 'btn-primary' : 'btn-outline'}`}
-                  style={{ fontWeight: 600, padding: '8px' }}
+                  style={{
+                    fontWeight: 700,
+                    padding: '9px',
+                    backgroundColor: gender === 'Male' ? 'var(--editorial-green)' : 'var(--editorial-bg-subtle)',
+                    color: gender === 'Male' ? '#FFFFFF' : 'var(--editorial-text)',
+                    borderColor: gender === 'Male' ? 'var(--editorial-green)' : 'var(--editorial-border)'
+                  }}
                 >
                   {gender === 'Male' ? '✓ Male' : 'Male'}
                 </button>
@@ -373,7 +379,13 @@ export default function ProfileCompletion({ onNavigate }) {
                   type="button"
                   onClick={() => setGender('Female')}
                   className={`btn btn-sm ${gender === 'Female' ? 'btn-primary' : 'btn-outline'}`}
-                  style={{ fontWeight: 600, padding: '8px' }}
+                  style={{
+                    fontWeight: 700,
+                    padding: '9px',
+                    backgroundColor: gender === 'Female' ? 'var(--editorial-green)' : 'var(--editorial-bg-subtle)',
+                    color: gender === 'Female' ? '#FFFFFF' : 'var(--editorial-text)',
+                    borderColor: gender === 'Female' ? 'var(--editorial-green)' : 'var(--editorial-border)'
+                  }}
                 >
                   {gender === 'Female' ? '✓ Female' : 'Female'}
                 </button>
@@ -445,7 +457,7 @@ export default function ProfileCompletion({ onNavigate }) {
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       border: isSelected ? '2px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                      backgroundColor: isSelected ? 'rgba(38, 61, 50, 0.06)' : '#FFFFFF',
+                      backgroundColor: isSelected ? 'var(--editorial-green-light)' : '#FFFFFF',
                       transition: 'all 0.15s ease',
                       display: 'flex',
                       flexDirection: 'column',

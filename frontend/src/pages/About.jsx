@@ -67,9 +67,10 @@ export default function About({ onNavigate }) {
         <div
           style={{
             padding: '56px 40px',
-            backgroundColor: 'var(--editorial-text)',
+            backgroundColor: 'var(--editorial-green)',
             color: '#FFFFFF',
             border: '1px solid var(--editorial-border)',
+            borderRadius: 'var(--radius-sm)',
             boxShadow: 'var(--shadow-xl)',
             marginBottom: '48px',
             position: 'relative'
@@ -82,8 +83,10 @@ export default function About({ onNavigate }) {
               top: 0,
               left: 0,
               right: 0,
-              height: '6px',
-              background: 'linear-gradient(90deg, var(--editorial-accent) 0% 33.3%, var(--editorial-green) 33.3% 66.6%, var(--editorial-border) 66.6% 100%)'
+              height: '5px',
+              borderTopLeftRadius: 'var(--radius-sm)',
+              borderTopRightRadius: 'var(--radius-sm)',
+              background: 'linear-gradient(90deg, var(--editorial-accent) 0% 50%, #C48A6C 100%)'
             }}
           />
 
@@ -93,10 +96,10 @@ export default function About({ onNavigate }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '5px 16px',
-                backgroundColor: 'var(--vintage-parchment)',
-                color: 'var(--vintage-walnut)',
-                border: '1px solid var(--vintage-brass)',
+                padding: '6px 16px',
+                backgroundColor: 'rgba(247, 244, 237, 0.15)',
+                color: '#F7F4ED',
+                border: '1px solid rgba(247, 244, 237, 0.3)',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '0.78rem',
                 fontWeight: 700,
@@ -105,13 +108,13 @@ export default function About({ onNavigate }) {
                 marginBottom: '20px'
               }}
             >
-              <Layers size={14} color="var(--vintage-crimson)" strokeWidth={2} />
+              <Layers size={14} color="#F7F4ED" strokeWidth={2.2} />
               Classical Athenaeum Architecture &amp; Curation
             </div>
 
             <h1
               style={{
-                fontSize: '2.8rem',
+                fontSize: 'clamp(2.2rem, 4vw, 2.8rem)',
                 lineHeight: 1.2,
                 color: '#FFFFFF',
                 marginBottom: '16px',
@@ -127,9 +130,9 @@ export default function About({ onNavigate }) {
               style={{
                 fontSize: '1.05rem',
                 lineHeight: 1.7,
-                color: '#E8DCBE',
+                color: '#E8EEEA',
                 marginBottom: '28px',
-                fontWeight: 500
+                fontWeight: 400
               }}
             >
               LibraMind is built on the grand tradition of the classical Athenaeum and European archival libraries (Estd. 1892). Uniting polished mahogany woodwork, warm gaslight ambiance, accession shelf mapping, and modern intelligent book discovery, we create a sanctuary for lifelong scholars.
@@ -139,23 +142,27 @@ export default function About({ onNavigate }) {
               <button
                 onClick={() => onNavigate('catalog')}
                 className="btn btn-secondary"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 22px', fontSize: '0.92rem' }}
               >
-                <BookOpen size={18} strokeWidth={2.4} />
+                <BookOpen size={18} strokeWidth={2.2} />
                 Explore Catalog →
               </button>
               <button
                 onClick={() => onNavigate('seats')}
-                className="btn btn-outline"
+                className="btn btn-white"
                 style={{
-                  backgroundColor: '#FFFFFF',
-                  color: 'var(--editorial-text)',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  padding: '11px 22px',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--editorial-text)',
+                  border: '1px solid #FFFFFF',
+                  fontSize: '0.92rem',
+                  fontWeight: 600
                 }}
               >
-                <Compass size={18} strokeWidth={2.4} />
+                <Compass size={18} strokeWidth={2.2} />
                 View Study Pods
               </button>
             </div>
@@ -166,7 +173,7 @@ export default function About({ onNavigate }) {
         <div style={{ marginBottom: '56px' }}>
           <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 36px' }}>
             <h2 style={{ fontSize: '2.2rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: '8px' }}>
-              Modernist Design Principles
+              Athenaeum Design Principles
             </h2>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.98rem', fontWeight: 500 }}>
               Engineered with zero superfluous ornament to foster deep academic concentration and spatial mastery.
@@ -182,7 +189,7 @@ export default function About({ onNavigate }) {
           >
             {principles.map((item, idx) => {
               const Icon = item.icon;
-              const borderColors = ['var(--editorial-accent)', 'var(--editorial-green)', 'var(--editorial-border)', 'var(--editorial-text)'];
+              const borderColors = ['var(--editorial-accent)', 'var(--editorial-green)', 'var(--editorial-accent)', 'var(--editorial-green)'];
               return (
                 <div
                   key={idx}
@@ -198,16 +205,16 @@ export default function About({ onNavigate }) {
                     style={{
                       width: '46px',
                       height: '46px',
-                      backgroundColor: 'var(--editorial-border)',
+                      backgroundColor: 'var(--editorial-bg-subtle)',
                       border: '1px solid var(--editorial-border)',
-                      boxShadow: 'var(--shadow-sm)',
+                      borderRadius: 'var(--radius-sm)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginBottom: '18px'
                     }}
                   >
-                    <Icon size={22} color="var(--editorial-text)" strokeWidth={2.4} />
+                    <Icon size={22} color={idx % 2 === 0 ? "var(--editorial-accent)" : "var(--editorial-green)"} strokeWidth={2.2} />
                   </div>
                   <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '10px' }}>
                     {item.title}
@@ -294,11 +301,11 @@ export default function About({ onNavigate }) {
               </h3>
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', fontWeight: 600 }}>
-              <li style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1.5px solid var(--editorial-text)', paddingBottom: '8px' }}>
+              <li style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '8px' }}>
                 <span style={{ color: 'var(--editorial-text)', opacity: 0.8 }}>Monday – Friday</span>
                 <strong>08:00 AM – 10:00 PM</strong>
               </li>
-              <li style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1.5px solid var(--editorial-text)', paddingBottom: '8px' }}>
+              <li style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '8px' }}>
                 <span style={{ color: 'var(--editorial-text)', opacity: 0.8 }}>Saturday – Sunday</span>
                 <strong>09:00 AM – 08:00 PM</strong>
               </li>

@@ -1,83 +1,67 @@
 const express = require('express');
-const db = require('../db/database');
+const mongoose = require('mongoose');
+
+const Seat = require('../models/Seat');
+const SeatReservation = require('../models/SeatReservation');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+
 const { authenticateToken, requireRole, logAudit } = require('../middleware/auth');
-const { checkUserPenaltyStatus } = require('../utils/penalties');
+const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
 const router = express.Router();
 
 // Get seat map, stats, and sections with optional date and time_slot filtering
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { floor, section, date, time_slot } = req.query;
 
-    let query = '';
-    const params = [];
+    const query = {};
+    if (floor && floor !== 'All') query.floor = floor;
+    if (section && section !== 'All') query.section = section;
 
+    const seats = await Seat.find(query)
+      .populate('current_user_id', 'name')
+      .sort({ floor: 1, section: 1, seat_number: 1 });
+
+    let activeBookingsMap = {};
     if (date && time_slot) {
-      // Check seat availability specific to this date and time slot
-      query = `
-        SELECT s.*,
-          u.name as current_user_name,
-          sr.id as active_booking_id,
-          sr.user_id as booked_by_user_id,
-          CASE
-            WHEN s.status = 'maintenance' THEN 'maintenance'
-            WHEN sr.id IS NOT NULL THEN 'reserved'
-            WHEN s.status = 'occupied' THEN 'occupied'
-            ELSE 'available'
-          END as effective_status
-        FROM seats s
-        LEFT JOIN users u ON s.current_user_id = u.id
-        LEFT JOIN seat_reservations sr ON s.id = sr.seat_id
-          AND sr.date = ?
-          AND sr.time_slot = ?
-          AND sr.status = 'active'
-        WHERE 1=1
-      `;
-      params.push(date, time_slot);
-    } else {
-      query = `
-        SELECT s.*,
-          u.name as current_user_name,
-          s.status as effective_status
-        FROM seats s
-        LEFT JOIN users u ON s.current_user_id = u.id
-        WHERE 1=1
-      `;
+      const activeReservations = await SeatReservation.find({
+        date,
+        time_slot,
+        status: 'active'
+      });
+      activeReservations.forEach(r => {
+        activeBookingsMap[r.seat_id.toString()] = r;
+      });
     }
 
-    if (floor && floor !== 'All') {
-      query += ` AND s.floor = ?`;
-      params.push(floor);
-    }
+    const formattedSeats = seats.map(s => {
+      const seatIdStr = s._id.toString();
+      const activeBooking = activeBookingsMap[seatIdStr];
+      const sObj = serializeDoc(s);
 
-    if (section && section !== 'All') {
-      query += ` AND s.section = ?`;
-      params.push(section);
-    }
+      let effective_status = s.status;
+      if (s.status === 'maintenance') {
+        effective_status = 'maintenance';
+      } else if (activeBooking) {
+        effective_status = 'reserved';
+      } else if (s.status === 'occupied') {
+        effective_status = 'occupied';
+      } else {
+        effective_status = 'available';
+      }
 
-    query += ` ORDER BY s.floor ASC, s.section ASC, s.seat_number ASC`;
+      return {
+        ...sObj,
+        current_user_name: s.current_user_id?.name || null,
+        active_booking_id: activeBooking ? activeBooking._id.toString() : null,
+        booked_by_user_id: activeBooking ? activeBooking.user_id.toString() : null,
+        effective_status
+      };
+    });
 
-    const seats = db.prepare(query).all(...params);
-
-    const stats = {
-      total: seats.length,
-      available: seats.filter(s => s.effective_status === 'available').length,
-      occupied: seats.filter(s => s.effective_status === 'occupied').length,
-      reserved: seats.filter(s => s.effective_status === 'reserved').length,
-      maintenance: seats.filter(s => s.effective_status === 'maintenance').length
-    };
-
-    // Floors and sections for filters
-    const floors = ['Floor 1', 'Floor 2'];
-    const sections = [
-      'Quiet Study Zone',
-      'Collaborative Hub',
-      'Garden Window Pods',
-      'Research Nook'
-    ];
-
-    res.json(seats);
+    res.json(formattedSeats);
   } catch (err) {
     console.error('Fetch seats error:', err);
     res.status(500).json({ error: 'Failed to retrieve study seats' });
@@ -85,15 +69,14 @@ router.get('/', (req, res) => {
 });
 
 // Get slot-by-slot availability for a specific seat on a date
-router.get('/:id/slots', (req, res) => {
+router.get('/:id/slots', async (req, res) => {
   try {
-    const seatId = parseInt(req.params.id);
-    const date = req.query.date || new Date().toISOString().split('T')[0];
-
-    const seat = db.prepare('SELECT * FROM seats WHERE id = ?').get(seatId);
+    const seat = await Seat.findOne(buildIdFilter(req.params.id));
     if (!seat) {
       return res.status(404).json({ error: 'Seat not found' });
     }
+
+    const date = req.query.date || new Date().toISOString().split('T')[0];
 
     const timeSlots = [
       '08:00 - 11:00 (Morning Focus)',
@@ -103,26 +86,28 @@ router.get('/:id/slots', (req, res) => {
       '20:00 - 22:00 (Night Owl)'
     ];
 
-    const activeReservations = db.prepare(`
-      SELECT time_slot, user_id FROM seat_reservations
-      WHERE seat_id = ? AND date = ? AND status = 'active'
-    `).all(seatId, date);
+    const sFilter = buildIdFilter(seat._id, 'seat_id', 'sqlite_seat_id');
+    const activeReservations = await SeatReservation.find({
+      ...sFilter,
+      date,
+      status: 'active'
+    });
 
     const bookedSlotsMap = {};
     activeReservations.forEach(r => {
-      bookedSlotsMap[r.time_slot] = r.user_id;
+      bookedSlotsMap[r.time_slot] = r.user_id.toString();
     });
 
     const slots = timeSlots.map(slot => ({
       slot,
       isAvailable: seat.status !== 'maintenance' && !bookedSlotsMap[slot],
       isMaintenance: seat.status === 'maintenance',
-      isBooked: !!bookedSlotsMap[slot],
+      isBooked: Boolean(bookedSlotsMap[slot]),
       bookedByUserId: bookedSlotsMap[slot] || null
     }));
 
     res.json({
-      seatId,
+      seatId: seat._id.toString(),
       seatNumber: seat.seat_number,
       date,
       seatStatus: seat.status,
@@ -134,148 +119,168 @@ router.get('/:id/slots', (req, res) => {
   }
 });
 
-// Reserve a study seat for a date and time slot (Student or Librarian)
-router.post('/reserve', authenticateToken, (req, res) => {
+// Reserve a study seat for a date and time slot
+router.post('/reserve', authenticateToken, async (req, res) => {
   try {
-    const seat_id = req.body.seat_id || req.body.seatId;
+    const rawSeatId = req.body.seat_id || req.body.seatId;
     const date = req.body.date;
     const time_slot = req.body.time_slot || req.body.timeSlot;
 
-    if (!seat_id || !date || !time_slot) {
+    if (!rawSeatId || !date || !time_slot) {
       return res.status(400).json({ error: 'Seat, date, and time slot are required' });
     }
 
-    // Note: Library policy allows study seat reservations even if penalties are pending (only book borrowing is restricted).
+    const seat = await Seat.findOne(buildIdFilter(rawSeatId));
+    if (!seat) {
+      return res.status(404).json({ error: 'Seat not found' });
+    }
 
-    const reserveSeatTx = db.transaction(() => {
-      const seat = db.prepare('SELECT * FROM seats WHERE id = ?').get(seat_id);
-      if (!seat) {
-        throw new Error('Seat not found');
-      }
+    if (seat.status === 'maintenance') {
+      return res.status(400).json({ error: 'This seat is currently under maintenance.' });
+    }
 
-      if (seat.status === 'maintenance') {
-        throw new Error('This seat is currently under maintenance.');
-      }
+    const sFilter = buildIdFilter(seat._id, 'seat_id', 'sqlite_seat_id');
+    const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
 
-      // 1. Conflict Check: Is this seat already booked by anyone for this exact date & time slot?
-      const seatConflict = db.prepare(`
-        SELECT id FROM seat_reservations
-        WHERE seat_id = ? AND date = ? AND time_slot = ? AND status = 'active'
-      `).get(seat_id, date, time_slot);
-
-      if (seatConflict) {
-        const err = new Error('This seat is already reserved for the selected time slot.');
-        err.statusCode = 409;
-        throw err;
-      }
-
-      // 2. User Conflict Check: Does this student already have an active seat reservation at this exact time slot?
-      // (Students can reserve only 1 seat per time slot, but can book different time slots on the same day)
-      const userSlotConflict = db.prepare(`
-        SELECT sr.id, s.seat_number FROM seat_reservations sr
-        JOIN seats s ON sr.seat_id = s.id
-        WHERE sr.user_id = ? AND sr.date = ? AND sr.time_slot = ? AND sr.status = 'active'
-      `).get(req.user.id, date, time_slot);
-
-      if (userSlotConflict) {
-        const err = new Error(`You already have seat ${userSlotConflict.seat_number} reserved during ${time_slot}. You can only reserve one seat per time slot.`);
-        err.statusCode = 409;
-        throw err;
-      }
-
-      // Insert reservation
-      const result = db.prepare(`
-        INSERT INTO seat_reservations (seat_id, user_id, date, time_slot, status)
-        VALUES (?, ?, ?, ?, 'active')
-      `).run(seat_id, req.user.id, date, time_slot);
-
-      // Notify student
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, 'seat', '/seats')
-      `).run(
-        req.user.id,
-        'Study Seat Booked',
-        `You booked seat ${seat.seat_number} (${seat.section}) for ${date} during ${time_slot}.`
-      );
-
-      logAudit(req.user.id, 'SEAT_RESERVED', `User reserved seat ${seat.seat_number} on ${date} (${time_slot})`);
-
-      return {
-        reservationId: result.lastInsertRowid,
-        seatNumber: seat.seat_number
-      };
+    // 1. Conflict Check: Is this seat already booked by anyone for this exact date & time slot?
+    const seatConflict = await SeatReservation.findOne({
+      ...sFilter,
+      date,
+      time_slot,
+      status: 'active'
     });
 
-    const result = reserveSeatTx();
+    if (seatConflict) {
+      return res.status(409).json({ error: 'This seat is already reserved for the selected time slot.' });
+    }
+
+    // 2. User Conflict Check: Does this student already have an active seat reservation at this exact time slot?
+    const userSlotConflict = await SeatReservation.findOne({
+      ...uFilter,
+      date,
+      time_slot,
+      status: 'active'
+    }).populate('seat_id');
+
+    if (userSlotConflict) {
+      const seatNum = userSlotConflict.seat_id?.seat_number || 'another seat';
+      return res.status(409).json({
+        error: `You already have seat ${seatNum} reserved during ${time_slot}. You can only reserve one seat per time slot.`
+      });
+    }
+
+    const reservation = await SeatReservation.create({
+      seat_id: seat._id,
+      user_id: req.user.id,
+      date,
+      time_slot,
+      status: 'active',
+      created_at: new Date()
+    });
+
+    await Notification.create({
+      user_id: req.user.id,
+      title: 'Study Seat Booked',
+      message: `You booked seat ${seat.seat_number} (${seat.section}) for ${date} during ${time_slot}.`,
+      type: 'seat',
+      link: '/seats',
+      created_at: new Date()
+    });
+
+    logAudit(req.user.id, 'SEAT_RESERVED', `User reserved seat ${seat.seat_number} on ${date} (${time_slot})`);
 
     res.status(201).json({
       message: 'Study seat reserved successfully',
-      reservationId: result.reservationId,
-      seatNumber: result.seatNumber
+      reservationId: reservation._id.toString(),
+      seatNumber: seat.seat_number
     });
   } catch (err) {
-    res.status(err.statusCode || 400).json({ error: err.message || 'Failed to reserve study seat' });
+    console.error('Reserve seat error:', err);
+    if (err.code === 11000) {
+      return res.status(409).json({ error: 'This seat is already reserved for the selected time slot.' });
+    }
+    res.status(500).json({ error: 'Failed to reserve study seat' });
   }
 });
 
 // Cancel / Release a study seat reservation
-router.delete('/reserve/:id', authenticateToken, (req, res) => {
+router.delete('/reserve/:id', authenticateToken, async (req, res) => {
   try {
-    const booking = db.prepare('SELECT * FROM seat_reservations WHERE id = ?').get(req.params.id);
+    const booking = await SeatReservation.findOne(buildIdFilter(req.params.id));
     if (!booking) {
       return res.status(404).json({ error: 'Seat reservation not found' });
     }
 
-    if (req.user.role === 'student' && booking.user_id !== req.user.id) {
+    if (req.user.role === 'student' && String(booking.user_id) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Not authorized to cancel this booking' });
     }
 
-    db.prepare("UPDATE seat_reservations SET status = 'cancelled' WHERE id = ?").run(booking.id);
-    logAudit(req.user.id, 'SEAT_CANCELLED', `Cancelled seat reservation #${booking.id}`);
+    booking.status = 'cancelled';
+    await booking.save();
+
+    logAudit(req.user.id, 'SEAT_CANCELLED', `Cancelled seat reservation #${booking._id}`);
 
     res.json({ message: 'Seat booking successfully cancelled. Seat is now free for others.' });
   } catch (err) {
+    console.error('Cancel seat booking error:', err);
     res.status(500).json({ error: 'Failed to cancel seat reservation' });
   }
 });
 
 // Get user's seat bookings
-router.get('/my-bookings', authenticateToken, (req, res) => {
+router.get('/my-bookings', authenticateToken, async (req, res) => {
   try {
-    const bookings = db.prepare(`
-      SELECT sr.*, s.seat_number, s.floor, s.section, s.has_power, s.has_monitor
-      FROM seat_reservations sr
-      JOIN seats s ON sr.seat_id = s.id
-      WHERE sr.user_id = ?
-      ORDER BY sr.status ASC, sr.date DESC, sr.created_at DESC
-    `).all(req.user.id);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
-    res.json(bookings);
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const bookings = await SeatReservation.find(userFilter)
+      .populate('seat_id')
+      .sort({ status: 1, date: -1, created_at: -1 });
+
+    const formatted = bookings.map(b => {
+      const bObj = serializeDoc(b);
+      const seat = b.seat_id;
+      return {
+        ...bObj,
+        seat_number: seat ? seat.seat_number : '',
+        floor: seat ? seat.floor : '',
+        section: seat ? seat.section : '',
+        has_power: seat ? seat.has_power : 1,
+        has_monitor: seat ? seat.has_monitor : 0
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
+    console.error('Fetch my bookings error:', err);
     res.status(500).json({ error: 'Failed to fetch seat bookings' });
   }
 });
 
 // Librarian/Admin: Update live seat status (occupy / release / maintenance)
-router.put('/:id/status', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.put('/:id/status', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
     const { status, user_id = null } = req.body;
     if (!['available', 'occupied', 'maintenance'].includes(status)) {
       return res.status(400).json({ error: 'Invalid seat status' });
     }
 
-    db.prepare(`
-      UPDATE seats SET
-        status = ?,
-        current_user_id = ?
-      WHERE id = ?
-    `).run(status, status === 'occupied' ? user_id : null, req.params.id);
+    const seat = await Seat.findOne(buildIdFilter(req.params.id));
+    if (!seat) {
+      return res.status(404).json({ error: 'Seat not found' });
+    }
 
-    logAudit(req.user.id, 'SEAT_STATUS_UPDATED', `Seat ${req.params.id} marked as ${status}`);
+    seat.status = status;
+    seat.current_user_id = status === 'occupied' && user_id ? user_id : null;
+    await seat.save();
+
+    logAudit(req.user.id, 'SEAT_STATUS_UPDATED', `Seat ${seat.seat_number} marked as ${status}`);
 
     res.json({ message: 'Seat status updated successfully', status });
   } catch (err) {
+    console.error('Update seat status error:', err);
     res.status(500).json({ error: 'Failed to update seat status' });
   }
 });

@@ -1,35 +1,39 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const db = require('../db/database');
+const mongoose = require('mongoose');
+
+const Reservation = require('../models/Reservation');
+const Book = require('../models/Book');
+const BookCopy = require('../models/BookCopy');
+const Loan = require('../models/Loan');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+
 const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../middleware/auth');
 const { checkUserPenaltyStatus } = require('../utils/penalties');
+const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
 const router = express.Router();
 
 // Get waiting queue stats and active reservation info for a book
-router.get('/book/:bookId', (req, res) => {
+router.get('/book/:bookId', async (req, res) => {
   try {
-    const bookId = parseInt(req.params.bookId, 10);
-    if (!bookId) {
-      return res.status(400).json({ error: 'Valid Book ID is required' });
-    }
-
-    const book = db.prepare('SELECT id, title, available_copies, total_copies FROM books WHERE id = ?').get(bookId);
+    const book = await Book.findOne(buildIdFilter(req.params.bookId));
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    // Active holds count (waiting + ready_for_pickup)
-    const stats = db.prepare(`
-      SELECT 
-        COUNT(CASE WHEN status = 'waiting' THEN 1 END) as waiting_count,
-        COUNT(CASE WHEN status = 'ready_for_pickup' THEN 1 END) as ready_count,
-        COUNT(*) as total_active_holds
-      FROM reservations
-      WHERE book_id = ? AND status IN ('waiting', 'ready_for_pickup')
-    `).get(bookId);
+    const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+    const waitingCount = await Reservation.countDocuments({
+      ...bFilter,
+      status: 'waiting'
+    });
+    const readyCount = await Reservation.countDocuments({
+      ...bFilter,
+      status: 'ready_for_pickup'
+    });
+    const totalActiveHolds = waitingCount + readyCount;
 
-    // Optional user check from Authorization header if present
     let userReservation = null;
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -37,26 +41,25 @@ router.get('/book/:bookId', (req, res) => {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded && decoded.id) {
-          userReservation = db.prepare(`
-            SELECT id, book_id, user_id, status, queue_position, pickup_deadline, reservation_date
-            FROM reservations
-            WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup')
-          `).get(bookId, decoded.id);
+          const uFilter = buildIdFilter(decoded.id, 'user_id', 'sqlite_user_id');
+          userReservation = await Reservation.findOne({
+            ...bFilter,
+            ...uFilter,
+            status: { $in: ['waiting', 'ready_for_pickup'] }
+          });
         }
-      } catch (e) {
-        // Token invalid or expired, continue without user reservation
-      }
+      } catch (e) {}
     }
 
     res.json({
-      bookId,
+      bookId: book._id.toString(),
       availableCopies: book.available_copies,
       totalCopies: book.total_copies,
       isAvailable: book.available_copies > 0,
-      waitingCount: stats.waiting_count || 0,
-      readyCount: stats.ready_count || 0,
-      totalActiveHolds: stats.total_active_holds || 0,
-      userReservation: userReservation || null
+      waitingCount,
+      readyCount,
+      totalActiveHolds,
+      userReservation: serializeDoc(userReservation)
     });
   } catch (err) {
     console.error('Fetch book reservation info error:', err);
@@ -64,60 +67,77 @@ router.get('/book/:bookId', (req, res) => {
   }
 });
 
-// Get reservations (Student gets own; Librarian/Admin gets all, supports status filter)
-router.get('/', authenticateToken, (req, res) => {
+// Get reservations (Student gets own; Librarian/Admin gets all)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status } = req.query;
-
-    let query = `
-      SELECT r.*,
-        b.title as book_title,
-        b.author as book_author,
-        b.cover_image,
-        b.available_copies,
-        b.floor,
-        b.section,
-        b.shelf,
-        b.rack,
-        (b.floor || ' · ' || b.section || ' · ' || b.shelf) as shelf_location,
-        u.name as student_name,
-        u.email as student_email,
-        u.membership_id
-      FROM reservations r
-      JOIN books b ON r.book_id = b.id
-      JOIN users u ON r.user_id = u.id
-      WHERE 1=1
-    `;
-    const params = [];
+    const query = {};
 
     if (req.user.role === 'student') {
-      query += ` AND r.user_id = ?`;
-      params.push(req.user.id);
+      const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+      Object.assign(query, uFilter);
     }
 
     if (status && status !== 'all') {
       if (status === 'active') {
-        query += ` AND r.status IN ('waiting', 'ready_for_pickup')`;
+        query.status = { $in: ['waiting', 'ready_for_pickup'] };
       } else {
-        query += ` AND r.status = ?`;
-        params.push(status);
+        query.status = status;
       }
     }
 
-    query += ` ORDER BY 
-      CASE r.status 
-        WHEN 'ready_for_pickup' THEN 1 
-        WHEN 'waiting' THEN 2 
-        WHEN 'fulfilled' THEN 3 
-        WHEN 'cancelled' THEN 4 
-        WHEN 'expired' THEN 5 
-        ELSE 6 
-      END ASC, 
-      r.queue_position ASC, 
-      r.reservation_date DESC`;
+    const reservations = await Reservation.find(query)
+      .populate('book_id')
+      .populate('user_id', 'name email membership_id')
+      .sort({ queue_position: 1, reservation_date: 1 });
 
-    const reservations = db.prepare(query).all(...params);
-    res.json(reservations);
+    const statusPriority = {
+      ready_for_pickup: 1,
+      waiting: 2,
+      fulfilled: 3,
+      cancelled: 4,
+      expired: 5
+    };
+
+    const formatted = reservations.map(r => {
+      const rObj = serializeDoc(r);
+      const b = r.book_id;
+      const u = r.user_id;
+      return {
+        ...rObj,
+        book_id: b?._id ? b._id.toString() : (r.book_id ? r.book_id.toString() : ''),
+        book_title: b?.title || 'Unknown Title',
+        book_author: b?.author || '',
+        cover_image: b?.cover_image || '',
+        category: b?.category || 'General',
+        available_copies: b?.available_copies ?? 0,
+        total_copies: b?.total_copies ?? 0,
+        floor: b?.floor || 'Floor 1',
+        section: b?.section || 'Main Hall',
+        shelf: b?.shelf || 'Shelf A-1',
+        rack: b?.rack || 'Rack 01',
+        shelf_location: b ? `${b.floor} · ${b.section} · ${b.shelf}` : '',
+        student_name: u?.name || 'Reader',
+        student_email: u?.email || '',
+        membership_id: u?.membership_id || '',
+        reservation_date: r.reservation_date || r.created_at || rObj.created_at,
+        created_at: r.created_at || r.reservation_date || rObj.created_at
+      };
+    });
+
+    formatted.sort((a, b) => {
+      const prioA = statusPriority[a.status] || 6;
+      const prioB = statusPriority[b.status] || 6;
+      if (prioA !== prioB) return prioA - prioB;
+      const posA = a.queue_position || 1;
+      const posB = b.queue_position || 1;
+      if (posA !== posB) return posA - posB;
+      const timeA = new Date(a.reservation_date || a.created_at || 0).getTime();
+      const timeB = new Date(b.reservation_date || b.created_at || 0).getTime();
+      return timeA - timeB;
+    });
+
+    res.json(formatted);
   } catch (err) {
     console.error('Fetch reservations error:', err);
     res.status(500).json({ error: 'Failed to retrieve reservations' });
@@ -125,15 +145,14 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Reserve a book (Student)
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const book_id = req.body.book_id || req.body.bookId;
-    if (!book_id) {
+    const rawBookId = req.body.book_id || req.body.bookId;
+    if (!rawBookId) {
       return res.status(400).json({ error: 'Book ID is required' });
     }
 
-    // Check circulation penalty & account hold
-    const penaltyStatus = checkUserPenaltyStatus(req.user.id);
+    const penaltyStatus = await checkUserPenaltyStatus(req.user.id);
     if (penaltyStatus.isBlocked) {
       return res.status(403).json({
         error: `Cannot place book hold: Your account is blocked due to unpaid circulation penalties ($${penaltyStatus.unpaidFines.toFixed(2)}) or overdue loans. Please settle your fines in your Reading Room to unblock reservations.`,
@@ -143,148 +162,158 @@ router.post('/', authenticateToken, (req, res) => {
       });
     }
 
-    const reserveTx = db.transaction(() => {
-      const book = db.prepare('SELECT * FROM books WHERE id = ?').get(book_id);
-      if (!book) {
-        throw new Error('Book not found');
-      }
+    const book = await Book.findOne(buildIdFilter(rawBookId));
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
 
-      // Check if user already has an active reservation for this book
-      const existing = db.prepare(`
-        SELECT id, queue_position FROM reservations
-        WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup')
-      `).get(book_id, req.user.id);
+    const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
+    const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
 
-      if (existing) {
-        throw new Error(`You already have an active hold on this book (Queue Position #${existing.queue_position}).`);
-      }
-
-      // Check if user currently has this book borrowed
-      const currentLoan = db.prepare(`
-        SELECT id, due_date FROM loans
-        WHERE book_id = ? AND user_id = ? AND status IN ('active', 'overdue')
-      `).get(book_id, req.user.id);
-
-      if (currentLoan) {
-        throw new Error('You already have this book borrowed on active loan! You can return or renew it in My Hub.');
-      }
-
-      // Calculate queue position atomically across all active holds
-      const activeHolds = db.prepare(`
-        SELECT COALESCE(MAX(queue_position), 0) as max_pos, COUNT(*) as count
-        FROM reservations
-        WHERE book_id = ? AND status IN ('waiting', 'ready_for_pickup')
-      `).get(book_id);
-
-      const queuePos = (activeHolds ? activeHolds.max_pos : 0) + 1;
-
-      // If available copies > 0 and no waiting queue, can immediately mark ready for pickup
-      let initialStatus = 'waiting';
-      let pickupDeadline = null;
-
-      if (book.available_copies > 0 && (!activeHolds || activeHolds.count === 0)) {
-        initialStatus = 'ready_for_pickup';
-        pickupDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-        // Reserve one physical copy
-        const copy = db.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(book_id);
-        if (copy) {
-          db.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(copy.id);
-          db.prepare('UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?').run(book_id);
-        }
-      }
-
-      const result = db.prepare(`
-        INSERT INTO reservations (book_id, user_id, status, queue_position, pickup_deadline)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(book_id, req.user.id, initialStatus, queuePos, pickupDeadline);
-
-      // Notify student
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, ?, ?, 'reservation', '/dashboard')
-      `).run(
-        req.user.id,
-        'Reservation Confirmed',
-        initialStatus === 'ready_for_pickup'
-          ? `Your hold on "${book.title}" is ready for pickup at the front desk!`
-          : `You are in waiting position #${queuePos} for "${book.title}".`
-      );
-
-      logAudit(req.user.id, 'BOOK_RESERVED', `User reserved "${book.title}" (Queue: ${queuePos})`);
-
-      return {
-        reservationId: result.lastInsertRowid,
-        queuePosition: queuePos,
-        status: initialStatus
-      };
+    // Check if user already has an active hold
+    const existing = await Reservation.findOne({
+      ...bFilter,
+      ...uFilter,
+      status: { $in: ['waiting', 'ready_for_pickup'] }
     });
 
-    const out = reserveTx();
+    if (existing) {
+      return res.status(400).json({
+        error: `You already have an active hold on this book (Queue Position #${existing.queue_position}).`
+      });
+    }
+
+    // Check if user currently has this book borrowed
+    const currentLoan = await Loan.findOne({
+      ...bFilter,
+      ...uFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
+    });
+
+    if (currentLoan) {
+      return res.status(400).json({
+        error: 'You already have this book borrowed on active loan! Under circulation rules, you cannot borrow or place a hold on the same title twice at the same time.'
+      });
+    }
+
+    // Calculate queue position atomically
+    const activeHolds = await Reservation.find({
+      ...bFilter,
+      status: { $in: ['waiting', 'ready_for_pickup'] }
+    });
+    const maxPos = activeHolds.reduce((max, r) => Math.max(max, r.queue_position || 0), 0);
+    const queuePos = maxPos + 1;
+
+    let initialStatus = 'waiting';
+    let pickupDeadline = null;
+
+    if (book.available_copies > 0 && activeHolds.length === 0) {
+      initialStatus = 'ready_for_pickup';
+      pickupDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const copy = await BookCopy.findOne({
+        ...bFilter,
+        status: 'available'
+      });
+      if (copy) {
+        copy.status = 'reserved';
+        await copy.save();
+        book.available_copies = Math.max(0, book.available_copies - 1);
+        await book.save();
+      }
+    }
+
+    const reservation = await Reservation.create({
+      book_id: book._id,
+      user_id: req.user.id,
+      status: initialStatus,
+      queue_position: queuePos,
+      pickup_deadline: pickupDeadline,
+      reservation_date: new Date()
+    });
+
+    await Notification.create({
+      user_id: req.user.id,
+      title: 'Reservation Confirmed',
+      message: initialStatus === 'ready_for_pickup'
+        ? `Your hold on "${book.title}" is ready for pickup at the front desk!`
+        : `You are in waiting position #${queuePos} for "${book.title}".`,
+      type: 'reservation',
+      link: '/dashboard',
+      created_at: new Date()
+    });
+
+    logAudit(req.user.id, 'BOOK_RESERVED', `User reserved "${book.title}" (Queue: ${queuePos})`);
 
     res.status(201).json({
       message: 'Reservation placed successfully',
-      reservationId: out.reservationId,
-      queuePosition: out.queuePosition,
-      status: out.status
+      reservationId: reservation._id.toString(),
+      queuePosition: queuePos,
+      status: initialStatus
     });
   } catch (err) {
+    console.error('Place reservation error:', err);
     res.status(400).json({ error: err.message || 'Failed to place reservation' });
   }
 });
 
 // Cancel reservation (Student or Librarian)
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(req.params.id);
+    const reservation = await Reservation.findOne(buildIdFilter(req.params.id));
     if (!reservation) {
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
-    if (req.user.role === 'student' && reservation.user_id !== req.user.id) {
+    if (req.user.role === 'student' && String(reservation.user_id) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Not authorized to cancel this reservation' });
     }
 
-    const cancelTx = db.transaction(() => {
-      // If it was ready for pickup, release the held copy
-      if (reservation.status === 'ready_for_pickup') {
-        const copy = db.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'reserved' LIMIT 1").get(reservation.book_id);
-        if (copy) {
-          // Check if there is next student in line
-          const nextStudent = db.prepare(`
-            SELECT * FROM reservations
-            WHERE book_id = ? AND status = 'waiting'
-            ORDER BY queue_position ASC LIMIT 1
-          `).get(reservation.book_id);
+    const bFilter = buildIdFilter(reservation.book_id, 'book_id', 'sqlite_book_id');
 
-          if (nextStudent) {
-            const newDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-            db.prepare("UPDATE reservations SET status = 'ready_for_pickup', pickup_deadline = ? WHERE id = ?").run(newDeadline, nextStudent.id);
-            db.prepare(`
-              INSERT INTO notifications (user_id, title, message, type, link)
-              VALUES (?, ?, ?, 'pickup', '/dashboard')
-            `).run(
-              nextStudent.user_id,
-              'Hold Ready for Pickup',
-              `Your reservation for book #${reservation.book_id} is now ready for pickup!`
-            );
-          } else {
-            db.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(copy.id);
-            db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(reservation.book_id);
-          }
+    // If ready for pickup, reassign or release held copy
+    if (reservation.status === 'ready_for_pickup') {
+      const copy = await BookCopy.findOne({ ...bFilter, status: 'reserved' });
+      if (copy) {
+        const nextStudent = await Reservation.findOne({
+          ...bFilter,
+          status: 'waiting'
+        }).sort({ queue_position: 1 });
+
+        if (nextStudent) {
+          const newDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+          nextStudent.status = 'ready_for_pickup';
+          nextStudent.pickup_deadline = newDeadline;
+          await nextStudent.save();
+
+          await Notification.create({
+            user_id: nextStudent.user_id,
+            title: 'Hold Ready for Pickup',
+            message: 'Your reservation for book hold is now ready for pickup!',
+            type: 'pickup',
+            link: '/dashboard',
+            created_at: new Date()
+          });
+        } else {
+          copy.status = 'available';
+          await copy.save();
+          await Book.updateOne({ _id: reservation.book_id }, { $inc: { available_copies: 1 } });
         }
       }
+    }
 
-      db.prepare("UPDATE reservations SET status = 'cancelled' WHERE id = ?").run(reservation.id);
+    reservation.status = 'cancelled';
+    await reservation.save();
 
-      // Shift queue positions for remaining waiting students
-      db.prepare(`
-        UPDATE reservations
-        SET queue_position = queue_position - 1
-        WHERE book_id = ? AND status = 'waiting' AND queue_position > ?
-      `).run(reservation.book_id, reservation.queue_position);
-    });
+    // Shift queue positions for remaining waiting patrons
+    await Reservation.updateMany(
+      {
+        ...bFilter,
+        status: 'waiting',
+        queue_position: { $gt: reservation.queue_position }
+      },
+      { $inc: { queue_position: -1 } }
+    );
 
-    cancelTx();
     res.json({ message: 'Reservation cancelled successfully' });
   } catch (err) {
     console.error('Cancel reservation error:', err);
@@ -293,59 +322,80 @@ router.delete('/:id', authenticateToken, (req, res) => {
 });
 
 // Librarian: Mark reservation as ready for pickup
-router.post('/:id/pickup', authenticateToken, requireRole(['admin', 'librarian']), (req, res) => {
+router.post('/:id/pickup', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const reservation = db.prepare(`
-      SELECT r.*, b.title as book_title
-      FROM reservations r
-      JOIN books b ON r.book_id = b.id
-      WHERE r.id = ?
-    `).get(req.params.id);
-
+    const reservation = await Reservation.findOne(buildIdFilter(req.params.id)).populate('book_id');
     if (!reservation) {
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
-    const deadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const deadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    reservation.status = 'ready_for_pickup';
+    reservation.pickup_deadline = deadline;
+    await reservation.save();
 
-    db.prepare(`
-      UPDATE reservations SET
-        status = 'ready_for_pickup',
-        pickup_deadline = ?
-      WHERE id = ?
-    `).run(deadline, reservation.id);
+    const bookTitle = reservation.book_id?.title || 'Book';
+    await Notification.create({
+      user_id: reservation.user_id,
+      title: 'Book Ready for Pickup!',
+      message: `"${bookTitle}" is ready at the desk. Pick it up within 48 hours.`,
+      type: 'pickup',
+      link: '/dashboard',
+      created_at: new Date()
+    });
 
-    db.prepare(`
-      INSERT INTO notifications (user_id, title, message, type, link)
-      VALUES (?, ?, ?, 'pickup', '/dashboard')
-    `).run(
-      reservation.user_id,
-      'Book Ready for Pickup!',
-      `"${reservation.book_title}" is ready at the desk. Pick it up within 48 hours.`
-    );
-
-    res.json({ message: 'Marked ready for pickup', pickupDeadline: deadline });
+    res.json({ message: 'Marked ready for pickup', pickupDeadline: deadline.toISOString() });
   } catch (err) {
+    console.error('Mark pickup error:', err);
     res.status(500).json({ error: 'Failed to update reservation' });
   }
 });
 
-// Claim / Pick up ready reservation directly (Student or Librarian/Admin)
-router.post('/:id/claim', authenticateToken, (req, res) => {
+// Librarian: Notify patron regarding their waiting list position
+router.post('/:id/notify', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
-    const reservationId = parseInt(req.params.id, 10);
-    const reservation = db.prepare(`
-      SELECT r.*, b.title as book_title
-      FROM reservations r
-      JOIN books b ON r.book_id = b.id
-      WHERE r.id = ?
-    `).get(reservationId);
-
+    const reservation = await Reservation.findOne(buildIdFilter(req.params.id))
+      .populate('book_id')
+      .populate('user_id');
     if (!reservation) {
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
-    if (req.user.role === 'student' && reservation.user_id !== req.user.id) {
+    const bookTitle = reservation.book_id?.title || 'Book';
+    const recipientId = reservation.user_id?._id || reservation.user_id;
+    const isReady = reservation.status === 'ready_for_pickup';
+    const message = req.body?.message || (
+      isReady
+        ? `Reminder from Circulation Desk: Your reserved volume "${bookTitle}" is currently waiting at the circulation desk for collection.`
+        : `Circulation Desk Notice: Your request for "${bookTitle}" is at waiting queue position #${reservation.queue_position}. Copies will be issued as soon as returned by patrons.`
+    );
+
+    await Notification.create({
+      user_id: recipientId,
+      title: isReady ? 'Desk Pickup Alert' : 'Waiting Queue Position Update',
+      message,
+      type: 'reservation',
+      link: '/dashboard',
+      created_at: new Date()
+    });
+
+    logAudit(req.user.id, 'WAITING_LIST_NOTIFIED', `Librarian notified patron for "${bookTitle}" (Queue: ${reservation.queue_position})`);
+    res.json({ message: 'Patron notified successfully' });
+  } catch (err) {
+    console.error('Notify waiting patron error:', err);
+    res.status(500).json({ error: 'Failed to dispatch patron notification' });
+  }
+});
+
+// Claim / Pick up ready reservation directly
+router.post('/:id/claim', authenticateToken, async (req, res) => {
+  try {
+    const reservation = await Reservation.findOne(buildIdFilter(req.params.id)).populate('book_id');
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    if (req.user.role === 'student' && String(reservation.user_id) !== String(req.user.id)) {
       return res.status(403).json({ error: 'Not authorized to claim this reservation' });
     }
 
@@ -355,56 +405,65 @@ router.post('/:id/claim', authenticateToken, (req, res) => {
       });
     }
 
-    const claimTx = db.transaction(() => {
-      // Find the reserved copy for this book
-      let copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'reserved' LIMIT 1").get(reservation.book_id);
-      if (!copy) {
-        copy = db.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(reservation.book_id);
-      }
+    const bFilter = buildIdFilter(reservation.book_id._id, 'book_id', 'sqlite_book_id');
+    let copy = await BookCopy.findOne({ ...bFilter, status: 'reserved' });
+    if (!copy) {
+      copy = await BookCopy.findOne({ ...bFilter, status: 'available' });
+    }
 
-      if (!copy) {
-        throw new Error('No physical copies currently available to allocate for this pickup.');
-      }
+    if (!copy) {
+      return res.status(400).json({ error: 'No physical copies currently available to allocate for this pickup.' });
+    }
 
-      const now = new Date();
-      const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
-
-      // Create loan record
-      const loanRes = db.prepare(`
-        INSERT INTO loans (book_id, copy_id, user_id, borrow_date, due_date, status)
-        VALUES (?, ?, ?, ?, ?, 'active')
-      `).run(reservation.book_id, copy.id, reservation.user_id, now.toISOString(), dueDate.toISOString());
-
-      // Update copy status
-      db.prepare("UPDATE book_copies SET status = 'borrowed' WHERE id = ?").run(copy.id);
-
-      // Mark reservation fulfilled
-      db.prepare("UPDATE reservations SET status = 'fulfilled' WHERE id = ?").run(reservation.id);
-
-      // Notification
-      db.prepare(`
-        INSERT INTO notifications (user_id, title, message, type, link)
-        VALUES (?, 'Hold Claimed & Checked Out', ?, 'borrow', '/dashboard')
-      `).run(
-        reservation.user_id,
-        `You have picked up "${reservation.book_title}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`
-      );
-
-      logAudit(req.user.id, 'RESERVATION_CLAIMED', `Claimed hold #${reservation.id} for "${reservation.book_title}" [${copy.copy_code}]`);
-
-      return {
-        loanId: loanRes.lastInsertRowid,
-        dueDate: dueDate.toISOString(),
-        copyCode: copy.copy_code
-      };
+    const uFilter = buildIdFilter(reservation.user_id, 'user_id', 'sqlite_user_id');
+    const existingActiveLoan = await Loan.findOne({
+      ...bFilter,
+      ...uFilter,
+      status: { $in: ['active', 'borrowed', 'overdue'] }
     });
 
-    const out = claimTx();
+    if (existingActiveLoan) {
+      return res.status(400).json({
+        error: 'You already have an active borrowed copy of this book. Under circulation rules, you cannot hold or borrow the same title twice concurrently. Please return your current copy before claiming another copy.'
+      });
+    }
+
+    const now = new Date();
+    const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
+
+    const loan = await Loan.create({
+      book_id: reservation.book_id._id,
+      copy_id: copy._id,
+      user_id: reservation.user_id,
+      borrow_date: now,
+      due_date: dueDate,
+      status: 'active',
+      created_at: now
+    });
+
+    copy.status = 'borrowed';
+    await copy.save();
+
+    reservation.status = 'fulfilled';
+    await reservation.save();
+
+    const bookTitle = reservation.book_id?.title || 'Book';
+    await Notification.create({
+      user_id: reservation.user_id,
+      title: 'Hold Claimed & Checked Out',
+      message: `You have picked up "${bookTitle}" (Copy: ${copy.copy_code}). Due date: ${dueDate.toLocaleDateString()}.`,
+      type: 'borrow',
+      link: '/dashboard',
+      created_at: new Date()
+    });
+
+    logAudit(req.user.id, 'RESERVATION_CLAIMED', `Claimed hold #${reservation._id} for "${bookTitle}" [${copy.copy_code}]`);
+
     res.json({
-      message: `"${reservation.book_title}" successfully claimed and checked out! Due date: ${new Date(out.dueDate).toLocaleDateString()}.`,
-      loanId: out.loanId,
-      copyCode: out.copyCode,
-      dueDate: out.dueDate
+      message: `"${bookTitle}" successfully claimed and checked out! Due date: ${dueDate.toLocaleDateString()}.`,
+      loanId: loan._id.toString(),
+      copyCode: copy.copy_code,
+      dueDate: dueDate.toISOString()
     });
   } catch (err) {
     console.error('Claim reservation error:', err);

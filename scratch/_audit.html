@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Audit Harness</title>
+<style>
+  html, body { margin: 0; background: #888; font-family: Arial, sans-serif; }
+  #row { display: flex; gap: 16px; padding: 16px; align-items: flex-start; }
+  .label { color: #fff; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .scaler { overflow: hidden; }
+  iframe { border: 0; display: block; transform-origin: top left; }
+  #status { position: fixed; top: 6px; right: 10px; color: #fff; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="status">LOADING</div>
+<div id="row"></div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const width = Number(params.get('widths') || params.get('width') || 390);
+  const height = Number(params.get('height') || 900);
+  const scale = Number(params.get('scale') || Math.min(1, (window.innerWidth - 40) / width));
+  const wrap = document.createElement('div');
+  wrap.className = 'frame';
+  wrap.id = 'frame-' + width;
+  wrap.innerHTML = '<div class="label">' + width + 'px @ ' + Math.round(scale * 100) + '%</div>';
+  const scaler = document.createElement('div');
+  scaler.className = 'scaler';
+  scaler.style.width = (width * scale) + 'px';
+  scaler.style.height = (height * scale) + 'px';
+  const f = document.createElement('iframe');
+  f.src = '/?harness=' + width;
+  f.width = width;
+  f.height = height;
+  f.id = 'iframe-' + width;
+  f.style.transform = 'scale(' + scale + ')';
+  f.addEventListener('load', () => { document.getElementById('status').textContent = 'ALL READY'; });
+  scaler.appendChild(f);
+  wrap.appendChild(scaler);
+  document.getElementById('row').appendChild(wrap);
+</script>
+</body>
+</html>

@@ -48,7 +48,6 @@ export default function UserNavbar({
 
   // Main Public Navigation Items
   const siteNavItems = [
-    { id: 'home', label: 'Home', action: () => { setMobileMenuOpen(false); onNavigate('home'); } },
     { id: 'catalog', label: 'Books', action: () => { setMobileMenuOpen(false); onNavigate('catalog'); } },
     { id: 'ai-finder', label: 'AI Oracle', action: () => { setMobileMenuOpen(false); onNavigate('ai-finder'); } },
     { id: 'seats', label: 'Study Pods', action: () => { setMobileMenuOpen(false); onNavigate('seats'); } },
@@ -122,7 +121,7 @@ export default function UserNavbar({
       >
         {/* Brand Logo with Editorial Monogram */}
         <div
-          onClick={() => onNavigate('home')}
+          onClick={() => onNavigate('dashboard')}
           style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
         >
           <div

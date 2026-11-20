@@ -80,24 +80,24 @@ export default function TermsPolicies({ onNavigate }) {
               alignItems: 'center',
               gap: '8px',
               padding: '4px 12px',
-              backgroundColor: 'var(--editorial-border)',
-              color: 'var(--editorial-text)',
+              backgroundColor: 'var(--editorial-bg-subtle)',
+              color: 'var(--editorial-accent)',
               border: '1px solid var(--editorial-border)',
-              boxShadow: 'var(--shadow-sm)',
+              borderRadius: 'var(--radius-full)',
               fontSize: '0.78rem',
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
-              letterSpacing: '0.08em',
+              letterSpacing: '0.06em',
               marginBottom: '14px'
             }}
           >
             <FileText size={15} strokeWidth={2.4} />
             Library Governance & Policies
           </div>
-          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '-0.01em', marginBottom: '12px' }}>
             Terms of Service & Rules
           </h1>
-          <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+          <p style={{ color: 'var(--editorial-text-muted)', fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
             LibraMind operates on principles of academic honor, mutual respect for shared collections, and rational library stewardship.
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function TermsPolicies({ onNavigate }) {
         >
           {policies.map((pol, idx) => {
             const Icon = pol.icon;
-            const borderColors = ['var(--editorial-accent)', 'var(--editorial-green)', 'var(--editorial-border)'];
+            const borderColors = ['var(--editorial-accent)', 'var(--editorial-green)', 'var(--editorial-accent)'];
             return (
               <div
                 key={idx}
@@ -129,12 +129,13 @@ export default function TermsPolicies({ onNavigate }) {
                     style={{
                       width: '44px',
                       height: '44px',
-                      backgroundColor: 'var(--editorial-border)',
+                      backgroundColor: 'var(--editorial-bg-subtle)',
                       border: '1px solid var(--editorial-border)',
+                      borderRadius: 'var(--radius-sm)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'var(--editorial-text)'
+                      color: idx % 2 === 0 ? 'var(--editorial-accent)' : 'var(--editorial-green)'
                     }}
                   >
                     <Icon size={22} strokeWidth={2.4} />

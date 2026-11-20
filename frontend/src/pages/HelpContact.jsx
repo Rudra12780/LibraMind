@@ -78,24 +78,24 @@ export default function HelpContact({ onNavigate }) {
               alignItems: 'center',
               gap: '8px',
               padding: '4px 12px',
-              backgroundColor: 'var(--editorial-border)',
-              color: 'var(--editorial-text)',
+              backgroundColor: 'var(--editorial-bg-subtle)',
+              color: 'var(--editorial-accent)',
               border: '1px solid var(--editorial-border)',
-              boxShadow: 'var(--shadow-sm)',
+              borderRadius: 'var(--radius-full)',
               fontSize: '0.78rem',
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
-              letterSpacing: '0.08em',
+              letterSpacing: '0.06em',
               marginBottom: '14px'
             }}
           >
             <HelpCircle size={15} strokeWidth={2.4} />
             Circulation Help & Patron Inquiries
           </div>
-          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontFamily: 'var(--font-serif)', fontWeight: 700, letterSpacing: '-0.01em', marginBottom: '12px' }}>
             We Are Here to Assist Your Research
           </h1>
-          <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+          <p style={{ color: 'var(--editorial-text-muted)', fontSize: '1rem', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
             Have a question about book loans, hold queues, study pod bookings, or library policies? Contact our staff or explore the answers below.
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function HelpContact({ onNavigate }) {
         >
           <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Phone size={20} strokeWidth={2.4} />
               </div>
               <div>
@@ -127,7 +127,7 @@ export default function HelpContact({ onNavigate }) {
 
           <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-green)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Mail size={20} strokeWidth={2.4} />
               </div>
               <div>
@@ -141,9 +141,9 @@ export default function HelpContact({ onNavigate }) {
             <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>For research & hold inquiries</span>
           </div>
 
-          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-border)' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-border)', border: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-text)' }}>
+              <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Clock size={20} strokeWidth={2.4} />
               </div>
               <div>
