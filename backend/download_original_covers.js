@@ -52,9 +52,9 @@ function generateUniqueFallbackSvg(book) {
     { bg1: '#3E2723', bg2: '#211412', accent: '#BCAAA4', text: '#FAF8F1' }
   ];
   const p = palettes[book.id % palettes.length];
-  const safeTitle = (book.title || 'Book').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const safeAuthor = (book.author || 'Author').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const safeCat = (book.category || 'Library').toUpperCase();
+  const safeTitle = (book.title || 'Book').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  const safeAuthor = (book.author || 'Author').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  const safeCat = (book.category || 'Library').toUpperCase().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
     <defs>

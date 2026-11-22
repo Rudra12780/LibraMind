@@ -559,7 +559,13 @@ button {
   .navbar-subtitle {
     display: none !important;
   }
+  .navbar-badge-hide {
+    display: none !important;
+  }
   .header-logout-btn {
+    display: none !important;
+  }
+  .visitor-join-desktop {
     display: none !important;
   }
 }

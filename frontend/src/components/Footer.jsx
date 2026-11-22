@@ -75,57 +75,12 @@ export default function Footer({ onNavigate, onOpenBlueprints }) {
           {/* Col 2: Navigation Links (Role-Adaptive) */}
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
-              {user?.role === 'admin'
-                ? 'Master Governance'
-                : user?.role === 'librarian'
+              {user?.role === 'librarian'
                 ? 'Circulation Suite'
                 : 'Library Chambers'}
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '9px', fontSize: '0.86rem' }}>
-              {user?.role === 'admin' ? (
-                <>
-                  <li>
-                    <button
-                      onClick={() => onNavigate('admin', { tab: 'overview' })}
-                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
-                    >
-                      → Admin Console Overview
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate('admin', { tab: 'users' })}
-                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
-                    >
-                      → Patron &amp; Staff Records
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate('analytics')}
-                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
-                    >
-                      → Circulation Analytics
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onNavigate('dashboard')}
-                      style={{ background: 'none', border: 'none', color: 'var(--editorial-text)', cursor: 'pointer', padding: 0, fontSize: '0.86rem' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--editorial-accent)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--editorial-text)'}
-                    >
-                      → Patron Reading Room View
-                    </button>
-                  </li>
-                </>
-              ) : user?.role === 'librarian' ? (
+              {user?.role === 'librarian' ? (
                 <>
                   <li>
                     <button

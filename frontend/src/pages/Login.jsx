@@ -194,7 +194,7 @@ export default function Login({ onNavigate }) {
               marginBottom: '10px'
             }}
           >
-            ☀️ Member & Student Sanctuary
+            ☀️ LibraMind Library Sanctuary
           </div>
 
           <h2
@@ -230,10 +230,10 @@ export default function Login({ onNavigate }) {
           >
             <div>
               <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
-                Active Session: {user.name} ({user.role.toUpperCase()})
+                Active Session: {user.name}
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
-                Click below to switch to another role or continue.
+                You are currently signed in.
               </div>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -353,7 +353,7 @@ export default function Login({ onNavigate }) {
               <input
                 type="text"
                 className="form-control"
-                placeholder="e.g. reader@libramind.edu or STU-1001"
+                placeholder="e.g. reader@libramind.edu or membership ID"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="username"
@@ -594,49 +594,8 @@ export default function Login({ onNavigate }) {
           </div>
         </div>
 
-        {/* Links to Separate Portals */}
-        <div style={{ marginTop: '22px', paddingTop: '16px', borderTop: '1px solid var(--editorial-border)' }}>
-          <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)', fontWeight: 600, textAlign: 'center', marginBottom: '10px' }}>
-            Staff & Institutional Access
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={() => onNavigate('librarian')}
-              className="btn btn-outline btn-sm"
-              style={{
-                fontSize: '0.78rem',
-                padding: '9px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}
-            >
-              <span>Librarian Desk →</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('admin')}
-              className="btn btn-outline btn-sm"
-              style={{
-                fontSize: '0.78rem',
-                padding: '9px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                borderColor: 'rgba(192, 108, 78, 0.4)',
-                color: 'var(--editorial-accent)'
-              }}
-            >
-              <span>Admin Console →</span>
-            </button>
-          </div>
-        </div>
-
         {/* Switch to Register */}
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.86rem', color: 'var(--muted-text)', fontWeight: 500 }}>
+        <div style={{ textAlign: 'center', marginTop: '26px', paddingTop: '20px', borderTop: '1px solid var(--editorial-border)', fontSize: '0.86rem', color: 'var(--muted-text)', fontWeight: 500 }}>
           Don't have a library sanctuary card?{' '}
           <button
             onClick={() => onNavigate('register')}

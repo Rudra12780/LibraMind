@@ -75,9 +75,13 @@ function AppContent() {
     setVisualBlueprintModal({ isOpen: true, pageId: pageId || 'home' });
   };
 
-  // Role-based protection: Students cannot enter staff or admin pages
+  // Role-based protection: non-authenticated or unauthorized roles cannot enter restricted pages
   useEffect(() => {
-    if (user?.role === 'student') {
+    if (!loading && !user) {
+      if (['admin', 'librarian', 'dashboard', 'analytics'].includes(activePage)) {
+        setActivePage('login');
+      }
+    } else if (user?.role === 'student') {
       if (['admin', 'librarian', 'analytics'].includes(activePage)) {
         setActivePage('dashboard');
       }
@@ -85,12 +89,8 @@ function AppContent() {
       if (['admin', 'analytics'].includes(activePage)) {
         setActivePage('librarian');
       }
-    } else if (user?.role === 'admin') {
-      if (activePage === 'analytics' && !adminVerified) {
-        setActivePage('admin');
-      }
     }
-  }, [user?.role, activePage, adminVerified]);
+  }, [user, loading, activePage]);
 
   // Synchronize route with browser URL & history
   useEffect(() => {
@@ -113,18 +113,12 @@ function AppContent() {
 
       if (cleanPath === 'presentation' || cleanPath === 'ppt' || cleanPath === 'download-ppt' || cleanPath === 'slides') {
         // disabled per user request
-        setActivePage(user ? (user.role === 'admin' ? 'admin' : user.role === 'librarian' ? 'librarian' : 'dashboard') : 'home');
+        setActivePage('home');
       } else if (cleanPath.startsWith('books/') || cleanPath.startsWith('book-details/') || cleanPath === 'book-details') {
         setActivePage('book-details');
       } else if (cleanPath === '' || cleanPath === 'home') {
-        // When authenticated, home redirects to user dashboard; for guests it shows the public landing page
-        if (user) {
-          if (user.role === 'admin' && adminVerified) setActivePage('admin');
-          else if (user.role === 'librarian') setActivePage('librarian');
-          else setActivePage('dashboard');
-        } else {
-          setActivePage('home');
-        }
+        // http://localhost:5000/ must always open the main LibraMind landing page by default
+        setActivePage('home');
       } else if (cleanPath === 'books' || cleanPath === 'catalog') {
         setActivePage('catalog');
       } else if (cleanPath === 'ai-book-finder' || cleanPath === 'ai-finder') {
@@ -144,9 +138,15 @@ function AppContent() {
         cleanPath === 'wishlist' ||
         cleanPath === 'profile'
       ) {
-        if (user && user.role === 'librarian') {
+        if (loading) return;
+        if (!user) {
+          window.history.replaceState(null, '', '/login');
+          setActivePage('login');
+          return;
+        }
+        if (user.role === 'librarian') {
           setActivePage('librarian');
-        } else if (user && user.role === 'admin' && adminVerified) {
+        } else if (user.role === 'admin') {
           setActivePage('admin');
         } else {
           setActivePage('dashboard');
@@ -157,6 +157,17 @@ function AppContent() {
         cleanPath === 'librarian/dashboard' ||
         cleanPath.startsWith('librarian')
       ) {
+        if (loading) return;
+        if (!user) {
+          window.history.replaceState(null, '', '/login');
+          setActivePage('login');
+          return;
+        }
+        if (user.role === 'student') {
+          window.history.replaceState(null, '', '/student/dashboard');
+          setActivePage('dashboard');
+          return;
+        }
         const parts = cleanPath.split('/');
         if (parts.length > 1 && ['issue', 'return', 'inventory', 'reservations', 'seats', 'announcements', 'adminmsg'].includes(parts[1])) {
           setLibrarianTab(parts[1]);
@@ -169,12 +180,41 @@ function AppContent() {
         cleanPath === 'admin' ||
         cleanPath.startsWith('admin')
       ) {
+        if (loading) return;
+        if (!user) {
+          // Unauthenticated visitor -> redirect to normal login page
+          window.history.replaceState(null, '', '/login');
+          setActivePage('login');
+          return;
+        }
+        if (user.role !== 'admin') {
+          // Normal student or librarian -> deny access and redirect
+          if (user.role === 'librarian') {
+            window.history.replaceState(null, '', '/librarian/dashboard');
+            setActivePage('librarian');
+          } else {
+            window.history.replaceState(null, '', '/student/dashboard');
+            setActivePage('dashboard');
+          }
+          return;
+        }
         const parts = cleanPath.split('/');
         if (parts.length > 1 && ['overview', 'users', 'inventory', 'messages', 'audit'].includes(parts[1])) {
           setAdminTab(parts[1]);
         }
         setActivePage('admin');
       } else if (cleanPath === 'analytics' || cleanPath === 'circulation-analytics') {
+        if (loading) return;
+        if (!user) {
+          window.history.replaceState(null, '', '/login');
+          setActivePage('login');
+          return;
+        }
+        if (user.role === 'student') {
+          window.history.replaceState(null, '', '/student/dashboard');
+          setActivePage('dashboard');
+          return;
+        }
         setActivePage('analytics');
       } else if (cleanPath === 'about') {
         setActivePage('about');
@@ -194,7 +234,7 @@ function AppContent() {
         setActivePage('notifications');
       } else if (cleanPath === 'login') {
         if (user) {
-          if (user.role === 'admin' && adminVerified) setActivePage('admin');
+          if (user.role === 'admin') setActivePage('admin');
           else if (user.role === 'librarian') setActivePage('librarian');
           else setActivePage('dashboard');
         } else {
@@ -202,7 +242,7 @@ function AppContent() {
         }
       } else if (cleanPath === 'register') {
         if (user) {
-          if (user.role === 'admin' && adminVerified) setActivePage('admin');
+          if (user.role === 'admin') setActivePage('admin');
           else if (user.role === 'librarian') setActivePage('librarian');
           else setActivePage('dashboard');
         } else {
@@ -217,7 +257,7 @@ function AppContent() {
     syncRouteFromLocation();
     window.addEventListener('popstate', syncRouteFromLocation);
     return () => window.removeEventListener('popstate', syncRouteFromLocation);
-  }, [user, adminVerified]);
+  }, [user, loading, adminVerified]);
 
   const navigate = (page, params = {}) => {
     let cleanPage = (page || 'home').toString().replace(/^\/+/, '') || 'home';
@@ -241,19 +281,16 @@ function AppContent() {
     if (cleanPage === 'help') cleanPage = 'contact';
     if (cleanPage === 'policies') cleanPage = 'terms';
 
-    // If authenticated user navigates to 'home' without an explicit scroll target, redirect to their dashboard
-    if ((cleanPage === 'home' || cleanPage === '') && user && !params.scrollTo) {
-      if (user.role === 'admin' && adminVerified) cleanPage = 'admin';
-      else if (user.role === 'librarian') cleanPage = 'librarian';
-      else cleanPage = 'dashboard';
-    }
-
     // Strict role-based navigation protection
-    if (user && user.role === 'student') {
+    if (!user) {
+      if (['admin', 'librarian', 'dashboard', 'analytics'].includes(cleanPage)) {
+        cleanPage = 'login';
+      }
+    } else if (user.role === 'student') {
       if (['admin', 'librarian', 'analytics'].includes(cleanPage)) {
         cleanPage = 'dashboard';
       }
-    } else if (user && user.role === 'librarian') {
+    } else if (user.role === 'librarian') {
       if (['admin', 'analytics'].includes(cleanPage)) {
         cleanPage = 'librarian';
       }
@@ -547,7 +584,9 @@ function AppContent() {
         )}
 
         {activePage === 'admin' && (
-          <AdminDashboard initialTab={adminTab} onNavigate={navigate} />
+          user?.role === 'admin' ? (
+            <AdminDashboard initialTab={adminTab} onNavigate={navigate} />
+          ) : null
         )}
 
         {activePage === 'analytics' && (

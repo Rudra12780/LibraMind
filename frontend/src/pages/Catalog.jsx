@@ -757,10 +757,12 @@ export default function Catalog({
               boxShadow: selectedCategory === 'All' ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
             }}
           >
-            All ({categories.length})
+            All
           </button>
 
-          {categories.map(cat => (
+          {categories
+            .filter(cat => cat && cat.toLowerCase() !== 'all')
+            .map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -865,6 +867,7 @@ export default function Catalog({
       ) : viewMode === 'circular' ? (
         <CircularBookCarousel
           books={books}
+          category={selectedCategory}
           onViewDetails={onViewBookDetails}
           onBorrow={handleQuickBorrow}
           onReturn={handleQuickReturn}

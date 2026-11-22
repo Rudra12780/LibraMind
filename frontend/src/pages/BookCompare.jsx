@@ -380,6 +380,8 @@ export default function BookCompare({
                       alt={b.title}
                       onError={(e) => handleBookCoverError(e, b.title, b.author, b.category)}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 

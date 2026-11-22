@@ -555,6 +555,8 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                       alt={res.book_title}
                       onError={(e) => handleBookCoverError(e, res.book_title, res.book_author || 'Archivist', res.book_category || 'Archival')}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 

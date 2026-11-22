@@ -449,6 +449,8 @@ export default function AiBookFinder({
                       alt={book.title}
                       onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 

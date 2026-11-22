@@ -26,7 +26,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
 
   const handleLogout = async () => {
     await logout();
-    if (onNavigate) onNavigate('admin');
+    if (onNavigate) onNavigate('login');
   };
 
   const handleExitToUserMode = () => {
@@ -99,7 +99,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="portal-brand-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1.40rem', color: 'var(--editorial-text)' }}>LibraMind</span>
               <span
-                className="badge"
+                className="badge navbar-badge-hide"
                 style={{
                   backgroundColor: 'var(--editorial-bg-subtle)',
                   color: 'var(--editorial-accent)',
@@ -112,7 +112,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
                 ADMIN CONSOLE
               </span>
             </div>
-            <p className="portal-subtitle" style={{ margin: 0, fontSize: '0.70rem', color: 'var(--editorial-text-muted)', fontWeight: 500, marginTop: '1px' }}>
+            <p className="portal-subtitle navbar-subtitle" style={{ margin: 0, fontSize: '0.70rem', color: 'var(--editorial-text-muted)', fontWeight: 500, marginTop: '1px' }}>
               Governance • System Analytics &amp; Security
             </p>
           </div>
@@ -232,6 +232,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
             onClick={handleLogout}
             title="Sign out of admin console"
             aria-label="Sign out"
+            className="header-logout-btn"
             style={{
               width: '34px',
               height: '34px',

@@ -71,39 +71,39 @@ function useViewportWidth() {
   return width;
 }
 
-// 10-Card Desktop Overhead Dome Arch Configurations (Matching Reference Image)
+// 10-Card Desktop Overhead Dome Arch Configurations (Graceful overhead canopy, 0 overlap with text)
 const DESKTOP_CARDS_10 = [
-  { x: -570, y: 95, rot: -44 },
-  { x: -475, y: 5,  rot: -35 },
-  { x: -365, y: -90, rot: -25 },
-  { x: -225, y: -165, rot: -14 },
-  { x: -78,  y: -208, rot: -5 },
-  { x: 78,   y: -208, rot: 5 },
-  { x: 225,  y: -165, rot: 14 },
-  { x: 365,  y: -90, rot: 25 },
-  { x: 475,  y: 5,  rot: 35 },
-  { x: 570,  y: 95, rot: 44 }
+  { x: -620, y: 80,   rot: -44 },
+  { x: -520, y: -52,  rot: -35 },
+  { x: -395, y: -170, rot: -25 },
+  { x: -248, y: -255, rot: -14 },
+  { x: -84,  y: -288, rot: -5 },
+  { x: 84,   y: -288, rot: 5 },
+  { x: 248,  y: -255, rot: 14 },
+  { x: 395,  y: -170, rot: 25 },
+  { x: 520,  y: -52,  rot: 35 },
+  { x: 620,  y: 80,   rot: 44 }
 ];
 
-// 8-Card Tablet Overhead Arch Configurations
+// 8-Card Tablet Overhead Arch Configurations (Sits cleanly overhead and flanks tablet headline)
 const TABLET_CARDS_8 = [
-  { x: -335, y: 65,  rot: -38 },
-  { x: -250, y: -20, rot: -28 },
-  { x: -155, y: -95, rot: -16 },
-  { x: -55,  y: -140, rot: -5 },
-  { x: 55,   y: -140, rot: 5 },
-  { x: 155,  y: -95, rot: 16 },
-  { x: 250,  y: -20, rot: 28 },
-  { x: 335,  y: 65,  rot: 38 }
+  { x: -370, y: 35,   rot: -38 },
+  { x: -290, y: -65,  rot: -27 },
+  { x: -180, y: -160, rot: -16 },
+  { x: -62,  y: -205, rot: -5 },
+  { x: 62,   y: -205, rot: 5 },
+  { x: 180,  y: -160, rot: 16 },
+  { x: 290,  y: -65,  rot: 27 },
+  { x: 370,  y: 35,   rot: 38 }
 ];
 
-// 5-Card Mobile Compact Overhead Fan (Guaranteed 0 overflow on 320px-480px)
+// 5-Card Mobile Compact Overhead Fan (Guaranteed 0 overflow and never cut off on 320px-480px)
 const MOBILE_CARDS_5 = [
-  { x: -108, y: 16, rot: -16 },
-  { x: -54,  y: 4,  rot: -8 },
-  { x: 0,    y: 0,  rot: 0 },
-  { x: 54,   y: 4,  rot: 8 },
-  { x: 108,  y: 16, rot: 16 }
+  { x: -88, y: 14, rot: -15 },
+  { x: -44, y: 5,  rot: -7 },
+  { x: 0,   y: 0,  rot: 0 },
+  { x: 44,  y: 5,  rot: 7 },
+  { x: 88,  y: 14, rot: 15 }
 ];
 
 export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }) {
@@ -309,8 +309,9 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
   const activeBooks = (heroBooks && heroBooks.length > 0 ? heroBooks : fallbackArcBooks).slice(0, cardConfigs.length);
 
   // Responsive scale calculations
-  const desktopScale = isDesktop ? Math.min(1.0, Math.max(0.76, (viewportWidth * 0.94) / 1380)) : 1.0;
-  const tabletScale = isTablet ? Math.min(1.0, Math.max(0.72, (viewportWidth * 0.94) / 860)) : 1.0;
+  const mobileScale = isMobile ? Math.min(1.0, Math.max(0.78, (viewportWidth - 28) / 360)) : 1.0;
+  const desktopScale = isDesktop ? Math.min(1.0, Math.max(0.72, (viewportWidth * 0.94) / 1380)) : 1.0;
+  const tabletScale = isTablet ? Math.min(1.0, Math.max(0.70, (viewportWidth * 0.94) / 860)) : 1.0;
 
   return (
     <div className="animate-fade-in" style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '100vh', color: 'var(--editorial-text)' }}>
@@ -379,12 +380,12 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
             style={{
               position: 'relative',
               width: '100%',
-              minHeight: isMobile ? 'auto' : (isTablet ? '520px' : '600px'),
+              minHeight: isMobile ? 'auto' : (isTablet ? '560px' : '650px'),
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: isMobile ? 'flex-start' : 'center',
-              padding: isMobile ? '0 16px' : '0'
+              padding: isMobile ? '0 12px' : '0'
             }}
           >
             {/* DESKTOP & TABLET: OVERHEAD FLOATING DOME ARCH OF REAL BOOKS */}
@@ -509,13 +510,14 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               <div
                 style={{
                   position: 'relative',
-                  height: '105px',
-                  maxWidth: '320px',
+                  height: `${Math.round(108 * mobileScale)}px`,
+                  maxWidth: `${Math.round(290 * mobileScale)}px`,
                   width: '100%',
                   margin: '0 auto 16px',
                   display: 'flex',
                   justifyContent: 'center',
-                  alignItems: 'flex-start'
+                  alignItems: 'flex-start',
+                  overflow: 'visible'
                 }}
               >
                 {cardConfigs.map((cfg, i) => {
@@ -523,43 +525,56 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                   if (!book) return null;
                   const coverUrl = book.cover_image || getOfflineBookCover(book.title, book.author, book.category);
 
+                  const cardW = Math.round(54 * mobileScale);
+                  const cardH = Math.round(76 * mobileScale);
+                  const cardRadius = Math.round(8 * mobileScale);
+                  const curX = Math.round(cfg.x * mobileScale);
+                  const curY = Math.round(cfg.y * mobileScale);
+
                   return (
                     <div
                       key={book.id || book._id || i}
-                      onClick={() => onViewBookDetails(book.id || book._id)}
-                      className="hero-card-motion"
                       style={{
                         position: 'absolute',
                         left: '50%',
                         top: '0',
-                        transform: `translate(calc(-50% + ${cfg.x}px), ${cfg.y}px) rotate(${cfg.rot}deg)`,
-                        width: '62px',
-                        height: '86px',
-                        borderRadius: '10px',
-                        backgroundColor: '#FFFFFF',
-                        border: '2px solid #FFFFFF',
-                        boxShadow: '0 8px 18px -3px rgba(37, 40, 32, 0.16), 0 3px 6px -2px rgba(37, 40, 32, 0.08)',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
+                        transform: `translate(calc(-50% + ${curX}px), ${curY}px) rotate(${cfg.rot}deg)`,
                         zIndex: 10 + (3 - Math.abs(i - 2)),
-                        animation: `${i % 2 === 0 ? 'heroFloatSlow' : 'heroFloatFast'} ${4.2 + (i % 3) * 0.6}s ease-in-out infinite`,
-                        animationDelay: `${(i * 0.25).toFixed(2)}s`,
-                        touchAction: 'manipulation'
+                        pointerEvents: 'auto',
+                        willChange: 'transform'
                       }}
-                      title={`${book.title} by ${book.author}`}
                     >
-                      <img
-                        src={coverUrl}
-                        alt={book.title}
-                        onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                      <div
+                        onClick={() => onViewBookDetails(book.id || book._id)}
+                        className="hero-card-motion"
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block'
+                          width: `${cardW}px`,
+                          height: `${cardH}px`,
+                          borderRadius: `${cardRadius}px`,
+                          backgroundColor: '#FFFFFF',
+                          border: '2px solid #FFFFFF',
+                          boxShadow: '0 8px 18px -3px rgba(37, 40, 32, 0.16), 0 3px 6px -2px rgba(37, 40, 32, 0.08)',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          animation: `${i % 2 === 0 ? 'heroFloatSlow' : 'heroFloatFast'} ${4.2 + (i % 3) * 0.6}s ease-in-out infinite`,
+                          animationDelay: `${(i * 0.25).toFixed(2)}s`,
+                          touchAction: 'manipulation'
                         }}
-                        loading="eager"
-                      />
+                        title={`${book.title} by ${book.author}`}
+                      >
+                        <img
+                          src={coverUrl}
+                          alt={book.title}
+                          onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block'
+                          }}
+                          loading="eager"
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -575,7 +590,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                 textAlign: 'center',
                 maxWidth: isMobile ? '100%' : (isTablet ? '480px' : '620px'),
                 margin: '0 auto',
-                padding: '0 16px',
+                padding: isMobile ? '0 12px' : '0 16px',
                 boxSizing: 'border-box'
               }}
             >
@@ -583,13 +598,15 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               <h1
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  fontSize: 'clamp(1.75rem, 4.3vw, 3.6rem)',
+                  fontSize: isMobile ? 'clamp(1.65rem, 6.8vw, 2.25rem)' : 'clamp(2.0rem, 4.3vw, 3.6rem)',
                   fontWeight: 800,
                   color: 'var(--editorial-text)',
-                  lineHeight: 1.15,
+                  lineHeight: isMobile ? 1.2 : 1.15,
                   letterSpacing: '-0.025em',
-                  margin: '0 0 16px 0',
-                  textAlign: 'center'
+                  margin: isMobile ? '0 0 12px 0' : '0 0 16px 0',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word'
                 }}
               >
                 Discover Your Next Favourite Book
@@ -599,11 +616,11 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               <p
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: 'clamp(0.94rem, 1.2vw, 1.08rem)',
-                  lineHeight: 1.62,
+                  fontSize: isMobile ? '0.90rem' : 'clamp(0.94rem, 1.2vw, 1.08rem)',
+                  lineHeight: isMobile ? 1.52 : 1.62,
                   color: 'var(--editorial-text-muted)',
-                  maxWidth: '560px',
-                  margin: '0 auto 28px',
+                  maxWidth: isMobile ? '330px' : '560px',
+                  margin: isMobile ? '0 auto 20px' : '0 auto 28px',
                   textAlign: 'center'
                 }}
               >
@@ -619,8 +636,8 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                     backgroundColor: 'var(--editorial-green)',
                     color: '#FFFFFF',
                     borderRadius: '9999px',
-                    padding: '14px 34px',
-                    fontSize: '0.98rem',
+                    padding: isMobile ? '12px 28px' : '14px 34px',
+                    fontSize: isMobile ? '0.92rem' : '0.98rem',
                     fontWeight: 600,
                     fontFamily: 'var(--font-sans)',
                     border: 'none',
@@ -631,7 +648,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                     gap: '8px',
                     boxShadow: '0 6px 18px rgba(38, 61, 50, 0.24)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                    minHeight: '48px',
+                    minHeight: isMobile ? '44px' : '48px',
                     touchAction: 'manipulation'
                   }}
                   onMouseEnter={(e) => {

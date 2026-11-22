@@ -99,14 +99,12 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
 
   const getDashboardTarget = () => {
     if (!user) return 'login';
-    if (user.role === 'admin') return 'admin';
     if (user.role === 'librarian') return 'librarian';
     return 'dashboard';
   };
 
   const getDashboardLabel = () => {
     if (!user) return 'My Library';
-    if (user.role === 'admin') return 'Admin Console';
     if (user.role === 'librarian') return 'Librarian Desk';
     return 'My Library';
   };
@@ -131,13 +129,13 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px'
+          gap: 'clamp(6px, 1.5vw, 16px)'
         }}
       >
         {/* Editorial Brand Logo */}
         <div
           onClick={handleLogoClick}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 12px)', cursor: 'pointer', flexShrink: 0 }}
         >
           <div
             style={{
@@ -159,7 +157,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
               <span
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  fontSize: '1.45rem',
+                  fontSize: 'clamp(1.2rem, 3.5vw, 1.45rem)',
                   fontWeight: 800,
                   color: 'var(--editorial-text)',
                   letterSpacing: '-0.02em',
@@ -169,6 +167,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 LibraMind
               </span>
               <span
+                className="navbar-badge-hide"
                 style={{
                   fontSize: '0.64rem',
                   padding: '2px 6px',
@@ -185,7 +184,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 Vol. XXIV
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--editorial-text-muted)', fontWeight: 500, letterSpacing: '0.02em', marginTop: '1px' }}>
+            <p className="navbar-subtitle" style={{ margin: 0, fontSize: '0.72rem', color: 'var(--editorial-text-muted)', fontWeight: 500, letterSpacing: '0.02em', marginTop: '1px' }}>
               The Literary Review &amp; Smart Library
             </p>
           </div>
@@ -217,7 +216,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
         </nav>
 
         {/* Right Action Cluster */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', flexShrink: 0 }}>
           {/* Notifications Dropdown */}
           {user && (
             <div style={{ position: 'relative' }}>
@@ -276,7 +275,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                   alignItems: 'center',
                   gap: '8px',
                   cursor: 'pointer',
-                  padding: '4px 10px 4px 6px',
+                  padding: '4px 8px 4px 6px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
                   backgroundColor: '#FFFFFF',
@@ -310,7 +309,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 >
                   {userInitial}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
+                <div className="patron-chip-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
                   <span style={{ fontSize: '0.80rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                     {user.name.split(' ')[0]}
                   </span>
@@ -323,7 +322,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                       letterSpacing: '0.04em'
                     }}
                   >
-                    {user.role} · Folio
+                    {user.role === 'admin' ? 'Member' : user.role} · Folio
                   </span>
                 </div>
               </button>
@@ -333,6 +332,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 onClick={handleLogout}
                 title="Sign Out"
                 aria-label="Sign Out"
+                className="header-logout-btn"
                 style={{
                   width: '34px',
                   height: '34px',
@@ -368,7 +368,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
               </button>
               <button
                 onClick={() => onNavigate('register')}
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm visitor-join-desktop"
               >
                 Join Library
               </button>

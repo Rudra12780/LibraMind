@@ -151,7 +151,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
         api.getAnalyticsOverview(),
         api.getLoans(),
         api.getReservations(),
-        api.getBooks({ limit: 100 }),
+        api.getBooks({ limit: 250 }),
         api.getSeats()
       ]);
       setOverview(overviewData);
