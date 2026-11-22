@@ -13,7 +13,7 @@
   <circle cx="24" cy="576" r="3" fill="#CBB279" fill-opacity="0.7"/>
   <circle cx="376" cy="576" r="3" fill="#CBB279" fill-opacity="0.7"/>
   <text x="200" y="58" text-anchor="middle" fill="#CBB279" font-family="system-ui, sans-serif" font-size="9" font-weight="700" letter-spacing="3.5">LIBRAMIND ATHENAEUM</text>
-  <text x="200" y="78" text-anchor="middle" fill="#DFD1AB" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ 28 • FICTION &AMP; MYSTERY</text>
+  <text x="200" y="78" text-anchor="middle" fill="#DFD1AB" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ 28 • FICTION &amp; MYSTERY</text>
   <line x1="130" y1="94" x2="270" y2="94" stroke="#CBB279" stroke-opacity="0.5" stroke-width="1"/>
   <text x="200" y="204" text-anchor="middle" fill="#FAF8F2" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" letter-spacing="-0.2">Murder on the</text>
 <text x="200" y="236" text-anchor="middle" fill="#FAF8F2" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" letter-spacing="-0.2">Orient Express</text>

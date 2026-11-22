@@ -77,6 +77,7 @@ export default function BookCard({
             objectFit: 'cover'
           }}
           loading="lazy"
+          decoding="async"
         />
 
         {/* Availability Badge */}

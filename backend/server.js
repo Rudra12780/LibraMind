@@ -43,8 +43,24 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static local uploads serving
-app.use('/uploads', express.static(uploadsDir));
+// Static local uploads serving with high-speed browser cache (30 days) and explicit MIME headers
+app.use('/uploads', express.static(uploadsDir, {
+  maxAge: '30d',
+  immutable: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (filePath.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (filePath.endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // API Routes
 app.use('/api/auth', authRoutes);

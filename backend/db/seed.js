@@ -999,15 +999,22 @@ async function seed() {
   `);
 
   const createdBooks = [];
+  let coversMap = {};
+  try {
+    coversMap = require('../book_covers_map.json');
+  } catch (_) {}
 
+  let bookIndex = 1;
   for (const b of booksData) {
+    const verifiedCover = coversMap[String(bookIndex)] || b.cover_image;
     const res = insertBook.run(
       b.title, b.author, b.isbn, b.publisher, b.publication_year,
-      b.category, b.language, b.edition, b.description, b.cover_image,
+      b.category, b.language, b.edition, b.description, verifiedCover,
       b.floor, b.section, b.shelf, b.rack, b.total_copies, b.available_copies
     );
     const bookId = res.lastInsertRowid;
-    createdBooks.push({ id: bookId, ...b });
+    bookIndex++;
+    createdBooks.push({ id: bookId, ...b, cover_image: verifiedCover });
 
     // Generate physical copy records
     for (let c = 1; c <= b.total_copies; c++) {
@@ -1171,7 +1178,11 @@ async function seed() {
   insertAudit.run(adminId, 'SYSTEM_INITIALIZATION', 'System initialized with pure Novels & Spiritual Books catalog.');
   insertAudit.run(librarianId, 'BOOK_CHECKOUT', 'Issued The Alchemist to member STU-1001.');
 
-  console.log(`LibraMind database seeded successfully with ${createdBooks.length} Novels & Spiritual books!`);
+  // 9. Integrate All Sacred Spiritual & Classical Works (134 volumes complete)
+  const addSpiritualClassics = require('../add_spiritual_classics');
+  addSpiritualClassics();
+
+  console.log(`LibraMind database seeded successfully with Novels, Classical & Spiritual books!`);
 }
 
 seed().catch(err => {

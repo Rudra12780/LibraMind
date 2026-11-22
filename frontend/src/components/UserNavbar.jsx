@@ -71,43 +71,6 @@ export default function UserNavbar({
         maxWidth: '100vw'
       }}
     >
-      {/* Top Banner if Admin is browsing in User Mode */}
-      {user && user.role === 'admin' && !adminVerified && (
-        <div
-          style={{
-            background: 'var(--editorial-green)',
-            color: '#FFFFFF',
-            padding: '6px 20px',
-            fontSize: '0.78rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid var(--editorial-border)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={14} color="#D9D3C7" />
-            <span style={{ letterSpacing: '0.04em' }}>ADMINISTRATOR PREVIEW MODE — VIEWING PATRON SANCTUARY</span>
-          </div>
-          <button
-            onClick={() => onNavigate('admin')}
-            style={{
-              background: '#FFFFFF',
-              border: 'none',
-              color: 'var(--editorial-green)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontSize: '0.72rem',
-              borderRadius: 'var(--radius-sm)',
-              padding: '3px 10px'
-            }}
-          >
-            Return to Admin Console →
-          </button>
-        </div>
-      )}
-
       {/* Main Top Navigation Row */}
       <div
         className="container"
@@ -116,13 +79,13 @@ export default function UserNavbar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px'
+          gap: 'clamp(6px, 1.5vw, 16px)'
         }}
       >
         {/* Brand Logo with Editorial Monogram */}
         <div
           onClick={() => onNavigate('dashboard')}
-          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', cursor: 'pointer', flexShrink: 0 }}
         >
           <div
             style={{
@@ -140,11 +103,11 @@ export default function UserNavbar({
             <BookOpen size={19} color="#FFFFFF" strokeWidth={2.2} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  fontSize: '1.40rem',
+                  fontSize: 'clamp(1.2rem, 3.5vw, 1.40rem)',
                   fontWeight: 800,
                   color: 'var(--editorial-text)',
                   letterSpacing: '-0.02em',
@@ -154,7 +117,7 @@ export default function UserNavbar({
                 LibraMind
               </span>
               <span
-                className="badge"
+                className="badge navbar-badge-hide"
                 style={{
                   fontSize: '0.62rem',
                   padding: '2px 6px',
@@ -168,7 +131,7 @@ export default function UserNavbar({
                 READING ROOM
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.70rem', color: 'var(--editorial-text-muted)', fontWeight: 500, marginTop: '2px' }}>
+            <p className="navbar-subtitle" style={{ margin: 0, fontSize: '0.70rem', color: 'var(--editorial-text-muted)', fontWeight: 500, marginTop: '2px' }}>
               Personal Folio &amp; Circulation Desk
             </p>
           </div>
@@ -201,7 +164,7 @@ export default function UserNavbar({
         </nav>
 
         {/* User Quick Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', flexShrink: 0 }}>
           {/* Notifications Dropdown */}
           <div style={{ position: 'relative' }}>
             <button
@@ -250,11 +213,12 @@ export default function UserNavbar({
           {/* User Profile Chip - Active Reading Room Folio */}
           {user && (
             <div
+              title={`${user.name} (${user.role === 'admin' ? 'Admin' : 'Scholar'} · ${user.membership_id || 'STU'})`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '4px 10px 4px 6px',
+                padding: '4px 8px 4px 6px',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-green)',
                 backgroundColor: 'var(--editorial-bg-subtle)',
@@ -278,7 +242,7 @@ export default function UserNavbar({
               >
                 {userInitial}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
+              <div className="patron-chip-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
                 <span style={{ fontSize: '0.80rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {user.name.split(' ')[0]}
                 </span>
@@ -294,6 +258,7 @@ export default function UserNavbar({
             onClick={handleLogout}
             title="Sign Out"
             aria-label="Sign Out"
+            className="header-logout-btn"
             style={{
               width: '34px',
               height: '34px',
@@ -387,13 +352,23 @@ export default function UserNavbar({
             </div>
           </div>
 
-          {/* User Details & Sign Out */}
-          <div style={{ borderTop: '1px solid var(--editorial-border)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* User Profile Card & Sign Out */}
+          {user && (
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '12px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
               <div
                 style={{
-                  width: '28px',
-                  height: '28px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: 'var(--radius-sm)',
                   backgroundColor: 'var(--editorial-green)',
                   color: '#FFFFFF',
@@ -401,22 +376,32 @@ export default function UserNavbar({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 700,
-                  fontSize: '0.76rem'
+                  fontSize: '0.95rem',
+                  flexShrink: 0
                 }}
               >
                 {userInitial}
               </div>
-              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
-                {user?.name}
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--editorial-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user.name}
+                </span>
+                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 600 }}>
+                  {user.role === 'admin' ? 'Administrator' : 'Scholar'} · ID: {user.membership_id || 'STU-1001'}
+                </span>
+              </div>
             </div>
+          )}
+
+          {/* Sign Out Button */}
+          <div style={{ borderTop: '1px solid var(--editorial-border)', paddingTop: '12px' }}>
             <button
               onClick={handleLogout}
-              className="btn btn-outline btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              className="btn btn-outline"
+              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <LogOut size={13} />
-              <span>Sign Out</span>
+              <LogOut size={15} />
+              <span>Sign Out ({user?.name ? user.name.split(' ')[0] : 'Account'})</span>
             </button>
           </div>
         </div>

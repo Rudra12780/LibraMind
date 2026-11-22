@@ -13,16 +13,22 @@ export function getOfflineBookCover(title = 'Library Volume', author = 'Scholar'
   const safeTitle = (title || 'Library Volume')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
   const safeAuthor = (author || 'Scholar')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
   const safeCat = (category || 'Archival Stacks')
+    .toUpperCase()
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .toUpperCase();
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 
   // Deterministic hash based on book title
   let hash = 0;
@@ -60,7 +66,7 @@ export function getOfflineBookCover(title = 'Library Volume', author = 'Scholar'
   const displayLines = lines.slice(0, 4);
   const startY = 220 - (displayLines.length - 1) * 16;
   const titleSvg = displayLines.map((line, idx) => 
-    `<text x="200" y="${startY + idx * 32}" text-anchor="middle" fill="${p.lightText}" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" letter-spacing="-0.2">${line}</text>`
+    `<text x="200" y="${startY + idx * 32}" text-anchor="middle" fill="${p.lightText}" font-family="'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', 'Nirmala UI', Georgia, 'Times New Roman', serif" font-size="20" font-weight="700" letter-spacing="-0.2">${line}</text>`
   ).join('\n');
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
@@ -94,7 +100,7 @@ export function getOfflineBookCover(title = 'Library Volume', author = 'Scholar'
   <line x1="160" y1="${startY + displayLines.length * 32 + 10}" x2="240" y2="${startY + displayLines.length * 32 + 10}" stroke="${p.gold}" stroke-opacity="0.6" stroke-width="1.2"/>
   
   <!-- Author -->
-  <text x="200" y="${startY + displayLines.length * 32 + 38}" text-anchor="middle" fill="${p.accent}" font-family="Georgia, serif" font-size="13" font-style="italic">by ${safeAuthor}</text>
+  <text x="200" y="${startY + displayLines.length * 32 + 38}" text-anchor="middle" fill="${p.accent}" font-family="'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', Georgia, serif" font-size="13" font-style="italic">by ${safeAuthor}</text>
   
   <!-- Archival Monogram Seal -->
   <circle cx="200" cy="495" r="24" fill="none" stroke="${p.gold}" stroke-opacity="0.5" stroke-width="1.2"/>

@@ -23,6 +23,19 @@ try {
   console.warn('SQLite fallback unavailable in books route:', e.message);
 }
 
+let bookCoversMap = {};
+try {
+  bookCoversMap = require('../book_covers_map.json');
+} catch (_) {}
+
+function getVerifiedCover(b) {
+  if (b.cover_image && b.cover_image.startsWith('/uploads/')) return b.cover_image;
+  const bId = b.id !== undefined ? b.id : b.sqlite_id;
+  const mapped = bId ? bookCoversMap[String(bId)] : null;
+  if (mapped) return mapped;
+  return b.cover_image || '';
+}
+
 const router = express.Router();
 
 function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', sort = 'title_asc', limit = 200, offset = 0 } = {}) {
@@ -50,7 +63,7 @@ function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', 
     else sql += ' ORDER BY title ASC';
 
     sql += ' LIMIT ? OFFSET ?';
-    params.push(parseInt(limit) || 80, parseInt(offset) || 0);
+    params.push(parseInt(limit) || 250, parseInt(offset) || 0);
 
     const books = sqliteDb.prepare(sql).all(...params);
     const categories = sqliteDb.prepare('SELECT DISTINCT category FROM books ORDER BY category ASC').all().map(c => c.category);
@@ -58,6 +71,7 @@ function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', 
       books: books.map(b => ({
         ...b,
         _id: b.id,
+        cover_image: getVerifiedCover(b),
         location_floor: b.floor || 'Floor 1',
         location_shelf: b.shelf || 'Shelf A-1',
         location_rack: b.rack || 'Rack 01',
@@ -90,6 +104,14 @@ function saveBase64ImageLocally(dataUrl) {
     }
     const filePath = path.join(uploadsDir, filename);
     fs.writeFileSync(filePath, buffer);
+
+    // Also mirror to frontend/public/uploads for instant client dev availability
+    const frontendUploadsDir = path.join(__dirname, '..', '..', 'frontend', 'public', 'uploads');
+    if (fs.existsSync(frontendUploadsDir)) {
+      try {
+        fs.writeFileSync(path.join(frontendUploadsDir, filename), buffer);
+      } catch (_) {}
+    }
     return `/uploads/${filename}`;
   } catch (e) {
     console.error('Failed to save base64 image locally, preserving dataUrl:', e);
@@ -258,6 +280,7 @@ router.get('/', async (req, res) => {
       const sampleCopy = copyMap.get(String(b._id)) || (b.sqlite_id ? copyMap.get(String(b.sqlite_id)) : null);
       return {
         ...bObj,
+        cover_image: getVerifiedCover(b),
         location_floor: b.floor || 'Floor 1',
         location_shelf: b.shelf || 'Shelf A-1',
         location_rack: b.rack || 'Rack 01',
@@ -306,6 +329,12 @@ router.get('/:id', async (req, res) => {
         const copies = sqliteDb.prepare('SELECT * FROM book_copies WHERE book_id = ? ORDER BY copy_code ASC').all(sqliteBook.id);
         const waitingQueueCount = sqliteDb.prepare("SELECT count(*) as c FROM reservations WHERE book_id = ? AND status = 'waiting'").get(sqliteBook.id)?.c || 0;
         return res.json({
+          ...sqliteBook,
+          _id: sqliteBook.id,
+          location_floor: sqliteBook.floor || 'Floor 1',
+          location_shelf: sqliteBook.shelf || 'Shelf A-1',
+          location_rack: sqliteBook.rack || 'Rack 01',
+          location_section: sqliteBook.section || 'Main Hall',
           book: {
             ...sqliteBook,
             _id: sqliteBook.id,

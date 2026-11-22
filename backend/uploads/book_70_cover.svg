@@ -13,7 +13,7 @@
   <circle cx="24" cy="576" r="3" fill="#D4AF37" fill-opacity="0.7"/>
   <circle cx="376" cy="576" r="3" fill="#D4AF37" fill-opacity="0.7"/>
   <text x="200" y="60" text-anchor="middle" fill="#D4AF37" font-family="system-ui, sans-serif" font-size="9" font-weight="700" letter-spacing="3.5">LIBRAMIND ATHENAEUM</text>
-  <text x="200" y="80" text-anchor="middle" fill="#E8D5A3" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ 70 • NOVELS & FICTION</text>
+  <text x="200" y="80" text-anchor="middle" fill="#E8D5A3" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ 70 • NOVELS &amp; FICTION</text>
   <line x1="130" y1="96" x2="270" y2="96" stroke="#D4AF37" stroke-opacity="0.5" stroke-width="1"/>
   <text x="200" y="250" text-anchor="middle" fill="#FAF8F2" font-family="Georgia, serif" font-size="24" font-weight="bold">To the Lighthouse</text>
   <line x1="160" y1="285" x2="240" y2="285" stroke="#D4AF37" stroke-opacity="0.6" stroke-width="1.2"/>

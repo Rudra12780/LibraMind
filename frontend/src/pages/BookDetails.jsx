@@ -60,14 +60,16 @@ export default function BookDetails({
     setLoading(true);
     try {
       const data = await api.getBook(bookId);
-      setBook(data);
+      const bookData = data.book || data;
+      setBook({ ...data, ...bookData });
       if (data.inWishlist !== undefined) setIsWishlisted(Boolean(data.inWishlist));
       if (data.inVisitPlanner !== undefined) setIsInPlanner(Boolean(data.inVisitPlanner));
       if (data.userLoan !== undefined) setUserLoan(data.userLoan);
       if (data.userReservation !== undefined) setUserReservation(data.userReservation);
 
-      if (data.copies && data.copies.length > 0) {
-        const firstAvail = data.copies.find(c => c.status === 'available');
+      const copiesList = bookData.copies || data.copies || [];
+      if (copiesList && copiesList.length > 0) {
+        const firstAvail = copiesList.find(c => c.status === 'available');
         if (firstAvail) setSelectedCopyCode(firstAvail.copy_code);
       }
     } catch (err) {
@@ -477,6 +479,8 @@ export default function BookDetails({
                 alt={book.title}
                 onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                loading="eager"
+                decoding="async"
               />
             </div>
 

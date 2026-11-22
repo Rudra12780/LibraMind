@@ -463,23 +463,21 @@ function seedCurated() {
     }
   }
 
-  // Also upgrade remaining classic books to authentic Open Library cover images by ISBN
+  // Ensure all books have clean, fast, local offline-capable covers
+  const coversMap = require('./book_covers_map.json');
   const allBooks = db.prepare('SELECT id, isbn, title, cover_image FROM books').all();
   let coversUpdated = 0;
   const updateCoverStmt = db.prepare('UPDATE books SET cover_image = ? WHERE id = ?');
 
   for (const bk of allBooks) {
-    if (bk.cover_image && bk.cover_image.includes('images.unsplash.com') && bk.isbn) {
-      const cleanIsbn = bk.isbn.replace(/[^0-9X]/gi, '');
-      if (cleanIsbn.length >= 10) {
-        const openLibUrl = `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`;
-        updateCoverStmt.run(openLibUrl, bk.id);
-        coversUpdated++;
-      }
+    const verifiedCover = coversMap[String(bk.id)];
+    if (verifiedCover && bk.cover_image !== verifiedCover) {
+      updateCoverStmt.run(verifiedCover, bk.id);
+      coversUpdated++;
     }
   }
 
-  console.log(`Curated sync complete: ${addedCount} new books added, ${updatedCount} updated, ${coversUpdated} cover URLs upgraded to authentic covers.`);
+  console.log(`Curated sync complete: ${addedCount} new books added, ${updatedCount} updated, ${coversUpdated} cover URLs verified with local high-speed covers.`);
 }
 
 seedCurated();

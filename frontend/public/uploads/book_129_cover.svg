@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <defs>
+    <linearGradient id="bgGrad_129" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F3328"/>
+      <stop offset="100%" stop-color="#122019"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bgGrad_129)"/>
+  <rect x="16" y="16" width="368" height="568" rx="4" fill="none" stroke="#D4AF37" stroke-opacity="0.5" stroke-width="1.6"/>
+  <rect x="24" y="24" width="352" height="552" rx="2" fill="none" stroke="#E5C158" stroke-opacity="0.3" stroke-width="0.9"/>
+  <circle cx="24" cy="24" r="3" fill="#E5C158" fill-opacity="0.75"/>
+  <circle cx="376" cy="24" r="3" fill="#E5C158" fill-opacity="0.75"/>
+  <circle cx="24" cy="576" r="3" fill="#E5C158" fill-opacity="0.75"/>
+  <circle cx="376" cy="576" r="3" fill="#E5C158" fill-opacity="0.75"/>
+  <text x="200" y="58" text-anchor="middle" fill="#E5C158" font-family="system-ui, sans-serif" font-size="9" font-weight="700" letter-spacing="3.5">LIBRAMIND ATHENAEUM</text>
+  <text x="200" y="78" text-anchor="middle" fill="#D8F3DC" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="2">№ 129 • SPIRITUAL &amp; WISDOM</text>
+  <line x1="130" y1="94" x2="270" y2="94" stroke="#E5C158" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="200" y="220" text-anchor="middle" fill="#FAF8F2" font-family="'Noto Sans Devanagari', 'Lohit Devanagari', Georgia, serif" font-size="20" font-weight="700">सुखमनी साहिब</text>
+  <line x1="160" y1="262" x2="240" y2="262" stroke="#E5C158" stroke-opacity="0.6" stroke-width="1.2"/>
+  <text x="200" y="290" text-anchor="middle" fill="#D8F3DC" font-family="'Noto Sans Devanagari', 'Lohit Devanagari', Georgia, serif" font-size="13" font-style="italic">by गुरु अर्जुन देव जी (Guru Arjan Dev Ji)</text>
+  <circle cx="200" cy="495" r="24" fill="none" stroke="#E5C158" stroke-opacity="0.5" stroke-width="1.2"/>
+  <text x="200" y="501" text-anchor="middle" fill="#E5C158" font-family="Georgia, serif" font-size="14" font-weight="bold">LM</text>
+  <text x="200" y="545" text-anchor="middle" fill="#D8F3DC" font-family="system-ui, sans-serif" font-size="8" letter-spacing="2.5" opacity="0.8">SACRED CLASSICAL EDITION</text>
+</svg>
