@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Play,
-  Pause,
-  BookOpen
+  Pause
 } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
+
+const EMPTY_SET = new Set();
+const EMPTY_ARRAY = [];
 
 // Deep Archival Library Leather & Bookcloth Palettes (Authentic physical hardcover colors)
 const ARCHIVAL_LEATHER_PALETTES = [
@@ -26,18 +28,18 @@ function getArchivalSpineTheme(book, index) {
 
 
 export default function CircularBookCarousel({
-  books = [],
+  books = EMPTY_ARRAY,
   category = 'All',
   onViewDetails,
-  onBorrow,
-  onReturn,
-  onReserve,
-  onToggleWishlist,
-  wishlistIds = new Set(),
-  onToggleCompare,
-  compareBookIds = [],
-  onAddToPlanner,
-  userBorrowedBookIds = new Set()
+  _onBorrow,
+  _onReturn,
+  _onReserve,
+  _onToggleWishlist,
+  _wishlistIds = EMPTY_SET,
+  _onToggleCompare,
+  _compareBookIds = EMPTY_ARRAY,
+  _onAddToPlanner,
+  _userBorrowedBookIds = EMPTY_SET
 }) {
   const containerRef = useRef(null);
   const wrapperRef = useRef(null);

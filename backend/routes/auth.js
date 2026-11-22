@@ -94,7 +94,7 @@ router.post('/register', async (req, res) => {
 
     const assignedRole = 'student';
     const prefix = 'STU';
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const randomNum = crypto.randomInt(1000, 10000);
     const membership_id = `${prefix}-${randomNum}`;
 
     let parsedInterests = 'Fiction & Literature, Philosophy & Deep Thinking';
@@ -288,7 +288,7 @@ router.post('/github', async (req, res) => {
       logAudit(user._id.toString(), 'GITHUB_LOGIN', `User ${user.email} logged in via GitHub SSO (@${cleanUsername})`);
     } else {
       const prefix = targetRole === 'librarian' ? 'LIB' : 'STU';
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const randomNum = crypto.randomInt(1000, 10000);
       const membership_id = `${prefix}-${randomNum}`;
       const randomPassword = crypto.randomBytes(16).toString('hex');
       const password_hash = bcrypt.hashSync(randomPassword, 10);
@@ -675,7 +675,7 @@ router.post('/create-librarian', authenticateToken, requireRole(['admin']), asyn
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(password, salt);
 
-    const randomNum = Math.floor(5000 + Math.random() * 4000);
+    const randomNum = crypto.randomInt(5000, 9000);
     const membership_id = `LIB-${randomNum}`;
 
     const newLibrarian = await User.create({

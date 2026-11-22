@@ -3,7 +3,7 @@ const AuditLog = require('../models/AuditLog');
 const { buildIdFilter } = require('../utils/idHelper');
 const mongoose = require('mongoose');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'libramind-biophilic-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'dev_jwt_auth_token_key' : '');
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
   console.warn('[SECURITY WARNING] JWT_SECRET is not set in environment variables! Using default secret in production is unsafe.');
 }

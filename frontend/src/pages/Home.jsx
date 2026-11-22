@@ -34,8 +34,7 @@ import {
   Bookmark,
   Quote,
   Feather,
-  Compass as CompassIcon,
-  ChevronRight
+  Compass as CompassIcon
 } from 'lucide-react';
 
 // Fast, bias-free Fisher-Yates array shuffling to ensure dynamic books on every page load
@@ -106,6 +105,19 @@ const MOBILE_CARDS_5 = [
   { x: 88,  y: 14, rot: 15 }
 ];
 
+const FALLBACK_ARC_BOOKS = [
+  { id: 1, title: 'The Bhagavad Gita: Walk the Path of Inner Peace', author: 'Eknath Easwaran', category: 'Spiritual & Wisdom', cover_image: '/uploads/book_1_cover.jpg' },
+  { id: 10, title: "Man's Search for Meaning", author: 'Viktor E. Frankl', category: 'Classic Literature', cover_image: '/uploads/book_10_cover.jpg' },
+  { id: 17, title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Classic Novels', cover_image: '/uploads/book_17_cover.jpg' },
+  { id: 18, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'Classic Novels', cover_image: '/uploads/book_18_cover.jpg' },
+  { id: 19, title: '1984', author: 'George Orwell', category: 'Fiction & Mystery', cover_image: '/uploads/book_1984_original.jpg' },
+  { id: 20, title: 'Pride and Prejudice', author: 'Jane Austen', category: 'Classic Literature', cover_image: '/uploads/book_20_cover.jpg' },
+  { id: 25, title: 'Wuthering Heights', author: 'Emily Brontë', category: 'Classic Novels', cover_image: '/uploads/book_wuthering_heights_original.jpg' },
+  { id: 52, title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell', category: 'AI & Data Science', cover_image: '/uploads/book_52_cover.svg' },
+  { id: 57, title: 'Clean Code: A Handbook of Agile Software Craftsmanship', author: 'Robert C. Martin', category: 'Programming & Technology', cover_image: '/uploads/book_57_cover.svg' },
+  { id: 61, title: 'Atomic Habits: Tiny Changes, Remarkable Results', author: 'James Clear', category: 'Personal Growth', cover_image: '/uploads/book_61_cover.svg' }
+];
+
 export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }) {
   const { user } = useAuth();
   const viewportWidth = useViewportWidth();
@@ -113,32 +125,14 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
   const isTablet = viewportWidth >= 640 && viewportWidth < 1024;
   const isDesktop = viewportWidth >= 1024;
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [heroBooks, setHeroBooks] = useState([]);
   const [catalogBooks, setCatalogBooks] = useState([]);
   const [featuredBooks, setFeaturedBooks] = useState([]);
-  const [trendingBooks, setTrendingBooks] = useState([]);
-  const [recentBooks, setRecentBooks] = useState([]);
   const [seatStats, setSeatStats] = useState({ total: 16, available: 12, occupied: 3 });
-  const [memberStats, setMemberStats] = useState({ loans: 0, holds: 0, wishlist: 0 });
-  const [loading, setLoading] = useState(true);
   const [hoveredArcIndex, setHoveredArcIndex] = useState(null);
   const [showVisualBlueprintModal, setShowVisualBlueprintModal] = useState(false);
   const [selectedBlueprintPage, setSelectedBlueprintPage] = useState('home');
   const [blueprintCategory, setBlueprintCategory] = useState('all');
-
-  const fallbackArcBooks = [
-    { id: 1, title: 'The Bhagavad Gita: Walk the Path of Inner Peace', author: 'Eknath Easwaran', category: 'Spiritual & Wisdom', cover_image: '/uploads/book_1_cover.jpg' },
-    { id: 10, title: "Man's Search for Meaning", author: 'Viktor E. Frankl', category: 'Classic Literature', cover_image: '/uploads/book_10_cover.jpg' },
-    { id: 17, title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Classic Novels', cover_image: '/uploads/book_17_cover.jpg' },
-    { id: 18, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'Classic Novels', cover_image: '/uploads/book_18_cover.jpg' },
-    { id: 19, title: '1984', author: 'George Orwell', category: 'Fiction & Mystery', cover_image: '/uploads/book_1984_original.jpg' },
-    { id: 20, title: 'Pride and Prejudice', author: 'Jane Austen', category: 'Classic Literature', cover_image: '/uploads/book_20_cover.jpg' },
-    { id: 25, title: 'Wuthering Heights', author: 'Emily Brontë', category: 'Classic Novels', cover_image: '/uploads/book_wuthering_heights_original.jpg' },
-    { id: 52, title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell', category: 'AI & Data Science', cover_image: '/uploads/book_52_cover.svg' },
-    { id: 57, title: 'Clean Code: A Handbook of Agile Software Craftsmanship', author: 'Robert C. Martin', category: 'Programming & Technology', cover_image: '/uploads/book_57_cover.svg' },
-    { id: 61, title: 'Atomic Habits: Tiny Changes, Remarkable Results', author: 'James Clear', category: 'Personal Growth', cover_image: '/uploads/book_61_cover.svg' }
-  ];
 
   // Single fast unified query to eliminate database wait time & lag, randomized dynamically
   useEffect(() => {
@@ -161,7 +155,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
         const shuffled = shuffleArray(uniqueBooks);
         const top10 = shuffled.slice(0, 10);
         if (top10.length < 10) {
-          for (const fb of fallbackArcBooks) {
+          for (const fb of FALLBACK_ARC_BOOKS) {
             if (top10.length >= 10) break;
             if (!top10.some(b => b.title === fb.title)) {
               top10.push(fb);
@@ -170,8 +164,6 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
         }
         setHeroBooks(top10);
         setFeaturedBooks(shuffled.slice(0, 10));
-        setRecentBooks(shuffled.slice(10, 15));
-        setTrendingBooks(shuffled.slice(15, 21));
         if (seatsData && seatsData.stats) {
           setSeatStats(seatsData.stats);
         } else if (Array.isArray(seatsData)) {
@@ -182,37 +174,11 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
       })
       .catch(err => {
         console.error('Home data load error', err);
-        setHeroBooks(shuffleArray(fallbackArcBooks));
-      })
-      .finally(() => setLoading(false));
+        setHeroBooks(shuffleArray(FALLBACK_ARC_BOOKS));
+      });
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      Promise.all([
-        api.getLoans().catch(() => []),
-        api.getReservations().catch(() => []),
-        api.getWishlist().catch(() => [])
-      ]).then(([loansData, resData, wishData]) => {
-        const activeL = (loansData || []).filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
-        const activeR = (resData || []).filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
-        setMemberStats({
-          loans: activeL.length,
-          holds: activeR.length,
-          wishlist: (wishData || []).length
-        });
-      });
-    }
-  }, [user]);
 
-  const handleHeroSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      onNavigate('catalog', { q: searchQuery.trim() });
-    } else {
-      onNavigate('catalog');
-    }
-  };
 
   const editorialGenres = [
     { title: 'Classical Literature', slug: 'Classic Literature', desc: 'Homer, Austen, Tolstoy & the enduring Western & Eastern canon', count: '14 Volumes' },
@@ -302,11 +268,11 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
     return matched.length > 0 ? matched.slice(0, 2) : staticFallback;
   };
 
-  const bookOfTheWeek = (heroBooks && heroBooks[0]) || fallbackArcBooks[4];
+  const bookOfTheWeek = (heroBooks && heroBooks[0]) || FALLBACK_ARC_BOOKS[4];
 
   // Responsive Card Selection and Geometry
   const cardConfigs = isMobile ? MOBILE_CARDS_5 : (isTablet ? TABLET_CARDS_8 : DESKTOP_CARDS_10);
-  const activeBooks = (heroBooks && heroBooks.length > 0 ? heroBooks : fallbackArcBooks).slice(0, cardConfigs.length);
+  const activeBooks = (heroBooks && heroBooks.length > 0 ? heroBooks : FALLBACK_ARC_BOOKS).slice(0, cardConfigs.length);
 
   // Responsive scale calculations
   const mobileScale = isMobile ? Math.min(1.0, Math.max(0.78, (viewportWidth - 28) / 360)) : 1.0;
