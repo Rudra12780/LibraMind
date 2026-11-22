@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const Book = require('../models/Book');
@@ -29,7 +30,8 @@ try {
 } catch (_) {}
 
 function getVerifiedCover(b) {
-  if (b.cover_image && b.cover_image.startsWith('/uploads/')) return b.cover_image;
+  if (!b) return '';
+  if (b.cover_image && typeof b.cover_image === 'string' && b.cover_image.startsWith('/uploads/')) return b.cover_image;
   const bId = b.id !== undefined ? b.id : b.sqlite_id;
   const mapped = bId ? bookCoversMap[String(bId)] : null;
   if (mapped) return mapped;
@@ -97,7 +99,8 @@ function saveBase64ImageLocally(dataUrl) {
 
     const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
     const buffer = Buffer.from(matches[2], 'base64');
-    const filename = `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const randomSuffix = crypto.randomBytes(4).toString('hex');
+    const filename = `book_${Date.now()}_${randomSuffix}.${ext}`;
     const uploadsDir = path.join(__dirname, '..', 'uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });

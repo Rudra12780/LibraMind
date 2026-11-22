@@ -36,7 +36,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(null, true); // Dev-friendly fallback
+    return callback(new Error('Blocked by CORS policy'));
   },
   credentials: true
 }));

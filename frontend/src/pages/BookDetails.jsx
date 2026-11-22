@@ -60,17 +60,19 @@ export default function BookDetails({
     setLoading(true);
     try {
       const data = await api.getBook(bookId);
-      const bookData = data.book || data;
-      setBook({ ...data, ...bookData });
-      if (data.inWishlist !== undefined) setIsWishlisted(Boolean(data.inWishlist));
-      if (data.inVisitPlanner !== undefined) setIsInPlanner(Boolean(data.inVisitPlanner));
-      if (data.userLoan !== undefined) setUserLoan(data.userLoan);
-      if (data.userReservation !== undefined) setUserReservation(data.userReservation);
+      if (data) {
+        const bookData = data.book || data;
+        setBook({ ...data, ...bookData });
+        if (data.inWishlist !== undefined) setIsWishlisted(Boolean(data.inWishlist));
+        if (data.inVisitPlanner !== undefined) setIsInPlanner(Boolean(data.inVisitPlanner));
+        if (data.userLoan !== undefined) setUserLoan(data.userLoan);
+        if (data.userReservation !== undefined) setUserReservation(data.userReservation);
 
-      const copiesList = bookData.copies || data.copies || [];
-      if (copiesList && copiesList.length > 0) {
-        const firstAvail = copiesList.find(c => c.status === 'available');
-        if (firstAvail) setSelectedCopyCode(firstAvail.copy_code);
+        const copiesList = bookData.copies || data.copies || [];
+        if (copiesList && copiesList.length > 0) {
+          const firstAvail = copiesList.find(c => c && c.status === 'available');
+          if (firstAvail) setSelectedCopyCode(firstAvail.copy_code);
+        }
       }
     } catch (err) {
       console.error('Failed to load book', err);
