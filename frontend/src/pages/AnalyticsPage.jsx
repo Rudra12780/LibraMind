@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '80vh', padding: '60px 24px', textAlign: 'center', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+      <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '80vh', padding: '60px 24px', textAlign: 'center', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>
         Calculating live copy statistics & circulation models...
       </div>
     );
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
                 border: '1px solid var(--editorial-border)',
                 boxShadow: 'var(--shadow-sm)',
                 fontSize: '0.78rem',
-                fontWeight: 900,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 marginBottom: '8px'
@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
             >
               <BarChart3 size={15} strokeWidth={2.4} /> Administrator Circulation Intelligence
             </div>
-            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', margin: '4px 0 8px' }}>
+            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', margin: '4px 0 8px' }}>
               Library Inventory & Analytics
             </h1>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.98rem', margin: 0, fontWeight: 500 }}>
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
         <div style={{ marginBottom: '36px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', margin: 0, color: 'var(--editorial-text)' }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.01em', margin: 0, color: 'var(--editorial-text)' }}>
                 Physical Copy Status & Demand Breakdown
               </h2>
               <span style={{ fontSize: '0.80rem', color: 'var(--editorial-text)', opacity: 0.75 }}>
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
             {/* 1. Total Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderLeft: '5px solid var(--editorial-green)',
                 padding: '20px',
@@ -172,19 +172,19 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderRadius: '2px'
+                borderRadius: '6px'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     1. Total Copies
                   </span>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: 'var(--editorial-bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'var(--editorial-bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Layers size={16} color="var(--editorial-green)" />
                   </div>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--editorial-text)', lineHeight: 1 }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--editorial-text)', lineHeight: 1 }}>
                   {totalCopies}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '8px' }}>
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
             {/* 2. Borrowed Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderLeft: '5px solid #B25E1A',
                 padding: '20px',
@@ -207,19 +207,19 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderRadius: '2px'
+                borderRadius: '6px'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#B25E1A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B25E1A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     2. Borrowed Copies
                   </span>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: 'rgba(178, 94, 26, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(178, 94, 26, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <BookOpen size={16} color="#B25E1A" />
                   </div>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#B25E1A', lineHeight: 1 }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#B25E1A', lineHeight: 1 }}>
                   {borrowedCopies}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '8px' }}>
@@ -234,7 +234,7 @@ export default function AnalyticsPage() {
             {/* 3. Reserved Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderLeft: '5px solid #C88719',
                 padding: '20px',
@@ -242,19 +242,19 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderRadius: '2px'
+                borderRadius: '6px'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#C88719', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#C88719', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     3. Reserved Copies
                   </span>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: 'rgba(200, 135, 25, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(200, 135, 25, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Bookmark size={16} color="#C88719" />
                   </div>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#C88719', lineHeight: 1 }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#C88719', lineHeight: 1 }}>
                   {reservedCopies}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '8px' }}>
@@ -269,7 +269,7 @@ export default function AnalyticsPage() {
             {/* 4. Waiting Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderLeft: '5px solid #4A5568',
                 padding: '20px',
@@ -277,19 +277,19 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderRadius: '2px'
+                borderRadius: '6px'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#4A5568', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4A5568', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     4. Waiting Copies
                   </span>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: 'rgba(74, 85, 104, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(74, 85, 104, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Users size={16} color="#4A5568" />
                   </div>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#4A5568', lineHeight: 1 }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#4A5568', lineHeight: 1 }}>
                   {waitingCopies}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '8px' }}>
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
             {/* 5. Current Available Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderLeft: '5px solid #2E7D32',
                 padding: '20px',
@@ -312,19 +312,19 @@ export default function AnalyticsPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderRadius: '2px'
+                borderRadius: '6px'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#2E7D32', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2E7D32', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     5. Available Copies
                   </span>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: 'rgba(46, 125, 50, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(46, 125, 50, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <CheckCircle2 size={16} color="#2E7D32" />
                   </div>
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#2E7D32', lineHeight: 1 }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#2E7D32', lineHeight: 1 }}>
                   {availableCopies}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '8px' }}>
@@ -340,10 +340,10 @@ export default function AnalyticsPage() {
           {/* Formula Audit & Mutual Exclusivity Verification Banner */}
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               padding: '14px 20px',
-              borderRadius: '2px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -354,18 +354,18 @@ export default function AnalyticsPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <CheckCircle2 size={18} color="#2E7D32" />
-              <span style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
                 Inventory Audit Formula:
               </span>
               <code style={{ backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', padding: '3px 10px', borderRadius: '3px', fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-green)' }}>
                 Total Copies ({totalCopies}) = Available ({availableCopies}) + Borrowed ({borrowedCopies}) + Reserved ({reservedCopies})
               </code>
               {isBalanced ? (
-                <span style={{ fontSize: '0.74rem', backgroundColor: 'rgba(46, 125, 50, 0.12)', color: '#2E7D32', border: '1px solid rgba(46, 125, 50, 0.25)', padding: '2px 8px', borderRadius: '9999px', fontWeight: 800 }}>
+                <span style={{ fontSize: '0.74rem', backgroundColor: 'rgba(46, 125, 50, 0.12)', color: '#2E7D32', border: '1px solid rgba(46, 125, 50, 0.25)', padding: '2px 8px', borderRadius: '9999px', fontWeight: 700 }}>
                   ✓ 100% Status Balanced
                 </span>
               ) : (
-                <span style={{ fontSize: '0.74rem', backgroundColor: 'rgba(197, 34, 31, 0.12)', color: '#C5221F', padding: '2px 8px', borderRadius: '9999px', fontWeight: 800 }}>
+                <span style={{ fontSize: '0.74rem', backgroundColor: 'rgba(197, 34, 31, 0.12)', color: '#C5221F', padding: '2px 8px', borderRadius: '9999px', fontWeight: 700 }}>
                   Audit Sum: {physicalSum}
                 </span>
               )}
@@ -391,13 +391,13 @@ export default function AnalyticsPage() {
               }}
             >
               {/* Monthly Trend Chart */}
-              <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+              <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                     <TrendingUp size={18} color="var(--editorial-accent)" strokeWidth={2.4} />
                     Monthly Borrowing Trajectory
                   </h3>
-                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>Last 6 Months</span>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Last 6 Months</span>
                 </div>
 
                 {/* SVG/Bar Chart */}
@@ -407,7 +407,7 @@ export default function AnalyticsPage() {
                     const heightPercent = Math.max(8, Math.round((item.loans / maxTrendVal) * 100));
                     return (
                       <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--editorial-text)', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--editorial-text)', marginBottom: '4px' }}>
                           {item.loans}
                         </span>
                         <div
@@ -435,13 +435,13 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Category Volume Distribution */}
-              <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+              <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                     <BookOpen size={18} color="var(--editorial-accent)" strokeWidth={2.4} />
                     Category Stacks Inventory
                   </h3>
-                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>{categories.length} Chambers</span>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>{categories.length} Chambers</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -451,8 +451,8 @@ export default function AnalyticsPage() {
                     return (
                       <div key={idx}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.84rem' }}>
-                          <span style={{ fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>{cat.category}</span>
-                          <span style={{ fontWeight: 900, color: 'var(--editorial-text)' }}>{cat.total_copies} copies <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>({cat.book_count} titles)</span></span>
+                          <span style={{ fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>{cat.category}</span>
+                          <span style={{ fontWeight: 700, color: 'var(--editorial-text)' }}>{cat.total_copies} copies <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>({cat.book_count} titles)</span></span>
                         </div>
                         <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', overflow: 'hidden' }}>
                           <div
@@ -481,8 +481,8 @@ export default function AnalyticsPage() {
               }}
             >
               {/* Top 5 Most Borrowed Books */}
-              <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
-                <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
+              <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+                <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
                   <Library size={18} color="var(--editorial-accent)" strokeWidth={2.4} />
                   Top Circulation Volumes
                 </h3>
@@ -497,10 +497,10 @@ export default function AnalyticsPage() {
                       return (
                         <div key={idx} style={{ padding: '10px 12px', border: '1px solid var(--editorial-border)', backgroundColor: 'var(--editorial-bg-subtle)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--editorial-text)' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--editorial-text)' }}>
                               #{idx + 1} {book.title}
                             </span>
-                            <span style={{ fontWeight: 900, fontSize: '0.82rem', color: 'var(--editorial-accent)' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--editorial-accent)' }}>
                               {book.borrow_count} loans
                             </span>
                           </div>
@@ -508,7 +508,7 @@ export default function AnalyticsPage() {
                             <span>by {book.author}</span>
                             <span>{book.category}</span>
                           </div>
-                          <div style={{ width: '100%', height: '6px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', overflow: 'hidden' }}>
+                          <div style={{ width: '100%', height: '6px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', overflow: 'hidden' }}>
                             <div style={{ width: `${percent}%`, height: '100%', backgroundColor: 'var(--editorial-green)' }} />
                           </div>
                         </div>
@@ -519,8 +519,8 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Study Section Seat Traffic */}
-              <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
-                <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
+              <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+                <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px' }}>
                   <Armchair size={18} color="var(--editorial-accent)" strokeWidth={2.4} />
                   Sanctuary Seat Pod Traffic
                 </h3>
@@ -531,14 +531,14 @@ export default function AnalyticsPage() {
                     return (
                       <div key={idx} style={{ padding: '12px 14px', border: '1px solid var(--editorial-border)', backgroundColor: 'var(--editorial-bg-subtle)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
                             {s.section}
                           </span>
-                          <span style={{ fontWeight: 900, fontSize: '0.82rem', color: occPct > 75 ? '#C5221F' : 'var(--editorial-green)' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.82rem', color: occPct > 75 ? '#C5221F' : 'var(--editorial-green)' }}>
                             {s.occupied_seats} / {s.total_seats} seats ({occPct}%)
                           </span>
                         </div>
-                        <div style={{ width: '100%', height: '8px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', overflow: 'hidden' }}>
                           <div
                             style={{
                               width: `${occPct}%`,
@@ -557,10 +557,10 @@ export default function AnalyticsPage() {
 
             {/* Demand Forecasting Table */}
             {demandForecast.length > 0 && (
-              <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+              <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+                    <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                       Predictive Demand & Replenishment Recommendations
                     </h3>
                     <span style={{ fontSize: '0.80rem', color: 'var(--editorial-text)', opacity: 0.75 }}>
@@ -573,29 +573,29 @@ export default function AnalyticsPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                     <thead>
                       <tr style={{ backgroundColor: 'var(--editorial-border)', borderBottom: '1px solid var(--editorial-border)' }}>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Category</th>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Demand Score</th>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Projected Growth</th>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Active Circ.</th>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Waitlist</th>
-                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase' }}>Recommendation</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Category</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Demand Score</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Projected Growth</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Active Circ.</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Waitlist</th>
+                        <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Recommendation</th>
                       </tr>
                     </thead>
                     <tbody>
                       {demandForecast.map((item, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1.5px solid var(--editorial-text)', backgroundColor: idx % 2 === 0 ? '#FFFFFF' : 'var(--editorial-bg-subtle)' }}>
-                          <td style={{ padding: '12px 14px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
+                        <tr key={idx} style={{ borderBottom: '1.5px solid var(--editorial-text)', backgroundColor: idx % 2 === 0 ? '#FFF8E9' : 'var(--editorial-bg-subtle)' }}>
+                          <td style={{ padding: '12px 14px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
                             {item.category}
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '60px', height: '8px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-text)', overflow: 'hidden' }}>
+                              <div style={{ width: '60px', height: '8px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-text)', overflow: 'hidden' }}>
                                 <div style={{ width: `${item.demandScore}%`, height: '100%', backgroundColor: 'var(--editorial-accent)' }} />
                               </div>
-                              <span style={{ fontWeight: 900, fontSize: '0.82rem' }}>{item.demandScore}</span>
+                              <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{item.demandScore}</span>
                             </div>
                           </td>
-                          <td style={{ padding: '12px 14px', color: 'var(--editorial-text)', fontWeight: 800 }}>
+                          <td style={{ padding: '12px 14px', color: 'var(--editorial-text)', fontWeight: 700 }}>
                             {item.projectedGrowth}
                           </td>
                           <td style={{ padding: '12px 14px', fontWeight: 600 }}>
@@ -603,7 +603,7 @@ export default function AnalyticsPage() {
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             {item.unmetWaitlist > 0 ? (
-                              <span style={{ color: 'var(--editorial-accent)', fontWeight: 900 }}>{item.unmetWaitlist} waiting</span>
+                              <span style={{ color: 'var(--editorial-accent)', fontWeight: 700 }}>{item.unmetWaitlist} waiting</span>
                             ) : (
                               <span style={{ color: 'var(--editorial-text)', opacity: 0.6 }}>0</span>
                             )}
@@ -622,8 +622,8 @@ export default function AnalyticsPage() {
             )}
           </>
         ) : (
-          <div style={{ padding: '40px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', textAlign: 'center' }}>
-            <h4 style={{ margin: 0, fontWeight: 800, textTransform: 'uppercase' }}>Circulation Charts Updating</h4>
+          <div style={{ padding: '40px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', textAlign: 'center' }}>
+            <h4 style={{ margin: 0, fontWeight: 700, textTransform: 'uppercase' }}>Circulation Charts Updating</h4>
             <p style={{ margin: '8px 0 0', opacity: 0.75 }}>Circulation trends and predictive demand models will refresh automatically.</p>
           </div>
         )}

@@ -1,5 +1,6 @@
 const { connect } = require('../backend/db/mongoose');
 const { ensureDemoAccounts } = require('../backend/db/demoAccounts');
+const { ensureSeats } = require('../backend/db/seedSeats');
 const app = require('../backend/server');
 
 let bootstrapPromise = null;
@@ -16,6 +17,11 @@ function bootstrap() {
         await ensureDemoAccounts();
       } catch (err) {
         console.error('Vercel demo account bootstrap error:', err.message);
+      }
+      try {
+        await ensureSeats();
+      } catch (err) {
+        console.error('Vercel seat seeder error:', err.message);
       }
     })();
   }

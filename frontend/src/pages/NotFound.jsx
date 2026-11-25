@@ -9,7 +9,7 @@ export default function NotFound({ onNavigate }) {
           textAlign: 'center',
           maxWidth: '560px',
           padding: '48px 36px',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           border: '1px solid var(--editorial-border)',
           boxShadow: 'var(--shadow-xl)'
         }}
@@ -21,7 +21,7 @@ export default function NotFound({ onNavigate }) {
             backgroundColor: 'var(--editorial-accent)',
             border: '1px solid var(--editorial-border)',
             boxShadow: 'var(--shadow-md)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -31,7 +31,7 @@ export default function NotFound({ onNavigate }) {
           <Compass size={44} strokeWidth={2.4} />
         </div>
 
-        <div style={{ fontSize: '5rem', fontWeight: 800, fontFamily: 'var(--font-serif)', color: 'var(--editorial-accent)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.04em' }}>
+        <div style={{ fontSize: '5rem', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--editorial-accent)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.04em' }}>
           404
         </div>
 

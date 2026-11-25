@@ -96,7 +96,7 @@ export default function BookCard({
         height: '100%',
         position: 'relative',
         cursor: 'pointer',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FFF8E9',
         borderRadius: 'var(--radius-sm)',
         border: isHovered ? '1px solid var(--editorial-border-dark)' : '1px solid var(--editorial-border)',
         transform: tiltStyle.transform,
@@ -116,7 +116,7 @@ export default function BookCard({
           pointerEvents: 'none',
           zIndex: 15,
           opacity: isHovered ? tiltStyle.glareOpacity : 0,
-          background: `radial-gradient(circle at ${tiltStyle.glareX}% ${tiltStyle.glareY}%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 70%)`,
+          background: `radial-gradient(circle at ${tiltStyle.glareX}% ${tiltStyle.glareY}%, rgba(255, 248, 233, 0.28) 0%, rgba(255, 248, 233, 0) 70%)`,
           transition: isHovered ? 'opacity 0.2s ease' : 'opacity 0.45s ease',
           mixBlendMode: 'overlay'
         }}
@@ -163,9 +163,9 @@ export default function BookCard({
                 fontSize: '0.64rem',
                 fontWeight: 700,
                 backgroundColor: 'var(--editorial-green)',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 padding: '2px 8px',
-                borderRadius: '2px',
+                borderRadius: '6px',
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
                 boxShadow: '0 2px 4px rgba(37, 40, 32, 0.18)'
@@ -201,7 +201,7 @@ export default function BookCard({
       </div>
 
       {/* Editorial Content */}
-      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', flex: 1, backgroundColor: '#FFFFFF' }}>
+      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', flex: 1, backgroundColor: '#FFF8E9' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span
             className="editorial-kicker"

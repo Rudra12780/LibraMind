@@ -79,7 +79,7 @@ export default function DemoAccounts({
         padding: dense ? '10px 11px' : '12px 13px',
         border: '1px dashed var(--editorial-border)',
         borderRadius: 'var(--radius-sm)',
-        backgroundColor: 'rgba(255, 255, 255, 0.66)',
+        backgroundColor: 'rgba(255, 248, 233, 0.66)',
         ...style
       }}
     >
@@ -127,7 +127,7 @@ export default function DemoAccounts({
                 width: '100%',
                 padding: dense ? '6px 8px' : '7px 9px',
                 textAlign: 'left',
-                background: '#FFFFFF',
+                background: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 cursor: busy ? 'wait' : 'pointer',
@@ -201,7 +201,7 @@ export default function DemoAccounts({
                   gap: '3px',
                   flexShrink: 0,
                   fontSize: dense ? '0.66rem' : '0.70rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: account.accent
                 }}
               >

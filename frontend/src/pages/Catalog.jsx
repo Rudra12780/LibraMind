@@ -433,7 +433,7 @@ export default function Catalog({
             bottom: '30px',
             right: '30px',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             padding: '12px 20px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
@@ -460,7 +460,7 @@ export default function Catalog({
               color: 'var(--forest-dark)',
               marginBottom: '8px',
               fontFamily: "var(--font-oswald), 'BBH Bogle', 'Space Grotesk', sans-serif",
-              fontWeight: 900,
+              fontWeight: 700,
               letterSpacing: '-0.02em',
               textTransform: 'uppercase',
               lineHeight: 1.10
@@ -508,7 +508,7 @@ export default function Catalog({
               maxWidth: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: '16px',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
@@ -541,7 +541,7 @@ export default function Catalog({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FAF8F1'
+                  color: '#FFF8E9'
                 }}
               >
                 <BookPlus size={22} />
@@ -740,7 +740,7 @@ export default function Catalog({
         style={{
           padding: '20px',
           marginBottom: '32px',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           border: '1px solid var(--editorial-border)',
           boxShadow: 'var(--shadow-card)',
           display: 'flex',
@@ -810,7 +810,7 @@ export default function Catalog({
                 height: '28px',
                 borderRadius: '50%',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 color: 'var(--editorial-text)',
                 display: 'flex',
                 alignItems: 'center',
@@ -851,15 +851,15 @@ export default function Catalog({
                   gap: '6px',
                   padding: '7px 18px',
                   borderRadius: '9999px',
-                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-green)' : '#FFFFFF',
-                  color: selectedCategory === 'All' ? '#FFFFFF' : 'var(--editorial-text)',
+                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-green)' : '#FFF8E9',
+                  color: selectedCategory === 'All' ? '#FFF8E9' : 'var(--editorial-text)',
                   border: `1.5px solid ${selectedCategory === 'All' ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
                   fontSize: '0.78rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   letterSpacing: '0.02em',
                   cursor: 'pointer',
                   flexShrink: 0,
-                  boxShadow: selectedCategory === 'All' ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                  boxShadow: selectedCategory === 'All' ? '0 3px 10px rgba(52, 39, 31, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
                   transition: 'all 0.2s ease',
                   touchAction: 'manipulation'
                 }}
@@ -882,15 +882,15 @@ export default function Catalog({
                         gap: '6px',
                         padding: '7px 18px',
                         borderRadius: '9999px',
-                        backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFFFFF',
-                        color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                        backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFF8E9',
+                        color: isSelected ? '#FFF8E9' : 'var(--editorial-text)',
                         border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
                         fontSize: '0.78rem',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         letterSpacing: '0.02em',
                         cursor: 'pointer',
                         flexShrink: 0,
-                        boxShadow: isSelected ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                        boxShadow: isSelected ? '0 3px 10px rgba(52, 39, 31, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
                         transition: 'all 0.2s ease',
                         touchAction: 'manipulation'
                       }}
@@ -910,7 +910,7 @@ export default function Catalog({
                 height: '28px',
                 borderRadius: '50%',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 color: 'var(--editorial-text)',
                 display: 'flex',
                 alignItems: 'center',
@@ -948,7 +948,7 @@ export default function Catalog({
         >
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-lg, 12px)',
               maxWidth: '560px',
               width: '100%',
@@ -956,7 +956,7 @@ export default function Catalog({
               display: 'flex',
               flexDirection: 'column',
               boxShadow: '0 20px 48px rgba(37, 40, 32, 0.22)',
-              border: '1.5px solid var(--editorial-border)',
+              border: '1px solid var(--retro-brown)',
               overflow: 'hidden'
             }}
             onClick={(e) => e.stopPropagation()}
@@ -973,7 +973,7 @@ export default function Catalog({
               }}
             >
               <div>
-                <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.20rem', fontWeight: 800, color: 'var(--editorial-text)' }}>
+                <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.20rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   Library Chambers &amp; Categories
                 </h3>
                 <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
@@ -1009,7 +1009,7 @@ export default function Catalog({
                   padding: '12px 14px',
                   borderRadius: 'var(--radius-sm, 6px)',
                   border: `1.5px solid ${selectedCategory === 'All' ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
-                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1041,7 +1041,7 @@ export default function Catalog({
                         padding: '12px 14px',
                         borderRadius: 'var(--radius-sm, 6px)',
                         border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
-                        backgroundColor: isSelected ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                        backgroundColor: isSelected ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -1063,7 +1063,7 @@ export default function Catalog({
       {/* View Mode Switcher */}
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         {/* View Mode Toggle Switcher */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '2px', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '2px', boxShadow: 'var(--shadow-sm)' }}>
           <button
             onClick={() => setViewMode('circular')}
             style={{
@@ -1071,9 +1071,9 @@ export default function Catalog({
               fontSize: '0.78rem',
               fontWeight: viewMode === 'circular' ? 700 : 500,
               backgroundColor: viewMode === 'circular' ? 'var(--editorial-green)' : 'transparent',
-              color: viewMode === 'circular' ? '#FFFFFF' : 'var(--editorial-text)',
+              color: viewMode === 'circular' ? '#FFF8E9' : 'var(--editorial-text)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '6px',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
@@ -1092,9 +1092,9 @@ export default function Catalog({
               fontSize: '0.78rem',
               fontWeight: viewMode === 'grid' ? 700 : 500,
               backgroundColor: viewMode === 'grid' ? 'var(--editorial-green)' : 'transparent',
-              color: viewMode === 'grid' ? '#FFFFFF' : 'var(--editorial-text)',
+              color: viewMode === 'grid' ? '#FFF8E9' : 'var(--editorial-text)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '6px',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',

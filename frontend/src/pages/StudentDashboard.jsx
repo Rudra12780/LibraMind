@@ -670,7 +670,7 @@ export default function StudentDashboard({
           style={{
             width: '480px',
             maxWidth: '100%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             padding: '42px 36px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--editorial-border)',
@@ -684,7 +684,7 @@ export default function StudentDashboard({
               height: '54px',
               borderRadius: 'var(--radius-sm)',
               backgroundColor: 'var(--editorial-green)',
-              color: '#FFFFFF',
+              color: '#FFF8E9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -726,7 +726,7 @@ export default function StudentDashboard({
             bottom: '28px',
             right: '28px',
             backgroundColor: 'var(--editorial-text)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--editorial-border)',
             padding: '14px 20px',
@@ -746,11 +746,11 @@ export default function StudentDashboard({
           )}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {toastMessage.title && (
-              <strong style={{ fontSize: '0.88rem', color: '#FFFFFF', marginBottom: '2px' }}>
+              <strong style={{ fontSize: '0.88rem', color: '#FFF8E9', marginBottom: '2px' }}>
                 {toastMessage.title}
               </strong>
             )}
-            <span style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 1.4 }}>
+            <span style={{ fontSize: '0.82rem', color: 'rgba(255, 248, 233, 0.9)', lineHeight: 1.4 }}>
               {toastMessage.msg}
             </span>
           </div>
@@ -794,7 +794,7 @@ export default function StudentDashboard({
                     color: '#C5221F',
                     backgroundColor: '#FDECE7',
                     padding: '2px 8px',
-                    borderRadius: '2px',
+                    borderRadius: '6px',
                     border: '1px solid #FCA5A5'
                   }}
                 >
@@ -808,7 +808,7 @@ export default function StudentDashboard({
                     color: 'var(--editorial-green)',
                     backgroundColor: 'var(--editorial-bg-subtle)',
                     padding: '2px 8px',
-                    borderRadius: '2px',
+                    borderRadius: '6px',
                     border: '1px solid var(--editorial-border)'
                   }}
                 >
@@ -821,7 +821,7 @@ export default function StudentDashboard({
               style={{
                 fontFamily: 'var(--font-serif)',
                 fontSize: 'clamp(2.1rem, 3.8vw, 3.2rem)',
-                fontWeight: 800,
+                fontWeight: 700,
                 color: 'var(--editorial-text)',
                 lineHeight: 1.12,
                 letterSpacing: '-0.025em',
@@ -886,7 +886,7 @@ export default function StudentDashboard({
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '18px',
-            boxShadow: '0 4px 16px rgba(217, 119, 6, 0.12)'
+            boxShadow: '0 4px 16px rgba(217, 165, 46, 0.12)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', maxWidth: '780px' }}>
@@ -950,7 +950,7 @@ export default function StudentDashboard({
               className="btn btn-sm"
               style={{
                 backgroundColor: '#B45309',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 border: 'none',
                 fontWeight: 700,
                 padding: '8px 16px',
@@ -1025,9 +1025,9 @@ export default function StudentDashboard({
                     fontSize: '0.68rem',
                     fontWeight: 700,
                     backgroundColor: '#C5221F',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     padding: '1px 7px',
-                    borderRadius: '2px'
+                    borderRadius: '6px'
                   }}
                 >
                   HOLD ACTIVE
@@ -1037,7 +1037,7 @@ export default function StudentDashboard({
                 style={{
                   fontFamily: 'var(--font-serif)',
                   fontSize: '1.35rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
                   margin: '0 0 6px'
                 }}
@@ -1141,7 +1141,7 @@ export default function StudentDashboard({
               }
             }}
             style={{
-              backgroundColor: stat.isPenalty ? '#FFF7F5' : currentTab === stat.tab ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+              backgroundColor: stat.isPenalty ? '#FFF7F5' : currentTab === stat.tab ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
               border: stat.isPenalty ? '1.5px solid #FCA5A5' : currentTab === stat.tab ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
               borderRadius: 'var(--radius-sm)',
               padding: '22px 24px',
@@ -1167,7 +1167,7 @@ export default function StudentDashboard({
               style={{
                 fontFamily: 'var(--font-serif)',
                 fontSize: '2.5rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 lineHeight: 1,
                 color: stat.color,
                 letterSpacing: '-0.03em',
@@ -1212,8 +1212,8 @@ export default function StudentDashboard({
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 style={{
-                  backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
-                  color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                  backgroundColor: isActive ? 'var(--editorial-green)' : '#FFF8E9',
+                  color: isActive ? '#FFF8E9' : 'var(--editorial-text)',
                   border: isActive ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '7px 16px',
@@ -1261,7 +1261,7 @@ export default function StudentDashboard({
                     borderRadius: 'var(--radius-sm)',
                     border: 'none',
                     backgroundColor: borrowSubTab === 'active' ? 'var(--editorial-text)' : 'transparent',
-                    color: borrowSubTab === 'active' ? '#FFFFFF' : 'var(--editorial-text)',
+                    color: borrowSubTab === 'active' ? '#FFF8E9' : 'var(--editorial-text)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
@@ -1278,7 +1278,7 @@ export default function StudentDashboard({
                     borderRadius: 'var(--radius-sm)',
                     border: 'none',
                     backgroundColor: borrowSubTab === 'history' ? 'var(--editorial-text)' : 'transparent',
-                    color: borrowSubTab === 'history' ? '#FFFFFF' : 'var(--editorial-text)',
+                    color: borrowSubTab === 'history' ? '#FFF8E9' : 'var(--editorial-text)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
@@ -1298,7 +1298,7 @@ export default function StudentDashboard({
 
           {borrowSubTab === 'history' ? (
             pastLoans.length === 0 ? (
-              <div style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '40px 24px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '40px 24px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                 <Clock size={36} color="var(--editorial-accent)" style={{ margin: '0 auto 12px', opacity: 0.6 }} />
                 <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
                   No Prior Borrowing History Yet
@@ -1310,7 +1310,7 @@ export default function StudentDashboard({
             ) : (
               <div
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   borderRadius: 'var(--radius-sm)',
                   boxShadow: 'var(--shadow-sm)',
@@ -1358,7 +1358,7 @@ export default function StudentDashboard({
                                   style={{
                                     width: '38px',
                                     height: '52px',
-                                    borderRadius: '2px',
+                                    borderRadius: '6px',
                                     overflow: 'hidden',
                                     backgroundColor: 'var(--editorial-bg-subtle)',
                                     flexShrink: 0,
@@ -1387,7 +1387,7 @@ export default function StudentDashboard({
                             </td>
 
                             <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: 600 }}>
-                              <span style={{ backgroundColor: 'var(--editorial-bg)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', fontSize: '0.78rem' }}>
+                              <span style={{ backgroundColor: 'var(--editorial-bg)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)', fontSize: '0.78rem' }}>
                                 {loan.copy_code || 'LM-STACKS'}
                               </span>
                             </td>
@@ -1406,7 +1406,7 @@ export default function StudentDashboard({
                             </td>
 
                             <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>
                                 ✓ Returned to Stacks
                               </span>
                             </td>
@@ -1422,7 +1422,7 @@ export default function StudentDashboard({
             activeLoans.length === 0 ? (
               <div
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '40px 24px',
@@ -1461,7 +1461,7 @@ export default function StudentDashboard({
               {primaryLoan && (
                 <div
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '30px clamp(18px, 3vw, 36px)',
@@ -1492,7 +1492,7 @@ export default function StudentDashboard({
                         style={{
                           width: '170px',
                           height: '240px',
-                          borderRadius: '2px',
+                          borderRadius: '6px',
                           overflow: 'hidden',
                           boxShadow: '0 10px 24px rgba(37, 40, 32, 0.16)',
                           border: '1px solid var(--editorial-border)',
@@ -1524,7 +1524,7 @@ export default function StudentDashboard({
                             color: 'var(--editorial-text-muted)',
                             backgroundColor: 'var(--editorial-bg-subtle)',
                             padding: '2px 8px',
-                            borderRadius: '2px',
+                            borderRadius: '6px',
                             border: '1px solid var(--editorial-border)'
                           }}
                         >
@@ -1536,7 +1536,7 @@ export default function StudentDashboard({
                         style={{
                           fontFamily: 'var(--font-serif)',
                           fontSize: 'clamp(1.5rem, 2.4vw, 2.1rem)',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           color: 'var(--editorial-text)',
                           lineHeight: 1.2,
                           letterSpacing: '-0.02em',
@@ -1624,7 +1624,7 @@ export default function StudentDashboard({
                         <div
                           key={loan.id}
                           style={{
-                            backgroundColor: '#FFFFFF',
+                            backgroundColor: '#FFF8E9',
                             border: '1px solid var(--editorial-border)',
                             borderRadius: 'var(--radius-sm)',
                             padding: '18px',
@@ -1639,7 +1639,7 @@ export default function StudentDashboard({
                               width: '76px',
                               minWidth: '76px',
                               height: '110px',
-                              borderRadius: '2px',
+                              borderRadius: '6px',
                               overflow: 'hidden',
                               boxShadow: '0 4px 12px rgba(37, 40, 32, 0.12)',
                               border: '1px solid var(--editorial-border)',
@@ -1686,7 +1686,7 @@ export default function StudentDashboard({
                               </div>
 
                               <div style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginBottom: '4px' }}>
-                                Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '1px 5px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
+                                Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '1px 5px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
                               </div>
 
                               <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
@@ -1730,7 +1730,7 @@ export default function StudentDashboard({
               {/* Accession Copies Summary Table */}
               <div
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   borderRadius: 'var(--radius-sm)',
                   boxShadow: 'var(--shadow-sm)',
@@ -1765,7 +1765,7 @@ export default function StudentDashboard({
                         return (
                           <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
                             <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: 700, color: 'var(--editorial-text)' }}>
-                              <span style={{ backgroundColor: 'var(--editorial-bg)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                              <span style={{ backgroundColor: 'var(--editorial-bg)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>
                                 {loan.copy_code}
                               </span>
                             </td>
@@ -1837,7 +1837,7 @@ export default function StudentDashboard({
                     <div
                       key={loan.id}
                       style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#FFF8E9',
                         border: '1px solid var(--editorial-border)',
                         borderRadius: 'var(--radius-sm)',
                         padding: '20px',
@@ -1853,7 +1853,7 @@ export default function StudentDashboard({
                           width: '88px',
                           minWidth: '88px',
                           height: '130px',
-                          borderRadius: '2px',
+                          borderRadius: '6px',
                           overflow: 'hidden',
                           boxShadow: '0 4px 12px rgba(37, 40, 32, 0.12)',
                           border: '1px solid var(--editorial-border)',
@@ -1902,7 +1902,7 @@ export default function StudentDashboard({
                           </div>
 
                           <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginBottom: '6px' }}>
-                            Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
+                            Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
                           </div>
 
                           <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
@@ -1955,7 +1955,7 @@ export default function StudentDashboard({
                   <Clock size={14} color="var(--editorial-accent)" strokeWidth={2.2} />
                   ARCHIVAL READING RECORD
                 </span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', margin: '4px 0 2px', color: 'var(--editorial-text)', fontWeight: 800 }}>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', margin: '4px 0 2px', color: 'var(--editorial-text)', fontWeight: 700 }}>
                   Archival Reading History
                 </h4>
               </div>
@@ -1976,7 +1976,7 @@ export default function StudentDashboard({
       {currentTab === 'all' && notifications && notifications.length > 0 && (
         <section
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             borderLeft: '4px solid var(--editorial-accent)',
             borderRadius: 'var(--radius-sm)',
@@ -1992,7 +1992,7 @@ export default function StudentDashboard({
                   <h3 style={{ fontSize: '1.05rem', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
                     Official Library Notices &amp; Announcements
                   </h3>
-                  <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '2px', color: 'var(--editorial-accent)' }}>
+                  <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '6px', color: 'var(--editorial-accent)' }}>
                     OFFICIAL ARCHIVE
                   </span>
                 </div>
@@ -2011,7 +2011,7 @@ export default function StudentDashboard({
                     padding: '4px 10px',
                     fontSize: '0.75rem',
                     fontWeight: notifTab === 'official' ? 700 : 500,
-                    backgroundColor: notifTab === 'official' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                    backgroundColor: notifTab === 'official' ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                     color: notifTab === 'official' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                     cursor: 'pointer'
                   }}
@@ -2026,7 +2026,7 @@ export default function StudentDashboard({
                     padding: '4px 10px',
                     fontSize: '0.75rem',
                     fontWeight: notifTab === 'all' ? 700 : 500,
-                    backgroundColor: notifTab === 'all' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                    backgroundColor: notifTab === 'all' ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                     color: notifTab === 'all' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                     cursor: 'pointer'
                   }}
@@ -2088,11 +2088,11 @@ export default function StudentDashboard({
                           <span
                             style={{
                               backgroundColor: 'var(--editorial-accent)',
-                              color: '#FFFFFF',
+                              color: '#FFF8E9',
                               fontSize: '0.62rem',
                               fontWeight: 700,
                               padding: '1px 6px',
-                              borderRadius: '2px',
+                              borderRadius: '6px',
                               textTransform: 'uppercase'
                             }}
                           >
@@ -2146,7 +2146,7 @@ export default function StudentDashboard({
           {activeReservations.length === 0 ? (
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '36px 24px',
@@ -2167,7 +2167,7 @@ export default function StudentDashboard({
                 <div
                   key={res.id}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '18px',
@@ -2180,7 +2180,7 @@ export default function StudentDashboard({
                     style={{
                       width: '60px',
                       height: '84px',
-                      borderRadius: '2px',
+                      borderRadius: '6px',
                       overflow: 'hidden',
                       flexShrink: 0,
                       border: '1px solid var(--editorial-border)',
@@ -2265,7 +2265,7 @@ export default function StudentDashboard({
           {activeSeats.length === 0 ? (
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '36px 24px',
@@ -2292,7 +2292,7 @@ export default function StudentDashboard({
                 <div
                   key={booking.id || booking._id}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '20px',
@@ -2329,12 +2329,12 @@ export default function StudentDashboard({
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {booking.has_power === 1 && (
-                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                           <Zap size={11} /> Power Socket
                         </span>
                       )}
                       {booking.has_monitor === 1 && (
-                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                           <Monitor size={11} /> External Screen
                         </span>
                       )}
@@ -2486,7 +2486,7 @@ export default function StudentDashboard({
           {wishlist.length === 0 ? (
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '48px 24px',
@@ -2534,7 +2534,7 @@ export default function StudentDashboard({
                       <div
                         key={bId}
                         style={{
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           border: '1px solid var(--editorial-border)',
                           borderRadius: 'var(--radius-sm)',
                           boxShadow: 'var(--shadow-sm)',
@@ -2589,7 +2589,7 @@ export default function StudentDashboard({
                             by <strong>{book.author}</strong>
                           </div>
 
-                          <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
                             📍 {book.floor || 'Floor 1'} • {book.shelf || 'Main Stacks'}
                           </div>
 
@@ -2672,7 +2672,7 @@ export default function StudentDashboard({
         <section
           style={{
             marginBottom: '48px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             borderRadius: 'var(--radius-sm)',
             padding: '28px clamp(16px, 3vw, 32px)',
@@ -2685,7 +2685,7 @@ export default function StudentDashboard({
                 <Heart size={14} color="var(--editorial-accent)" strokeWidth={2.2} />
                 PERSONAL DESIDERATA
               </span>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 2px', fontWeight: 800 }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 2px', fontWeight: 700 }}>
                 Personal Wishlist ({wishlist.length})
               </h3>
               <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
@@ -2712,7 +2712,7 @@ export default function StudentDashboard({
                 <div
                   key={bId}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)',
                     boxShadow: 'var(--shadow-sm)',
@@ -2768,7 +2768,7 @@ export default function StudentDashboard({
                       by <strong>{book.author}</strong>
                     </div>
 
-                    <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
                       📍 {book.floor || 'Floor 1'} • {book.shelf || 'Main Stacks'}
                     </div>
 
@@ -2852,7 +2852,7 @@ export default function StudentDashboard({
               position: 'relative',
               width: '100%',
               maxWidth: '520px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               padding: '32px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
@@ -2926,7 +2926,7 @@ export default function StudentDashboard({
                       border: isSelected ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
                       borderRadius: 'var(--radius-sm)',
                       background: isSelected ? 'var(--editorial-green)' : 'var(--editorial-bg)',
-                      color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                      color: isSelected ? '#FFF8E9' : 'var(--editorial-text)',
                       fontWeight: 600,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
@@ -3011,7 +3011,7 @@ export default function StudentDashboard({
               position: 'relative',
               width: '100%',
               maxWidth: '460px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               padding: '32px 28px',
               border: '1px solid var(--editorial-border)',
@@ -3047,7 +3047,7 @@ export default function StudentDashboard({
                 fontFamily: 'var(--font-serif)',
                 fontSize: '1.45rem',
                 color: 'var(--editorial-text)',
-                fontWeight: 800
+                fontWeight: 700
               }}
             >
               Return This Physical Volume?
@@ -3158,7 +3158,7 @@ export default function StudentDashboard({
               position: 'relative',
               width: '100%',
               maxWidth: '520px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               padding: '32px 30px',
               border: '1px solid var(--editorial-border)',
@@ -3176,7 +3176,7 @@ export default function StudentDashboard({
                   style={{
                     fontFamily: 'var(--font-serif)',
                     fontSize: '1.5rem',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: 'var(--editorial-text)',
                     margin: '4px 0 0'
                   }}
@@ -3233,7 +3233,7 @@ export default function StudentDashboard({
                           Barcode: {p.copy_code} • {p.status === 'overdue' ? 'Overdue loan' : 'Returned with late fine'}
                         </span>
                       </div>
-                      <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, color: '#C5221F', fontSize: '0.98rem' }}>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, color: '#C5221F', fontSize: '0.98rem' }}>
                         ${p.fine_amount ? p.fine_amount.toFixed(2) : '1.00'}
                       </div>
                     </div>
@@ -3262,7 +3262,7 @@ export default function StudentDashboard({
               <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                 Total Remittance Due
               </span>
-              <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 800, color: '#C5221F' }}>
+              <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 700, color: '#C5221F' }}>
                 ${penaltyStatus.unpaidFines.toFixed(2)}
               </span>
             </div>
@@ -3272,19 +3272,19 @@ export default function StudentDashboard({
               <div
                 style={{
                   backgroundColor: 'var(--editorial-bg-subtle)',
-                  border: '1.5px solid var(--editorial-border)',
+                  border: '1px solid var(--retro-brown)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '16px',
                   textAlign: 'center',
                   marginBottom: '20px'
                 }}
               >
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: '8px' }}>
                   📱 LIBRARIAN PENALTY PAYMENT QR CODE
                 </div>
                 <div
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     display: 'inline-block',
                     padding: '10px',
                     borderRadius: 'var(--radius-sm)',

@@ -180,7 +180,7 @@ export default function NotificationsPage({ onNavigate }) {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   color: 'var(--editorial-text, #242120)',
                   border: '1px solid var(--editorial-border, #DFD6C9)',
                   borderRadius: '6px',
@@ -234,8 +234,8 @@ export default function NotificationsPage({ onNavigate }) {
               key={f.id}
               onClick={() => setFilterType(f.id)}
               style={{
-                backgroundColor: filterType === f.id ? 'var(--editorial-green, #435340)' : '#FFFFFF',
-                color: filterType === f.id ? '#FFFFFF' : 'var(--editorial-text, #242120)',
+                backgroundColor: filterType === f.id ? 'var(--editorial-green, #435340)' : '#FFF8E9',
+                color: filterType === f.id ? '#FFF8E9' : 'var(--editorial-text, #242120)',
                 border: filterType === f.id ? '1px solid var(--editorial-green, #435340)' : '1px solid var(--editorial-border, #DFD6C9)',
                 borderRadius: '6px',
                 padding: '6px 14px',
@@ -261,7 +261,7 @@ export default function NotificationsPage({ onNavigate }) {
               style={{
                 padding: '48px 20px',
                 textAlign: 'center',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border, #DFD6C9)',
                 borderRadius: '10px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.03)'
@@ -295,7 +295,7 @@ export default function NotificationsPage({ onNavigate }) {
                 onClick={() => handleNotificationClick(item)}
                 style={{
                   padding: '16px 18px',
-                  backgroundColor: item.is_read ? '#FFFFFF' : 'var(--editorial-bg-subtle, #FAF7F2)',
+                  backgroundColor: item.is_read ? '#FFF8E9' : 'var(--editorial-bg-subtle, #FAF7F2)',
                   border: '1px solid var(--editorial-border, #DFD6C9)',
                   borderLeft: item.is_read ? '3px solid var(--editorial-border, #DFD6C9)' : '4px solid var(--editorial-accent, #B95D3B)',
                   borderRadius: '10px',
@@ -312,7 +312,7 @@ export default function NotificationsPage({ onNavigate }) {
                         width: '38px',
                         height: '38px',
                         borderRadius: '8px',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#FFF8E9',
                         border: '1px solid var(--editorial-border, #DFD6C9)',
                         display: 'flex',
                         alignItems: 'center',
@@ -342,10 +342,10 @@ export default function NotificationsPage({ onNavigate }) {
                               display: 'inline-block',
                               padding: '1px 6px',
                               backgroundColor: 'var(--editorial-accent, #B95D3B)',
-                              color: '#FFFFFF',
-                              borderRadius: '4px',
+                              color: '#FFF8E9',
+                              borderRadius: '8px',
                               fontSize: '0.68rem',
-                              fontWeight: 800,
+                              fontWeight: 700,
                               letterSpacing: '0.04em',
                               textTransform: 'uppercase'
                             }}
@@ -406,7 +406,7 @@ export default function NotificationsPage({ onNavigate }) {
                           markAsRead(item.id);
                         }}
                         style={{
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           border: '1px solid var(--editorial-border, #DFD6C9)',
                           color: 'var(--editorial-green, #435340)',
                           cursor: 'pointer',
@@ -432,7 +432,7 @@ export default function NotificationsPage({ onNavigate }) {
                     <button
                       onClick={(e) => handleDelete(e, item.id)}
                       style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#FFF8E9',
                         border: '1px solid rgba(185, 93, 59, 0.25)',
                         color: 'var(--editorial-accent, #B95D3B)',
                         cursor: 'pointer',
@@ -476,7 +476,7 @@ export default function NotificationsPage({ onNavigate }) {
         >
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: '12px',
               padding: '24px',
               maxWidth: '420px',
@@ -501,7 +501,7 @@ export default function NotificationsPage({ onNavigate }) {
                 onClick={() => setShowClearModal(false)}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border, #DFD6C9)',
                   borderRadius: '6px',
                   fontWeight: 600,
@@ -517,7 +517,7 @@ export default function NotificationsPage({ onNavigate }) {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--editorial-accent, #B95D3B)',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   border: 'none',
                   borderRadius: '6px',
                   fontWeight: 700,

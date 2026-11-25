@@ -512,7 +512,7 @@ export default function CircularBookCarousel({
               borderTopLeftRadius: `${mobileRadius + mobileCardH / 2 + 10}px`,
               borderBottomLeftRadius: `${mobileRadius + mobileCardH / 2 + 10}px`,
               backgroundColor: '#FAF8F4',
-              border: '1.5px solid var(--editorial-border)',
+              border: '1px solid var(--retro-brown)',
               borderRight: 'none',
               boxShadow: 'inset 0 4px 14px rgba(37, 40, 32, 0.04), -6px 0 20px rgba(37, 40, 32, 0.06)',
               pointerEvents: 'none',
@@ -631,7 +631,7 @@ export default function CircularBookCarousel({
                       overflow: 'hidden',
                       border: isSelected
                         ? '2px solid rgba(212, 175, 55, 0.95)'
-                        : '1px solid rgba(255, 255, 255, 0.70)',
+                        : '1px solid rgba(255, 248, 233, 0.70)',
                       boxShadow: isSelected
                         ? '0 6px 16px rgba(0, 0, 0, 0.45), 0 0 10px rgba(212, 175, 55, 0.70)'
                         : '0 3px 8px rgba(0, 0, 0, 0.28)',
@@ -659,7 +659,7 @@ export default function CircularBookCarousel({
                         position: 'absolute',
                         inset: 0,
                         pointerEvents: 'none',
-                        background: 'linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(255,255,255,0.15) 6%, transparent 15%, transparent 88%, rgba(0,0,0,0.14) 100%)'
+                        background: 'linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(255, 248, 233,0.15) 6%, transparent 15%, transparent 88%, rgba(0,0,0,0.14) 100%)'
                       }}
                     />
 
@@ -673,7 +673,7 @@ export default function CircularBookCarousel({
                         height: '5px',
                         borderRadius: '50%',
                         backgroundColor: isBookAvailable ? '#27AE60' : '#C0392B',
-                        border: '0.6px solid #FFFFFF',
+                        border: '0.6px solid #FFF8E9',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
                         zIndex: 3
                       }}
@@ -696,9 +696,9 @@ export default function CircularBookCarousel({
               left: '12px',
               top: `${mobileCenterY - 100}px`,
               width: `${Math.min(180, mobileStageWidth - (mobileRadius + 32))}px`,
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: '10px',
-              border: '1.5px solid var(--editorial-border)',
+              border: '1px solid var(--retro-brown)',
               boxShadow: '0 4px 14px rgba(37, 40, 32, 0.08)',
               display: 'flex',
               flexDirection: 'column',
@@ -792,8 +792,8 @@ export default function CircularBookCarousel({
                 width: '30px',
                 height: '30px',
                 borderRadius: '50%',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid var(--editorial-border)',
+                backgroundColor: '#FFF8E9',
+                border: '1px solid var(--retro-brown)',
                 boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
@@ -816,8 +816,8 @@ export default function CircularBookCarousel({
                 width: '30px',
                 height: '30px',
                 borderRadius: '50%',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid var(--editorial-border)',
+                backgroundColor: '#FFF8E9',
+                border: '1px solid var(--retro-brown)',
                 boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
@@ -844,9 +844,9 @@ export default function CircularBookCarousel({
                 alignItems: 'center',
                 gap: '4px',
                 borderRadius: '9999px',
-                backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFFFFF',
-                color: isAutoRotating ? '#FFFFFF' : 'var(--editorial-text)',
-                border: '1.5px solid var(--editorial-border)',
+                backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFF8E9',
+                color: isAutoRotating ? '#FFF8E9' : 'var(--editorial-text)',
+                border: '1px solid var(--retro-brown)',
                 cursor: 'pointer',
                 fontWeight: 700,
                 boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)'
@@ -902,7 +902,7 @@ export default function CircularBookCarousel({
           boxShadow: `
             0 24px 54px -8px rgba(37, 40, 32, 0.20),
             0 8px 22px -4px rgba(37, 40, 32, 0.10),
-            inset 0 0 0 10px #FFFFFF,
+            inset 0 0 0 10px #FFF8E9,
             inset 0 0 0 12px var(--editorial-border),
             inset 0 12px 28px rgba(37, 40, 32, 0.06)
           `,
@@ -918,7 +918,7 @@ export default function CircularBookCarousel({
             width: `${(desktopRadius + desktopCardH / 2 + 10) * 2}px`,
             height: `${(desktopRadius + desktopCardH / 2 + 10) * 2}px`,
             borderRadius: '50%',
-            border: '12px solid #FFFFFF',
+            border: '12px solid #FFF8E9',
             boxShadow: '0 8px 24px rgba(37, 40, 32, 0.12), inset 0 2px 4px rgba(0,0,0,0.04)',
             pointerEvents: 'none',
             zIndex: 1
@@ -1019,11 +1019,11 @@ export default function CircularBookCarousel({
                     overflow: 'hidden',
                     boxShadow: isActive
                       ? '0 6px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(212, 175, 55, 0.85)'
-                      : '0 2px 4px rgba(0, 0, 0, 0.35), inset 1px 0 2px rgba(255,255,255,0.16), inset -1px 0 2px rgba(0,0,0,0.45)',
+                      : '0 2px 4px rgba(0, 0, 0, 0.35), inset 1px 0 2px rgba(255, 248, 233,0.16), inset -1px 0 2px rgba(0,0,0,0.45)',
                     border: isActive
                       ? '1.2px solid rgba(212, 175, 55, 0.95)'
                       : `1px solid ${spineTheme.border}`,
-                    borderLeft: isActive ? '1.5px solid rgba(212, 175, 55, 0.95)' : '1px solid rgba(255, 255, 255, 0.16)',
+                    borderLeft: isActive ? '1.5px solid rgba(212, 175, 55, 0.95)' : '1px solid rgba(255, 248, 233, 0.16)',
                     pointerEvents: 'auto',
                     transition: 'box-shadow 0.18s ease, border 0.18s ease'
                   }}
@@ -1062,7 +1062,7 @@ export default function CircularBookCarousel({
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.08) 16%, rgba(255,255,255,0.30) 38%, rgba(255,255,255,0.06) 62%, rgba(0,0,0,0.18) 84%, rgba(0,0,0,0.72) 100%)',
+                        background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.08) 16%, rgba(255, 248, 233,0.30) 38%, rgba(255, 248, 233,0.06) 62%, rgba(0,0,0,0.18) 84%, rgba(0,0,0,0.72) 100%)',
                         pointerEvents: 'none'
                       }}
                     />
@@ -1077,7 +1077,7 @@ export default function CircularBookCarousel({
                         height: '5px',
                         borderRadius: '50%',
                         backgroundColor: isBookAvailable ? '#27AE60' : '#C0392B',
-                        border: '0.6px solid #FFFFFF',
+                        border: '0.6px solid #FFF8E9',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
                         zIndex: 4,
                         pointerEvents: 'none'
@@ -1124,7 +1124,7 @@ export default function CircularBookCarousel({
                           height: '3px',
                           borderRadius: '50%',
                           backgroundColor: isBookAvailable ? '#2E7D32' : '#C62828',
-                          border: '0.5px solid #FFFFFF',
+                          border: '0.5px solid #FFF8E9',
                           pointerEvents: 'none'
                         }}
                       />
@@ -1149,7 +1149,7 @@ export default function CircularBookCarousel({
             width: `${desktopHubDiameter}px`,
             height: `${desktopHubDiameter}px`,
             borderRadius: '50%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '2px solid var(--editorial-border)',
             boxShadow: `
               0 10px 26px rgba(37, 40, 32, 0.08),
@@ -1248,11 +1248,11 @@ export default function CircularBookCarousel({
               alignItems: 'center',
               gap: '6px',
               borderRadius: '9999px',
-              backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFFFFF',
-              color: isAutoRotating ? '#FFFFFF' : 'var(--editorial-text)',
-              border: '1.5px solid var(--editorial-border)',
+              backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFF8E9',
+              color: isAutoRotating ? '#FFF8E9' : 'var(--editorial-text)',
+              border: '1px solid var(--retro-brown)',
               cursor: 'pointer',
-              fontWeight: 800,
+              fontWeight: 700,
               boxShadow: '0 4px 14px rgba(37, 40, 32, 0.16)',
               transition: 'all 0.2s ease',
               whiteSpace: 'nowrap'

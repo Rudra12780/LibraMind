@@ -338,7 +338,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <BookOpen size={20} color="#FFFFFF" strokeWidth={2.4} />
+            <BookOpen size={20} color="#FFF8E9" strokeWidth={2.4} />
           </div>
           <div>
             <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
@@ -530,7 +530,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
             background: 'none',
             border: 'none',
             color: 'var(--editorial-accent)',
-            fontWeight: 800,
+            fontWeight: 700,
             cursor: 'pointer',
             padding: '2px 4px',
             textDecoration: 'underline'
@@ -560,7 +560,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <Sparkles size={20} color="#FFFFFF" strokeWidth={2.4} />
+            <Sparkles size={20} color="#FFF8E9" strokeWidth={2.4} />
           </div>
           <div>
             <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
@@ -802,7 +802,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
             background: 'none',
             border: 'none',
             color: 'var(--editorial-accent)',
-            fontWeight: 800,
+            fontWeight: 700,
             cursor: 'pointer',
             padding: '2px 4px',
             textDecoration: 'underline'
@@ -831,14 +831,14 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
 
         {/* Sanctuary Architectural Highlights */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <div style={{ padding: '8px 10px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+          <div style={{ padding: '8px 10px', backgroundColor: '#FFF8E9', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
             <div style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>COLLECTION</div>
-            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--editorial-text)' }}>112 Volumes</div>
+            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)' }}>112 Volumes</div>
             <div style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>9 Chambers</div>
           </div>
-          <div style={{ padding: '8px 10px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+          <div style={{ padding: '8px 10px', backgroundColor: '#FFF8E9', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
             <div style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>CARRELS</div>
-            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--editorial-text)' }}>Quiet Stacks</div>
+            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)' }}>Quiet Stacks</div>
             <div style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>Power & Light</div>
           </div>
         </div>
@@ -922,7 +922,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                     boxShadow: 'var(--shadow-sm)'
                   }}
                 >
-                  <BookOpen size={20} color="#FFFFFF" strokeWidth={2.4} />
+                  <BookOpen size={20} color="#FFF8E9" strokeWidth={2.4} />
                 </div>
                 <div>
                   <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
@@ -1081,7 +1081,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                     background: 'none',
                     border: 'none',
                     color: 'var(--editorial-accent)',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                     padding: '2px 4px',
                     textDecoration: 'underline'
@@ -1107,7 +1107,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                     boxShadow: 'var(--shadow-sm)'
                   }}
                 >
-                  <Sparkles size={20} color="#FFFFFF" strokeWidth={2.4} />
+                  <Sparkles size={20} color="#FFF8E9" strokeWidth={2.4} />
                 </div>
                 <div>
                   <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
@@ -1344,7 +1344,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                     background: 'none',
                     border: 'none',
                     color: 'var(--editorial-accent)',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                     padding: '2px 4px',
                     textDecoration: 'underline'
@@ -1378,7 +1378,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
               style={{
                 width: '460px',
                 maxWidth: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 borderRadius: 'var(--radius-sm)',
                 padding: '28px 20px',
                 boxShadow: 'var(--shadow-xl)',
@@ -1495,7 +1495,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                 <div
                   className="open-book-leaf-shading"
                   style={{
-                    background: 'linear-gradient(to right, rgba(0,0,0,0.24) 0%, rgba(255,255,255,0.18) 25%, rgba(0,0,0,0.20) 100%)'
+                    background: 'linear-gradient(to right, rgba(0,0,0,0.24) 0%, rgba(255, 248, 233,0.18) 25%, rgba(0,0,0,0.20) 100%)'
                   }}
                 />
               </div>
@@ -1506,7 +1506,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                 <div
                   className="open-book-leaf-shading"
                   style={{
-                    background: 'linear-gradient(to left, rgba(0,0,0,0.24) 0%, rgba(255,255,255,0.18) 25%, rgba(0,0,0,0.20) 100%)'
+                    background: 'linear-gradient(to left, rgba(0,0,0,0.24) 0%, rgba(255, 248, 233,0.18) 25%, rgba(0,0,0,0.20) 100%)'
                   }}
                 />
               </div>
@@ -1536,7 +1536,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
             style={{
               width: '460px',
               maxWidth: '100%',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               padding: '32px',
               boxShadow: 'var(--shadow-xl)',
@@ -1567,7 +1567,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                   height: '52px',
                   borderRadius: '16px',
                   backgroundColor: '#24292F',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1591,7 +1591,7 @@ export default function Login({ onNavigate, initialMode = 'login' }) {
                   height: '52px',
                   borderRadius: '16px',
                   background: 'linear-gradient(135deg, var(--editorial-accent), var(--editorial-border))',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

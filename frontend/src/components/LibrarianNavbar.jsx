@@ -85,7 +85,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               flexShrink: 0
             }}
           >
-            <Layers size={18} color="#FFFFFF" strokeWidth={2.2} />
+            <Layers size={18} color="#FFF8E9" strokeWidth={2.2} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -98,7 +98,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                   border: '1px solid var(--editorial-border)',
                   fontSize: '0.62rem',
                   fontWeight: 700,
-                  borderRadius: '2px'
+                  borderRadius: '6px'
                 }}
               >
                 CIRCULATION DESK
@@ -120,7 +120,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 onClick={() => handleTabClick(tab)}
                 style={{
                   backgroundColor: isActive ? 'var(--editorial-green)' : 'transparent',
-                  color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                  color: isActive ? '#FFF8E9' : 'var(--editorial-text)',
                   border: isActive ? '1px solid var(--editorial-green)' : '1px solid transparent',
                   borderRadius: 'var(--radius-sm)',
                   padding: '6px 12px',
@@ -134,7 +134,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 }}
                 title={tab.title}
               >
-                <tab.icon size={14} color={isActive ? '#FFFFFF' : 'var(--editorial-accent)'} strokeWidth={2} />
+                <tab.icon size={14} color={isActive ? '#FFF8E9' : 'var(--editorial-accent)'} strokeWidth={2} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -164,7 +164,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 height: '36px',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                 color: 'var(--editorial-text)',
                 display: 'flex',
                 alignItems: 'center',
@@ -193,7 +193,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               padding: '4px 10px 4px 5px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               boxShadow: 'var(--shadow-sm)'
             }}
           >
@@ -203,7 +203,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
                 height: '26px',
                 borderRadius: 'var(--radius-sm)',
                 backgroundColor: 'var(--editorial-green)',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -230,7 +230,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               height: '34px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -251,7 +251,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               height: '38px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: mobileMenuOpen ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+              backgroundColor: mobileMenuOpen ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
@@ -284,8 +284,8 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               key={tab.id}
               onClick={() => handleTabClick(tab)}
               style={{
-                backgroundColor: activeTab === tab.id ? 'var(--editorial-green)' : '#FFFFFF',
-                color: activeTab === tab.id ? '#FFFFFF' : 'var(--editorial-text)',
+                backgroundColor: activeTab === tab.id ? 'var(--editorial-green)' : '#FFF8E9',
+                color: activeTab === tab.id ? '#FFF8E9' : 'var(--editorial-text)',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '10px 14px',
@@ -298,7 +298,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <tab.icon size={15} color={activeTab === tab.id ? '#FFFFFF' : 'var(--editorial-accent)'} />
+                <tab.icon size={15} color={activeTab === tab.id ? '#FFF8E9' : 'var(--editorial-accent)'} />
                 <span>{tab.label}</span>
               </div>
               <ArrowRight size={14} color="var(--editorial-border)" />

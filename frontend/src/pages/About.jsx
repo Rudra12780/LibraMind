@@ -68,7 +68,7 @@ export default function About({ onNavigate }) {
           style={{
             padding: '56px 40px',
             backgroundColor: 'var(--editorial-green)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             borderRadius: 'var(--radius-sm)',
             boxShadow: 'var(--shadow-xl)',
@@ -116,9 +116,9 @@ export default function About({ onNavigate }) {
               style={{
                 fontSize: 'clamp(2.2rem, 4vw, 2.8rem)',
                 lineHeight: 1.2,
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 marginBottom: '16px',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontFamily: 'var(--font-serif)',
                 letterSpacing: '-0.01em'
               }}
@@ -155,9 +155,9 @@ export default function About({ onNavigate }) {
                   alignItems: 'center',
                   gap: '8px',
                   padding: '11px 22px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   color: 'var(--editorial-text)',
-                  border: '1px solid #FFFFFF',
+                  border: '1px solid #FFF8E9',
                   fontSize: '0.92rem',
                   fontWeight: 600
                 }}
@@ -172,7 +172,7 @@ export default function About({ onNavigate }) {
         {/* 4 Pillars */}
         <div style={{ marginBottom: '56px' }}>
           <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 36px' }}>
-            <h2 style={{ fontSize: '2.2rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '2.2rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: '8px' }}>
               Athenaeum Design Principles
             </h2>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.98rem', fontWeight: 500 }}>
@@ -195,7 +195,7 @@ export default function About({ onNavigate }) {
                   key={idx}
                   style={{
                     padding: '28px',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: 'var(--shadow-card)',
                     borderTop: `6px solid ${borderColors[idx % 4]}`
@@ -216,7 +216,7 @@ export default function About({ onNavigate }) {
                   >
                     <Icon size={22} color={idx % 2 === 0 ? "var(--editorial-accent)" : "var(--editorial-green)"} strokeWidth={2.2} />
                   </div>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '10px' }}>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '10px' }}>
                     {item.title}
                   </h3>
                   <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.85, lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
@@ -232,7 +232,7 @@ export default function About({ onNavigate }) {
         <div
           style={{
             padding: '36px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             boxShadow: 'var(--shadow-lg)',
             marginBottom: '48px'
@@ -240,7 +240,7 @@ export default function About({ onNavigate }) {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h2 style={{ fontSize: '1.6rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+              <h2 style={{ fontSize: '1.6rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                 Dedicated Academic Environments
               </h2>
               <span style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>
@@ -274,7 +274,7 @@ export default function About({ onNavigate }) {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <strong style={{ color: 'var(--editorial-text)', fontSize: '0.95rem', fontWeight: 900, textTransform: 'uppercase' }}>{s.name}</strong>
+                  <strong style={{ color: 'var(--editorial-text)', fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase' }}>{s.name}</strong>
                   <span className="badge badge-category" style={{ fontSize: '0.74rem' }}>{s.seats}</span>
                 </div>
                 <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text)', opacity: 0.85, lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
@@ -293,10 +293,10 @@ export default function About({ onNavigate }) {
             gap: '24px'
           }}
         >
-          <div style={{ padding: '28px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div style={{ padding: '28px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <Clock size={22} color="var(--editorial-accent)" strokeWidth={2.4} />
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                 Library Hours
               </h3>
             </div>
@@ -316,10 +316,10 @@ export default function About({ onNavigate }) {
             </ul>
           </div>
 
-          <div style={{ padding: '28px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div style={{ padding: '28px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <MapPin size={22} color="var(--editorial-green)" strokeWidth={2.4} />
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                 Campus Coordinates
               </h3>
             </div>

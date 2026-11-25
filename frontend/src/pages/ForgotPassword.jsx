@@ -190,7 +190,7 @@ export default function ForgotPassword({ onNavigate }) {
         style={{
           width: '490px',
           maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           padding: '40px',
           borderRadius: 'var(--radius-xl)',
           border: '1px solid var(--editorial-border)',
@@ -228,11 +228,11 @@ export default function ForgotPassword({ onNavigate }) {
             }}
           >
             {step === 'otp' ? (
-              <Smartphone size={28} color="#FFFFFF" strokeWidth={2.2} />
+              <Smartphone size={28} color="#FFF8E9" strokeWidth={2.2} />
             ) : step === 'reset' ? (
-              <Lock size={28} color="#FFFFFF" strokeWidth={2.2} />
+              <Lock size={28} color="#FFF8E9" strokeWidth={2.2} />
             ) : (
-              <KeyRound size={28} color="#FFFFFF" strokeWidth={2.2} />
+              <KeyRound size={28} color="#FFF8E9" strokeWidth={2.2} />
             )}
           </div>
 
@@ -284,7 +284,7 @@ export default function ForgotPassword({ onNavigate }) {
                         ? 'var(--editorial-bg-subtle)'
                         : '#FAF8F4',
                     color: isActive
-                      ? '#FFFFFF'
+                      ? '#FFF8E9'
                       : isDone
                         ? 'var(--editorial-green)'
                         : 'var(--muted-text)',
@@ -407,7 +407,7 @@ export default function ForgotPassword({ onNavigate }) {
                     alignItems: 'center',
                     gap: '5px',
                     fontSize: '0.82rem',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     fontFamily: 'monospace',
                     color: secondsLeft === 0 ? 'var(--status-danger-text)' : secondsLeft <= 15 ? '#B45309' : 'var(--editorial-green)'
                   }}
@@ -682,7 +682,7 @@ export default function ForgotPassword({ onNavigate }) {
                   width: '52px',
                   height: '52px',
                   borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   color: 'var(--editorial-green)',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-sm)',

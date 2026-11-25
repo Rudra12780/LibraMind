@@ -118,7 +118,7 @@ export default function TermsPolicies({ onNavigate }) {
                 key={idx}
                 style={{
                   padding: '28px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-card)',
                   borderTop: `6px solid ${borderColors[idx % 3]}`
@@ -140,7 +140,7 @@ export default function TermsPolicies({ onNavigate }) {
                   >
                     <Icon size={22} strokeWidth={2.4} />
                   </div>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                     {pol.title}
                   </h3>
                 </div>
@@ -159,7 +159,7 @@ export default function TermsPolicies({ onNavigate }) {
                         fontWeight: 500
                       }}
                     >
-                      <span style={{ color: 'var(--editorial-accent)', fontWeight: 900, flexShrink: 0, marginTop: '2px' }}>■</span>
+                      <span style={{ color: 'var(--editorial-accent)', fontWeight: 700, flexShrink: 0, marginTop: '2px' }}>■</span>
                       <span>{rule}</span>
                     </li>
                   ))}

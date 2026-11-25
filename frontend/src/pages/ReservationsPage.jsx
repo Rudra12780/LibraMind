@@ -136,7 +136,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           style={{
             maxWidth: '500px',
             padding: '40px 24px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             boxShadow: 'var(--shadow-xl)',
             textAlign: 'center'
@@ -157,7 +157,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           >
             <Bookmark size={28} color="var(--editorial-text)" strokeWidth={2.4} />
           </div>
-          <h2 style={{ color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
+          <h2 style={{ color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
             Sign In to View Reservations
           </h2>
           <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.92rem', marginBottom: '24px', fontWeight: 500 }}>
@@ -189,7 +189,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
               maxWidth: '420px',
               marginLeft: 'auto',
               backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
-              color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
+              color: toastMessage.isError ? '#FFF8E9' : 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               padding: '12px 20px',
@@ -198,7 +198,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
               alignItems: 'center',
               gap: '8px',
               fontSize: '0.9rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase'
             }}
           >
@@ -229,7 +229,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                 border: '1px solid var(--editorial-border)',
                 boxShadow: 'var(--shadow-sm)',
                 fontSize: '0.74rem',
-                fontWeight: 900,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 padding: '3px 10px',
@@ -239,7 +239,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
               <Bookmark size={13} strokeWidth={2.4} />
               Circulation Hold Services
             </div>
-            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', margin: '0 0 6px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em' }}>
+            <h1 style={{ fontSize: '2.4rem', color: 'var(--editorial-text)', margin: '0 0 6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em' }}>
               Book Reservations & Waiting Lists
             </h1>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, margin: 0, fontSize: '0.94rem', fontWeight: 500 }}>
@@ -316,16 +316,16 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           <div
             style={{
               padding: '18px 20px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               borderTop: '6px solid var(--editorial-text)'
             }}
           >
-            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Total Holds Tracked
             </span>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--editorial-text)', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '4px' }}>
               {reservations.length}
             </div>
           </div>
@@ -333,16 +333,16 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           <div
             style={{
               padding: '18px 20px',
-              backgroundColor: readyCount > 0 ? 'var(--editorial-border)' : '#FFFFFF',
+              backgroundColor: readyCount > 0 ? 'var(--editorial-border)' : '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               borderTop: '6px solid var(--editorial-border)'
             }}
           >
-            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Ready for Pickup
             </span>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--editorial-text)', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--editorial-text)', marginTop: '4px' }}>
               {readyCount}
             </div>
           </div>
@@ -350,16 +350,16 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           <div
             style={{
               padding: '18px 20px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               borderTop: '6px solid var(--editorial-accent)'
             }}
           >
-            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 700 }}>
               In Waiting Queues
             </span>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--editorial-accent)', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--editorial-accent)', marginTop: '4px' }}>
               {waitingCount}
             </div>
           </div>
@@ -367,16 +367,16 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
           <div
             style={{
               padding: '18px 20px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               borderTop: '6px solid var(--editorial-green)'
             }}
           >
-            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <span style={{ fontSize: '0.76rem', textTransform: 'uppercase', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Fulfilled / Claimed
             </span>
-            <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'var(--editorial-green)', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--editorial-green)', marginTop: '4px' }}>
               {fulfilledCount}
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
         <div
           style={{
             padding: '16px 20px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             boxShadow: 'var(--shadow-card)',
             marginBottom: '24px',
@@ -432,7 +432,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
 
         {/* Reservation List */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>
             Syncing reservation queue records...
           </div>
         ) : filteredReservations.length === 0 ? (
@@ -440,7 +440,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
             style={{
               padding: '50px 24px',
               textAlign: 'center',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)'
             }}
@@ -461,7 +461,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
             >
               <Bookmark size={26} strokeWidth={2.4} />
             </div>
-            <h3 style={{ color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
+            <h3 style={{ color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
               No Reservations Found
             </h3>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.9rem', fontWeight: 500 }}>
@@ -495,7 +495,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                 <div
                   key={res.id}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     padding: '20px 24px',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: isReady ? '6px 6px 0px var(--editorial-text)' : '4px 4px 0px var(--editorial-text)',
@@ -540,7 +540,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                             backgroundColor: 'var(--editorial-border)',
                             color: 'var(--editorial-text)',
                             border: '1px solid var(--editorial-border)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: '0.74rem',
                             padding: '3px 8px',
                             display: 'inline-flex',
@@ -560,7 +560,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                             backgroundColor: 'var(--editorial-bg-subtle)',
                             color: 'var(--editorial-text)',
                             border: '1px solid var(--editorial-border)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: '0.74rem',
                             padding: '3px 8px',
                             display: 'inline-flex',
@@ -578,9 +578,9 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                         <span
                           style={{
                             backgroundColor: 'var(--editorial-green)',
-                            color: '#FFFFFF',
+                            color: '#FFF8E9',
                             border: '1px solid var(--editorial-border)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: '0.74rem',
                             padding: '3px 8px',
                             display: 'inline-flex',
@@ -600,7 +600,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                             backgroundColor: 'var(--editorial-bg-subtle)',
                             color: 'var(--editorial-text)',
                             border: '1px solid var(--editorial-border)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: '0.74rem',
                             padding: '3px 8px',
                             textTransform: 'uppercase'
@@ -614,9 +614,9 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                         <span
                           style={{
                             backgroundColor: 'var(--editorial-accent)',
-                            color: '#FFFFFF',
+                            color: '#FFF8E9',
                             border: '1px solid var(--editorial-border)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             fontSize: '0.74rem',
                             padding: '3px 8px',
                             textTransform: 'uppercase'
@@ -649,7 +649,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                     <h3
                       style={{
                         fontSize: '1.25rem',
-                        fontWeight: 900,
+                        fontWeight: 700,
                         textTransform: 'uppercase',
                         color: 'var(--editorial-text)',
                         margin: '0 0 4px',
@@ -672,14 +672,14 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
 
                       {/* Pickup Deadline Notice */}
                       {isReady && res.pickup_deadline && (
-                        <span style={{ color: 'var(--editorial-accent)', fontWeight: 900, textTransform: 'uppercase' }}>
+                        <span style={{ color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase' }}>
                           Claim Deadline: {new Date(res.pickup_deadline).toLocaleString()} (Desk)
                         </span>
                       )}
 
                       {/* Librarian viewing info */}
                       {user.role !== 'student' && res.student_name && (
-                        <span style={{ color: 'var(--editorial-green)', fontWeight: 800 }}>
+                        <span style={{ color: 'var(--editorial-green)', fontWeight: 700 }}>
                           Patron: {res.student_name} ({res.membership_id || res.student_email})
                         </span>
                       )}
@@ -697,7 +697,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
                           width: '100%',
                           padding: '9px 14px',
                           fontSize: '0.84rem',
-                          fontWeight: 900,
+                          fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -821,7 +821,7 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
             >
               ⏳
             </div>
-            <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--vintage-walnut)', margin: '0 0 8px', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--vintage-walnut)', margin: '0 0 8px', fontWeight: 700 }}>
               Cancel Hold Queue?
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--vintage-sepia)', lineHeight: 1.55, margin: '0 0 16px' }}>

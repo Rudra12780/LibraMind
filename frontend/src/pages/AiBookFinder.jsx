@@ -146,7 +146,7 @@ export default function AiBookFinder({
               right: isMobile ? '12px' : '30px',
               left: isMobile ? '12px' : 'auto',
               backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
-              color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
+              color: toastMessage.isError ? '#FFF8E9' : 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               padding: '12px 20px',
@@ -155,7 +155,7 @@ export default function AiBookFinder({
               alignItems: 'center',
               gap: '8px',
               fontSize: '0.88rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase'
             }}
           >
@@ -177,7 +177,7 @@ export default function AiBookFinder({
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-sm)',
               fontSize: isMobile ? '0.70rem' : '0.78rem',
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               marginBottom: '14px'
@@ -187,7 +187,7 @@ export default function AiBookFinder({
             TF-IDF Vector Space & Cosine Similarity Ranking
           </div>
 
-          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '10px', lineHeight: 1.2 }}>
+          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2.5rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '10px', lineHeight: 1.2 }}>
             AI-Powered Book Finder
           </h1>
 
@@ -207,7 +207,7 @@ export default function AiBookFinder({
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
               alignItems: isMobile ? 'stretch' : 'center',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)',
               padding: isMobile ? '10px 12px' : '8px 12px',
@@ -260,7 +260,7 @@ export default function AiBookFinder({
               style={{
                 marginTop: '12px',
                 padding: '16px 20px',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '2.5px solid var(--editorial-text)',
                 boxShadow: 'var(--shadow-card)',
                 display: 'grid',
@@ -269,7 +269,7 @@ export default function AiBookFinder({
               }}
             >
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Category
                 </label>
                 <select
@@ -285,7 +285,7 @@ export default function AiBookFinder({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Availability
                 </label>
                 <select
@@ -301,7 +301,7 @@ export default function AiBookFinder({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Min Publication Year
                 </label>
                 <input
@@ -318,13 +318,13 @@ export default function AiBookFinder({
 
           {/* Sample queries pills */}
           <div style={{ marginTop: '14px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>Try asking:</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>Try asking:</span>
             {sampleQueries.map((sample, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSearch(sample)}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-sm)',
                   padding: '4px 10px',
@@ -359,12 +359,12 @@ export default function AiBookFinder({
               flexWrap: 'wrap'
             }}
           >
-            <span style={{ fontWeight: 900, textTransform: 'uppercase' }}>Extracted TF-IDF Terms:</span>
+            <span style={{ fontWeight: 700, textTransform: 'uppercase' }}>Extracted TF-IDF Terms:</span>
             {extractedKeywords.map((kw, i) => (
               <span
                 key={i}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '2px 8px',
                   border: '1px solid var(--editorial-text)',
                   fontFamily: 'monospace',
@@ -382,7 +382,7 @@ export default function AiBookFinder({
           {loading ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)' }}>
               <Sparkles size={36} color="var(--editorial-accent)" strokeWidth={2.4} style={{ animation: 'spin 2s linear infinite', marginBottom: '14px' }} />
-              <p style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <p style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Computing cosine similarity vectors across collection...
               </p>
             </div>
@@ -391,7 +391,7 @@ export default function AiBookFinder({
               <div
                 style={{
                   padding: '36px 20px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-lg)',
                   textAlign: 'center',
@@ -401,7 +401,7 @@ export default function AiBookFinder({
                 <div style={{ marginBottom: '12px' }}>
                   <HelpCircle size={36} color="var(--editorial-accent)" strokeWidth={2.4} />
                 </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
                   No Direct Catalog Match
                 </h3>
                 <p style={{ maxWidth: '440px', margin: '0 auto 16px', fontSize: '0.9rem', color: 'var(--editorial-text)', opacity: 0.85, fontWeight: 500 }}>
@@ -412,7 +412,7 @@ export default function AiBookFinder({
               {/* Suggestions */}
               {suggestions.length > 0 && (
                 <div>
-                  <h4 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '14px' }}>
+                  <h4 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '14px' }}>
                     Recommended Alternatives Available on Shelf:
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
@@ -421,15 +421,15 @@ export default function AiBookFinder({
                         key={s.id}
                         style={{
                           padding: '18px',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           border: '1px solid var(--editorial-border)',
                           boxShadow: 'var(--shadow-md)'
                         }}
                       >
                         <span className="badge badge-category" style={{ marginBottom: '6px' }}>{s.category}</span>
-                        <h5 style={{ margin: '6px 0 4px', color: 'var(--editorial-text)', fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase' }}>{s.title}</h5>
+                        <h5 style={{ margin: '6px 0 4px', color: 'var(--editorial-text)', fontSize: '1rem', fontWeight: 700, textTransform: 'uppercase' }}>{s.title}</h5>
                         <p style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, marginBottom: '8px', fontWeight: 600 }}>by {s.author}</p>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--editorial-green)', fontWeight: 800, marginBottom: '12px', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--editorial-green)', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase' }}>
                           {s.floor} • {s.shelf}
                         </div>
                         <button
@@ -452,7 +452,7 @@ export default function AiBookFinder({
                   key={book.id}
                   style={{
                     padding: isMobile ? '14px 12px' : '24px',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
@@ -497,7 +497,7 @@ export default function AiBookFinder({
                               color: 'var(--editorial-text)',
                               padding: '2px 6px',
                               fontSize: '0.68rem',
-                              fontWeight: 800
+                              fontWeight: 700
                             }}
                           >
                             <Sparkles size={11} strokeWidth={2.4} />
@@ -508,7 +508,7 @@ export default function AiBookFinder({
                           style={{
                             fontSize: '0.96rem',
                             color: 'var(--editorial-text)',
-                            fontWeight: 800,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
                             margin: '0 0 3px',
                             lineHeight: 1.25,
@@ -532,7 +532,7 @@ export default function AiBookFinder({
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                             <span className="badge badge-category">{book.category}</span>
-                            <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+                            <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>
                               Rank #{idx + 1}
                             </span>
                           </div>
@@ -549,7 +549,7 @@ export default function AiBookFinder({
                               boxShadow: 'var(--shadow-sm)',
                               padding: '4px 10px',
                               fontSize: '0.78rem',
-                              fontWeight: 900,
+                              fontWeight: 700,
                               textTransform: 'uppercase'
                             }}
                           >
@@ -562,7 +562,7 @@ export default function AiBookFinder({
                           style={{
                             fontSize: '1.3rem',
                             color: 'var(--editorial-text)',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: '-0.02em',
                             marginBottom: '4px',

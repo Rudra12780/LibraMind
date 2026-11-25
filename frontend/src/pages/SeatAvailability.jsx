@@ -302,7 +302,7 @@ export default function SeatAvailability({ onNavigate }) {
             bottom: '30px',
             right: '30px',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             padding: '12px 20px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
@@ -340,33 +340,33 @@ export default function SeatAvailability({ onNavigate }) {
           marginBottom: '32px'
         }}
       >
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--botanical)' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--botanical)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Available Seats</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--status-available-text)', marginTop: '4px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--status-available-text)', marginTop: '4px' }}>
             {stats.available}
           </div>
           <span style={{ fontSize: '0.78rem', color: 'var(--sage)' }}>Ready for immediate walk-in</span>
         </div>
 
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF', borderLeft: '4px solid #B25E1A' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9', borderLeft: '4px solid #B25E1A' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Occupied Seats</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--status-borrowed-text)', marginTop: '4px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--status-borrowed-text)', marginTop: '4px' }}>
             {stats.occupied}
           </div>
           <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>Students currently studying</span>
         </div>
 
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--forest)' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--forest)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Total Capacity</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
             {stats.total}
           </div>
           <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>Across 2 biophilic floors</span>
         </div>
 
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--sage)' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--sage)' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Occupancy Rate</span>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
             {stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0}%
           </div>
           <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>Healthy calm density</span>
@@ -379,7 +379,7 @@ export default function SeatAvailability({ onNavigate }) {
         style={{
           padding: '16px 20px',
           marginBottom: '28px',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           border: '1px solid var(--editorial-border)',
           boxShadow: 'var(--shadow-card)',
           display: 'flex',
@@ -391,7 +391,7 @@ export default function SeatAvailability({ onNavigate }) {
       >
         {/* Floor selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>FLOOR:</span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>FLOOR:</span>
           {['All', 'Floor 1', 'Floor 2'].map(f => (
             <button
               key={f}
@@ -399,10 +399,10 @@ export default function SeatAvailability({ onNavigate }) {
               style={{
                 padding: '6px 14px',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: selectedFloor === f ? 'var(--editorial-border)' : '#FFFFFF',
+                backgroundColor: selectedFloor === f ? 'var(--editorial-border)' : '#FFF8E9',
                 color: 'var(--editorial-text)',
                 fontSize: '0.80rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 cursor: 'pointer',
@@ -416,7 +416,7 @@ export default function SeatAvailability({ onNavigate }) {
 
         {/* Section selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>SECTION:</span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>SECTION:</span>
           {[
             { id: 'All', label: 'All Sections' },
             { id: 'Quiet Study Zone', label: 'Quiet Zone' },
@@ -430,10 +430,10 @@ export default function SeatAvailability({ onNavigate }) {
               style={{
                 padding: '6px 12px',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: selectedSection === sec.id ? 'var(--editorial-border)' : '#FFFFFF',
+                backgroundColor: selectedSection === sec.id ? 'var(--editorial-border)' : '#FFF8E9',
                 color: 'var(--editorial-text)',
                 fontSize: '0.78rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 cursor: 'pointer',
@@ -459,7 +459,7 @@ export default function SeatAvailability({ onNavigate }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={16} color="var(--editorial-text)" strokeWidth={2.4} />
-            <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>VACANCY DATE:</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>VACANCY DATE:</span>
             <input
               type="date"
               value={selectedDate}
@@ -525,7 +525,7 @@ export default function SeatAvailability({ onNavigate }) {
                 className="bio-card"
                 style={{
                   padding: '20px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   borderTop: `4px solid ${
                     isAvailable ? 'var(--botanical)' : isReserved ? '#D97706' : isOccupied ? '#B25E1A' : '#999999'
                   }`,
@@ -633,8 +633,8 @@ export default function SeatAvailability({ onNavigate }) {
                           fontSize: '0.72rem',
                           padding: '4px',
                           border: '1px solid var(--editorial-border)',
-                          borderRadius: '4px',
-                          backgroundColor: '#FAF5EC',
+                          borderRadius: '8px',
+                          backgroundColor: '#F5EBD7',
                           cursor: 'pointer'
                         }}
                       >
@@ -646,8 +646,8 @@ export default function SeatAvailability({ onNavigate }) {
                           fontSize: '0.72rem',
                           padding: '4px 8px',
                           border: '1px solid var(--editorial-border)',
-                          borderRadius: '4px',
-                          backgroundColor: '#FFF',
+                          borderRadius: '8px',
+                          backgroundColor: '#FFF8E9',
                           cursor: 'pointer'
                         }}
                       >
@@ -670,7 +670,7 @@ export default function SeatAvailability({ onNavigate }) {
           </h3>
           <div
             className="bio-card"
-            style={{ backgroundColor: '#FFFFFF', padding: '16px' }}
+            style={{ backgroundColor: '#FFF8E9', padding: '16px' }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
               {activeMyBookings.map(b => (
@@ -740,7 +740,7 @@ export default function SeatAvailability({ onNavigate }) {
               width: '540px',
               maxWidth: '94vw',
               maxHeight: '90vh',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: '20px',
               display: 'flex',
               flexDirection: 'column',
@@ -767,7 +767,7 @@ export default function SeatAvailability({ onNavigate }) {
                   <span
                     style={{
                       backgroundColor: 'var(--forest)',
-                      color: '#FFFFFF',
+                      color: '#FFF8E9',
                       fontSize: '0.74rem',
                       fontWeight: 700,
                       padding: '2px 8px',
@@ -868,8 +868,8 @@ export default function SeatAvailability({ onNavigate }) {
                               : isUserConflict
                               ? '#FFF5F5'
                               : isSeatBooked
-                              ? '#F5F5F5'
-                              : '#FFFFFF',
+                              ? '#F5EBD7'
+                              : '#FFF8E9',
                             cursor: isAvail ? 'pointer' : 'not-allowed',
                             opacity: isAvail ? 1 : 0.75,
                             display: 'flex',
@@ -885,7 +885,7 @@ export default function SeatAvailability({ onNavigate }) {
                                 height: '18px',
                                 borderRadius: '50%',
                                 border: isSelected ? '5px solid var(--forest)' : '2px solid var(--muted-text)',
-                                backgroundColor: '#FFFFFF',
+                                backgroundColor: '#FFF8E9',
                                 flexShrink: 0
                               }}
                             />
@@ -1021,7 +1021,7 @@ export default function SeatAvailability({ onNavigate }) {
                 style={{
                   padding: '16px 24px',
                   borderTop: '1px solid var(--subtle-border)',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   display: 'flex',
                   gap: '12px'
                 }}

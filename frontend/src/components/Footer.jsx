@@ -39,7 +39,7 @@ export default function Footer({ onNavigate, onOpenBlueprints }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   boxShadow: 'var(--shadow-sm)'
                 }}
               >
@@ -224,7 +224,7 @@ export default function Footer({ onNavigate, onOpenBlueprints }) {
             </div>
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '16px 18px',

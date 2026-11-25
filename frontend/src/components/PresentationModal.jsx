@@ -630,7 +630,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
+                fontWeight: 700,
                 fontSize: '0.85rem'
               }}
             >
@@ -638,14 +638,14 @@ export default function PresentationModal({ isOpen, onClose }) {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#D4AF37', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#D4AF37', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                   LIBRAMIND SCHOLARLY FOLIO
                 </span>
-                <span style={{ fontSize: '0.66rem', fontWeight: 700, backgroundColor: 'rgba(212,175,55,0.2)', color: '#F4DE9A', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(212,175,55,0.4)' }}>
+                <span style={{ fontSize: '0.66rem', fontWeight: 700, backgroundColor: 'rgba(212,175,55,0.2)', color: '#F4DE9A', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.4)' }}>
                   15 CHAPTERS COMPLETE
                 </span>
               </div>
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: '#FFFFFF', margin: 0, fontWeight: 700 }}>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: '#FFF8E9', margin: 0, fontWeight: 700 }}>
                 Human-Centered Design Thinking Presentation
               </h2>
             </div>
@@ -696,10 +696,10 @@ export default function PresentationModal({ isOpen, onClose }) {
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'rgba(255, 248, 233,0.08)',
+                border: '1px solid rgba(255, 248, 233,0.2)',
                 cursor: 'pointer',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 padding: '6px',
                 borderRadius: '6px',
                 display: 'flex',
@@ -795,7 +795,7 @@ export default function PresentationModal({ isOpen, onClose }) {
             {/* Left Page Top Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #E2D7C5', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
-                <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.80rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                   {current.chapter} • SLIDE {current.num} OF 15
                 </span>
                 <h3
@@ -804,14 +804,14 @@ export default function PresentationModal({ isOpen, onClose }) {
                     fontSize: '1.65rem',
                     color: '#111D14',
                     margin: '2px 0 0',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     lineHeight: 1.2
                   }}
                 >
                   {current.title}
                 </h3>
               </div>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#4A5B4F', backgroundColor: '#EFE7D8', padding: '3px 10px', borderRadius: '4px', border: '1px solid #D6CAB7' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#4A5B4F', backgroundColor: '#EFE7D8', padding: '3px 10px', borderRadius: '8px', border: '1px solid #D6CAB7' }}>
                 Page {current.num * 2 - 1}
               </span>
             </div>
@@ -829,7 +829,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   flex: 1,
                   border: '2px solid #D4AF37',
                   borderRadius: '8px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '24px',
                   boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
                   display: 'flex',
@@ -843,10 +843,10 @@ export default function PresentationModal({ isOpen, onClose }) {
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#1A281E', border: '2px solid #D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', color: '#D4AF37' }}>
                   🏛️
                 </div>
-                <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.80rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                   ACADEMIC THESIS &amp; VIVA PORTFOLIO
                 </span>
-                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.1rem', color: '#1A281E', margin: 0, fontWeight: 800 }}>
+                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.1rem', color: '#1A281E', margin: 0, fontWeight: 700 }}>
                   {current.leftContent.title}
                 </h2>
                 <div style={{ width: '80px', height: '2px', backgroundColor: '#D4AF37', margin: '4px 0' }} />
@@ -863,7 +863,7 @@ export default function PresentationModal({ isOpen, onClose }) {
             {current.leftContent && current.leftContent.type === 'comparisonCard' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ backgroundColor: '#FFF5F2', border: '1.5px solid #F0D0C5', borderRadius: '6px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#A12D18', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#A12D18', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
                     ⚠️ {current.leftContent.traditional.title}
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.98rem', color: '#2B1A16', lineHeight: 1.6 }}>
@@ -874,7 +874,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                 </div>
 
                 <div style={{ backgroundColor: '#F2F8F4', border: '1.5px solid #C4DEC9', borderRadius: '6px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1E6038', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#1E6038', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
                     ✨ {current.leftContent.libramind.title}
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.98rem', color: '#13281B', lineHeight: 1.6 }}>
@@ -893,7 +893,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   flex: 1,
                   border: '2px solid #D4AF37',
                   borderRadius: '8px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -904,13 +904,13 @@ export default function PresentationModal({ isOpen, onClose }) {
                 }}
               >
                 <div style={{ fontSize: '2.5rem' }}>🎓</div>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#1A281E', margin: 0, fontWeight: 800 }}>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: '#1A281E', margin: 0, fontWeight: 700 }}>
                   {current.leftContent.heading}
                 </h4>
                 <p style={{ fontSize: '1.05rem', color: '#1B241E', lineHeight: 1.7, margin: 0, fontWeight: 500, maxWidth: '440px' }}>
                   {current.leftContent.text}
                 </p>
-                <div style={{ border: '2px dashed #D4AF37', borderRadius: '6px', padding: '8px 18px', backgroundColor: '#FAF6EE', fontSize: '0.80rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.12em' }}>
+                <div style={{ border: '2px dashed #D4AF37', borderRadius: '6px', padding: '8px 18px', backgroundColor: '#FAF6EE', fontSize: '0.80rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.12em' }}>
                   {current.leftContent.sealText}
                 </div>
               </div>
@@ -924,13 +924,13 @@ export default function PresentationModal({ isOpen, onClose }) {
                   border: '1.5px solid #D4AF37',
                   borderRadius: '6px',
                   overflow: 'hidden',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   display: 'flex',
                   flexDirection: 'column',
                   boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
                 }}
               >
-                <div style={{ padding: '8px 14px', backgroundColor: '#FAF6EE', borderBottom: '1px solid #E2D7C5', fontSize: '0.80rem', fontWeight: 800, color: '#1B241E', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ padding: '8px 14px', backgroundColor: '#FAF6EE', borderBottom: '1px solid #E2D7C5', fontSize: '0.80rem', fontWeight: 700, color: '#1B241E', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>📊</span>
                   <span>PLATE: {current.imageCaption || current.title}</span>
                 </div>
@@ -946,7 +946,7 @@ export default function PresentationModal({ isOpen, onClose }) {
 
             {/* Left Page Bottom: Chapter Index Jump Navigator */}
             <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid #E2D7C5' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 QUICK CHAPTER JUMP (15 CHAPTERS):
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -961,9 +961,9 @@ export default function PresentationModal({ isOpen, onClose }) {
                         height: '24px',
                         borderRadius: '3px',
                         border: isActive ? '1.5px solid #8F3724' : '1px solid #D6CAB7',
-                        backgroundColor: isActive ? '#1A281E' : '#FFFFFF',
+                        backgroundColor: isActive ? '#1A281E' : '#FFF8E9',
                         color: isActive ? '#D4AF37' : '#1B241E',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         fontSize: '0.74rem',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -994,14 +994,14 @@ export default function PresentationModal({ isOpen, onClose }) {
             {/* Right Page Top Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #E2D7C5', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
-                <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#1E6038', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.80rem', fontWeight: 700, color: '#1E6038', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                   SCHOLARLY DISCOURSE &amp; ANALYSIS
                 </span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: '#111D14', margin: '2px 0 0', fontWeight: 800 }}>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: '#111D14', margin: '2px 0 0', fontWeight: 700 }}>
                   {current.rightContent?.heading || 'Design Thinking Deep Dive'}
                 </h4>
               </div>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#4A5B4F', backgroundColor: '#EFE7D8', padding: '3px 10px', borderRadius: '4px', border: '1px solid #D6CAB7' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#4A5B4F', backgroundColor: '#EFE7D8', padding: '3px 10px', borderRadius: '8px', border: '1px solid #D6CAB7' }}>
                 Page {current.num * 2}
               </span>
             </div>
@@ -1010,14 +1010,14 @@ export default function PresentationModal({ isOpen, onClose }) {
             {/* 1. Slide 1 Team & Faculty Credentials */}
             {current.rightContent.type === 'credentials' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                <div style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
                     PROJECT TEAM MEMBERS &amp; UNIVERSITY ROLL NUMBERS
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     {current.rightContent.teamMembers.map((m, idx) => (
                       <div key={idx} style={{ backgroundColor: '#FAF7F0', border: '1px solid #E2D7C5', borderRadius: '6px', padding: '10px 14px' }}>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111D14' }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111D14' }}>
                           {m.name}
                         </div>
                         <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#8F3724', marginTop: '2px' }}>
@@ -1031,11 +1031,11 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#1E6038', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1E6038', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                     DEPARTMENT &amp; ACADEMIC INSTITUTION
                   </div>
-                  <div style={{ fontSize: '1.08rem', fontWeight: 800, color: '#111D14' }}>
+                  <div style={{ fontSize: '1.08rem', fontWeight: 700, color: '#111D14' }}>
                     {current.rightContent.department}
                   </div>
                   <div style={{ fontSize: '0.98rem', color: '#3A483E', marginTop: '2px', fontWeight: 600 }}>
@@ -1044,10 +1044,10 @@ export default function PresentationModal({ isOpen, onClose }) {
                 </div>
 
                 <div style={{ backgroundColor: '#FAF7F0', border: '1.5px solid #E2D7C5', borderRadius: '8px', padding: '14px 20px' }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                     FACULTY PROJECT MENTOR &amp; GUIDE
                   </div>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111D14', marginTop: '2px' }}>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111D14', marginTop: '2px' }}>
                     {current.rightContent.facultyMentor}
                   </div>
                   <div style={{ fontSize: '0.92rem', color: '#3A483E', fontWeight: 600 }}>
@@ -1064,14 +1064,14 @@ export default function PresentationModal({ isOpen, onClose }) {
                   <div
                     key={idx}
                     style={{
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: '#FFF8E9',
                       border: '1.5px solid #D6CAB7',
                       borderRadius: '6px',
                       padding: '14px 18px',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                     }}
                   >
-                    <div style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E6038', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '1.02rem', fontWeight: 700, color: '#1E6038', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '6px' }}>
                       {sec.title}
                     </div>
                     {sec.text && (
@@ -1096,7 +1096,7 @@ export default function PresentationModal({ isOpen, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                   <div style={{ backgroundColor: '#F2F8F4', border: '1px solid #C4DEC9', borderRadius: '6px', padding: '12px 14px' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
                       🧠 SAYS (DIRECT QUOTES)
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.94rem', color: '#13281B', lineHeight: 1.5 }}>
@@ -1107,7 +1107,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </div>
 
                   <div style={{ backgroundColor: '#F2F8F4', border: '1px solid #C4DEC9', borderRadius: '6px', padding: '12px 14px' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
                       💭 THINKS (INTERNAL FEARS)
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.94rem', color: '#13281B', lineHeight: 1.5 }}>
@@ -1118,7 +1118,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </div>
 
                   <div style={{ backgroundColor: '#FFF5F2', border: '1px solid #F0D0C5', borderRadius: '6px', padding: '12px 14px' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#A12D18', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#A12D18', textTransform: 'uppercase', marginBottom: '4px' }}>
                       🏃 DOES (OBSERVED ACTIONS)
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.94rem', color: '#2B1A16', lineHeight: 1.5 }}>
@@ -1129,7 +1129,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </div>
 
                   <div style={{ backgroundColor: '#FFF5F2', border: '1px solid #F0D0C5', borderRadius: '6px', padding: '12px 14px' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#A12D18', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#A12D18', textTransform: 'uppercase', marginBottom: '4px' }}>
                       ❤️ FEELS (EMOTIONS)
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.94rem', color: '#2B1A16', lineHeight: 1.5 }}>
@@ -1140,8 +1140,8 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D6CAB7', borderRadius: '6px', padding: '14px 18px' }}>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                <div style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D6CAB7', borderRadius: '6px', padding: '14px 18px' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                     PRIMARY SCHOLAR NEEDS DERIVED:
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '22px', fontSize: '0.98rem', color: '#1B241E', lineHeight: 1.6 }}>
@@ -1158,11 +1158,11 @@ export default function PresentationModal({ isOpen, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                   {current.rightContent.metrics.map((m, idx) => (
-                    <div key={idx} style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D4AF37', borderRadius: '6px', padding: '12px 16px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.80rem', fontWeight: 800, color: '#8F3724', textTransform: 'uppercase' }}>
+                    <div key={idx} style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D4AF37', borderRadius: '6px', padding: '12px 16px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.80rem', fontWeight: 700, color: '#8F3724', textTransform: 'uppercase' }}>
                         {m.label}
                       </div>
-                      <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#1E6038', margin: '4px 0 2px' }}>
+                      <div style={{ fontSize: '1.85rem', fontWeight: 700, color: '#1E6038', margin: '4px 0 2px' }}>
                         {m.value}
                       </div>
                       <div style={{ fontSize: '0.84rem', color: '#3A483E', fontWeight: 600 }}>
@@ -1173,7 +1173,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                 </div>
 
                 <div style={{ backgroundColor: '#F2F8F4', border: '1.5px solid #C4DEC9', borderRadius: '6px', padding: '12px 18px' }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1E6038', textTransform: 'uppercase', marginBottom: '4px' }}>
                     STATISTICAL CORRELATION:
                   </div>
                   <p style={{ margin: 0, fontSize: '0.98rem', color: '#13281B', lineHeight: 1.5, fontWeight: 600 }}>
@@ -1181,8 +1181,8 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </p>
                 </div>
 
-                <div style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D6CAB7', borderRadius: '6px', padding: '14px 18px' }}>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#8F3724', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <div style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D6CAB7', borderRadius: '6px', padding: '14px 18px' }}>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#8F3724', textTransform: 'uppercase', marginBottom: '4px' }}>
                     {current.rightContent.hypothesis.testName}
                   </div>
                   <div style={{ fontSize: '0.90rem', color: '#3A483E', marginBottom: '3px' }}>
@@ -1191,7 +1191,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   <div style={{ fontSize: '0.90rem', color: '#3A483E', marginBottom: '6px' }}>
                     {current.rightContent.hypothesis.h1}
                   </div>
-                  <div style={{ fontSize: '1.02rem', fontWeight: 800, color: '#1E6038' }}>
+                  <div style={{ fontSize: '1.02rem', fontWeight: 700, color: '#1E6038' }}>
                     {current.rightContent.hypothesis.result}
                   </div>
                 </div>
@@ -1201,8 +1201,8 @@ export default function PresentationModal({ isOpen, onClose }) {
             {/* 5. Slide 15 References & Q&A Layout */}
             {current.rightContent.type === 'references' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ backgroundColor: '#FFF8E9', border: '1.5px solid #D4AF37', borderRadius: '8px', padding: '16px 20px' }}>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#8F3724', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                     ACADEMIC BIBLIOGRAPHY &amp; CITATIONS
                   </div>
                   <ol style={{ margin: 0, paddingLeft: '22px', fontSize: '0.98rem', color: '#1B241E', lineHeight: 1.7 }}>
@@ -1212,11 +1212,11 @@ export default function PresentationModal({ isOpen, onClose }) {
                   </ol>
                 </div>
 
-                <div style={{ backgroundColor: '#1A281E', color: '#FFFFFF', borderRadius: '8px', padding: '18px 24px', textAlign: 'center', border: '2px solid #D4AF37', boxShadow: '0 4px 14px rgba(0,0,0,0.15)' }}>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-serif)', color: '#D4AF37' }}>
+                <div style={{ backgroundColor: '#1A281E', color: '#FFF8E9', borderRadius: '8px', padding: '18px 24px', textAlign: 'center', border: '2px solid #D4AF37', boxShadow: '0 4px 14px rgba(0,0,0,0.15)' }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 700, fontFamily: 'var(--font-serif)', color: '#D4AF37' }}>
                     Oral Viva Examination &amp; Committee Q&amp;A
                   </div>
-                  <p style={{ margin: '8px 0 0', fontSize: '1.05rem', color: '#FFFFFF', lineHeight: 1.5, fontWeight: 500 }}>
+                  <p style={{ margin: '8px 0 0', fontSize: '1.05rem', color: '#FFF8E9', lineHeight: 1.5, fontWeight: 500 }}>
                     {current.rightContent.qaPrompt}
                   </p>
                 </div>
@@ -1237,7 +1237,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   fontWeight: 700,
                   fontSize: '0.88rem',
                   padding: '7px 16px',
-                  backgroundColor: '#FFFFFF'
+                  backgroundColor: '#FFF8E9'
                 }}
               >
                 <ChevronLeft size={16} />
@@ -1261,7 +1261,7 @@ export default function PresentationModal({ isOpen, onClose }) {
                   backgroundColor: '#1A281E',
                   color: '#D4AF37',
                   border: '1px solid #D4AF37',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '0.88rem',
                   padding: '7px 18px',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.2)'

@@ -5,6 +5,7 @@ const fs = require('fs');
 
 const { connect } = require('./db/mongoose');
 const { ensureDemoAccounts } = require('./db/demoAccounts');
+const { ensureSeats } = require('./db/seedSeats');
 
 const authRoutes = require('./routes/auth');
 const booksRoutes = require('./routes/books');
@@ -221,6 +222,7 @@ async function startServer() {
   try {
     await connect();
     await ensureDemoAccounts();
+    await ensureSeats();
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`LibraMind Backend Server listening on http://0.0.0.0:${PORT} (LAN & Localhost)`);
       startScheduler(3 * 60 * 1000);

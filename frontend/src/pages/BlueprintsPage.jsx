@@ -133,7 +133,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
       <section
         style={{
           borderBottom: '1px solid var(--editorial-border)',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           padding: '40px 24px 32px'
         }}
       >
@@ -149,7 +149,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   backgroundColor: 'var(--editorial-border)',
                   color: 'var(--editorial-text)',
                   fontSize: '0.78rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   marginBottom: '10px'
@@ -160,7 +160,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
               <h1
                 style={{
                   fontSize: 'clamp(2rem, 3.8vw, 2.8rem)',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '-0.03em',
                   lineHeight: 1.15,
@@ -207,8 +207,8 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       border: isActive ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                      backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
-                      color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                      backgroundColor: isActive ? 'var(--editorial-green)' : '#FFF8E9',
+                      color: isActive ? '#FFF8E9' : 'var(--editorial-text)',
                       transition: 'all 0.15s ease',
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -237,12 +237,12 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 style={{
                   padding: '5px 12px',
                   fontSize: '0.76rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: 'var(--radius-xs)',
                   cursor: 'pointer',
-                  backgroundColor: viewLayout === 'sheet' ? '#FFFFFF' : 'transparent',
+                  backgroundColor: viewLayout === 'sheet' ? '#FFF8E9' : 'transparent',
                   color: viewLayout === 'sheet' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                   boxShadow: viewLayout === 'sheet' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   display: 'inline-flex',
@@ -259,12 +259,12 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 style={{
                   padding: '5px 12px',
                   fontSize: '0.76rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: 'var(--radius-xs)',
                   cursor: 'pointer',
-                  backgroundColor: viewLayout === 'continuous' ? '#FFFFFF' : 'transparent',
+                  backgroundColor: viewLayout === 'continuous' ? '#FFF8E9' : 'transparent',
                   color: viewLayout === 'continuous' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                   boxShadow: viewLayout === 'continuous' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   display: 'inline-flex',
@@ -281,12 +281,12 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 style={{
                   padding: '5px 12px',
                   fontSize: '0.76rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: 'var(--radius-xs)',
                   cursor: 'pointer',
-                  backgroundColor: viewLayout === 'grid' ? '#FFFFFF' : 'transparent',
+                  backgroundColor: viewLayout === 'grid' ? '#FFF8E9' : 'transparent',
                   color: viewLayout === 'grid' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                   boxShadow: viewLayout === 'grid' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   display: 'inline-flex',
@@ -303,12 +303,12 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 style={{
                   padding: '5px 12px',
                   fontSize: '0.76rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: 'var(--radius-xs)',
                   cursor: 'pointer',
-                  backgroundColor: viewLayout === 'spec' ? '#FFFFFF' : 'transparent',
+                  backgroundColor: viewLayout === 'spec' ? '#FFF8E9' : 'transparent',
                   color: viewLayout === 'spec' ? 'var(--editorial-text)' : 'var(--editorial-text-muted)',
                   boxShadow: viewLayout === 'spec' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   display: 'inline-flex',
@@ -338,7 +338,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
             {!isFullScreen && (
               <div
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   padding: '20px',
                   boxShadow: 'var(--shadow-sm)'
@@ -373,7 +373,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     Sheets Directory ({filteredPages.length} of 21)
                   </span>
                   <span style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)' }}>Click to Inspect</span>
@@ -400,8 +400,8 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                           textAlign: 'left',
                           padding: '10px 12px',
                           border: isSelected ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                          backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFFFFF',
-                          color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                          backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFF8E9',
+                          color: isSelected ? '#FFF8E9' : 'var(--editorial-text)',
                           borderRadius: 'var(--radius-xs)',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
@@ -411,7 +411,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', opacity: isSelected ? 0.9 : 0.65 }}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', opacity: isSelected ? 0.9 : 0.65 }}>
                             Page {page.pageNumber} • {page.category}
                           </span>
                           <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', opacity: isSelected ? 0.85 : 0.5 }}>
@@ -431,7 +431,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
             {/* Right: Full Uncut Blueprint Sheet Viewer */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 padding: '24px',
                 boxShadow: 'var(--shadow-sm)',
@@ -447,24 +447,24 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   alignItems: 'center',
                   marginBottom: '20px',
                   paddingBottom: '16px',
-                  borderBottom: '1.5px solid var(--editorial-border)',
+                  borderBottom: '1px solid var(--retro-brown)',
                   flexWrap: 'wrap',
                   gap: '12px'
                 }}
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                       SHEET {activePage.pageNumber} OF 21
                     </span>
-                    <span style={{ fontSize: '0.72rem', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', padding: '2px 8px', borderRadius: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', padding: '2px 8px', borderRadius: '6px' }}>
                       {activePage.category}
                     </span>
                     <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--editorial-text-muted)' }}>
                       http://libramind.edu{activePage.route}
                     </span>
                   </div>
-                  <h2 style={{ fontSize: '1.45rem', fontWeight: 900, textTransform: 'uppercase', margin: '4px 0 0', color: 'var(--editorial-text)' }}>
+                  <h2 style={{ fontSize: '1.45rem', fontWeight: 700, textTransform: 'uppercase', margin: '4px 0 0', color: 'var(--editorial-text)' }}>
                     {activePage.name}
                   </h2>
                 </div>
@@ -475,14 +475,14 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   <div style={{ display: 'inline-flex', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                     <button
                       onClick={handlePrev}
-                      style={{ padding: '6px 10px', backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', borderRight: '1px solid var(--editorial-border)' }}
+                      style={{ padding: '6px 10px', backgroundColor: '#FFF8E9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', borderRight: '1px solid var(--editorial-border)' }}
                       title="Previous Blueprint (Left Arrow)"
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <button
                       onClick={handleNext}
-                      style={{ padding: '6px 10px', backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      style={{ padding: '6px 10px', backgroundColor: '#FFF8E9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                       title="Next Blueprint (Right Arrow)"
                     >
                       <ChevronRight size={16} />
@@ -490,7 +490,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   </div>
 
                   {/* Zoom Controls */}
-                  <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-xs)', backgroundColor: '#FFFFFF', padding: '0 4px' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-xs)', backgroundColor: '#FFF8E9', padding: '0 4px' }}>
                     <button
                       onClick={() => setZoom(z => Math.max(0.5, Number((z - 0.15).toFixed(2))))}
                       style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -571,7 +571,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   padding: '24px 12px',
                   backgroundColor: '#FAF8F4',
                   border: '1px solid var(--editorial-border)',
-                  borderRadius: '2px',
+                  borderRadius: '6px',
                   boxSizing: 'border-box',
                   scrollBehavior: 'smooth'
                 }}
@@ -581,7 +581,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                     width: `${Math.round(920 * zoom)}px`,
                     maxWidth: zoom === 1 ? '920px' : 'none',
                     aspectRatio: '920 / 1520',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     boxShadow: '0 16px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
                     border: '1px solid #C8C4B8',
                     transition: 'width 0.2s ease',
@@ -593,7 +593,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
 
               {/* Sections & Description Breakdown */}
               <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--editorial-border)' }}>
-                <h4 style={{ fontSize: '0.90rem', fontWeight: 800, textTransform: 'uppercase', margin: '0 0 10px', color: 'var(--editorial-text)' }}>
+                <h4 style={{ fontSize: '0.90rem', fontWeight: 700, textTransform: 'uppercase', margin: '0 0 10px', color: 'var(--editorial-text)' }}>
                   Architectural Wireframe Sections (Page {activePage.pageNumber})
                 </h4>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
@@ -606,7 +606,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                         fontWeight: 600,
                         backgroundColor: 'var(--editorial-bg-subtle)',
                         border: '1px solid var(--editorial-border)',
-                        borderRadius: '2px',
+                        borderRadius: '6px',
                         color: 'var(--editorial-text)'
                       }}
                     >
@@ -631,7 +631,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
             <div
               style={{
                 width: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 padding: '16px 24px',
                 display: 'flex',
@@ -642,10 +642,10 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
               }}
             >
               <div>
-                <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   CONTINUOUS UNCUT ARCHITECTURAL FEED
                 </span>
-                <h3 style={{ margin: '2px 0 0', fontSize: '1.2rem', textTransform: 'uppercase', fontWeight: 900 }}>
+                <h3 style={{ margin: '2px 0 0', fontSize: '1.2rem', textTransform: 'uppercase', fontWeight: 700 }}>
                   All 21 Blueprint Sheets Stacked Uncropped
                 </h3>
               </div>
@@ -672,7 +672,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 style={{
                   width: '100%',
                   maxWidth: '960px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   padding: '28px',
                   boxShadow: 'var(--shadow-card)',
@@ -682,17 +682,17 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 }}
               >
                 {/* Header Strip for each page in feed */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--editorial-border)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--retro-brown)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                         PAGE {page.pageNumber} OF 21
                       </span>
                       <span style={{ fontSize: '0.68rem', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', padding: '2px 6px' }}>
                         {page.category}
                       </span>
                     </div>
-                    <h3 style={{ margin: '3px 0 0', fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
+                    <h3 style={{ margin: '3px 0 0', fontSize: '1.25rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
                       {page.name}
                     </h3>
                   </div>
@@ -723,7 +723,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   style={{
                     width: '100%',
                     aspectRatio: '920 / 1520',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                     border: '1px solid #D2D2D2'
                   }}
@@ -759,7 +759,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                 <div
                   key={page.id}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: 'var(--shadow-card)',
                     display: 'flex',
@@ -776,14 +776,14 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   {/* Top Sheet Header */}
                   <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FAF8F4' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                         SHEET {page.pageNumber} OF 21
                       </span>
-                      <span style={{ fontSize: '0.66rem', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', padding: '1px 6px' }}>
+                      <span style={{ fontSize: '0.66rem', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', padding: '1px 6px' }}>
                         {page.category}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 900, textTransform: 'uppercase', margin: 0, color: 'var(--editorial-text)', lineHeight: 1.25 }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, textTransform: 'uppercase', margin: 0, color: 'var(--editorial-text)', lineHeight: 1.25 }}>
                       {page.name}
                     </h3>
                   </div>
@@ -792,7 +792,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                   <div
                     style={{
                       height: '380px',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: '#FFF8E9',
                       padding: '16px',
                       display: 'flex',
                       alignItems: 'center',
@@ -820,7 +820,7 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
                       {page.desc}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px dashed var(--editorial-border)' }}>
-                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--editorial-accent)' }}>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)' }}>
                         Inspect Full Sheet Uncut →
                       </span>
                       <button
@@ -847,18 +847,18 @@ export default function BlueprintsPage({ onNavigate, initialPageId = 'home', onO
         {viewLayout === 'spec' && (
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               padding: '32px',
               boxShadow: 'var(--shadow-card)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1.5px solid var(--editorial-border)', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--retro-brown)', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   MARKDOWN SPECIFICATION
                 </span>
-                <h2 style={{ fontSize: '1.45rem', fontWeight: 900, textTransform: 'uppercase', margin: '4px 0 0', color: 'var(--editorial-text)' }}>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 700, textTransform: 'uppercase', margin: '4px 0 0', color: 'var(--editorial-text)' }}>
                   System Architecture & Design Thinking Specs
                 </h2>
               </div>

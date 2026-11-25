@@ -149,7 +149,7 @@ export default function ProfileCompletion({ onNavigate }) {
         style={{
           width: '740px',
           maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           padding: '40px',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--editorial-border)',
@@ -264,7 +264,7 @@ export default function ProfileCompletion({ onNavigate }) {
                 width: '100px',
                 height: '100px',
                 borderRadius: '50%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '3px solid var(--editorial-accent)',
                 overflow: 'hidden',
                 display: 'flex',
@@ -391,7 +391,7 @@ export default function ProfileCompletion({ onNavigate }) {
                     fontWeight: 700,
                     padding: '9px',
                     backgroundColor: gender === 'Male' ? 'var(--editorial-green)' : 'var(--editorial-bg-subtle)',
-                    color: gender === 'Male' ? '#FFFFFF' : 'var(--editorial-text)',
+                    color: gender === 'Male' ? '#FFF8E9' : 'var(--editorial-text)',
                     borderColor: gender === 'Male' ? 'var(--editorial-green)' : 'var(--editorial-border)'
                   }}
                 >
@@ -405,7 +405,7 @@ export default function ProfileCompletion({ onNavigate }) {
                     fontWeight: 700,
                     padding: '9px',
                     backgroundColor: gender === 'Female' ? 'var(--editorial-green)' : 'var(--editorial-bg-subtle)',
-                    color: gender === 'Female' ? '#FFFFFF' : 'var(--editorial-text)',
+                    color: gender === 'Female' ? '#FFF8E9' : 'var(--editorial-text)',
                     borderColor: gender === 'Female' ? 'var(--editorial-green)' : 'var(--editorial-border)'
                   }}
                 >
@@ -479,7 +479,7 @@ export default function ProfileCompletion({ onNavigate }) {
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       border: isSelected ? '2px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                      backgroundColor: isSelected ? 'var(--editorial-green-light)' : '#FFFFFF',
+                      backgroundColor: isSelected ? 'var(--editorial-green-light)' : '#FFF8E9',
                       transition: 'all 0.15s ease',
                       display: 'flex',
                       flexDirection: 'column',
@@ -493,7 +493,7 @@ export default function ProfileCompletion({ onNavigate }) {
                       {isSelected ? (
                         <CheckCircle2 size={16} color="var(--editorial-green)" />
                       ) : (
-                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1.5px solid var(--editorial-border)' }} />
+                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid var(--retro-brown)' }} />
                       )}
                     </div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', lineHeight: 1.3 }}>

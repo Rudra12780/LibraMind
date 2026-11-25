@@ -93,7 +93,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
           style={{
             maxWidth: '500px',
             padding: '40px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             border: '1px solid var(--editorial-border)',
             boxShadow: 'var(--shadow-xl)',
             textAlign: 'center'
@@ -114,7 +114,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
           >
             <Compass size={28} color="var(--editorial-text)" strokeWidth={2.4} />
           </div>
-          <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '1.4rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
             Sign In to Plan Your Visit
           </h3>
           <p style={{ margin: '0 auto 20px', fontSize: '0.92rem', color: 'var(--editorial-text)', opacity: 0.85, fontWeight: 500 }}>
@@ -154,7 +154,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
               bottom: '30px',
               right: '30px',
               backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
-              color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
+              color: toastMessage.isError ? '#FFF8E9' : 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               padding: '12px 20px',
@@ -163,7 +163,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
               alignItems: 'center',
               gap: '8px',
               fontSize: '0.88rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase'
             }}
           >
@@ -214,14 +214,14 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>
             Loading your visit checklist and floor seat vacancy maps...
           </div>
         ) : totalCount === 0 ? (
           <div
             style={{
               padding: '48px 24px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)',
               textAlign: 'center'
@@ -230,7 +230,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
             <div style={{ marginBottom: '14px' }}>
               <Compass size={36} color="var(--editorial-accent)" strokeWidth={2.4} />
             </div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
               Your Visit List is Empty
             </h3>
             <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem', color: 'var(--editorial-text)', opacity: 0.85, fontWeight: 500 }}>
@@ -257,16 +257,16 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
               <div
                 style={{
                   padding: '24px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-card)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.95rem' }}>
+                  <span style={{ fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.95rem' }}>
                     Visit Progress: {visitedCount} of {totalCount} Found
                   </span>
-                  <span style={{ fontWeight: 900, color: 'var(--editorial-accent)', fontSize: '1.1rem' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--editorial-accent)', fontSize: '1.1rem' }}>
                     {progressPercent}%
                   </span>
                 </div>
@@ -297,14 +297,14 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
               <div
                 style={{
                   padding: '24px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-card)'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                   <Armchair size={18} color="var(--editorial-text)" strokeWidth={2.4} />
-                  <span style={{ fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.95rem' }}>
+                  <span style={{ fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.95rem' }}>
                     Floor Study Seats Glance
                   </span>
                 </div>
@@ -321,7 +321,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                       }}
                     >
                       <strong style={{ color: 'var(--editorial-text)', textTransform: 'uppercase' }}>{s.floor}: </strong>
-                      <span style={{ color: 'var(--editorial-green)', fontWeight: 900 }}>
+                      <span style={{ color: 'var(--editorial-green)', fontWeight: 700 }}>
                         {s.available_seats} of {s.total_seats} open
                       </span>
                     </div>
@@ -334,7 +334,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                     border: 'none',
                     color: 'var(--editorial-accent)',
                     fontSize: '0.82rem',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     textTransform: 'uppercase',
                     cursor: 'pointer',
                     marginTop: '12px',
@@ -364,7 +364,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                     }}
                   >
                     <MapPin size={22} color="var(--editorial-accent)" strokeWidth={2.4} />
-                    <h2 style={{ fontSize: '1.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>
+                    <h2 style={{ fontSize: '1.5rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
                       {floorName}
                     </h2>
                   </div>
@@ -376,7 +376,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                         <div
                           style={{
                             fontSize: '0.88rem',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             color: 'var(--editorial-text)',
                             textTransform: 'uppercase',
                             letterSpacing: '0.04em',
@@ -398,7 +398,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                               key={book.book_id}
                               style={{
                                 padding: '18px',
-                                backgroundColor: book.visited ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                                backgroundColor: book.visited ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                                 display: 'flex',
                                 gap: '16px',
                                 alignItems: 'flex-start',
@@ -429,7 +429,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                                 <h4
                                   style={{
                                     fontSize: '1.05rem',
-                                    fontWeight: 900,
+                                    fontWeight: 700,
                                     textTransform: 'uppercase',
                                     color: 'var(--editorial-text)',
                                     marginBottom: '4px',
@@ -453,7 +453,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                                     backgroundColor: 'var(--editorial-border)',
                                     border: '1px solid var(--editorial-text)',
                                     fontSize: '0.78rem',
-                                    fontWeight: 900,
+                                    fontWeight: 700,
                                     textTransform: 'uppercase',
                                     color: 'var(--editorial-text)',
                                     marginBottom: '8px'
@@ -483,7 +483,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                                             background: 'none',
                                             border: 'none',
                                             color: 'var(--editorial-green)',
-                                            fontWeight: 900,
+                                            fontWeight: 700,
                                             textDecoration: 'underline',
                                             cursor: 'pointer',
                                             padding: 0,
@@ -505,7 +505,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                                       border: 'none',
                                       color: 'var(--editorial-green)',
                                       fontSize: '0.8rem',
-                                      fontWeight: 800,
+                                      fontWeight: 700,
                                       textTransform: 'uppercase',
                                       cursor: 'pointer',
                                       padding: 0
@@ -521,7 +521,7 @@ export default function VisitPlanner({ onViewBookDetails, onNavigate }) {
                                       border: 'none',
                                       color: 'var(--editorial-accent)',
                                       fontSize: '0.8rem',
-                                      fontWeight: 800,
+                                      fontWeight: 700,
                                       textTransform: 'uppercase',
                                       cursor: 'pointer',
                                       padding: 0,

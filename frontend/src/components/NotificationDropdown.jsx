@@ -42,7 +42,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
         right: '20px',
         width: '400px',
         maxWidth: '92vw',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FFF8E9',
         border: '1px solid var(--editorial-border)',
         boxShadow: 'var(--shadow-lg)',
         zIndex: 1000,
@@ -62,7 +62,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Bell size={18} color="var(--editorial-text)" strokeWidth={2.4} />
-          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
+          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>
             Notifications
           </h4>
           {unreadCount > 0 && (
@@ -73,7 +73,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                 fontSize: '0.72rem',
                 padding: '2px 7px',
                 border: '1px solid var(--editorial-text)',
-                fontWeight: 900
+                fontWeight: 700
               }}
             >
               {unreadCount} new
@@ -89,7 +89,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
               border: 'none',
               color: 'var(--editorial-text)',
               fontSize: '0.78rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase',
               cursor: 'pointer',
               display: 'flex',
@@ -120,8 +120,8 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
               }}
               style={{
                 padding: '14px 18px',
-                borderBottom: '1px solid rgba(52, 78, 65, 0.06)',
-                backgroundColor: n.is_read ? '#FFFFFF' : 'var(--soft-sage-light)',
+                borderBottom: '1px solid rgba(82, 124, 120, 0.06)',
+                backgroundColor: n.is_read ? '#FFF8E9' : 'var(--soft-sage-light)',
                 cursor: 'pointer',
                 transition: 'background-color 0.15s ease',
                 display: 'flex',
@@ -133,7 +133,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -149,11 +149,11 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                     {n.type === 'announcement' && (
                       <span style={{
                         backgroundColor: 'var(--forest)',
-                        color: '#FFFFFF',
+                        color: '#FFF8E9',
                         fontSize: '0.66rem',
                         fontWeight: 700,
                         padding: '1px 5px',
-                        borderRadius: '4px',
+                        borderRadius: '8px',
                         letterSpacing: '0.04em'
                       }}>
                         ADMIN
@@ -194,7 +194,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                     color: 'var(--editorial-accent, #B95D3B)',
                     cursor: 'pointer',
                     padding: '4px',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -214,7 +214,7 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
       <div
         style={{
           padding: '10px 18px',
-          borderTop: '1px solid rgba(52, 78, 65, 0.08)',
+          borderTop: '1px solid rgba(82, 124, 120, 0.08)',
           backgroundColor: 'var(--cream)',
           textAlign: 'center'
         }}

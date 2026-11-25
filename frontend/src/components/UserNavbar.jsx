@@ -130,7 +130,7 @@ export default function UserNavbar({
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <BookOpen size={19} color="#FFFFFF" strokeWidth={2.2} />
+            <BookOpen size={19} color="#FFF8E9" strokeWidth={2.2} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -156,7 +156,7 @@ export default function UserNavbar({
                   color: 'var(--editorial-accent)',
                   border: '1px solid var(--editorial-border)',
                   fontWeight: 700,
-                  borderRadius: '2px'
+                  borderRadius: '6px'
                 }}
               >
                 READING ROOM
@@ -211,7 +211,7 @@ export default function UserNavbar({
                 height: '36px',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -232,7 +232,7 @@ export default function UserNavbar({
                     height: '7px',
                     borderRadius: '50%',
                     backgroundColor: 'var(--editorial-accent)',
-                    border: '1.5px solid #FFFFFF'
+                    border: '1.5px solid #FFF8E9'
                   }}
                 />
               )}
@@ -270,7 +270,7 @@ export default function UserNavbar({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   fontSize: '0.78rem',
                   fontWeight: 700,
                   flexShrink: 0
@@ -300,7 +300,7 @@ export default function UserNavbar({
               height: '34px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -329,7 +329,7 @@ export default function UserNavbar({
               height: '38px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: mobileMenuOpen ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+              backgroundColor: mobileMenuOpen ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
@@ -362,7 +362,7 @@ export default function UserNavbar({
           {user && (
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '12px',
@@ -379,7 +379,7 @@ export default function UserNavbar({
                     height: '36px',
                     borderRadius: 'var(--radius-sm)',
                     backgroundColor: 'var(--editorial-green)',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -417,7 +417,7 @@ export default function UserNavbar({
 
           {/* MY CIRCULATION FOLIO & RECORDS */}
           <div>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
               MY PATRON FOLIO &amp; LEDGER
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '5px' }}>
@@ -429,8 +429,8 @@ export default function UserNavbar({
                     key={tab.id}
                     onClick={tab.action}
                     style={{
-                      backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
-                      color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                      backgroundColor: isActive ? 'var(--editorial-green)' : '#FFF8E9',
+                      color: isActive ? '#FFF8E9' : 'var(--editorial-text)',
                       border: '1px solid var(--editorial-border)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '9px 12px',
@@ -444,7 +444,7 @@ export default function UserNavbar({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Icon size={15} color={isActive ? '#FFFFFF' : 'var(--editorial-accent)'} style={{ flexShrink: 0 }} />
+                      <Icon size={15} color={isActive ? '#FFF8E9' : 'var(--editorial-accent)'} style={{ flexShrink: 0 }} />
                       <span>{tab.label}</span>
                     </div>
                     {tab.badge !== null && tab.badge !== undefined && (
@@ -454,8 +454,8 @@ export default function UserNavbar({
                           fontWeight: 700,
                           padding: '1px 7px',
                           borderRadius: '10px',
-                          backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--editorial-bg-subtle)',
-                          color: isActive ? '#FFFFFF' : 'var(--editorial-accent)',
+                          backgroundColor: isActive ? 'rgba(255, 248, 233,0.25)' : 'var(--editorial-bg-subtle)',
+                          color: isActive ? '#FFF8E9' : 'var(--editorial-accent)',
                           border: isActive ? 'none' : '1px solid var(--editorial-border)'
                         }}
                       >
@@ -470,7 +470,7 @@ export default function UserNavbar({
 
           {/* EXPLORE ARCHIVE CHAMBERS */}
           <div>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
               EXPLORE LIBRARY CHAMBERS
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '5px' }}>
@@ -482,7 +482,7 @@ export default function UserNavbar({
                     key={item.id}
                     onClick={item.action}
                     style={{
-                      background: isActive ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                      background: isActive ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                       border: '1px solid var(--editorial-border)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '9px 12px',
@@ -514,7 +514,7 @@ export default function UserNavbar({
                 if (onNavigate) onNavigate('notifications');
               }}
               style={{
-                background: '#FFFFFF',
+                background: '#FFF8E9',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '9px 12px',
@@ -539,7 +539,7 @@ export default function UserNavbar({
                     padding: '1px 6px',
                     borderRadius: '10px',
                     backgroundColor: 'var(--editorial-accent)',
-                    color: '#FFFFFF'
+                    color: '#FFF8E9'
                   }}
                 >
                   {unreadCount} new

@@ -756,7 +756,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           style={{
             width: '480px',
             maxWidth: '100%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             padding: '38px',
             borderRadius: '20px',
             boxShadow: 'var(--shadow-xl)',
@@ -785,7 +785,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
               backgroundColor: '#FCE8E6',
               color: '#C5221F',
               fontSize: '0.74rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               padding: '3px 12px',
@@ -863,7 +863,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           style={{
             width: '440px',
             maxWidth: '100%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             padding: '36px 32px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--editorial-border)',
@@ -911,7 +911,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                 fontWeight: 600,
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: authMode === 'signin' ? '#FFFFFF' : 'transparent',
+                backgroundColor: authMode === 'signin' ? '#FFF8E9' : 'transparent',
                 color: authMode === 'signin' ? 'var(--editorial-green)' : 'var(--editorial-text-muted)',
                 boxShadow: authMode === 'signin' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 cursor: 'pointer',
@@ -930,7 +930,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                 fontWeight: 600,
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
-                backgroundColor: authMode === 'signup' ? '#FFFFFF' : 'transparent',
+                backgroundColor: authMode === 'signup' ? '#FFF8E9' : 'transparent',
                 color: authMode === 'signup' ? 'var(--editorial-green)' : 'var(--editorial-text-muted)',
                 boxShadow: authMode === 'signup' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 cursor: 'pointer',
@@ -1205,7 +1205,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
               style={{
                 width: '460px',
                 maxWidth: '100%',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 borderRadius: 'var(--radius-xl)',
                 padding: '32px',
                 boxShadow: 'var(--shadow-xl)',
@@ -1236,7 +1236,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                     height: '52px',
                     borderRadius: '16px',
                     backgroundColor: '#24292F',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1260,7 +1260,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                     height: '52px',
                     borderRadius: '16px',
                     background: 'linear-gradient(135deg, var(--editorial-green), var(--editorial-border))',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1359,7 +1359,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             bottom: '30px',
             right: '30px',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             padding: '12px 20px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
@@ -1398,41 +1398,41 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             marginBottom: '36px'
           }}
         >
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--forest)' }}>
+          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--forest)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Book Titles</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '2px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '2px' }}>
               {overview.totalTitles}
             </div>
             <span style={{ fontSize: '0.74rem', color: 'var(--sage)' }}>Catalog volumes</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--botanical)' }}>
+          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--botanical)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Physical Copies</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '2px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '2px' }}>
               {overview.totalCopies}
             </div>
             <span style={{ fontSize: '0.74rem', color: 'var(--botanical)' }}>{overview.availableCopies} available</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid #B25E1A' }}>
+          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFF8E9', borderLeft: '4px solid #B25E1A' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Active Checkouts</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#B25E1A', marginTop: '2px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#B25E1A', marginTop: '2px' }}>
               {overview.activeLoans}
             </div>
             <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>In member hands</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid #C5221F' }}>
+          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFF8E9', borderLeft: '4px solid #C5221F' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Overdue Loans</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#C5221F', marginTop: '2px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#C5221F', marginTop: '2px' }}>
               {overview.overdueLoans}
             </div>
             <span style={{ fontSize: '0.74rem', color: '#C5221F' }}>Fine active ($1.00/day)</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--sage)' }}>
+          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFF8E9', borderLeft: '4px solid var(--sage)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Waiting Holds</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '2px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '2px' }}>
               {overview.pendingReservations}
             </div>
             <span style={{ fontSize: '0.74rem', color: 'var(--sage)' }}>In queue & pickup</span>
@@ -1448,7 +1448,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             {/* Left: Issue Book Form */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
                 padding: '28px',
@@ -1584,7 +1584,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             {/* Right: Quick Specimen of Currently Available Copies */}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
                 padding: '24px 28px',
@@ -1662,7 +1662,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           {/* Bottom: Complete Currently Borrowed Books Table (Borrow Options) */}
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
               padding: '28px',
@@ -1757,19 +1757,19 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             </td>
                             <td style={{ padding: '12px 14px' }}>
                               {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
-                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FCA5A5' }}>
                                   ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
                                 </span>
                               ) : (loan.warning_sent || loan.return_warning_active) ? (
-                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FCD34D' }}>
                                   ● RETURN WARNING SENT
                                 </span>
                               ) : isOverdue ? (
-                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                                <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FCA5A5' }}>
                                   ● OVERDUE (Fine: ${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
                                 </span>
                               ) : (
-                                <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>
                                   ● On Loan in Good Standing
                                 </span>
                               )}
@@ -1785,7 +1785,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                       padding: '4px 10px',
                                       fontSize: '0.74rem',
                                       backgroundColor: '#374151',
-                                      color: '#FFFFFF',
+                                      color: '#FFF8E9',
                                       border: 'none',
                                       fontWeight: 700,
                                       display: 'inline-flex',
@@ -1807,7 +1807,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                         padding: '4px 9px',
                                         fontSize: '0.73rem',
                                         backgroundColor: '#D97706',
-                                        color: '#FFFFFF',
+                                        color: '#FFF8E9',
                                         border: 'none',
                                         fontWeight: 600,
                                         display: 'inline-flex',
@@ -1828,7 +1828,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                         padding: '4px 9px',
                                         fontSize: '0.73rem',
                                         backgroundColor: '#B91C1C',
-                                        color: '#FFFFFF',
+                                        color: '#FFF8E9',
                                         border: 'none',
                                         fontWeight: 700,
                                         display: 'inline-flex',
@@ -1881,7 +1881,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
       {/* TAB 2: Process Returns & Overdue Fines */}
       {activeTab === 'return' && (
-        <div style={{ backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '28px', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ backgroundColor: '#FFF8E9', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '28px', boxShadow: 'var(--shadow-sm)' }}>
           <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
             CIRCULATION CHECK-IN &amp; RETURNS
           </span>
@@ -1902,8 +1902,8 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   fontWeight: 700,
                   cursor: 'pointer',
                   border: '1px solid var(--editorial-border)',
-                  backgroundColor: returnSubTab === 'active' ? 'var(--editorial-text)' : '#FFFFFF',
-                  color: returnSubTab === 'active' ? '#FFFFFF' : 'var(--editorial-text)'
+                  backgroundColor: returnSubTab === 'active' ? 'var(--editorial-text)' : '#FFF8E9',
+                  color: returnSubTab === 'active' ? '#FFF8E9' : 'var(--editorial-text)'
                 }}
               >
                 Pending Returns ({activeLoans.length})
@@ -1918,8 +1918,8 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   fontWeight: 700,
                   cursor: 'pointer',
                   border: '1px solid var(--editorial-border)',
-                  backgroundColor: returnSubTab === 'history' ? 'var(--editorial-text)' : '#FFFFFF',
-                  color: returnSubTab === 'history' ? '#FFFFFF' : 'var(--editorial-text)'
+                  backgroundColor: returnSubTab === 'history' ? 'var(--editorial-text)' : '#FFF8E9',
+                  color: returnSubTab === 'history' ? '#FFF8E9' : 'var(--editorial-text)'
                 }}
               >
                 Returned History ({returnedLoans.length})
@@ -1979,19 +1979,19 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
-                              <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #F87171' }}>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '6px', border: '1px solid #F87171' }}>
                                 ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
                               </span>
                             ) : (loan.warning_sent || loan.return_warning_active) ? (
-                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FCD34D' }}>
                                 ● RETURN WARNING SENT
                               </span>
                             ) : isOverdue ? (
-                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FCA5A5' }}>
                                 ● Overdue (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
                               </span>
                             ) : (
-                              <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>
                                 Active Loan
                               </span>
                             )}
@@ -2008,7 +2008,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                       padding: '5px 10px',
                                       fontSize: '0.74rem',
                                       backgroundColor: '#374151',
-                                      color: '#FFFFFF',
+                                      color: '#FFF8E9',
                                       border: 'none',
                                       fontWeight: 700,
                                       display: 'inline-flex',
@@ -2029,7 +2029,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                         padding: '5px 9px',
                                         fontSize: '0.73rem',
                                         backgroundColor: '#D97706',
-                                        color: '#FFFFFF',
+                                        color: '#FFF8E9',
                                         border: 'none',
                                         fontWeight: 600,
                                         display: 'inline-flex',
@@ -2050,7 +2050,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                         padding: '5px 10px',
                                         fontSize: '0.74rem',
                                         backgroundColor: '#B91C1C',
-                                        color: '#FFFFFF',
+                                        color: '#FFF8E9',
                                         border: 'none',
                                         fontWeight: 700,
                                         display: 'inline-flex',
@@ -2117,7 +2117,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           padding: '4px 7px',
                           border: '1px solid var(--editorial-border)',
                           borderRadius: 'var(--radius-sm)',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -2135,7 +2135,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           padding: '4px 8px',
                           border: '1px solid var(--editorial-border)',
                           borderRadius: 'var(--radius-sm)',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           cursor: 'pointer',
                           fontSize: '0.74rem',
                           fontWeight: 700,
@@ -2152,7 +2152,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           padding: '4px 7px',
                           border: '1px solid var(--editorial-border)',
                           borderRadius: 'var(--radius-sm)',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -2169,7 +2169,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   {/* Day of Week Headers */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
                     {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, idx) => (
-                      <div key={idx} style={{ fontSize: '0.70rem', fontWeight: 800, color: 'var(--editorial-text-muted)', textTransform: 'uppercase' }}>
+                      <div key={idx} style={{ fontSize: '0.70rem', fontWeight: 700, color: 'var(--editorial-text-muted)', textTransform: 'uppercase' }}>
                         {d}
                       </div>
                     ))}
@@ -2229,9 +2229,9 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                               ? 'var(--editorial-text)'
                               : hasReturns
                                 ? '#F0FDF4'
-                                : '#FFFFFF',
+                                : '#FFF8E9',
                             color: isSelected
-                              ? '#FFFFFF'
+                              ? '#FFF8E9'
                               : 'var(--editorial-text)',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
@@ -2245,11 +2245,11 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           {hasReturns && (
                             <span style={{
                               fontSize: '0.60rem',
-                              fontWeight: 800,
+                              fontWeight: 700,
                               padding: '1px 4px',
                               borderRadius: '6px',
-                              backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : '#16A34A',
-                              color: '#FFFFFF',
+                              backgroundColor: isSelected ? 'rgba(255, 248, 233,0.3)' : '#16A34A',
+                              color: '#FFF8E9',
                               lineHeight: '1.1'
                             }}>
                               {cell.returnCount}
@@ -2267,7 +2267,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       <span>Dates with return records ({datesWithReturns.length} active days)</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ width: '8px', height: '8px', border: '2px solid var(--editorial-accent)', borderRadius: '2px', display: 'inline-block' }} />
+                      <span style={{ width: '8px', height: '8px', border: '2px solid var(--editorial-accent)', borderRadius: '6px', display: 'inline-block' }} />
                       <span>Current date (Today)</span>
                     </div>
 
@@ -2279,8 +2279,8 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                         padding: '8px 12px',
                         borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--editorial-border)',
-                        backgroundColor: showAllReturnHistory ? 'var(--editorial-text)' : '#FFFFFF',
-                        color: showAllReturnHistory ? '#FFFFFF' : 'var(--editorial-text)',
+                        backgroundColor: showAllReturnHistory ? 'var(--editorial-text)' : '#FFF8E9',
+                        color: showAllReturnHistory ? '#FFF8E9' : 'var(--editorial-text)',
                         fontSize: '0.78rem',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -2300,7 +2300,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                 <div style={{
                   flex: '1 1 540px',
                   minWidth: '320px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   border: '1px solid var(--editorial-border)',
                   borderRadius: 'var(--radius-md)',
                   overflow: 'hidden',
@@ -2325,7 +2325,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                         </h4>
                         <span style={{
                           fontSize: '0.72rem',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           padding: '2px 8px',
                           borderRadius: '10px',
                           backgroundColor: displayedLoans.length > 0 ? '#DCFCE7' : '#F3F4F6',
@@ -2352,7 +2352,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           fontWeight: 600,
                           borderRadius: 'var(--radius-sm)',
                           border: '1px solid var(--editorial-border)',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#FFF8E9',
                           color: 'var(--editorial-text)',
                           cursor: 'pointer'
                         }}
@@ -2438,7 +2438,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                 {loan.return_date ? new Date(loan.return_date).toLocaleDateString() : new Date().toLocaleDateString()}
                               </td>
                               <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--editorial-border)' }}>
                                   ✓ Returned to Stacks
                                 </span>
                               </td>
@@ -2457,7 +2457,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
       {/* TAB 3: Waiting Users & Hold Queues */}
       {activeTab === 'reservations' && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
+        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFF8E9' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <Bookmark size={22} color="var(--editorial-accent)" />
             <h3 style={{ fontSize: '1.35rem', color: 'var(--forest-dark)', margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 700 }}>
@@ -2490,7 +2490,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
               </thead>
               <tbody>
                 {reservations.map(r => (
-                  <tr key={r.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
+                  <tr key={r.id} style={{ borderBottom: '1px solid rgba(82, 124, 120, 0.08)' }}>
                     <td style={{ padding: '12px 14px' }}>
                       <strong>{r.student_name}</strong>
                       <div style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>{r.membership_id}</div>
@@ -2504,7 +2504,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           borderRadius: '6px',
                           overflow: 'hidden',
                           backgroundColor: 'var(--warm-beige)',
-                          border: '1.5px solid var(--editorial-border)',
+                          border: '1px solid var(--retro-brown)',
                           boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                         }}>
                           <img
@@ -2523,11 +2523,11 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                           </div>
                           <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             {r.cover_image?.startsWith('/uploads') ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: 'var(--botanical)', fontWeight: 600, backgroundColor: 'rgba(82, 115, 77, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: 'var(--botanical)', fontWeight: 600, backgroundColor: 'rgba(82, 115, 77, 0.1)', padding: '2px 6px', borderRadius: '8px' }}>
                                 <Check size={11} /> Original Photo Active
                               </span>
                             ) : (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: '#B45309', fontWeight: 600, backgroundColor: 'rgba(217, 119, 6, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', color: '#B45309', fontWeight: 600, backgroundColor: 'rgba(217, 165, 46, 0.12)', padding: '2px 6px', borderRadius: '8px' }}>
                                 Standard Stock Image
                               </span>
                             )}
@@ -2541,10 +2541,10 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                                 gap: '4px',
                                 fontSize: '0.72rem',
                                 padding: '2px 8px',
-                                borderRadius: '4px',
+                                borderRadius: '8px',
                                 borderColor: 'var(--botanical)',
                                 color: 'var(--forest-dark)',
-                                backgroundColor: '#FFFFFF'
+                                backgroundColor: '#FFF8E9'
                               }}
                               title="Upload device photo to replace standard image for this book on hold"
                             >
@@ -2591,7 +2591,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '850px' }}>
           
           {/* Section A: Add Copies to Existing Book */}
-          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', borderLeft: '5px solid var(--botanical)' }}>
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFF8E9', borderLeft: '5px solid var(--botanical)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <CopyPlus size={22} color="var(--botanical)" />
               <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
@@ -2681,9 +2681,9 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       left: 0,
                       right: 0,
                       zIndex: 50,
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: '#FFF8E9',
                       border: '1px solid var(--editorial-border)',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                       maxHeight: '260px',
                       overflowY: 'auto',
@@ -2729,7 +2729,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             transition: 'background-color 0.1s ease'
                           }}
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--editorial-bg)'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFF8E9'}
                         >
                           <div>
                             <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--editorial-text)' }}>
@@ -2750,7 +2750,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
                 {/* Validation Error: Book not in catalog */}
                 {copyBookError && (
-                  <div style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '4px', color: '#991B1B', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#991B1B', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <AlertCircle size={16} />
                     <span>{copyBookError}</span>
                   </div>
@@ -2764,7 +2764,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       padding: '12px 14px',
                       backgroundColor: '#F0FDF4',
                       border: '1px solid #86EFAC',
-                      borderRadius: '4px',
+                      borderRadius: '8px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
@@ -2773,7 +2773,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           ✓ Catalog Book Verified
                         </span>
                       </div>
@@ -2785,7 +2785,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#15803D' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#15803D' }}>
                         Current Stock: {selectedCopyBook.available_copies}/{selectedCopyBook.total_copies}
                       </div>
                       <button
@@ -2856,7 +2856,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           </div>
 
           {/* Section B: Catalog New Book Title (Device Image Upload) */}
-          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF', borderLeft: '5px solid var(--forest)' }}>
+          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFF8E9', borderLeft: '5px solid var(--forest)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <Plus size={22} color="var(--forest)" />
               <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
@@ -3023,7 +3023,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   <img
                     src={imagePreview}
                     alt="Device upload preview"
-                    style={{ width: '56px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1.5px solid var(--editorial-border)' }}
+                    style={{ width: '56px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--retro-brown)' }}
                   />
                   <div>
                     <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
@@ -3066,7 +3066,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           </div>
 
           {/* Section C: Upload Photo of the Book Directly from Device */}
-          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', borderLeft: '5px solid #2A6F97' }}>
+          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFF8E9', borderLeft: '5px solid #2A6F97' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
               <Camera size={22} color="#2A6F97" />
               <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0 }}>
@@ -3097,7 +3097,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
               {inventoryPhotoPreview && (
                 <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', maxWidth: '480px' }}>
-                  <div style={{ width: '70px', height: '96px', borderRadius: '4px', overflow: 'hidden', border: '2px solid var(--editorial-green)', backgroundColor: '#FFF', flexShrink: 0 }}>
+                  <div style={{ width: '70px', height: '96px', borderRadius: '8px', overflow: 'hidden', border: '2px solid var(--editorial-green)', backgroundColor: '#FFF8E9', flexShrink: 0 }}>
                     <img
                       src={inventoryPhotoPreview}
                       alt="Device upload preview"
@@ -3134,7 +3134,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
       {/* TAB: Study Pods & Carrels Live Schedule (Read-Only Monitor) */}
       {activeTab === 'seats' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '24px 28px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ backgroundColor: '#FFF8E9', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '24px 28px', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--editorial-accent)', marginBottom: '4px' }}>
               <Armchair size={18} />
               <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
@@ -3153,13 +3153,13 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
               {/* Status summary pill indicators */}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', color: 'var(--editorial-green)' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', color: 'var(--editorial-green)' }}>
                   ● {seats.filter(s => s.effective_status === 'available').length} Available
                 </span>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', color: '#B45309' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', color: '#B45309' }}>
                   ● {seats.filter(s => s.effective_status === 'occupied').length} Booked / Occupied
                 </span>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
                   ● {seats.filter(s => s.effective_status === 'maintenance').length} Maintenance
                 </span>
               </div>
@@ -3168,7 +3168,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             {/* Filter controls */}
             <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', alignItems: 'center', marginTop: '18px', paddingTop: '16px', borderTop: '1px solid var(--editorial-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Floor:</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Floor:</span>
                 {['All', 'Floor 1', 'Floor 2'].map(f => (
                   <button
                     key={f}
@@ -3179,10 +3179,10 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       fontSize: '0.76rem',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      borderRadius: '2px',
+                      borderRadius: '6px',
                       border: '1px solid var(--editorial-border)',
-                      backgroundColor: seatFloorFilter === f ? 'var(--editorial-text)' : '#FFFFFF',
-                      color: seatFloorFilter === f ? '#FFFFFF' : 'var(--editorial-text)'
+                      backgroundColor: seatFloorFilter === f ? 'var(--editorial-text)' : '#FFF8E9',
+                      color: seatFloorFilter === f ? '#FFF8E9' : 'var(--editorial-text)'
                     }}
                   >
                     {f}
@@ -3191,7 +3191,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Status:</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Status:</span>
                 {['All', 'Available', 'Occupied'].map(st => (
                   <button
                     key={st}
@@ -3202,10 +3202,10 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                       fontSize: '0.76rem',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      borderRadius: '2px',
+                      borderRadius: '6px',
                       border: '1px solid var(--editorial-border)',
-                      backgroundColor: seatStatusFilter.toLowerCase() === st.toLowerCase() ? 'var(--editorial-text)' : '#FFFFFF',
-                      color: seatStatusFilter.toLowerCase() === st.toLowerCase() ? '#FFFFFF' : 'var(--editorial-text)'
+                      backgroundColor: seatStatusFilter.toLowerCase() === st.toLowerCase() ? 'var(--editorial-text)' : '#FFF8E9',
+                      color: seatStatusFilter.toLowerCase() === st.toLowerCase() ? '#FFF8E9' : 'var(--editorial-text)'
                     }}
                   >
                     {st}
@@ -3236,7 +3236,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   style={{
                     padding: '48px 24px',
                     textAlign: 'center',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     borderRadius: 'var(--radius-sm)'
                   }}
@@ -3272,7 +3272,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                     <div
                       key={seat.id || seat._id}
                       style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#FFF8E9',
                         border: '1px solid var(--editorial-border)',
                         borderTop: isAvail
                           ? '3px solid var(--editorial-green)'
@@ -3304,12 +3304,12 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             <span className="badge badge-available">● Available</span>
                           )}
                           {isOccupied && (
-                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B45309', backgroundColor: '#FEF3C7', padding: '3px 8px', borderRadius: '4px', border: '1px solid #FCD34D' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B45309', backgroundColor: '#FEF3C7', padding: '3px 8px', borderRadius: '8px', border: '1px solid #FCD34D' }}>
                               ● Booked
                             </span>
                           )}
                           {isMaint && (
-                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '3px 8px', borderRadius: '4px', border: '1px solid #FCA5A5' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '3px 8px', borderRadius: '8px', border: '1px solid #FCA5A5' }}>
                               ● Maintenance
                             </span>
                           )}
@@ -3318,12 +3318,12 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                         {/* Features */}
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
                           {seat.has_power === 1 && (
-                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               <Zap size={10} /> Power
                             </span>
                           )}
                           {seat.has_monitor === 1 && (
-                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '6px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               <Monitor size={10} /> Screen
                             </span>
                           )}
@@ -3335,7 +3335,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             style={{
                               backgroundColor: '#FFFBEB',
                               border: '1px solid #FDE68A',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               padding: '12px 14px',
                               display: 'flex',
                               flexDirection: 'column',
@@ -3375,7 +3375,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             style={{
                               backgroundColor: 'var(--editorial-bg-subtle)',
                               border: '1px solid var(--editorial-border)',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               padding: '10px 12px',
                               display: 'flex',
                               alignItems: 'center',
@@ -3393,7 +3393,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                             style={{
                               backgroundColor: '#FEE2E2',
                               border: '1px solid #FCA5A5',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               padding: '10px 12px',
                               fontSize: '0.78rem',
                               color: '#991B1B',
@@ -3422,7 +3422,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
       {/* TAB: Unified Message Admin & Restock Messenger */}
       {activeTab === 'adminmsg' && (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="bio-card" style={{ padding: '32px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div className="bio-card" style={{ padding: '32px', backgroundColor: '#FFF8E9', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--editorial-accent)', marginBottom: '8px' }}>
               <Send size={18} />
               <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Direct Staff Dispatch</span>
@@ -3531,7 +3531,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
       {/* TAB 6: Broadcast Library Announcement */}
       {activeTab === 'announcement' && (
         <div style={{ maxWidth: '640px' }}>
-          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF' }}>
+          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFF8E9' }}>
             <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
               Broadcast Library Announcement
             </h3>
@@ -3593,11 +3593,11 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
           padding: '20px'
         }}>
           <div className="bio-card" style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             width: '100%',
             maxWidth: '520px',
             padding: '28px',
-            border: '1.5px solid var(--editorial-border)',
+            border: '1px solid var(--retro-brown)',
             boxShadow: 'var(--shadow-xl)',
             position: 'relative'
           }}>
@@ -3626,7 +3626,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', padding: '14px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '10px', marginBottom: '18px' }}>
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--muted-text)', fontWeight: 600, marginBottom: '4px' }}>CURRENT:</div>
-                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1.5px solid var(--editorial-border)', backgroundColor: '#FFF' }}>
+                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--retro-brown)', backgroundColor: '#FFF8E9' }}>
                   <img
                     src={resolveBookCoverUrl(photoModalBook.cover_image, photoModalBook.title, photoModalBook.author, photoModalBook.category)}
                     alt={photoModalBook.title}
@@ -3640,7 +3640,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
 
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--botanical)', fontWeight: 700, marginBottom: '4px' }}>NEW ORIGINAL PHOTO:</div>
-                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--botanical)', backgroundColor: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '60px', height: '80px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--botanical)', backgroundColor: '#FFF8E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {modalPhotoPreview ? (
                     <img
                       src={modalPhotoPreview}

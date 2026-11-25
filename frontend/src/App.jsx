@@ -808,7 +808,7 @@ function AppContent() {
             style={{
               width: '460px',
               maxWidth: '100%',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               padding: '32px 28px',
               border: '2px solid #DC2626',
@@ -845,7 +845,7 @@ function AppContent() {
                 fontSize: '1.45rem',
                 color: 'var(--editorial-text)',
                 margin: '4px 0 8px',
-                fontWeight: 800
+                fontWeight: 700
               }}
             >
               Loan Overdue Penalty Notice
@@ -863,7 +863,7 @@ function AppContent() {
                 padding: '12px',
                 backgroundColor: '#F9FAFB',
                 borderRadius: '8px',
-                border: '1.5px solid var(--editorial-border)',
+                border: '1px solid var(--retro-brown)',
                 display: 'inline-block',
                 marginBottom: '16px',
                 boxShadow: 'var(--shadow-sm)'

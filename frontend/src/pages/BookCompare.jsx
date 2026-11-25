@@ -134,7 +134,7 @@ export default function BookCompare({
               bottom: '30px',
               right: '30px',
               backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
-              color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
+              color: toastMessage.isError ? '#FFF8E9' : 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-card)',
               padding: '12px 20px',
@@ -143,7 +143,7 @@ export default function BookCompare({
               alignItems: 'center',
               gap: '8px',
               fontSize: '0.88rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase'
             }}
           >
@@ -198,7 +198,7 @@ export default function BookCompare({
           <div
             style={{
               padding: '16px 20px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)',
               marginBottom: '32px',
@@ -208,7 +208,7 @@ export default function BookCompare({
               flexWrap: 'wrap'
             }}
           >
-            <span style={{ fontSize: '0.88rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)' }}>
               Add Book to Comparison ({books.length}/3 selected):
             </span>
             <select
@@ -244,14 +244,14 @@ export default function BookCompare({
 
         {/* Comparison Content */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase' }}>
             Loading comparison data from library catalog...
           </div>
         ) : books.length === 0 ? (
           <div
             style={{
               padding: '48px 24px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)',
               textAlign: 'center'
@@ -260,7 +260,7 @@ export default function BookCompare({
             <div style={{ marginBottom: '14px' }}>
               <GitCompare size={36} color="var(--editorial-accent)" strokeWidth={2.4} />
             </div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', marginBottom: '8px' }}>
               No Books Selected for Comparison
             </h3>
             <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '0.92rem', color: 'var(--editorial-text)', opacity: 0.85, fontWeight: 500 }}>
@@ -287,7 +287,7 @@ export default function BookCompare({
               <div
                 style={{
                   padding: '16px',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   color: 'var(--editorial-text)',
                   display: 'flex',
@@ -305,7 +305,7 @@ export default function BookCompare({
                   key={b.id}
                   style={{
                     padding: '20px',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: 'var(--shadow-card)',
                     display: 'flex',
@@ -324,7 +324,7 @@ export default function BookCompare({
                       width: '28px',
                       height: '28px',
                       border: '1px solid var(--editorial-border)',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: '#FFF8E9',
                       boxShadow: 'var(--shadow-sm)',
                       cursor: 'pointer',
                       display: 'flex',
@@ -344,7 +344,7 @@ export default function BookCompare({
                       backgroundColor: 'var(--editorial-border)',
                       color: 'var(--editorial-text)',
                       fontSize: '0.74rem',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       padding: '3px 8px',
                       border: '1px solid var(--editorial-border)',
@@ -359,9 +359,9 @@ export default function BookCompare({
                     <div style={{
                       marginBottom: '8px',
                       backgroundColor: 'var(--editorial-green)',
-                      color: '#FFFFFF',
+                      color: '#FFF8E9',
                       fontSize: '0.74rem',
-                      fontWeight: 900,
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       padding: '3px 8px',
                       border: '1px solid var(--editorial-border)',
@@ -385,7 +385,7 @@ export default function BookCompare({
                     />
                   </div>
 
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px', lineHeight: 1.3 }}>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px', lineHeight: 1.3 }}>
                     {b.title}
                   </h3>
                   <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '14px', fontWeight: 600 }}>
@@ -446,38 +446,38 @@ export default function BookCompare({
               ))}
 
               {/* Row 2: Category & Subject */}
-              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '16px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
                 Category
               </div>
               {books.map(b => (
-                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
                   <span className="badge badge-category">{b.category}</span>
                 </div>
               ))}
 
               {/* Row 3: Shelf Location */}
-              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '16px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapPin size={16} color="var(--editorial-accent)" strokeWidth={2.4} /> Shelf Stack
                 </div>
               </div>
               {books.map(b => (
                 <div key={b.id} style={{ padding: '16px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.94rem' }}>
+                  <div style={{ fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.94rem' }}>
                     {b.floor} • {b.section}
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--editorial-green)', fontWeight: 800, marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--editorial-green)', fontWeight: 700, marginTop: '2px' }}>
                     {b.shelf} ({b.rack})
                   </div>
                 </div>
               ))}
 
               {/* Row 4: Live Availability */}
-              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '16px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
                 Availability
               </div>
               {books.map(b => (
-                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
                   {b.available_copies > 0 ? (
                     <div>
                       <span className="badge badge-available">
@@ -501,12 +501,12 @@ export default function BookCompare({
               ))}
 
               {/* Row 5: Publication Year & Edition */}
-              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '16px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
                 Edition & Year
               </div>
               {books.map(b => (
-                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ fontWeight: 800, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.9rem' }}>
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', fontSize: '0.9rem' }}>
                     {b.edition || '1st Edition'}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>
@@ -519,11 +519,11 @@ export default function BookCompare({
               ))}
 
               {/* Row 6: Synopsis & Topics */}
-              <div style={{ padding: '16px', fontWeight: 900, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '16px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--editorial-text)', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', fontSize: '0.85rem' }}>
                 Description
               </div>
               {books.map(b => (
-                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+                <div key={b.id} style={{ padding: '16px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
                   <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                     {b.description ? (b.description.length > 220 ? `${b.description.substring(0, 220)}...` : b.description) : 'No description available.'}
                   </p>

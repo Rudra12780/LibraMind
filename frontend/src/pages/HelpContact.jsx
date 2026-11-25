@@ -109,49 +109,49 @@ export default function HelpContact({ onNavigate }) {
             marginBottom: '48px'
           }}
         >
-          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
               <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Phone size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Front Desk Hotline</strong>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Front Desk Hotline</strong>
                 <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Direct desk phone line</span>
               </div>
             </div>
-            <p style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
+            <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
               +1 (800) 555-LIBRA
             </p>
             <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>Active during all open hours</span>
           </div>
 
-          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-green)' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-green)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
               <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Mail size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Circulation Email</strong>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Circulation Email</strong>
                 <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Response within 12h</span>
               </div>
             </div>
-            <p style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
+            <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--editorial-text)', margin: '0 0 4px', letterSpacing: '0.02em' }}>
               support@libramind.edu
             </p>
             <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>For research & hold inquiries</span>
           </div>
 
-          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
+          <div style={{ padding: '24px', backgroundColor: '#FFF8E9', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-card)', borderTop: '6px solid var(--editorial-accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
               <div style={{ width: '42px', height: '42px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--editorial-accent)' }}>
                 <Clock size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 900, textTransform: 'uppercase' }}>Desk Hours</strong>
+                <strong style={{ color: 'var(--editorial-text)', fontSize: '1rem', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Desk Hours</strong>
                 <span style={{ fontSize: '0.82rem', color: 'var(--editorial-text)', opacity: 0.8, fontWeight: 600 }}>Physical staff presence</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.92rem', fontWeight: 900, color: 'var(--editorial-text)', margin: '0 0 4px', textTransform: 'uppercase' }}>
+            <p style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--editorial-text)', margin: '0 0 4px', textTransform: 'uppercase' }}>
               Mon – Fri: 08:00 – 22:00
             </p>
             <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text)', opacity: 0.75, fontWeight: 600 }}>Sat – Sun: 09:00 – 20:00</span>
@@ -169,7 +169,7 @@ export default function HelpContact({ onNavigate }) {
         >
           {/* FAQ Accordion */}
           <div>
-            <h2 style={{ fontSize: '1.6rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '1.6rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
               Frequently Asked Questions
             </h2>
             <p style={{ color: 'var(--editorial-text)', opacity: 0.85, fontSize: '0.9rem', marginBottom: '20px', fontWeight: 500 }}>
@@ -181,7 +181,7 @@ export default function HelpContact({ onNavigate }) {
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: activeFaq === idx ? '4px 4px 0px var(--editorial-text)' : '2px 2px 0px var(--editorial-text)',
                     overflow: 'hidden'
@@ -192,7 +192,7 @@ export default function HelpContact({ onNavigate }) {
                     style={{
                       width: '100%',
                       padding: '16px 20px',
-                      background: activeFaq === idx ? 'var(--editorial-border)' : '#FFFFFF',
+                      background: activeFaq === idx ? 'var(--editorial-border)' : '#FFF8E9',
                       border: 'none',
                       textAlign: 'left',
                       display: 'flex',
@@ -202,7 +202,7 @@ export default function HelpContact({ onNavigate }) {
                       gap: '12px'
                     }}
                   >
-                    <span style={{ fontWeight: 800, color: 'var(--editorial-text)', fontSize: '0.95rem', textTransform: 'uppercase' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.95rem', textTransform: 'uppercase' }}>
                       {faq.q}
                     </span>
                     {activeFaq === idx ? (
@@ -220,7 +220,7 @@ export default function HelpContact({ onNavigate }) {
                         color: 'var(--editorial-text)',
                         lineHeight: 1.6,
                         borderTop: '1px solid var(--editorial-border)',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#FFF8E9',
                         fontWeight: 500
                       }}
                     >
@@ -236,12 +236,12 @@ export default function HelpContact({ onNavigate }) {
           <div
             style={{
               padding: '32px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)'
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>
+            <h2 style={{ fontSize: '1.5rem', color: 'var(--editorial-text)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
               Send an Inquiry
             </h2>
             <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '20px', fontWeight: 500 }}>
@@ -259,7 +259,7 @@ export default function HelpContact({ onNavigate }) {
                 }}
               >
                 <CheckCircle size={32} color="var(--editorial-text)" strokeWidth={2.4} style={{ margin: '0 auto 10px' }} />
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', margin: '0 0 6px' }}>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, textTransform: 'uppercase', margin: '0 0 6px' }}>
                   Inquiry Dispatched!
                 </h4>
                 <p style={{ fontSize: '0.88rem', margin: 0, fontWeight: 600 }}>
@@ -269,7 +269,7 @@ export default function HelpContact({ onNavigate }) {
             ) : (
               <form onSubmit={handleSubmit}>
                 <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Your Name</label>
+                  <label className="form-label" style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}>Your Name</label>
                   <input
                     type="text"
                     required
@@ -281,7 +281,7 @@ export default function HelpContact({ onNavigate }) {
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Registered Email</label>
+                  <label className="form-label" style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}>Registered Email</label>
                   <input
                     type="email"
                     required
@@ -293,7 +293,7 @@ export default function HelpContact({ onNavigate }) {
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Category</label>
+                  <label className="form-label" style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}>Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -308,7 +308,7 @@ export default function HelpContact({ onNavigate }) {
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Subject</label>
+                  <label className="form-label" style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}>Subject</label>
                   <input
                     type="text"
                     required
@@ -320,7 +320,7 @@ export default function HelpContact({ onNavigate }) {
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label" style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Message Details</label>
+                  <label className="form-label" style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}>Message Details</label>
                   <textarea
                     rows={4}
                     required

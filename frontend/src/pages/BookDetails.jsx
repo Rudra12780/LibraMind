@@ -477,7 +477,7 @@ export default function BookDetails({
             maxWidth: '420px',
             marginLeft: 'auto',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             padding: '12px 20px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
@@ -530,7 +530,7 @@ export default function BookDetails({
             className="bio-card"
             style={{
               padding: isMobile ? '12px' : '16px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               marginBottom: isMobile ? '14px' : '20px'
             }}
           >
@@ -541,7 +541,7 @@ export default function BookDetails({
                 overflow: 'hidden',
                 height: isMobile ? '260px' : '420px',
                 backgroundColor: 'var(--warm-beige)',
-                boxShadow: '0 8px 20px rgba(52, 78, 65, 0.1)'
+                boxShadow: '0 8px 20px rgba(82, 124, 120, 0.1)'
               }}
             >
               <img
@@ -562,8 +562,8 @@ export default function BookDetails({
                     fontSize: '0.74rem',
                     fontWeight: 700,
                     padding: '2px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: book.cover_image?.startsWith('/uploads') ? 'rgba(82, 115, 77, 0.12)' : 'rgba(217, 119, 6, 0.12)',
+                    borderRadius: '8px',
+                    backgroundColor: book.cover_image?.startsWith('/uploads') ? 'rgba(82, 115, 77, 0.12)' : 'rgba(217, 165, 46, 0.12)',
                     color: book.cover_image?.startsWith('/uploads') ? 'var(--botanical)' : '#B45309'
                   }}>
                     {book.cover_image?.startsWith('/uploads') ? '● Original Photo Uploaded' : '● Standard Stock Photo'}
@@ -582,7 +582,7 @@ export default function BookDetails({
                     padding: '8px 12px',
                     borderColor: 'var(--botanical)',
                     color: 'var(--forest-dark)',
-                    backgroundColor: '#FFFFFF'
+                    backgroundColor: '#FFF8E9'
                   }}
                 >
                   <Upload size={14} color="var(--botanical)" />
@@ -607,7 +607,7 @@ export default function BookDetails({
             className="bio-card"
             style={{
               padding: '20px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px'
@@ -633,7 +633,7 @@ export default function BookDetails({
                     width: '46px',
                     height: '46px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(38, 61, 50, 0.08)',
+                    backgroundColor: 'rgba(52, 39, 31, 0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -647,7 +647,7 @@ export default function BookDetails({
                   <span
                     style={{
                       fontSize: '0.68rem',
-                      fontWeight: 800,
+                      fontWeight: 700,
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
                       color: 'var(--editorial-accent)'
@@ -737,7 +737,7 @@ export default function BookDetails({
                       className="btn btn-secondary btn-sm"
                       style={{
                         backgroundColor: 'var(--editorial-accent)',
-                        color: '#FFFFFF',
+                        color: '#FFF8E9',
                         fontWeight: 700,
                         padding: isMobile ? '8px 4px' : '8px 6px',
                         minWidth: 0,
@@ -794,7 +794,7 @@ export default function BookDetails({
                     style={{
                       fontSize: '0.70rem',
                       color: 'var(--editorial-text-muted)',
-                      backgroundColor: 'rgba(38, 61, 50, 0.05)',
+                      backgroundColor: 'rgba(52, 39, 31, 0.05)',
                       padding: '8px 10px',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px dashed var(--editorial-border)',
@@ -975,7 +975,7 @@ export default function BookDetails({
                       boxSizing: 'border-box'
                     }}
                   >
-                    <Heart size={13} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'currentColor'} style={{ flexShrink: 0 }} />
+                    <Heart size={13} fill={isWishlisted ? '#FFF8E9' : 'none'} color={isWishlisted ? '#FFF8E9' : 'currentColor'} style={{ flexShrink: 0 }} />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isWishlisted ? 'In Wishlist' : 'Add Wishlist'}</span>
                   </button>
 
@@ -1065,7 +1065,7 @@ export default function BookDetails({
             )}
           </div>
 
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1.5rem' : 'clamp(2rem, 3.2vw, 2.7rem)', fontWeight: 800, color: 'var(--editorial-text)', marginBottom: '8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1.5rem' : 'clamp(2rem, 3.2vw, 2.7rem)', fontWeight: 700, color: 'var(--editorial-text)', marginBottom: '8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
             {book.title}
           </h1>
 
@@ -1101,7 +1101,7 @@ export default function BookDetails({
                 gap: '10px'
               }}
             >
-              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+              <div style={{ backgroundColor: '#FFF8E9', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
                 <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Floor Level
                 </span>
@@ -1110,7 +1110,7 @@ export default function BookDetails({
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+              <div style={{ backgroundColor: '#FFF8E9', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
                 <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Section
                 </span>
@@ -1119,7 +1119,7 @@ export default function BookDetails({
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+              <div style={{ backgroundColor: '#FFF8E9', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
                 <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Shelf Code
                 </span>
@@ -1128,7 +1128,7 @@ export default function BookDetails({
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+              <div style={{ backgroundColor: '#FFF8E9', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
                 <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Rack Unit
                 </span>
@@ -1156,7 +1156,7 @@ export default function BookDetails({
               gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(170px, 1fr))',
               gap: isMobile ? '10px' : '16px',
               padding: isMobile ? '14px 12px' : '20px 24px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
               marginBottom: isMobile ? '24px' : '36px',
@@ -1197,7 +1197,7 @@ export default function BookDetails({
             )}
             <div
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFF8E9',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
                 overflowX: 'auto',
@@ -1241,7 +1241,7 @@ export default function BookDetails({
                         </td>
                         <td style={{ padding: isMobile ? '8px 10px' : '12px 16px' }}>
                           {isMyCopy ? (
-                            <span className="badge" style={{ backgroundColor: 'var(--editorial-green)', color: '#FFFFFF', fontWeight: 700, fontSize: '0.70rem' }}>
+                            <span className="badge" style={{ backgroundColor: 'var(--editorial-green)', color: '#FFF8E9', fontWeight: 700, fontSize: '0.70rem' }}>
                               ✓ In Your Possession
                             </span>
                           ) : copy.status === 'available' ? (
@@ -1340,7 +1340,7 @@ export default function BookDetails({
               width: '460px',
               maxWidth: 'calc(100vw - 32px)',
               boxSizing: 'border-box',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               padding: isMobile ? '20px 16px' : '32px',
               border: '1px solid var(--editorial-border)',
               borderRadius: 'var(--radius-sm)',
@@ -1351,7 +1351,7 @@ export default function BookDetails({
             <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
               STAFF CIRCULATION
             </span>
-            <h3 style={{ fontSize: '1.35rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.35rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Issue Physical Volume
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
@@ -1434,7 +1434,7 @@ export default function BookDetails({
               width: '420px',
               maxWidth: 'calc(100vw - 32px)',
               boxSizing: 'border-box',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               padding: isMobile ? '24px 18px' : '34px 28px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
@@ -1453,7 +1453,7 @@ export default function BookDetails({
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px',
-                color: '#FFFFFF'
+                color: '#FFF8E9'
               }}
             >
               <BookOpen size={24} strokeWidth={2.2} />
@@ -1462,7 +1462,7 @@ export default function BookDetails({
             <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
               PATRON SANCTUARY
             </span>
-            <h3 style={{ fontSize: '1.45rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.45rem', margin: '4px 0 8px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Sign In to Continue
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', marginBottom: '22px', lineHeight: 1.5 }}>

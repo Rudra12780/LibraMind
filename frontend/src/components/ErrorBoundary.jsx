@@ -35,7 +35,7 @@ export default class ErrorBoundary extends React.Component {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '40px 20px',
-            backgroundColor: 'var(--cream, #FAF8F1)'
+            backgroundColor: 'var(--cream, #FFF8E9)'
           }}
         >
           <div
@@ -43,10 +43,10 @@ export default class ErrorBoundary extends React.Component {
             style={{
               width: '540px',
               maxWidth: '100%',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: '20px',
               padding: '36px',
-              boxShadow: '0 12px 32px rgba(52, 78, 65, 0.12)',
+              boxShadow: '0 12px 32px rgba(82, 124, 120, 0.12)',
               border: '1px solid rgba(82, 115, 77, 0.2)',
               textAlign: 'center'
             }}
@@ -56,7 +56,7 @@ export default class ErrorBoundary extends React.Component {
                 width: '64px',
                 height: '64px',
                 borderRadius: '18px',
-                backgroundColor: 'rgba(217, 119, 6, 0.12)',
+                backgroundColor: 'rgba(217, 165, 46, 0.12)',
                 color: '#D97706',
                 display: 'flex',
                 alignItems: 'center',
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends React.Component {
                 backgroundColor: 'var(--soft-sage-light, #E8EDE6)',
                 color: 'var(--forest-dark, #24352B)',
                 fontSize: '0.72rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 padding: '4px 12px',

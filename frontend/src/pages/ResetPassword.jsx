@@ -117,7 +117,7 @@ export default function ResetPassword({ onNavigate }) {
         style={{
           width: '500px',
           maxWidth: '100%',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           padding: '40px',
           borderRadius: 'var(--radius-xl)',
           border: '1px solid var(--editorial-border)',
@@ -154,7 +154,7 @@ export default function ResetPassword({ onNavigate }) {
               margin: '0 auto 16px'
             }}
           >
-            <Lock size={28} color="#FFFFFF" strokeWidth={2.2} />
+            <Lock size={28} color="#FFF8E9" strokeWidth={2.2} />
           </div>
 
           <div
@@ -260,7 +260,7 @@ export default function ResetPassword({ onNavigate }) {
                   width: '52px',
                   height: '52px',
                   borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   color: 'var(--editorial-green)',
                   border: '1px solid var(--editorial-border)',
                   boxShadow: 'var(--shadow-sm)',

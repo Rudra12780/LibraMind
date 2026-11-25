@@ -50,7 +50,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(35, 52, 43, 0.75)',
+        backgroundColor: 'rgba(52, 39, 31, 0.80)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         zIndex: 9999,
@@ -63,7 +63,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
     >
       <div
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           width: '100%',
           maxWidth: '1000px',
           maxHeight: '90vh',
@@ -92,9 +92,9 @@ export default function BlueprintModal({ isOpen, onClose }) {
               <span
                 style={{
                   background: 'var(--editorial-text)',
-                  color: '#FFFFFF',
+                  color: '#FFF8E9',
                   fontSize: '0.68rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   padding: '2px 8px',
                   border: '1px solid var(--editorial-text)',
                   letterSpacing: '0.05em',
@@ -127,7 +127,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
               height: '36px',
               borderRadius: '50%',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -145,7 +145,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
         <div
           style={{
             padding: '14px 28px',
-            backgroundColor: '#FAF5EC',
+            backgroundColor: '#F5EBD7',
             borderBottom: '1px solid var(--subtle-border)',
             display: 'flex',
             alignItems: 'center',
@@ -163,7 +163,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
                 padding: '8px 14px',
                 fontSize: '0.82rem',
                 gap: '6px',
-                boxShadow: '0 2px 8px rgba(52, 78, 65, 0.2)'
+                boxShadow: '0 2px 8px rgba(82, 124, 120, 0.2)'
               }}
             >
               <Download size={14} /> Download Markdown (.md)
@@ -190,7 +190,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
                 padding: '8px 14px',
                 fontSize: '0.82rem',
                 gap: '6px',
-                backgroundColor: '#FFFFFF'
+                backgroundColor: '#FFF8E9'
               }}
             >
               <Printer size={14} /> Print / Save as PDF
@@ -207,7 +207,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
               fontSize: '0.80rem',
               fontWeight: 600,
               color: copied ? 'var(--status-available-text)' : 'var(--forest-dark)',
-              backgroundColor: copied ? 'var(--status-available-bg)' : '#FFFFFF',
+              backgroundColor: copied ? 'var(--status-available-bg)' : '#FFF8E9',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
@@ -226,7 +226,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
             flex: 1,
             overflowY: 'auto',
             padding: '24px 28px',
-            backgroundColor: '#FFFFFF'
+            backgroundColor: '#FFF8E9'
           }}
         >
           <pre
@@ -238,7 +238,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
               color: 'var(--forest-dark)',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
-              backgroundColor: '#FAF8F1',
+              backgroundColor: '#FFF8E9',
               padding: '20px',
               borderRadius: '12px',
               border: '1px solid var(--editorial-border)'
@@ -252,7 +252,7 @@ export default function BlueprintModal({ isOpen, onClose }) {
         <div
           style={{
             padding: '12px 28px',
-            backgroundColor: '#FAF8F1',
+            backgroundColor: '#FFF8E9',
             borderTop: '1px solid var(--subtle-border)',
             display: 'flex',
             alignItems: 'center',

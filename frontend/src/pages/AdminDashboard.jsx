@@ -360,7 +360,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           style={{
             width: '480px',
             maxWidth: '100%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: '#FFF8E9',
             padding: '38px',
             borderRadius: '20px',
             boxShadow: 'var(--shadow-xl)',
@@ -389,7 +389,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               backgroundColor: '#FCE8E6',
               color: '#C5221F',
               fontSize: '0.74rem',
-              fontWeight: 800,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               padding: '3px 12px',
@@ -444,7 +444,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             bottom: '30px',
             right: '30px',
             backgroundColor: toastMessage.isError ? '#C5221F' : 'var(--forest)',
-            color: '#FFFFFF',
+            color: '#FFF8E9',
             padding: '12px 20px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
@@ -485,11 +485,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               maxHeight: '90vh',
               overflowY: 'auto',
               margin: 'auto',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
               position: 'relative',
-              border: '1.5px solid var(--editorial-border)'
+              border: '1px solid var(--retro-brown)'
             }}
           >
             <button
@@ -517,7 +517,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FAF8F1'
+                  color: '#FFF8E9'
                 }}
               >
                 <UserPlus size={22} />
@@ -638,10 +638,10 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               maxHeight: '90vh',
               overflowY: 'auto',
               margin: 'auto',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
-              border: '1.5px solid var(--editorial-border)',
+              border: '1px solid var(--retro-brown)',
               position: 'relative'
             }}
           >
@@ -670,7 +670,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FAF8F1'
+                  color: '#FFF8E9'
                 }}
               >
                 <BookPlus size={22} />
@@ -878,8 +878,8 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               maxHeight: '90vh',
               overflowY: 'auto',
               margin: 'auto',
-              backgroundColor: '#FFFFFF',
-              border: '1.5px solid var(--editorial-border)',
+              backgroundColor: '#FFF8E9',
+              border: '1px solid var(--retro-brown)',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
               position: 'relative'
@@ -1002,7 +1002,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', fontSize: '0.84rem', fontWeight: 700, textTransform: 'uppercase' }}>
             <Shield size={16} /> Security & System Governance
-            <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '2px', color: 'var(--editorial-accent)' }}>
+            <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '6px', color: 'var(--editorial-accent)' }}>
               SOVEREIGN ARCHIVE
             </span>
           </div>
@@ -1037,7 +1037,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           marginBottom: '36px'
         }}
       >
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <Database size={20} color="var(--forest)" />
             <strong style={{ fontSize: '1rem', color: 'var(--forest-dark)' }}>Database Engine</strong>
@@ -1047,7 +1047,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           </p>
         </div>
 
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <Key size={20} color="var(--botanical)" />
             <strong style={{ fontSize: '1rem', color: 'var(--forest-dark)' }}>Role-Based Access Control</strong>
@@ -1057,7 +1057,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           </p>
         </div>
 
-        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF' }}>
+        <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <Download size={20} color="var(--sage)" />
             <strong style={{ fontSize: '1rem', color: 'var(--forest-dark)' }}>Data Export</strong>
@@ -1077,11 +1077,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
         {/* 4 Reading Velocity Metrics Cards (Overview) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFF8E9', border: '1px solid var(--retro-brown)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Daily Books Read
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {overviewData?.dailyBooksRead || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>books/day</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--botanical)' }}>
@@ -1089,11 +1089,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFF8E9', border: '1px solid var(--retro-brown)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Est. Reading Velocity
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {overviewData?.avgDailyVelocity || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>daily cap</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--muted-text)' }}>
@@ -1101,11 +1101,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFF8E9', border: '1px solid var(--retro-brown)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Active Student Readers
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {users.filter(u => u.role === 'student').length} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>students</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--muted-text)' }}>
@@ -1113,11 +1113,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFFFFF', border: '1.5px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: '#FFF8E9', border: '1px solid var(--retro-brown)', boxShadow: 'var(--shadow-sm)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Copies Needing Restock
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: overviewData?.popularBooks?.some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: overviewData?.popularBooks?.some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
               {overviewData?.popularBooks?.filter(b => b.available_copies <= 1).length || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>titles</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#C5221F' }}>
@@ -1131,7 +1131,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           <div
             onClick={() => { setActiveTab('users'); if (onNavigate) onNavigate('admin', { tab: 'users' }); }}
             className="bio-card"
-            style={{ padding: '24px', backgroundColor: '#FFFFFF', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--forest)' }}
+            style={{ padding: '24px', backgroundColor: '#FFF8E9', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--forest)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
@@ -1151,7 +1151,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           <div
             onClick={() => { setActiveTab('inventory'); if (onNavigate) onNavigate('admin', { tab: 'inventory' }); }}
             className="bio-card"
-            style={{ padding: '24px', backgroundColor: '#FFFFFF', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--botanical)' }}
+            style={{ padding: '24px', backgroundColor: '#FFF8E9', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--botanical)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
@@ -1171,7 +1171,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           <div
             onClick={() => { if (onNavigate) onNavigate('analytics'); }}
             className="bio-card"
-            style={{ padding: '24px', backgroundColor: '#FFFFFF', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--forest)' }}
+            style={{ padding: '24px', backgroundColor: '#FFF8E9', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--forest)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
@@ -1193,7 +1193,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
       {/* TAB 2: Inventory & Velocity */}
       {activeTab === 'inventory' && (
-      <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF', marginBottom: '36px', borderLeft: '5px solid var(--forest)' }}>
+      <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFF8E9', marginBottom: '36px', borderLeft: '5px solid var(--forest)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase' }}>
@@ -1216,11 +1216,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
 
         {/* 4 Reading Velocity Metrics Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--retro-brown)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Daily Books Read
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {overviewData?.dailyBooksRead || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>books/day</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--botanical)' }}>
@@ -1228,11 +1228,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--retro-brown)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Est. Reading Velocity
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {overviewData?.avgDailyVelocity || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>daily cap</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--muted-text)' }}>
@@ -1240,11 +1240,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--retro-brown)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Active Student Readers
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '4px' }}>
               {users.filter(u => u.role === 'student').length} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>students</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: 'var(--muted-text)' }}>
@@ -1252,11 +1252,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </p>
           </div>
 
-          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1.5px solid var(--editorial-border)' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '12px', backgroundColor: 'var(--cream)', border: '1px solid var(--retro-brown)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Copies Needing Restock
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: (overviewData?.allBooks || overviewData?.popularBooks || []).some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
+            <div style={{ fontSize: '2.1rem', fontWeight: 700, color: (overviewData?.allBooks || overviewData?.popularBooks || []).some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
               {(overviewData?.allBooks || overviewData?.popularBooks || []).filter(b => b.available_copies <= 1).length} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>titles</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#C5221F' }}>
@@ -1348,7 +1348,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--cream)' }}>
-                    <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1.5px solid var(--editorial-border)' }}>
+                    <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--retro-brown)' }}>
                       <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Title &amp; Author</th>
                       <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Category &amp; Location</th>
                       <th style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--forest-dark)' }}>Total Copies</th>
@@ -1367,7 +1367,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                       </tr>
                     ) : (
                       filteredInventory.map(b => (
-                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
+                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(82, 124, 120, 0.08)' }}>
                           <td style={{ padding: '12px 14px' }}>
                             <strong style={{ color: 'var(--forest-dark)' }}>{b.title}</strong>
                             <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>by {b.author}</div>
@@ -1431,9 +1431,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                 style={{
                                   padding: '4px 10px',
                                   fontSize: '0.76rem',
-                                  backgroundColor: '#FFFFFF',
+                                  backgroundColor: '#FFF8E9',
                                   color: 'var(--forest)',
-                                  border: '1.5px solid var(--editorial-border)',
+                                  border: '1px solid var(--retro-brown)',
                                   borderRadius: '6px',
                                   cursor: 'pointer'
                                 }}
@@ -1495,7 +1495,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 className="bio-card"
                 style={{
                   padding: '20px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   borderLeft: '4px solid var(--forest)',
                   cursor: 'pointer',
                   boxShadow: userDirectoryFilter === 'students' ? '0 0 0 2px var(--forest)' : 'var(--shadow-card)'
@@ -1508,7 +1508,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   </span>
                   <Users size={18} color="var(--forest)" />
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
                   {studentUsers.length}
                 </div>
                 <span style={{ fontSize: '0.74rem', color: 'var(--sage)' }}>Active registered library members</span>
@@ -1520,7 +1520,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 className="bio-card"
                 style={{
                   padding: '20px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   borderLeft: '4px solid var(--botanical)',
                   cursor: 'pointer',
                   boxShadow: userDirectoryFilter === 'librarians' ? '0 0 0 2px var(--botanical)' : 'var(--shadow-card)'
@@ -1533,7 +1533,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   </span>
                   <Layers size={18} color="var(--botanical)" />
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--forest-dark)' }}>
                   {librarianUsers.length}
                 </div>
                 <span style={{ fontSize: '0.74rem', color: 'var(--botanical)' }}>Circulation desk & operations team</span>
@@ -1545,7 +1545,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 className="bio-card"
                 style={{
                   padding: '20px',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   borderLeft: '4px solid #C5221F',
                   cursor: 'pointer',
                   boxShadow: userDirectoryFilter === 'admins' ? '0 0 0 2px #C5221F' : 'var(--shadow-card)'
@@ -1558,21 +1558,21 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   </span>
                   <Shield size={18} color="#C5221F" />
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#C5221F' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#C5221F' }}>
                   {adminUsers.length}
                 </div>
                 <span style={{ fontSize: '0.74rem', color: '#8C1D18' }}>Master security & system governance</span>
               </div>
 
               {/* Card 4: Total Books on Loan */}
-              <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFFFFF', borderLeft: '4px solid #B25E1A' }}>
+              <div className="bio-card" style={{ padding: '20px', backgroundColor: '#FFF8E9', borderLeft: '4px solid #B25E1A' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 700, textTransform: 'uppercase' }}>
                     Active Loans
                   </span>
                   <Database size={18} color="#B25E1A" />
                 </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#B25E1A' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#B25E1A' }}>
                   {totalActiveLoans}
                 </div>
                 <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>Books currently borrowed by members</span>
@@ -1580,7 +1580,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             </div>
 
             {/* User & Staff Directory Panel */}
-            <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
+            <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFF8E9' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                   <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1650,7 +1650,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                         fontSize: '0.82rem',
                         fontWeight: userDirectoryFilter === f.id ? 700 : 500,
                         border: userDirectoryFilter === f.id ? '1px solid var(--forest)' : '1px solid var(--subtle-border)',
-                        backgroundColor: userDirectoryFilter === f.id ? 'var(--soft-sage-light)' : '#FFFFFF',
+                        backgroundColor: userDirectoryFilter === f.id ? 'var(--soft-sage-light)' : '#FFF8E9',
                         color: userDirectoryFilter === f.id ? 'var(--forest-dark)' : 'var(--muted-text)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -1673,7 +1673,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                       width: '100%',
                       padding: '7px 12px 7px 32px',
                       borderRadius: '8px',
-                      border: '1.5px solid var(--editorial-border)',
+                      border: '1px solid var(--retro-brown)',
                       fontSize: '0.84rem'
                     }}
                   />
@@ -1729,7 +1729,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                       </tr>
                     ) : (
                       filteredUsers.map(u => (
-                        <tr key={u.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
+                        <tr key={u.id} style={{ borderBottom: '1px solid rgba(82, 124, 120, 0.08)' }}>
                           <td style={{ padding: '12px 14px', fontWeight: 600, color: 'var(--forest-dark)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <div
@@ -1745,7 +1745,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   fontSize: '0.78rem',
-                                  fontWeight: 800
+                                  fontWeight: 700
                                 }}
                               >
                                 {u.profile_photo ? (
@@ -1832,7 +1832,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   fontWeight: 700,
                                   backgroundColor: u.role === 'admin' ? '#FCE8E6' : u.role === 'librarian' ? 'var(--soft-sage-light)' : 'var(--cream)',
                                   color: u.role === 'admin' ? '#C5221F' : u.role === 'librarian' ? 'var(--botanical)' : 'var(--forest-dark)',
-                                  border: '1.5px solid var(--editorial-border)',
+                                  border: '1px solid var(--retro-brown)',
                                   display: 'inline-flex',
                                   alignItems: 'center'
                                 }}
@@ -1851,8 +1851,8 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   padding: '5px 12px',
                                   fontSize: '0.80rem',
                                   color: u.role === 'librarian' ? 'var(--botanical)' : 'var(--forest)',
-                                  border: '1.5px solid var(--editorial-border)',
-                                  backgroundColor: '#FFFFFF',
+                                  border: '1px solid var(--retro-brown)',
+                                  backgroundColor: '#FFF8E9',
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   gap: '5px',
@@ -1909,7 +1909,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
       {/* TAB 4: Sent Messages Log */}
       {activeTab === 'messages' && (
         sentMessages.length > 0 ? (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF', marginTop: '36px' }}>
+        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFF8E9', marginTop: '36px' }}>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <MessageSquare size={20} color="var(--forest)" />
             Messages Sent in this Session ({sentMessages.length})
@@ -1922,7 +1922,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   padding: '14px 18px',
                   borderRadius: '10px',
                   backgroundColor: 'var(--cream)',
-                  border: '1.5px solid var(--editorial-border)',
+                  border: '1px solid var(--retro-brown)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
@@ -1953,7 +1953,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           </div>
         </div>
         ) : (
-        <div className="bio-card" style={{ padding: '36px', backgroundColor: '#FFFFFF', textAlign: 'center' }}>
+        <div className="bio-card" style={{ padding: '36px', backgroundColor: '#FFF8E9', textAlign: 'center' }}>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
             No Broadcast Messages Dispatched
           </h3>
@@ -1996,10 +1996,10 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             style={{
               width: '100%',
               maxWidth: '460px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               borderRadius: 'var(--radius-lg)',
               padding: '32px 28px',
-              border: '1.5px solid var(--editorial-border)',
+              border: '1px solid var(--retro-brown)',
               boxShadow: 'var(--shadow-modal)',
               textAlign: 'center',
               position: 'relative',
@@ -2031,7 +2031,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 borderRadius: '50%',
                 background: adminConfirmModal.isDanger
                   ? 'rgba(165, 29, 36, 0.12)'
-                  : 'rgba(38, 61, 50, 0.10)',
+                  : 'rgba(52, 39, 31, 0.10)',
                 border: adminConfirmModal.isDanger
                   ? '1px solid rgba(165, 29, 36, 0.3)'
                   : '1px solid var(--editorial-border)',
@@ -2044,7 +2044,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             >
               {adminConfirmModal.isDanger ? '⚠️' : '🛡️'}
             </div>
-            <h3 style={{ fontSize: '1.30rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 10px', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.30rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 10px', fontWeight: 700 }}>
               {adminConfirmModal.title}
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, margin: '0 0 20px', whiteSpace: 'pre-line' }}>
@@ -2055,7 +2055,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 type="button"
                 onClick={() => setAdminConfirmModal(null)}
                 className="btn btn-outline"
-                style={{ flex: 1, backgroundColor: '#FFFFFF', color: 'var(--editorial-text)' }}
+                style={{ flex: 1, backgroundColor: '#FFF8E9', color: 'var(--editorial-text)' }}
               >
                 Cancel
               </button>
@@ -2067,7 +2067,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   if (cb) cb();
                 }}
                 className={adminConfirmModal.isDanger ? 'btn btn-botanical' : 'btn btn-primary'}
-                style={{ flex: 1.2, backgroundColor: adminConfirmModal.isDanger ? '#A51D24' : 'var(--editorial-green)', color: '#FFFFFF', border: 'none' }}
+                style={{ flex: 1.2, backgroundColor: adminConfirmModal.isDanger ? '#A51D24' : 'var(--editorial-green)', color: '#FFF8E9', border: 'none' }}
               >
                 {adminConfirmModal.confirmLabel}
               </button>

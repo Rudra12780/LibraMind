@@ -161,7 +161,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <BookOpen size={19} color="#FFFFFF" strokeWidth={2.2} />
+            <BookOpen size={19} color="#FFF8E9" strokeWidth={2.2} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -225,7 +225,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                   height: '36px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
-                  backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                  backgroundColor: showNotifs ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -246,7 +246,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                       height: '7px',
                       borderRadius: '50%',
                       backgroundColor: 'var(--editorial-accent)',
-                      border: '1.5px solid #FFFFFF'
+                      border: '1.5px solid #FFF8E9'
                     }}
                   />
                 )}
@@ -275,7 +275,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                   padding: '4px 8px 4px 6px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   boxShadow: 'var(--shadow-sm)',
                   transition: 'all 0.15s ease'
                 }}
@@ -286,7 +286,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = 'var(--editorial-border)';
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.backgroundColor = '#FFF8E9';
                 }}
               >
                 <div
@@ -298,7 +298,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     fontSize: '0.76rem',
                     fontWeight: 700,
                     flexShrink: 0
@@ -335,7 +335,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                   height: '34px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -392,7 +392,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
               height: '38px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              backgroundColor: mobileOpen ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+              backgroundColor: mobileOpen ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
@@ -428,7 +428,7 @@ export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpe
                       key={item.id}
                       onClick={item.action}
                       style={{
-                        background: active ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                        background: active ? 'var(--editorial-bg-subtle)' : '#FFF8E9',
                         border: '1px solid var(--editorial-border)',
                         borderRadius: 'var(--radius-sm)',
                         padding: '12px 16px',

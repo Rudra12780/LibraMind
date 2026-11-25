@@ -440,8 +440,8 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                           width: `${cardW}px`,
                           height: `${cardH}px`,
                           borderRadius: `${cardRadius}px`,
-                          backgroundColor: '#FFFFFF',
-                          border: isHovered ? '2px solid var(--editorial-accent)' : '2px solid #FFFFFF',
+                          backgroundColor: '#FFF8E9',
+                          border: isHovered ? '2px solid var(--editorial-accent)' : '2px solid #FFF8E9',
                           boxShadow: isHovered
                             ? '0 26px 52px -10px rgba(37, 40, 32, 0.26), 0 12px 24px -6px rgba(37, 40, 32, 0.14)'
                             : '0 16px 36px -8px rgba(37, 40, 32, 0.16), 0 6px 14px -3px rgba(37, 40, 32, 0.08)',
@@ -486,7 +486,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                             style={{
                               fontSize: '0.64rem',
                               fontWeight: 700,
-                              color: '#FFFFFF',
+                              color: '#FFF8E9',
                               lineHeight: 1.2,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -549,8 +549,8 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                           width: `${cardW}px`,
                           height: `${cardH}px`,
                           borderRadius: `${cardRadius}px`,
-                          backgroundColor: '#FFFFFF',
-                          border: '2px solid #FFFFFF',
+                          backgroundColor: '#FFF8E9',
+                          border: '2px solid #FFF8E9',
                           boxShadow: '0 8px 18px -3px rgba(37, 40, 32, 0.16), 0 3px 6px -2px rgba(37, 40, 32, 0.08)',
                           overflow: 'hidden',
                           cursor: 'pointer',
@@ -610,7 +610,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                 style={{
                   fontFamily: 'var(--font-serif)',
                   fontSize: isMobile ? 'clamp(1.65rem, 6.8vw, 2.25rem)' : 'clamp(2.0rem, 4.3vw, 3.6rem)',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
                   lineHeight: isMobile ? 1.2 : 1.15,
                   letterSpacing: '-0.025em',
@@ -645,7 +645,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                   className="hero-cta-btn"
                   style={{
                     backgroundColor: 'var(--editorial-green)',
-                    color: '#FFFFFF',
+                    color: '#FFF8E9',
                     borderRadius: '9999px',
                     padding: isMobile ? '12px 28px' : '14px 34px',
                     fontSize: isMobile ? '0.92rem' : '0.98rem',
@@ -657,7 +657,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    boxShadow: '0 6px 18px rgba(38, 61, 50, 0.24)',
+                    boxShadow: '0 6px 18px rgba(52, 39, 31, 0.24)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     minHeight: isMobile ? '44px' : '48px',
                     touchAction: 'manipulation'
@@ -665,12 +665,12 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#1D3027';
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 26px rgba(38, 61, 50, 0.38)';
+                    e.currentTarget.style.boxShadow = '0 10px 26px rgba(52, 39, 31, 0.38)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'var(--editorial-green)';
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 6px 18px rgba(38, 61, 50, 0.24)';
+                    e.currentTarget.style.boxShadow = '0 6px 18px rgba(52, 39, 31, 0.24)';
                   }}
                 >
                   <span>Explore Books</span>
@@ -905,7 +905,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                   borderRight: i < 3 ? '1px solid var(--editorial-border)' : 'none'
                 }}
               >
-                <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2.1rem', fontWeight: 800, color: 'var(--editorial-text)', lineHeight: 1 }}>
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2.1rem', fontWeight: 700, color: 'var(--editorial-text)', lineHeight: 1 }}>
                   {stat.num}
                 </div>
                 <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '6px' }}>
@@ -932,7 +932,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
 
           <div
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               border: '1px solid var(--editorial-border)',
               borderRadius: 'var(--radius-md)',
               padding: '36px',
@@ -1011,7 +1011,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* 4. EDITOR'S PICKS GRID                                          */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
+      <section style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFF8E9' }}>
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
@@ -1038,7 +1038,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
           >
             {featuredBooks.slice(0, 4).map((book, idx) => (
               <div key={book.id} style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '-10px', left: '16px', zIndex: 2, backgroundColor: 'var(--editorial-text)', color: '#FFFFFF', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)', borderRadius: '2px' }}>
+                <div style={{ position: 'absolute', top: '-10px', left: '16px', zIndex: 2, backgroundColor: 'var(--editorial-text)', color: '#FFF8E9', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)', borderRadius: '6px' }}>
                   № 0{idx + 1}
                 </div>
                 <BookCard
@@ -1072,7 +1072,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               style={{
                 fontFamily: "var(--font-oswald), 'BBH Bogle', 'Space Grotesk', sans-serif",
                 fontSize: 'clamp(2.2rem, 5vw, 3.6rem)',
-                fontWeight: 900,
+                fontWeight: 700,
                 color: 'var(--forest-dark)',
                 textTransform: 'uppercase',
                 letterSpacing: '-0.02em',
@@ -1121,14 +1121,14 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                     gap: '6px',
                     padding: '7px 18px',
                     borderRadius: '9999px',
-                    backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFFFFF',
-                    color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                    backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFF8E9',
+                    color: isSelected ? '#FFF8E9' : 'var(--editorial-text)',
                     border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
                     fontSize: '0.80rem',
                     fontWeight: 700,
                     letterSpacing: '0.02em',
                     cursor: 'pointer',
-                    boxShadow: isSelected ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                    boxShadow: isSelected ? '0 3px 10px rgba(52, 39, 31, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
                     transition: 'all 0.2s ease'
                   }}
                 >
@@ -1172,7 +1172,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                 key={i}
                 onClick={() => onNavigate('catalog', { category: genre.slug })}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '24px 28px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
@@ -1264,7 +1264,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               <div
                 key={idx}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '28px 24px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
@@ -1308,7 +1308,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               padding: '36px 32px',
               backgroundColor: 'var(--editorial-green)',
               borderRadius: 'var(--radius-sm)',
-              color: '#FFFFFF',
+              color: '#FFF8E9',
               textAlign: 'center',
               boxShadow: 'var(--shadow-card)'
             }}
@@ -1319,7 +1319,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               style={{
                 fontSize: 'clamp(1.4rem, 2.8vw, 2.05rem)',
                 lineHeight: 1.45,
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 margin: '0 auto 12px',
                 maxWidth: '720px'
               }}
@@ -1346,7 +1346,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* 7. FEATURED AUTHORS & SCHOLARS                                  */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section id="authors-section" style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
+      <section id="authors-section" style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFF8E9' }}>
         <div className="container">
           <div style={{ marginBottom: '36px' }}>
             <span className="editorial-kicker">SCHOLARLY MONOGRAPHS</span>
@@ -1398,7 +1398,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                           height: '46px',
                           borderRadius: '50%',
                           backgroundColor: 'var(--editorial-green)',
-                          color: '#FFFFFF',
+                          color: '#FFF8E9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1446,9 +1446,9 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                               style={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                backgroundColor: '#FFFFFF',
+                                backgroundColor: '#FFF8E9',
                                 border: '1px solid var(--editorial-border)',
-                                borderRadius: '4px',
+                                borderRadius: '8px',
                                 padding: '8px',
                                 cursor: 'pointer',
                                 transition: 'all 0.15s ease'
@@ -1563,7 +1563,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               <div
                 key={idx}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#FFF8E9',
                   padding: '28px 24px',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--editorial-border)',
@@ -1578,7 +1578,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                     <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--editorial-accent)' }}>
                       {rule.num}
                     </span>
-                    <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '2px', backgroundColor: 'var(--editorial-bg-subtle)', color: 'var(--editorial-text)', border: '1px solid var(--editorial-border)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '6px', backgroundColor: 'var(--editorial-bg-subtle)', color: 'var(--editorial-text)', border: '1px solid var(--editorial-border)', fontWeight: 600 }}>
                       {rule.badge}
                     </span>
                   </div>
@@ -1618,7 +1618,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* 10. ABOUT LIBRAMIND                                             */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section id="about-section" style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFFFFF' }}>
+      <section id="about-section" style={{ padding: '72px 0', borderBottom: '1px solid var(--editorial-border)', backgroundColor: '#FFF8E9' }}>
         <div className="container">
           <div
             style={{

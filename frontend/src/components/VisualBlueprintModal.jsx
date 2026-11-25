@@ -47,7 +47,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(20, 25, 22, 0.85)',
+        backgroundColor: 'rgba(52, 39, 31, 0.86)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         zIndex: 9999,
@@ -60,7 +60,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
     >
       <div
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#FFF8E9',
           color: 'var(--editorial-text)',
           width: '100%',
           maxWidth: '1240px',
@@ -97,20 +97,20 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFFFFF'
+                color: '#FFF8E9'
               }}
             >
-              <FileText size={20} color="#FFFFFF" strokeWidth={2.4} />
+              <FileText size={20} color="#FFF8E9" strokeWidth={2.4} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span
                   style={{
                     fontSize: '0.68rem',
-                    fontWeight: 900,
+                    fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: '#FFF8E9',
                     color: 'var(--editorial-text)',
                     padding: '2px 8px',
                     border: '1px solid var(--editorial-border)'
@@ -127,7 +127,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 style={{
                   margin: '2px 0 0',
                   fontSize: '1.20rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   color: 'var(--editorial-text)',
                   fontFamily: 'var(--font-libramind)'
@@ -144,17 +144,17 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               <div
                 style={{
                   display: 'flex',
-                  backgroundColor: '#EEEEEE',
+                  backgroundColor: '#EADFC9',
                   padding: '3px',
                   borderRadius: '8px',
-                  border: '1px solid #DDDDDD'
+                  border: '1px solid #D9C8AE'
                 }}
               >
                 <button
                   onClick={() => setViewMode('svg')}
                   style={{
-                    background: viewMode === 'svg' ? '#FFFFFF' : 'transparent',
-                    color: '#111111',
+                    background: viewMode === 'svg' ? '#FFF8E9' : 'transparent',
+                    color: '#34271F',
                     border: 'none',
                     padding: '5px 12px',
                     borderRadius: '6px',
@@ -169,8 +169,8 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 <button
                   onClick={() => setViewMode('jpg')}
                   style={{
-                    background: viewMode === 'jpg' ? '#FFFFFF' : 'transparent',
-                    color: '#111111',
+                    background: viewMode === 'jpg' ? '#FFF8E9' : 'transparent',
+                    color: '#34271F',
                     border: 'none',
                     padding: '5px 12px',
                     borderRadius: '6px',
@@ -191,7 +191,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                background: '#FAF8F5',
+                background: '#FFF8E9',
                 color: 'var(--editorial-accent)',
                 border: '1px solid var(--editorial-accent)',
                 padding: '6px 12px',
@@ -214,7 +214,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               onClick={downloadAllBlueprintsZIP}
               style={{
                 background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 border: 'none',
                 padding: '6px 14px',
                 borderRadius: '8px',
@@ -224,7 +224,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 alignItems: 'center',
                 gap: '6px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(52,78,65,0.25)'
+                boxShadow: '0 2px 8px rgba(82, 124, 120,0.25)'
               }}
               title="Download all 21 wireframe SVG files in a single .ZIP file"
             >
@@ -236,7 +236,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               onClick={printAllBlueprints}
               style={{
                 background: '#000000',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 border: 'none',
                 padding: '6px 14px',
                 borderRadius: '8px',
@@ -259,9 +259,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
-                border: '1px solid #CCCCCC',
-                backgroundColor: '#FFFFFF',
-                color: '#333333',
+                border: '1px solid #D9C8AE',
+                backgroundColor: '#FFF8E9',
+                color: '#34271F',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -278,7 +278,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         <div
           style={{
             padding: '6px 20px',
-            backgroundColor: '#EDEDED',
+            backgroundColor: '#EADFC9',
             borderBottom: '1px solid #DEDEDE',
             display: 'flex',
             alignItems: 'center',
@@ -289,7 +289,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         >
           {/* Category Filter Chips */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-            <span style={{ fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#555555', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.70rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B5848', whiteSpace: 'nowrap' }}>
               Tier Filter:
             </span>
             {[
@@ -305,9 +305,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                   key={cat.id}
                   onClick={() => setModalCategory(cat.id)}
                   style={{
-                    backgroundColor: active ? '#000000' : '#FFFFFF',
-                    color: active ? '#FFFFFF' : '#333333',
-                    border: '1px solid #CCCCCC',
+                    backgroundColor: active ? '#000000' : '#FFF8E9',
+                    color: active ? '#FFF8E9' : '#34271F',
+                    border: '1px solid #D9C8AE',
                     padding: '3px 9px',
                     borderRadius: '12px',
                     fontSize: '0.72rem',
@@ -324,7 +324,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
 
           {/* Quick Jump Dropdown (Ideal for mobile phones) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#555555', textTransform: 'uppercase' }}>Jump to:</span>
+            <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#6B5848', textTransform: 'uppercase' }}>Jump to:</span>
             <select
               value={selectedPageId}
               onChange={(e) => {
@@ -335,10 +335,10 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 fontSize: '0.76rem',
                 fontWeight: 600,
                 padding: '3px 8px',
-                borderRadius: '4px',
-                border: '1px solid #CCCCCC',
-                backgroundColor: '#FFFFFF',
-                color: '#111111',
+                borderRadius: '8px',
+                border: '1px solid #D9C8AE',
+                backgroundColor: '#FFF8E9',
+                color: '#34271F',
                 cursor: 'pointer'
               }}
             >
@@ -355,8 +355,8 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         <div
           style={{
             padding: '8px 20px',
-            backgroundColor: '#F5F5F5',
-            borderBottom: '1px solid #E0E0E0',
+            backgroundColor: '#F5EBD7',
+            borderBottom: '1px solid #E3D5BC',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -365,7 +365,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          <span style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#333333', whiteSpace: 'nowrap', marginRight: '4px' }}>
+          <span style={{ fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#34271F', whiteSpace: 'nowrap', marginRight: '4px' }}>
             All 21 Pages:
           </span>
           {BLUEPRINT_PAGES.filter(p => {
@@ -385,9 +385,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                   if (page.id !== 'home') setViewMode('svg');
                 }}
                 style={{
-                  background: isSelected ? '#111111' : '#FFFFFF',
-                  color: isSelected ? '#FFFFFF' : '#222222',
-                  border: isSelected ? '1.5px solid #000000' : '1px solid #CCCCCC',
+                  background: isSelected ? '#34271F' : '#FFF8E9',
+                  color: isSelected ? '#FFF8E9' : '#34271F',
+                  border: isSelected ? '1.5px solid #000000' : '1px solid #D9C8AE',
                   padding: '5px 12px',
                   borderRadius: '16px',
                   fontSize: '0.78rem',
@@ -412,14 +412,14 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         <div
           style={{
             padding: '7px 24px',
-            backgroundColor: '#FFFFFF',
-            borderBottom: '1px solid #EAEAEA',
+            backgroundColor: '#FFF8E9',
+            borderBottom: '1px solid #E3D5BC',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
             overflowX: 'auto',
             fontSize: '0.74rem',
-            color: '#444444',
+            color: '#6B5848',
             scrollbarWidth: 'none'
           }}
         >
@@ -429,7 +429,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           {activePage.sections.map((sec, i) => (
             <React.Fragment key={i}>
               <span style={{ whiteSpace: 'nowrap' }}>{sec}</span>
-              {i < activePage.sections.length - 1 && <span style={{ color: '#AAAAAA' }}>·</span>}
+              {i < activePage.sections.length - 1 && <span style={{ color: '#80634D' }}>·</span>}
             </React.Fragment>
           ))}
         </div>
@@ -443,14 +443,14 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'center',
-            backgroundColor: '#EDEDED'
+            backgroundColor: '#EADFC9'
           }}
         >
           <div
             style={{
               width: `${880 * zoom}px`,
               maxWidth: '100%',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#FFF8E9',
               boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
               borderRadius: '8px',
               border: '1.5px solid #000000',
@@ -478,7 +478,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
           style={{
             padding: '12px 24px',
             backgroundColor: '#FAFAFA',
-            borderTop: '1px solid #E0E0E0',
+            borderTop: '1px solid #E3D5BC',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -488,13 +488,13 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
         >
           {/* Zoom controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#666666', fontWeight: 600 }}>Zoom:</span>
+            <span style={{ fontSize: '0.78rem', color: '#6B5848', fontWeight: 600 }}>Zoom:</span>
             <button
               onClick={() => setZoom(Math.max(0.6, zoom - 0.15))}
               style={{
-                background: '#FFFFFF',
-                color: '#111111',
-                border: '1px solid #CCCCCC',
+                background: '#FFF8E9',
+                color: '#34271F',
+                border: '1px solid #D9C8AE',
                 padding: '4px 10px',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -507,15 +507,15 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             >
               <ZoomOut size={13} />
             </button>
-            <span style={{ fontSize: '0.80rem', fontWeight: 700, color: '#111111', minWidth: '40px', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.80rem', fontWeight: 700, color: '#34271F', minWidth: '40px', textAlign: 'center' }}>
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={() => setZoom(Math.min(1.6, zoom + 0.15))}
               style={{
-                background: '#FFFFFF',
-                color: '#111111',
-                border: '1px solid #CCCCCC',
+                background: '#FFF8E9',
+                color: '#34271F',
+                border: '1px solid #D9C8AE',
                 padding: '4px 10px',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -532,7 +532,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               onClick={() => setZoom(1)}
               style={{
                 background: 'transparent',
-                color: '#444444',
+                color: '#6B5848',
                 border: 'none',
                 fontSize: '0.76rem',
                 cursor: 'pointer',
@@ -554,7 +554,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
               onClick={downloadAllBlueprintsZIP}
               style={{
                 background: 'linear-gradient(135deg, var(--forest-dark) 0%, var(--botanical) 100%)',
-                color: '#FFFFFF',
+                color: '#FFF8E9',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '8px',
@@ -564,7 +564,7 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 alignItems: 'center',
                 gap: '7px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(52,78,65,0.22)'
+                boxShadow: '0 2px 8px rgba(82, 124, 120,0.22)'
               }}
               title="Download all 21 wireframe blueprint files in one .ZIP archive"
             >
@@ -575,8 +575,8 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             <button
               onClick={() => downloadPageSVG(activePage.id)}
               style={{
-                background: '#111111',
-                color: '#FFFFFF',
+                background: '#34271F',
+                color: '#FFF8E9',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '8px',
@@ -597,9 +597,9 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             <button
               onClick={() => downloadPagePNG(activePage.id)}
               style={{
-                background: '#FFFFFF',
-                color: '#111111',
-                border: '1px solid #CCCCCC',
+                background: '#FFF8E9',
+                color: '#34271F',
+                border: '1px solid #D9C8AE',
                 padding: '8px 16px',
                 borderRadius: '8px',
                 fontSize: '0.82rem',
@@ -618,8 +618,8 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
             <button
               onClick={() => printSingleBlueprint(activePage.id)}
               style={{
-                background: '#EAEAEA',
-                color: '#111111',
+                background: '#E3D5BC',
+                color: '#34271F',
                 border: '1px solid #B0B0B0',
                 padding: '8px 16px',
                 borderRadius: '8px',
