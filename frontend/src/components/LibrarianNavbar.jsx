@@ -16,10 +16,11 @@ import {
   BookOpen,
   Menu,
   X,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 
-export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNavigate }) {
+export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNavigate, onOpenPresentation }) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const [showNotifs, setShowNotifs] = useState(false);
@@ -27,7 +28,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
 
   const handleLogout = async () => {
     await logout();
-    if (onNavigate) onNavigate('login');
+    if (onNavigate) onNavigate('lib@1234');
   };
 
   const navTabs = [
@@ -35,7 +36,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
     { id: 'return', label: 'Returns', icon: RotateCcw, title: 'Book Returns & Overdue Ledger' },
     { id: 'reservations', label: 'Hold Queues', icon: Bookmark, title: 'Patron Book Reservations & Hold Queues' },
     { id: 'inventory', label: 'Inventory', icon: Plus, title: 'Catalog Titles & Physical Copies' },
-    { id: 'seats', label: 'Study Pods', icon: Armchair, title: 'Study Seat & Pod Real-Time Status' },
+    { id: 'seats', label: 'Study Pods', icon: Armchair, title: 'Study Pods Live Schedule & Timings' },
     { id: 'adminmsg', label: 'Msg Admin', icon: Send, title: 'Direct Staff Dispatch to System Scholar Admin' },
     { id: 'announcement', label: 'Notices', icon: Megaphone, title: 'Broadcast Notices to Library Patrons' }
   ];
@@ -88,7 +89,7 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="portal-brand-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1.40rem', color: 'var(--editorial-text)' }}>LibraMind</span>
+              <span className="libramind-heading portal-brand-title" style={{ fontFamily: 'var(--font-libramind)', fontWeight: 700, fontSize: '1.40rem', color: 'var(--editorial-text)', letterSpacing: '0.02em' }}>LibraMind</span>
               <span
                 className="badge navbar-badge-hide"
                 style={{
@@ -304,11 +305,39 @@ export default function LibrarianNavbar({ activeTab = 'issue', onSelectTab, onNa
             </button>
           ))}
           <button
-            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('home'); }}
+            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('notifications'); }}
+            className="btn btn-outline btn-sm"
+            style={{ width: '100%', justifyContent: 'space-between', display: 'flex', marginTop: '6px' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bell size={14} color="var(--editorial-accent)" /> Notifications
+            </span>
+            {unreadCount > 0 && (
+              <span style={{ fontSize: '0.70rem', padding: '1px 6px', borderRadius: '8px', backgroundColor: 'var(--editorial-accent)', color: '#fff', fontWeight: 700 }}>
+                {unreadCount} new
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('blueprints'); }}
             className="btn btn-outline btn-sm"
             style={{ width: '100%', justifyContent: 'center', marginTop: '6px' }}
           >
-            <BookOpen size={14} /> Browse Public Archives
+            <Layers size={14} /> View 21 Architectural Blueprints
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('catalog'); }}
+            className="btn btn-outline btn-sm"
+            style={{ width: '100%', justifyContent: 'center', marginTop: '6px' }}
+          >
+            <BookOpen size={14} /> Browse Book Catalog
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+            className="btn btn-outline btn-sm"
+            style={{ width: '100%', justifyContent: 'center', marginTop: '6px', color: '#DC2626', borderColor: '#FECACA' }}
+          >
+            <LogOut size={14} /> Sign Out (Librarian)
           </button>
         </div>
       )}

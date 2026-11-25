@@ -5,7 +5,7 @@ const OTPSchema = new Schema({
   sqlite_id: { type: Number, index: true },
   phone: { type: String, required: true, trim: true },
   otp_code: { type: String, required: true, trim: true },
-  purpose: { type: String, enum: ['register', 'login'], default: 'login' },
+  purpose: { type: String, enum: ['register', 'login', 'forgot_password'], default: 'login' },
   expires_at: { type: Date, required: true },
   used: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now }

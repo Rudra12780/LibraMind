@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import BookCard from '../components/BookCard';
 import BookCompare from './BookCompare';
+import CircularBookCarousel from '../components/CircularBookCarousel';
 import {
   BookOpen,
   Calendar,
@@ -36,18 +37,82 @@ import {
 } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
-const SUGGESTED_INTEREST_TAGS = [
-  'Fiction & Novels',
-  'Literary Classics',
-  'Computer Science',
-  'Artificial Intelligence',
-  'Philosophy & Ethics',
-  'History & Heritage',
-  'Psychology',
-  'Modern Poetry',
-  'Science & Technology',
-  'Economics & Society'
+const INSTALLED_LIBRARY_TOPICS = [
+  'AI & Data Science',
+  'Classic Novels',
+  'Emotional Fiction',
+  'Fiction & Mystery',
+  'Indian Literature',
+  'Modern Novels',
+  'Personal Growth',
+  'Programming & Technology',
+  'Spiritual & Wisdom'
 ];
+
+function formatTimeSlot12h(slotStr) {
+  if (!slotStr) return '';
+  return String(slotStr)
+    .replace(/08:00\s*-\s*11:00/gi, '8:00 AM - 11:00 AM')
+    .replace(/11:00\s*-\s*14:00/gi, '11:00 AM - 2:00 PM')
+    .replace(/14:00\s*-\s*17:00/gi, '2:00 PM - 5:00 PM')
+    .replace(/17:00\s*-\s*20:00/gi, '5:00 PM - 8:00 PM')
+    .replace(/20:00\s*-\s*22:00/gi, '8:00 PM - 10:00 PM');
+}
+
+function getSlotEndMinutes(slotStr) {
+  if (!slotStr) return 0;
+  const s = String(slotStr).trim();
+
+  // 1. Match 12-hour with AM/PM after hyphen: e.g. "- 4:00 PM", "- 2:00 PM", "- 10:00 PM", "- 4 PM"
+  const match12 = s.match(/-\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const min = match12[2] ? parseInt(match12[2], 10) : 0;
+    const ampm = match12[3].toUpperCase();
+    if (ampm === 'PM' && hour < 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    return hour * 60 + min;
+  }
+
+  // 2. Match 24-hour after hyphen: e.g. "- 16:00", "- 14:00", "- 22:00"
+  const match24 = s.match(/-\s*(\d{1,2}):(\d{2})/);
+  if (match24) {
+    const hour = parseInt(match24[1], 10);
+    const min = parseInt(match24[2], 10);
+    return hour * 60 + min;
+  }
+
+  // 3. Known slot key fallbacks:
+  if (s.includes('08:00-11:00') || s.includes('morning')) return 11 * 60;
+  if (s.includes('11:00-14:00') || s.includes('mid-day') || s.includes('midday')) return 14 * 60;
+  if (s.includes('14:00-17:00') || s.includes('afternoon')) return 17 * 60;
+  if (s.includes('17:00-20:00') || s.includes('evening')) return 20 * 60;
+  if (s.includes('20:00-22:00') || s.includes('night')) return 22 * 60;
+
+  return 24 * 60;
+}
+
+function normalizeDateString(d) {
+  if (!d) return '';
+  if (typeof d === 'string' && d.includes('T')) return d.split('T')[0];
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return String(d);
+  return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+}
+
+function isSlotExpired(dateStr, timeSlotStr, now = new Date()) {
+  if (!dateStr) return false;
+  const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const bookingYMD = normalizeDateString(dateStr);
+
+  if (bookingYMD < todayYMD) return true;
+  if (bookingYMD > todayYMD) return false;
+
+  // Same day: check if current time is at or past slot end time
+  const endMinutes = getSlotEndMinutes(timeSlotStr);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= endMinutes;
+}
 
 export default function StudentDashboard({
   onNavigate,
@@ -66,16 +131,19 @@ export default function StudentDashboard({
   const [loans, setLoans] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [availableBooks, setAvailableBooks] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [seatBookings, setSeatBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
   const [notifTab, setNotifTab] = useState('official');
+  const [borrowSubTab, setBorrowSubTab] = useState('active'); // 'active' | 'history'
 
   const normalizeTab = (tab) => {
     if (!tab || tab === 'all' || tab === 'overview') return 'all';
     if (tab === 'loans' || tab === 'my-loans' || tab === 'borrowed') return 'loans';
     if (tab === 'holds' || tab === 'reservations' || tab === 'my-reservations') return 'holds';
+    if (tab === 'available' || tab === 'stacks' || tab === 'in-stacks') return 'available';
     if (tab === 'seats' || tab === 'study-pods') return 'seats';
     if (tab === 'wishlist' || tab === 'saved') return 'wishlist';
     if (tab === 'compare' || tab === 'comparison') return 'compare';
@@ -142,24 +210,40 @@ export default function StudentDashboard({
   }, [showInterestsModal, returnModalLoan, returningLoan, savingInterests, showPayModal, payingFine]);
 
   const handleToggleTag = (tag) => {
-    const trimmed = (interestsText || '').trim();
-    if (!trimmed) {
-      setInterestsText(tag);
-      return;
-    }
-    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(^|,\\s*)${escapedTag}(\\s*,|$)`, 'i');
-    if (regex.test(trimmed)) {
-      const updated = trimmed
-        .replace(regex, '$1')
-        .replace(/^,\s*|,\s*$/g, '')
-        .replace(/,\s*,/g, ', ')
-        .trim();
-      setInterestsText(updated);
+    const currentTags = (interestsText || '')
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean);
+    const exists = currentTags.some(t => t.toLowerCase() === tag.toLowerCase());
+    let updated;
+    if (exists) {
+      updated = currentTags.filter(t => t.toLowerCase() !== tag.toLowerCase());
     } else {
-      setInterestsText(`${trimmed}, ${tag}`);
+      updated = [...currentTags, tag];
     }
+    setInterestsText(updated.join(', '));
   };
+
+  const availableTopics = useMemo(() => {
+    const set = new Set(INSTALLED_LIBRARY_TOPICS);
+    if (Array.isArray(availableBooks)) {
+      availableBooks.forEach(b => {
+        if (b?.category && typeof b.category === 'string' && b.category.trim()) {
+          set.add(b.category.trim());
+        }
+      });
+    }
+    return Array.from(set);
+  }, [availableBooks]);
+
+  const selectedTagsSet = useMemo(() => {
+    return new Set(
+      (interestsText || '')
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(Boolean)
+    );
+  }, [interestsText]);
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -168,34 +252,39 @@ export default function StudentDashboard({
     }
     setLoading(true);
     try {
-      const [loansData, resData, recData, wishData, seatData, penaltyData] = await Promise.all([
-        api.getLoans(),
-        api.getReservations(),
-        api.getRecommendations(),
-        api.getWishlist(),
-        api.getUserSeatReservations(),
-        api.getPenaltyStatus().catch(() => ({ isBlocked: false, unpaidFines: 0, overdueCount: 0, penaltyLoans: [], reason: null }))
+      const [loansData, resData, recData, wishData, seatData, penaltyData, booksData] = await Promise.all([
+        api.getLoans().catch(() => []),
+        api.getReservations().catch(() => []),
+        api.getRecommendations().catch(() => ({ recommendations: [] })),
+        api.getWishlist().catch(() => []),
+        api.getUserSeatReservations().catch(() => []),
+        api.getPenaltyStatus().catch(() => ({ isBlocked: false, unpaidFines: 0, overdueCount: 0, penaltyLoans: [], reason: null })),
+        api.getBooks({ limit: 120 }).catch(() => ({ books: [] }))
       ]);
 
       const safeLoans = Array.isArray(loansData) ? loansData : [];
       const safeReservations = Array.isArray(resData) ? resData : [];
-      const safeRecs = Array.isArray(recData) ? recData : [];
+      const safeRecs = Array.isArray(recData?.recommendations)
+        ? recData.recommendations
+        : (Array.isArray(recData) ? recData : []);
       const safeWishlist = Array.isArray(wishData) ? wishData : [];
       const safeSeats = Array.isArray(seatData) ? seatData : [];
+      const safeAvailable = (booksData?.books || []).filter(b => b.available_copies > 0);
 
       setLoans(safeLoans);
       setReservations(safeReservations);
       setRecommendations(safeRecs);
       setWishlist(safeWishlist);
       setSeatBookings(safeSeats);
+      setAvailableBooks(safeAvailable);
       if (penaltyData) {
         setPenaltyStatus(penaltyData);
       }
 
       if (onUpdateStats) {
-        const activeL = safeLoans.filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue').length;
+        const activeL = safeLoans.filter(l => (l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue' || l.is_active) && l.status !== 'returned').length;
         const activeR = safeReservations.filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup').length;
-        const activeS = safeSeats.filter(s => s.status === 'active').length;
+        const activeS = safeSeats.filter(s => (s.status === 'active' || !s.status) && s.status !== 'cancelled').length;
         onUpdateStats({
           loanCount: activeL,
           holdCount: activeR,
@@ -217,14 +306,27 @@ export default function StudentDashboard({
       fetchData();
     };
     window.addEventListener('libramind:data-updated', handleDataUpdate);
+    window.addEventListener('focus', handleDataUpdate);
+    const handleVis = () => {
+      if (document.visibilityState === 'visible') fetchData();
+    };
+    document.addEventListener('visibilitychange', handleVis);
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 4000);
+
     let bc;
     try {
       bc = new BroadcastChannel('libramind_sync');
       bc.onmessage = () => fetchData();
-    } catch (e) {}
+    } catch (e) { }
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('libramind:data-updated', handleDataUpdate);
+      window.removeEventListener('focus', handleDataUpdate);
+      document.removeEventListener('visibilitychange', handleVis);
       if (bc) bc.close();
     };
   }, [fetchData]);
@@ -290,7 +392,7 @@ export default function StudentDashboard({
       });
       fetchData();
       window.dispatchEvent(new CustomEvent('libramind:data-updated'));
-      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE' }); bc.close(); } catch(e){}
+      try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE' }); bc.close(); } catch (e) { }
     } catch (err) {
       console.error('Return book error:', err);
       setReturnError(err.message || 'Failed to process return. Please visit the front desk.');
@@ -314,6 +416,12 @@ export default function StudentDashboard({
       await api.cancelSeatReservation(bookingId);
       showToast('Study seat reservation released.');
       fetchData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'seat_cancelled', bookingId });
+        bc.close();
+      } catch (e) { }
     } catch (err) {
       showToast(err.message, true);
     }
@@ -345,6 +453,12 @@ export default function StudentDashboard({
       await api.removeFromWishlist(bookId);
       showToast('Removed from saved wishlist.');
       fetchData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'wishlist_updated', bookId });
+        bc.close();
+      } catch (e) { }
     } catch (err) {
       showToast(err.message, true);
     }
@@ -367,9 +481,16 @@ export default function StudentDashboard({
   const handleBorrowWishlistBook = async (book, e) => {
     if (e) e.stopPropagation();
     try {
-      const res = await api.checkoutBook({ book_id: book.id });
-      showToast(`Success! Checked out copy ${res.copyCode} of "${book.title}". Due in 14 days.`);
+      const bId = book.id !== undefined ? book.id : book._id;
+      const res = await api.checkoutBook({ book_id: bId });
+      showToast(`Success! Checked out copy ${res.copyCode || ''} of "${book.title}". Due in 14 days.`);
       fetchData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'book_borrowed', bookId: bId });
+        bc.close();
+      } catch (e) { }
     } catch (err) {
       showToast(err.message || 'Checkout failed', true);
     }
@@ -381,6 +502,12 @@ export default function StudentDashboard({
       const res = await api.placeReservation(bookId);
       showToast(res.message || `Hold queue confirmed for "${title}"!`);
       fetchData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'book_reserved', bookId });
+        bc.close();
+      } catch (e) { }
     } catch (err) {
       showToast(err.message, true);
     }
@@ -402,10 +529,127 @@ export default function StudentDashboard({
     }
   };
 
-  const activeLoans = loans.filter(l => l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue');
-  const pastLoans = loans.filter(l => l.status === 'returned');
+  // 1. Strict Active Loans: currently borrowed or overdue books that are NOT returned
+  const activeLoans = useMemo(() => {
+    return loans.filter(l => {
+      const isReturned = l.status === 'returned' || (!!l.return_date && l.status !== 'active' && l.status !== 'borrowed' && l.status !== 'overdue');
+      return !isReturned && (l.status === 'borrowed' || l.status === 'active' || l.status === 'overdue' || l.is_active);
+    });
+  }, [loans]);
+
+  // Set of identifiers for all books currently on active loan
+  // Used to strictly prevent actively borrowed books from crossing over into archival reading history
+  const activeBookIdSet = useMemo(() => {
+    const set = new Set();
+    activeLoans.forEach(l => {
+      if (l.book_id) set.add(String(l.book_id).trim().toLowerCase());
+      if (l.id && !l.book_id) set.add(String(l.id).trim().toLowerCase());
+      if (l.book_title) set.add(l.book_title.trim().toLowerCase());
+      if (l.title) set.add(l.title.trim().toLowerCase());
+      if (l.isbn) set.add(l.isbn.trim().toLowerCase());
+    });
+    return set;
+  }, [activeLoans]);
+
+  // 2. Strict Past Loans: books that have been returned
+  const pastLoans = useMemo(() => {
+    return loans.filter(l => {
+      const isReturned = l.status === 'returned' || (!!l.return_date && l.status !== 'active' && l.status !== 'borrowed' && l.status !== 'overdue');
+      return isReturned;
+    });
+  }, [loans]);
+
+  // Map past returned loans to unique book structures for CircularBookCarousel (zero duplicate book spines)
+  // STRICT RULE: Only returned / archived books appear here. Any book currently on active loan is strictly excluded.
+  const pastLoansBooks = useMemo(() => {
+    const seen = new Set();
+    const unique = [];
+    for (const p of pastLoans) {
+      const bId = String(p.book_id || p.id || '').trim().toLowerCase();
+      const bTitle = (p.book_title || p.title || '').trim().toLowerCase();
+      const bIsbn = (p.isbn || '').trim().toLowerCase();
+
+      // Strictly exclude books that are currently actively borrowed
+      if ((bId && activeBookIdSet.has(bId)) ||
+          (bTitle && activeBookIdSet.has(bTitle)) ||
+          (bIsbn && activeBookIdSet.has(bIsbn))) {
+        continue;
+      }
+
+      const dedupeKey = bTitle || bId;
+      if (!seen.has(dedupeKey)) {
+        seen.add(dedupeKey);
+        unique.push({
+          id: p.book_id || p.id,
+          _id: p.book_id || p.id,
+          title: p.book_title || p.title || 'Library Volume',
+          author: p.book_author || p.author || 'Scholar',
+          cover_image: p.cover_image,
+          category: p.category || 'Archival Stacks',
+          isbn: p.isbn || '',
+          copy_code: p.copy_code,
+          barcode: p.copy_code,
+          floor: p.floor || 'Floor 1',
+          section: p.section || 'General',
+          shelf: p.shelf || 'Main Stacks',
+          available_copies: p.available_copies ?? 1,
+          total_copies: p.total_copies ?? 1,
+          return_date: p.return_date,
+          loan_id: p.id
+        });
+      }
+    }
+    return unique;
+  }, [pastLoans, activeBookIdSet]);
+
+  // When active loans are 0 and past loans exist, default borrowSubTab to 'history'
+  useEffect(() => {
+    if (activeLoans.length === 0 && pastLoans.length > 0) {
+      setBorrowSubTab('history');
+    }
+  }, [activeLoans.length, pastLoans.length]);
+
+  // Map saved wishlist items to unique book structures for CircularBookCarousel (zero duplicate book spines)
+  const wishlistBooks = useMemo(() => {
+    const seen = new Set();
+    const unique = [];
+    for (const w of (wishlist || [])) {
+      const bKey = String(w.id || w._id || w.book_id || w.title);
+      if (!seen.has(bKey)) {
+        seen.add(bKey);
+        unique.push({
+          id: w.id !== undefined ? w.id : (w._id !== undefined ? w._id : w.wishlist_id || bKey),
+          _id: w._id !== undefined ? w._id : (w.id !== undefined ? w.id : w.wishlist_id || bKey),
+          title: w.title || 'Library Volume',
+          author: w.author || 'Scholar',
+          cover_image: w.cover_image,
+          category: w.category || 'Saved Wishlist',
+          isbn: w.isbn || '',
+          available_copies: w.available_copies ?? 1,
+          total_copies: w.total_copies ?? 1,
+          floor: w.floor || 'Floor 1',
+          section: w.section || 'General',
+          shelf: w.shelf || 'Main Stacks',
+          wishlist_id: w.wishlist_id || w.id || w._id
+        });
+      }
+    }
+    return unique;
+  }, [wishlist]);
+  // Live ticker that runs every 10 seconds to auto-release expired study pod bookings in real time
+  const [currentSlotTick, setCurrentSlotTick] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentSlotTick(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
   const activeReservations = reservations.filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup');
-  const activeSeats = seatBookings.filter(b => b.status === 'active');
+  const activeSeats = useMemo(() => {
+    return (seatBookings || []).filter(b => {
+      if (b.status === 'cancelled' || b.status === 'completed') return false;
+      return !isSlotExpired(b.date, b.time_slot);
+    });
+  }, [seatBookings, currentSlotTick]);
 
   // Foremost currently reading volume for magazine feature
   const primaryLoan = activeLoans.length > 0 ? activeLoans[0] : null;
@@ -584,8 +828,12 @@ export default function StudentDashboard({
                 margin: '0 0 12px'
               }}
             >
-              The Reading Room of {user?.name || 'Reader'}
+              The Reading Room of <span className="cursive-dedication" style={{ color: 'var(--editorial-accent)', fontSize: 'clamp(1.9rem, 3.4vw, 2.9rem)', fontWeight: 600 }}>{user?.name || 'Reader'}</span>
             </h1>
+
+            <div className="desk-slip" style={{ color: 'var(--editorial-green)', marginBottom: '8px', fontSize: '1.22rem' }}>
+              ✍ Stack Pass Active • Personal Folio Circulation
+            </div>
 
             <p
               style={{
@@ -850,14 +1098,18 @@ export default function StudentDashboard({
             color: '#C5221F'
           }] : []),
           {
-            label: 'VOLUMES ON LOAN',
-            value: String(activeLoans.length).padStart(2, '0'),
-            meta: `Max allowance: 05 copies`,
+            label: 'TOTAL BORROWED BOOKS',
+            value: String(loans.length).padStart(2, '0'),
+            meta: activeLoans.length > 0
+              ? `${String(activeLoans.length).padStart(2, '0')} active on loan • ${pastLoans.length} archived`
+              : pastLoans.length > 0
+                ? `${pastLoans.length} returned to stacks • 0 active`
+                : 'Max allowance: 05 copies',
             tab: 'loans',
             color: 'var(--editorial-text)'
           },
           {
-            label: 'ACTIVE HOLD QUEUES',
+            label: 'WAITING LIST',
             value: String(activeReservations.length).padStart(2, '0'),
             meta: activeReservations.some(r => r.status === 'ready_for_pickup') ? '● 1 Ready for Pickup' : 'Waitlist notifications on',
             tab: 'holds',
@@ -866,7 +1118,7 @@ export default function StudentDashboard({
           {
             label: 'RESERVED STUDY PODS',
             value: String(activeSeats.length).padStart(2, '0'),
-            meta: activeSeats.length > 0 ? `${activeSeats[0].time_slot}` : 'Silent carrels available',
+            meta: activeSeats.length > 0 ? `${formatTimeSlot12h(activeSeats[0].time_slot)}` : 'Silent carrels available',
             tab: 'seats',
             color: 'var(--editorial-text)'
           },
@@ -946,13 +1198,13 @@ export default function StudentDashboard({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {[
-            { id: 'all', label: 'All Records', count: null },
-            { id: 'loans', label: 'Borrowed Copies', count: activeLoans.length },
-            { id: 'holds', label: 'Hold Queues', count: activeReservations.length },
-            { id: 'seats', label: 'Study Pods', count: activeSeats.length },
-            { id: 'wishlist', label: 'Saved Wishlist', count: wishlist.length },
-            { id: 'compare', label: 'Compare Matrix', count: compareBookIds.length },
-            { id: 'recommendations', label: 'Curated For You', count: recommendations.length }
+            { id: 'all', label: 'All Records' },
+            { id: 'loans', label: 'Borrowed Books' },
+            { id: 'holds', label: 'Waiting List' },
+            { id: 'seats', label: 'Study Pods' },
+            { id: 'wishlist', label: 'Saved Wishlist' },
+            { id: 'compare', label: 'Compare Matrix' },
+            { id: 'recommendations', label: 'Curated For You' }
           ].map(tab => {
             const isActive = currentTab === tab.id;
             return (
@@ -975,20 +1227,6 @@ export default function StudentDashboard({
                 }}
               >
                 <span>{tab.label}</span>
-                {tab.count !== null && (
-                  <span
-                    style={{
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.22)' : 'var(--editorial-bg-subtle)',
-                      color: isActive ? '#FFFFFF' : 'var(--editorial-accent)',
-                      padding: '1px 6px',
-                      borderRadius: '10px'
-                    }}
-                  >
-                    {tab.count}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -1002,47 +1240,222 @@ export default function StudentDashboard({
       {/* ── 4. Active Borrowed Volumes (Circulation Ledger) ── */}
       {(currentTab === 'all' || currentTab === 'loans') && (
         <section style={{ marginBottom: '44px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--editorial-border)', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <span className="editorial-kicker">CIRCULATION LEDGER</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
-                Active Borrowed Books ({activeLoans.length})
+                Borrowed Books ({borrowSubTab === 'active' ? `${activeLoans.length} Active` : `${pastLoans.length} Returned History`})
               </h3>
             </div>
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="btn btn-outline btn-sm"
-            >
-              Borrow Another Book →
-            </button>
-          </div>
 
-          {activeLoans.length === 0 ? (
-            <div
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid var(--editorial-border)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '40px 24px',
-                textAlign: 'center',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <BookOpen size={36} color="var(--editorial-text-muted)" style={{ margin: '0 auto 12px' }} />
-              <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
-                No Physical Volumes Currently on Loan
-              </h4>
-              <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', margin: '0 0 18px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
-                Your circulation ledger is clear. Explore the library chambers to borrow your next scholarly read.
-              </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              {/* Sub-tabs: Active on Loan vs Borrowing History */}
+              <div style={{ display: 'inline-flex', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <button
+                  type="button"
+                  onClick={() => setBorrowSubTab('active')}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    borderRadius: 'var(--radius-sm)',
+                    border: 'none',
+                    backgroundColor: borrowSubTab === 'active' ? 'var(--editorial-text)' : 'transparent',
+                    color: borrowSubTab === 'active' ? '#FFFFFF' : 'var(--editorial-text)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Active on Loan ({activeLoans.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBorrowSubTab('history')}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    borderRadius: 'var(--radius-sm)',
+                    border: 'none',
+                    backgroundColor: borrowSubTab === 'history' ? 'var(--editorial-text)' : 'transparent',
+                    color: borrowSubTab === 'history' ? '#FFFFFF' : 'var(--editorial-text)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Borrowing History ({pastLoans.length})
+                </button>
+              </div>
+
               <button
                 onClick={() => onNavigate('catalog')}
-                className="btn btn-primary btn-sm"
+                className="btn btn-outline btn-sm"
               >
-                Browse Available Volumes
+                Borrow Another Book →
               </button>
             </div>
-          ) : currentTab === 'all' ? (
+          </div>
+
+          {borrowSubTab === 'history' ? (
+            pastLoans.length === 0 ? (
+              <div style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '40px 24px', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                <Clock size={36} color="var(--editorial-accent)" style={{ margin: '0 auto 12px', opacity: 0.6 }} />
+                <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
+                  No Prior Borrowing History Yet
+                </h4>
+                <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                  Completed and returned loans will be preserved here in your permanent reading ledger.
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  boxShadow: 'var(--shadow-sm)',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--editorial-border)', backgroundColor: 'var(--editorial-bg-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--editorial-accent)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle size={14} color="#15803D" />
+                    <span>Returned Stacks Ledger ({pastLoans.length} Volumes Returned)</span>
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                    Scroll table to view all {pastLoans.length} archived checkouts
+                  </span>
+                </div>
+
+                <div style={{
+                  maxHeight: '480px',
+                  overflowY: 'auto',
+                  overflowX: 'auto',
+                  scrollbarWidth: 'thin',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--editorial-bg-subtle)' }}>
+                      <tr style={{ backgroundColor: 'var(--editorial-bg)', borderBottom: '1px solid var(--editorial-border)' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700 }}>Book Title &amp; Author</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700 }}>Barcode / Copy Code</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700 }}>Category &amp; Location</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700 }}>Borrow Date</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--editorial-text)', fontWeight: 700 }}>Returned Date</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--editorial-text)', fontWeight: 700 }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pastLoans.map((loan, idx) => {
+                        const borrowD = loan.borrow_date ? new Date(loan.borrow_date) : null;
+                        const returnD = loan.return_date ? new Date(loan.return_date) : null;
+
+                        return (
+                          <tr key={loan.id || idx} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
+                            <td style={{ padding: '14px 16px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div
+                                  style={{
+                                    width: '38px',
+                                    height: '52px',
+                                    borderRadius: '2px',
+                                    overflow: 'hidden',
+                                    backgroundColor: 'var(--editorial-bg-subtle)',
+                                    flexShrink: 0,
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                                  }}
+                                >
+                                  <img
+                                    src={loan.cover_image || getOfflineBookCover(loan.book_title, loan.book_author || 'Scholar', loan.category)}
+                                    alt={loan.book_title}
+                                    onError={(e) => handleBookCoverError(e, loan.book_title, loan.book_author || 'Scholar', loan.category)}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  />
+                                </div>
+                                <div>
+                                  <strong
+                                    style={{ color: 'var(--editorial-text)', cursor: 'pointer', display: 'block', lineHeight: 1.3 }}
+                                    onClick={() => loan.book_id && onViewBookDetails(loan.book_id)}
+                                  >
+                                    {loan.book_title}
+                                  </strong>
+                                  <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text-muted)' }}>
+                                    by {loan.book_author || 'Scholar'}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: 600 }}>
+                              <span style={{ backgroundColor: 'var(--editorial-bg)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', fontSize: '0.78rem' }}>
+                                {loan.copy_code || 'LM-STACKS'}
+                              </span>
+                            </td>
+
+                            <td style={{ padding: '14px 16px', fontSize: '0.80rem', color: 'var(--editorial-text-muted)' }}>
+                              <div>{loan.category || 'General Collection'}</div>
+                              <div style={{ fontSize: '0.74rem' }}>{loan.floor || 'Floor 1'} • {loan.shelf || 'Main Stacks'}</div>
+                            </td>
+
+                            <td style={{ padding: '14px 16px', fontSize: '0.82rem', color: 'var(--editorial-text-muted)' }}>
+                              {borrowD ? borrowD.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                            </td>
+
+                            <td style={{ padding: '14px 16px', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                              {returnD ? returnD.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently Returned'}
+                            </td>
+
+                            <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                ✓ Returned to Stacks
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          ) : (
+            activeLoans.length === 0 ? (
+              <div
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '40px 24px',
+                  textAlign: 'center',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <BookOpen size={36} color="var(--editorial-text-muted)" style={{ margin: '0 auto 12px' }} />
+                <h4 style={{ fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 6px' }}>
+                  No Physical Volumes Currently on Loan
+                </h4>
+                <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', margin: '0 0 18px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  You have returned all borrowed volumes. You can review all {pastLoans.length} books in your Borrowing History or browse new volumes.
+                </p>
+                <div style={{ display: 'inline-flex', gap: '10px' }}>
+                  {pastLoans.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setBorrowSubTab('history')}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      View Borrowing History ({pastLoans.length})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onNavigate('catalog')}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Browse Available Volumes
+                  </button>
+                </div>
+              </div>
+            ) : currentTab === 'all' ? (
             /* In All tab: Show Featured Spread for primary loan + Grid for any additional loans */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {primaryLoan && (
@@ -1326,7 +1739,7 @@ export default function StudentDashboard({
               >
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--editorial-border)', backgroundColor: 'var(--editorial-bg-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--editorial-accent)' }}>
-                    PHYSICAL BORROWED COPIES ({activeLoans.length})
+                    PHYSICAL BORROWED COPIES ({activeLoans.length} Active in Circulation)
                   </div>
                   <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text-muted)' }}>
                     Max Allowance: 5 Copies Concurrent
@@ -1415,170 +1828,144 @@ export default function StudentDashboard({
 
               {/* Specimen Cards View */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-              {activeLoans.map(loan => {
-                const dueDate = new Date(loan.due_date);
-                const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
-                const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                {activeLoans.map(loan => {
+                  const dueDate = new Date(loan.due_date);
+                  const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
+                  const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
 
-                return (
-                  <div
-                    key={loan.id}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid var(--editorial-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '20px',
-                      display: 'flex',
-                      gap: '18px',
-                      boxShadow: 'var(--shadow-sm)',
-                      alignItems: 'stretch'
-                    }}
-                  >
-                    {/* Book Cover Specimen */}
+                  return (
                     <div
+                      key={loan.id}
                       style={{
-                        width: '88px',
-                        minWidth: '88px',
-                        height: '130px',
-                        borderRadius: '2px',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 12px rgba(37, 40, 32, 0.12)',
+                        backgroundColor: '#FFFFFF',
                         border: '1px solid var(--editorial-border)',
-                        backgroundColor: 'var(--editorial-bg-subtle)',
-                        cursor: 'pointer',
-                        flexShrink: 0
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '20px',
+                        display: 'flex',
+                        gap: '18px',
+                        boxShadow: 'var(--shadow-sm)',
+                        alignItems: 'stretch'
                       }}
-                      onClick={() => onViewBookDetails(loan.book_id)}
-                      title={`View details for ${loan.book_title}`}
                     >
-                      <img
-                        src={loan.cover_image || getOfflineBookCover(loan.book_title, loan.book_author || 'Scholar', 'Circulation')}
-                        alt={loan.book_title}
-                        onError={(e) => handleBookCoverError(e, loan.book_title, loan.book_author || 'Scholar', 'Circulation')}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-
-                    {/* Book Details */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-                          <h4
-                            style={{
-                              fontFamily: 'var(--font-serif)',
-                              fontSize: '1.08rem',
-                              fontWeight: 700,
-                              color: 'var(--editorial-text)',
-                              margin: 0,
-                              lineHeight: 1.3,
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => onViewBookDetails(loan.book_id)}
-                          >
-                            {loan.book_title}
-                          </h4>
-                          {isOverdue ? (
-                            <span className="badge badge-danger" style={{ flexShrink: 0 }}>Overdue</span>
-                          ) : (
-                            <span className="badge badge-available" style={{ flexShrink: 0 }}>{daysLeft}d left</span>
-                          )}
-                        </div>
-
-                        <div style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', marginBottom: '8px' }}>
-                          by <strong style={{ color: 'var(--editorial-text)' }}>{loan.book_author || 'Scholar'}</strong>
-                        </div>
-
-                        <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginBottom: '6px' }}>
-                          Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
-                        </div>
-
-                        <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
-                          Due on: <strong style={{ color: 'var(--editorial-text)' }}>{dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-                        </div>
+                      {/* Book Cover Specimen */}
+                      <div
+                        style={{
+                          width: '88px',
+                          minWidth: '88px',
+                          height: '130px',
+                          borderRadius: '2px',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 12px rgba(37, 40, 32, 0.12)',
+                          border: '1px solid var(--editorial-border)',
+                          backgroundColor: 'var(--editorial-bg-subtle)',
+                          cursor: 'pointer',
+                          flexShrink: 0
+                        }}
+                        onClick={() => onViewBookDetails(loan.book_id)}
+                        title={`View details for ${loan.book_title}`}
+                      >
+                        <img
+                          src={loan.cover_image || getOfflineBookCover(loan.book_title, loan.book_author || 'Scholar', 'Circulation')}
+                          alt={loan.book_title}
+                          onError={(e) => handleBookCoverError(e, loan.book_title, loan.book_author || 'Scholar', 'Circulation')}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--editorial-border)', marginTop: '10px', flexWrap: 'wrap', gap: '6px' }}>
-                        <span style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)' }}>
-                          Renewals: {loan.renewal_count || 0}/2
-                        </span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button
-                            onClick={() => handleReturnLoan(loan)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ fontSize: '0.74rem', padding: '4px 10px' }}
-                          >
-                            ✓ Return
-                          </button>
-                          <button
-                            onClick={() => handleRenewLoan(loan.id)}
-                            disabled={loan.renewal_count >= 2}
-                            className="btn btn-outline btn-sm"
-                            style={{ fontSize: '0.74rem', padding: '4px 8px' }}
-                          >
-                            Renew
-                          </button>
-                          <button
-                            onClick={() => onViewBookDetails(loan.book_id)}
-                            className="btn btn-outline btn-sm"
-                            style={{ fontSize: '0.74rem', padding: '4px 8px' }}
-                          >
-                            Details
-                          </button>
+                      {/* Book Details */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+                            <h4
+                              style={{
+                                fontFamily: 'var(--font-serif)',
+                                fontSize: '1.08rem',
+                                fontWeight: 700,
+                                color: 'var(--editorial-text)',
+                                margin: 0,
+                                lineHeight: 1.3,
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => onViewBookDetails(loan.book_id)}
+                            >
+                              {loan.book_title}
+                            </h4>
+                            {isOverdue ? (
+                              <span className="badge badge-danger" style={{ flexShrink: 0 }}>Overdue</span>
+                            ) : (
+                              <span className="badge badge-available" style={{ flexShrink: 0 }}>{daysLeft}d left</span>
+                            )}
+                          </div>
+
+                          <div style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', marginBottom: '8px' }}>
+                            by <strong style={{ color: 'var(--editorial-text)' }}>{loan.book_author || 'Scholar'}</strong>
+                          </div>
+
+                          <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginBottom: '6px' }}>
+                            Barcode: <code style={{ color: 'var(--editorial-text)', fontFamily: 'monospace', fontWeight: 600, backgroundColor: 'var(--editorial-bg)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>{loan.copy_code}</code>
+                          </div>
+
+                          <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                            Due on: <strong style={{ color: 'var(--editorial-text)' }}>{dueDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--editorial-border)', marginTop: '10px', flexWrap: 'wrap', gap: '6px' }}>
+                          <span style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)' }}>
+                            Renewals: {loan.renewal_count || 0}/2
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              onClick={() => handleReturnLoan(loan)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ fontSize: '0.74rem', padding: '4px 10px' }}
+                            >
+                              ✓ Return
+                            </button>
+                            <button
+                              onClick={() => handleRenewLoan(loan.id)}
+                              disabled={loan.renewal_count >= 2}
+                              className="btn btn-outline btn-sm"
+                              style={{ fontSize: '0.74rem', padding: '4px 8px' }}
+                            >
+                              Renew
+                            </button>
+                            <button
+                              onClick={() => onViewBookDetails(loan.book_id)}
+                              className="btn btn-outline btn-sm"
+                              style={{ fontSize: '0.74rem', padding: '4px 8px' }}
+                            >
+                              Details
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          ))}
 
-          {/* If In Loans Tab: Also Display Past Returned Circulation History */}
-          {currentTab === 'loans' && pastLoans.length > 0 && (
+          {/* Archival Reading History: Circular Bookshelf for Returned Volumes */}
+          {(currentTab === 'all' || currentTab === 'loans') && pastLoansBooks.length > 0 && (
             <div style={{ marginTop: '48px', borderTop: '1px solid var(--editorial-border)', paddingTop: '28px' }}>
               <div style={{ marginBottom: '16px' }}>
-                <span className="editorial-kicker">ARCHIVAL READING RECORD</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
-                  Returned Volumes History ({pastLoans.length})
+                <span className="editorial-kicker" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={14} color="var(--editorial-accent)" strokeWidth={2.2} />
+                  ARCHIVAL READING RECORD
+                </span>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', margin: '4px 0 2px', color: 'var(--editorial-text)', fontWeight: 800 }}>
+                  Archival Reading History
                 </h4>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' }}>
-                {pastLoans.map(pLoan => (
-                  <div
-                    key={pLoan.id}
-                    style={{
-                      backgroundColor: 'var(--editorial-bg-subtle)',
-                      border: '1px solid var(--editorial-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '14px 16px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '12px'
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '0.94rem', color: 'var(--editorial-text)', cursor: 'pointer', lineHeight: 1.25, marginBottom: '3px' }}
-                        onClick={() => onViewBookDetails(pLoan.book_id)}
-                      >
-                        {pLoan.book_title}
-                      </div>
-                      <div style={{ fontSize: '0.76rem', color: 'var(--editorial-text-muted)' }}>
-                        Barcode: <code style={{ fontFamily: 'monospace' }}>{pLoan.copy_code}</code> • Returned to circulation
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => onViewBookDetails(pLoan.book_id)}
-                      className="btn btn-outline btn-sm"
-                      style={{ fontSize: '0.72rem', padding: '3px 8px', flexShrink: 0 }}
-                    >
-                      View Volume →
-                    </button>
-                  </div>
-                ))}
+              <div style={{ width: '100%', overflow: 'visible' }}>
+                <CircularBookCarousel
+                  books={pastLoansBooks}
+                  category="Archival Reading Record"
+                  onViewDetails={onViewBookDetails}
+                />
               </div>
             </div>
           )}
@@ -1601,9 +1988,14 @@ export default function StudentDashboard({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Bell size={18} color="var(--editorial-accent)" strokeWidth={2.2} />
               <div>
-                <h3 style={{ fontSize: '1.05rem', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
-                  Official Library Notices &amp; Announcements
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ fontSize: '1.05rem', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
+                    Official Library Notices &amp; Announcements
+                  </h3>
+                  <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '2px', color: 'var(--editorial-accent)' }}>
+                    OFFICIAL ARCHIVE
+                  </span>
+                </div>
                 <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
                   Administrative dispatches regarding renewals, holiday hours, and collection updates.
                 </span>
@@ -1740,7 +2132,7 @@ export default function StudentDashboard({
             <div>
               <span className="editorial-kicker">WAITLIST LEDGER</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
-                Active Hold Queues ({activeReservations.length})
+                Waiting List
               </h3>
             </div>
             <button
@@ -1851,6 +2243,7 @@ export default function StudentDashboard({
         </section>
       )}
 
+
       {/* ── 8. Biophilic Study Pods & Carrels ── */}
       {(currentTab === 'all' || currentTab === 'seats') && (
         <section style={{ marginBottom: '44px' }}>
@@ -1858,7 +2251,7 @@ export default function StudentDashboard({
             <div>
               <span className="editorial-kicker">STUDY SANCTUARY</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
-                Reserved Study Carrels &amp; Pods ({activeSeats.length})
+                Reserved Study Carrels &amp; Pods
               </h3>
             </div>
             <button
@@ -1897,7 +2290,7 @@ export default function StudentDashboard({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
               {activeSeats.map(booking => (
                 <div
-                  key={booking.id}
+                  key={booking.id || booking._id}
                   style={{
                     backgroundColor: '#FFFFFF',
                     border: '1px solid var(--editorial-border)',
@@ -1930,7 +2323,7 @@ export default function StudentDashboard({
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Clock size={14} color="var(--editorial-accent)" />
-                        <span>Time Slot: <strong>{booking.time_slot}</strong></span>
+                        <span>Time Slot: <strong>{formatTimeSlot12h(booking.time_slot)}</strong></span>
                       </div>
                     </div>
 
@@ -1950,7 +2343,7 @@ export default function StudentDashboard({
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}>
                     <button
-                      onClick={() => handleCancelSeatBooking(booking.id)}
+                      onClick={() => handleCancelSeatBooking(booking.id || booking._id)}
                       className="btn btn-outline btn-sm"
                       style={{ fontSize: '0.74rem', padding: '4px 10px', color: '#8C2222' }}
                     >
@@ -1971,10 +2364,14 @@ export default function StudentDashboard({
             <div>
               <span className="editorial-kicker">LITERARY SELECTIONS</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '2px 0 0', color: 'var(--editorial-text)' }}>
-                Recommended For You ({recommendations.length})
+                Recommended For You
               </h3>
               <p style={{ fontSize: '0.82rem', color: 'var(--editorial-text-muted)', margin: '4px 0 0' }}>
-                Curated based on your interests: <em>"{user?.interests || 'Classical Literature & Science'}"</em>
+                {user?.interests && user.interests.trim() ? (
+                  <>Curated based on your selected topics: <em>"{user.interests}"</em></>
+                ) : (
+                  'No reading topics selected yet'
+                )}
               </p>
             </div>
             <button
@@ -1984,36 +2381,84 @@ export default function StudentDashboard({
               }}
               className="btn btn-outline btn-sm"
             >
-              Adjust Topics
+              {user?.interests && user.interests.trim() ? 'Adjust Topics' : '+ Select Topics'}
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
-            {recommendations.slice(0, 8).map(book => (
-              <div key={book.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                <div
-                  style={{
-                    padding: '5px 8px',
-                    backgroundColor: 'var(--editorial-bg-subtle)',
-                    color: 'var(--editorial-accent)',
-                    fontSize: '0.70rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.04em',
-                    border: '1px solid var(--editorial-border)',
-                    borderBottom: 'none',
-                    borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0'
-                  }}
-                >
-                  ★ {book.recommendationReason || 'Archival Match'}
-                </div>
-                <BookCard
-                  book={book}
-                  onViewDetails={onViewBookDetails}
-                  onReserve={() => onNavigate('catalog')}
-                />
+          {(!user?.interests || !user.interests.trim() || recommendations.length === 0) ? (
+            <div
+              style={{
+                padding: '44px 24px',
+                textAlign: 'center',
+                border: '1px dashed var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--editorial-bg-subtle)',
+                marginTop: '12px'
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  margin: '0 auto 16px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(44, 76, 59, 0.10)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--editorial-green)'
+                }}
+              >
+                <Sparkles size={28} />
               </div>
-            ))}
-          </div>
+              <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', color: 'var(--editorial-text)', margin: '0 0 8px' }}>
+                {!user?.interests || !user.interests.trim() ? 'No Reading Topics Selected' : 'No Matching Volumes Found'}
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.55 }}>
+                {!user?.interests || !user.interests.trim()
+                  ? 'Select your preferred reading topics or genres from our catalog to receive tailored book recommendations.'
+                  : `No library volumes currently match your selected topics ("${user.interests}"). Try adding additional categories or modifying your preferences.`}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setInterestsText(user?.interests || '');
+                  setShowInterestsModal(true);
+                }}
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 22px' }}
+              >
+                <Sparkles size={16} /> Curate Reading Topics
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
+              {recommendations.slice(0, 16).map(book => (
+                <div key={book.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div
+                    style={{
+                      padding: '5px 8px',
+                      backgroundColor: 'var(--editorial-bg-subtle)',
+                      color: 'var(--editorial-accent)',
+                      fontSize: '0.70rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      border: '1px solid var(--editorial-border)',
+                      borderBottom: 'none',
+                      borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0'
+                    }}
+                  >
+                    ★ {book.recommendationReason || 'Archival Match'}
+                  </div>
+                  <BookCard
+                    book={book}
+                    onViewDetails={onViewBookDetails}
+                    onReserve={() => onNavigate('catalog')}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -2064,108 +2509,128 @@ export default function StudentDashboard({
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '22px' }}>
-              {wishlist.map(book => {
-                const isAvail = (book.available_copies ?? 1) > 0;
-                return (
-                  <div
-                    key={book.id}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid var(--editorial-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      boxShadow: 'var(--shadow-sm)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '210px',
-                        backgroundColor: 'var(--editorial-bg-subtle)',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => onViewBookDetails(book.id)}
-                    >
-                      <img
-                        src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
-                        alt={book.title}
-                        onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                      <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
-                        {isAvail ? (
-                          <span className="badge badge-available">● In Stacks</span>
-                        ) : (
-                          <span className="badge badge-borrowed">● On Loan</span>
-                        )}
-                      </div>
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+              {/* Circular Bookshelf Rotunda for Wishlist (when extensive collection) */}
+              {wishlistBooks.length >= 8 && (
+                <div style={{ width: '100%', overflow: 'visible' }}>
+                  <CircularBookCarousel
+                    books={wishlistBooks}
+                    category="Personal Wishlist"
+                    onViewDetails={onViewBookDetails}
+                  />
+                </div>
+              )}
 
-                    <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <div style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
-                        {book.category || 'Archival'}
-                      </div>
-                      <h4
+              {/* Action Cards (Borrow / Hold / Remove) */}
+              <div>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--editorial-text)', margin: '0 0 16px', fontWeight: 700 }}>
+                  Wishlist Volume Management ({wishlist.length})
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '22px' }}>
+                  {wishlist.map(book => {
+                    const bId = book.id !== undefined ? book.id : (book._id !== undefined ? book._id : book.wishlist_id);
+                    const isAvail = (book.available_copies ?? 1) > 0;
+                    return (
+                      <div
+                        key={bId}
                         style={{
-                          margin: '0 0 4px',
-                          fontSize: '1.02rem',
-                          fontFamily: 'var(--font-serif)',
-                          color: 'var(--editorial-text)',
-                          lineHeight: 1.3,
-                          cursor: 'pointer'
+                          backgroundColor: '#FFFFFF',
+                          border: '1px solid var(--editorial-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          boxShadow: 'var(--shadow-sm)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          overflow: 'hidden'
                         }}
-                        onClick={() => onViewBookDetails(book.id)}
                       >
-                        {book.title}
-                      </h4>
-                      <div style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', marginBottom: '10px' }}>
-                        by <strong>{book.author}</strong>
-                      </div>
-
-                      <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
-                        📍 {book.floor || 'Floor 1'} • {book.shelf || 'Main Stacks'}
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
-                        {isAvail ? (
-                          <button
-                            type="button"
-                            onClick={(e) => handleBorrowWishlistBook(book, e)}
-                            className="btn btn-primary btn-sm"
-                            style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
-                          >
-                            <BookOpen size={13} />
-                            <span>Borrow Copy</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => handleReserveWishlistBook(book.id, book.title, e)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
-                          >
-                            <Bookmark size={13} />
-                            <span>Place Hold</span>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => handleRemoveWishlist(book.id, e)}
-                          className="btn btn-outline btn-sm"
-                          style={{ padding: '6px 10px', color: '#991B1B', borderColor: '#FCA5A5' }}
-                          title="Remove from wishlist"
+                        <div
+                          style={{
+                            height: '210px',
+                            backgroundColor: 'var(--editorial-bg-subtle)',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => onViewBookDetails(bId)}
                         >
-                          <X size={14} />
-                        </button>
+                          <img
+                            src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
+                            alt={book.title}
+                            onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
+                            {isAvail ? (
+                              <span className="badge badge-available">● In Stacks</span>
+                            ) : (
+                              <span className="badge badge-borrowed">● On Loan</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                          <div style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                            {book.category || 'Archival'}
+                          </div>
+                          <h4
+                            style={{
+                              margin: '0 0 4px',
+                              fontSize: '1.02rem',
+                              fontFamily: 'var(--font-serif)',
+                              color: 'var(--editorial-text)',
+                              lineHeight: 1.3,
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => onViewBookDetails(bId)}
+                          >
+                            {book.title}
+                          </h4>
+                          <div style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', marginBottom: '10px' }}>
+                            by <strong>{book.author}</strong>
+                          </div>
+
+                          <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
+                            📍 {book.floor || 'Floor 1'} • {book.shelf || 'Main Stacks'}
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+                            {isAvail ? (
+                              <button
+                                type="button"
+                                onClick={(e) => handleBorrowWishlistBook(book, e)}
+                                className="btn btn-primary btn-sm"
+                                style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                              >
+                                <BookOpen size={13} />
+                                <span>Borrow Copy</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => handleReserveWishlistBook(bId, book.title, e)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                              >
+                                <Bookmark size={13} />
+                                <span>Place Hold</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => handleRemoveWishlist(bId, e)}
+                              className="btn btn-outline btn-sm"
+                              style={{ padding: '6px 10px', color: '#991B1B', borderColor: '#FCA5A5' }}
+                              title="Remove from wishlist"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </section>
@@ -2202,146 +2667,157 @@ export default function StudentDashboard({
         </section>
       )}
 
-      {/* ── 12. Saved Wishlist & Borrowing History Spread (Overview & Loans) ── */}
-      {(currentTab === 'all' || currentTab === 'loans') && (
+      {/* ── 12. Saved Wishlist (Overview Tab: Curated Wishlist Showcase Grid) ── */}
+      {currentTab === 'all' && wishlist.length > 0 && (
         <section
           style={{
-            display: 'grid',
-            gridTemplateColumns: currentTab === 'all' ? 'repeat(auto-fit, minmax(340px, 1fr))' : '1fr',
-            gap: '30px'
+            marginBottom: '48px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid var(--editorial-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '28px clamp(16px, 3vw, 32px)',
+            boxShadow: 'var(--shadow-sm)'
           }}
         >
-          {/* Wishlist Column for Overview Tab */}
-          {currentTab === 'all' && (
-            <div
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid var(--editorial-border)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '24px',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, color: 'var(--editorial-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Heart size={18} color="var(--editorial-accent)" strokeWidth={2} />
-                  <span>Personal Wishlist ({wishlist.length})</span>
-                </h3>
-                <button
-                  onClick={() => setCurrentTab('wishlist')}
-                  className="btn btn-outline btn-sm"
-                  style={{ fontSize: '0.74rem' }}
-                >
-                  View Full Shelf →
-                </button>
-              </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <span className="editorial-kicker" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Heart size={14} color="var(--editorial-accent)" strokeWidth={2.2} />
+                PERSONAL DESIDERATA
+              </span>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 2px', fontWeight: 800 }}>
+                Personal Wishlist ({wishlist.length})
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                Your private curated reading shelf. Borrow directly when copies are available in stacks or place a hold.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setCurrentTab('wishlist')}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.76rem' }}
+              >
+                Manage Wishlist Stacks →
+              </button>
+            </div>
+          </div>
 
-              {wishlist.length === 0 ? (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--editorial-text-muted)', fontSize: '0.86rem' }}>
-                  No titles saved to your wishlist yet. Click "Save to Wishlist" on any book page.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {wishlist.map(book => (
-                    <div
-                      key={book.id}
+          {/* Grid of Wishlist Books */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '22px' }}>
+            {wishlist.map(book => {
+              const bId = book.id !== undefined ? book.id : (book._id !== undefined ? book._id : book.wishlist_id);
+              const isAvail = (book.available_copies ?? 1) > 0;
+              return (
+                <div
+                  key={bId}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--editorial-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    transition: 'transform 0.18s ease, box-shadow 0.18s ease'
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '210px',
+                      backgroundColor: 'var(--editorial-bg-subtle)',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => onViewBookDetails(bId)}
+                  >
+                    <img
+                      src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
+                      alt={book.title}
+                      onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
+                      {isAvail ? (
+                        <span className="badge badge-available">● In Stacks</span>
+                      ) : (
+                        <span className="badge badge-borrowed">● On Loan</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      {book.category || 'Archival'}
+                    </div>
+                    <h4
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '10px 12px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--editorial-bg)',
-                        border: '1px solid var(--editorial-border)',
+                        margin: '0 0 4px',
+                        fontSize: '1.02rem',
+                        fontFamily: 'var(--font-serif)',
+                        color: 'var(--editorial-text)',
+                        lineHeight: 1.3,
                         cursor: 'pointer'
                       }}
-                      onClick={() => onViewBookDetails(book.id)}
+                      onClick={() => onViewBookDetails(bId)}
                     >
-                      <img
-                        src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
-                        alt={book.title}
-                        onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
-                        style={{ width: '38px', height: '52px', objectFit: 'cover', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h5 style={{ margin: '0 0 2px', fontSize: '0.88rem', color: 'var(--editorial-text)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {book.title}
-                        </h5>
-                        <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
-                          {book.author}
-                        </span>
-                      </div>
+                      {book.title}
+                    </h4>
+                    <div style={{ fontSize: '0.80rem', color: 'var(--editorial-text-muted)', marginBottom: '10px' }}>
+                      by <strong>{book.author}</strong>
+                    </div>
+
+                    <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', backgroundColor: 'var(--editorial-bg)', padding: '4px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)', marginBottom: '14px', marginTop: 'auto' }}>
+                      📍 {book.floor || 'Floor 1'} • {book.shelf || 'Main Stacks'}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+                      {isAvail ? (
+                        <button
+                          type="button"
+                          onClick={(e) => handleBorrowWishlistBook(book, e)}
+                          className="btn btn-primary btn-sm"
+                          style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                        >
+                          <BookOpen size={13} />
+                          <span>Borrow Copy</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => handleReserveWishlistBook(bId, book.title, e)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.76rem', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                        >
+                          <Bookmark size={13} />
+                          <span>Place Hold</span>
+                        </button>
+                      )}
                       <button
-                        onClick={(e) => handleRemoveWishlist(book.id, e)}
+                        type="button"
+                        onClick={(e) => handleRemoveWishlist(bId, e)}
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: '6px 10px', color: '#991B1B', borderColor: '#FCA5A5' }}
                         title="Remove from wishlist"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: 'var(--editorial-text-muted)',
-                          padding: '4px'
-                        }}
                       >
-                        <X size={15} />
+                        <X size={14} />
                       </button>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })}
+          </div>
 
-          {/* Reading History Column */}
-          {(currentTab === 'all' || currentTab === 'loans') && (
-            <div
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid var(--editorial-border)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '24px',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, color: 'var(--editorial-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Clock size={18} color="var(--editorial-accent)" strokeWidth={2} />
-                  <span>Archival Reading History ({pastLoans.length})</span>
-                </h3>
-              </div>
-
-              {pastLoans.length === 0 ? (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--editorial-text-muted)', fontSize: '0.86rem' }}>
-                  Returned volumes will be archived here as your permanent reading record.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {pastLoans.map(p => (
-                    <div
-                      key={p.id}
-                      style={{
-                        padding: '10px 14px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--editorial-bg)',
-                        border: '1px solid var(--editorial-border)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '12px'
-                      }}
-                    >
-                      <div>
-                        <strong style={{ fontSize: '0.86rem', color: 'var(--editorial-text)' }}>
-                          {p.book_title}
-                        </strong>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginTop: '2px' }}>
-                          Returned on {new Date(p.return_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      </div>
-                      <span className="badge badge-available">Archived</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* If extensive collection (8+ books), also offer circular bookshelf rotunda */}
+          {wishlistBooks.length >= 8 && (
+            <div style={{ width: '100%', overflow: 'visible', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--editorial-border)' }}>
+              <CircularBookCarousel
+                books={wishlistBooks}
+                category="Personal Wishlist"
+                onViewDetails={onViewBookDetails}
+              />
             </div>
           )}
         </section>
@@ -2413,9 +2889,32 @@ export default function StudentDashboard({
               Select scholarly topics or specify custom literary subjects. Your reading recommendations are continuously tailored to these topics.
             </p>
 
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Catalog Topics ({availableTopics.length}):
+              </span>
+              {interestsText && interestsText.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setInterestsText('')}
+                  style={{
+                    fontSize: '0.74rem',
+                    background: 'none',
+                    border: 'none',
+                    color: '#c2410c',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Clear All Topics
+                </button>
+              )}
+            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '18px' }}>
-              {SUGGESTED_INTEREST_TAGS.map(tag => {
-                const isSelected = (interestsText || '').toLowerCase().includes(tag.toLowerCase());
+              {availableTopics.map(tag => {
+                const isSelected = selectedTagsSet.has(tag.toLowerCase());
                 return (
                   <button
                     key={tag}

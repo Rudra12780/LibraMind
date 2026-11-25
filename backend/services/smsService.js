@@ -51,8 +51,12 @@ function getSmsConfig() {
 /**
  * Dispatch real SMS message via configured provider
  */
-async function sendSmsOtp(phoneNumber, otpCode, purpose = 'verification') {
+async function sendSmsOtp(phoneNumber, otpCode, purpose = 'verification', expiresInSeconds = 300) {
   const config = getSmsConfig();
+
+  const validityLabel = expiresInSeconds <= 60
+    ? `${expiresInSeconds} seconds only`
+    : `${Math.max(1, Math.round(expiresInSeconds / 60))} minutes`;
 
   if (!config.isConfigured) {
     const missingList = config.missing.join(', ');
@@ -66,7 +70,7 @@ async function sendSmsOtp(phoneNumber, otpCode, purpose = 'verification') {
     throw err;
   }
 
-  const messageText = `Your LibraMind Library verification code is ${otpCode}. Valid for 5 minutes. Do not share this code with anyone.`;
+  const messageText = `Your LibraMind Library verification code is ${otpCode}. Valid for ${validityLabel}. Do not share this code with anyone.`;
 
   if (config.provider === 'twilio') {
     return sendTwilioSms(config, phoneNumber, messageText);

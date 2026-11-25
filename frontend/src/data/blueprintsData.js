@@ -311,6 +311,25 @@ PAGE 11: CIRCULATION ANALYTICS (AnalyticsPage.jsx)
 | ACQUISITIONS FORECASTING:             |                                         |
 | • The Power of Now: 34 loans / 4 waitlist ➔ Recommendation: Order 2 copies     |
 +---------------------------------------------------------------------------------+
+
+================================================================================
+14. HUMAN-CENTERED DESIGN THINKING 15-STAGE ARCHITECTURE
+================================================================================
+• Stage 1 (Title Slide): Project title, team members, roll numbers, department, institution, mentor.
+• Stage 2 (Introduction): Physical retrieval dilemmas (μ=14.2 min) vs biophilic smart sanctuary paradigm.
+• Stage 3 (Project Overview): Tri-portal scope (Member, Librarian, Admin), sub-2.5 min retrieval target.
+• Stage 4 (User Research): Stratified random sampling (N=184), 24 interviews, 40 hrs ethnographic inquiry.
+• Stage 5 (Empathise): 4-quadrant empathy map (Think, Feel, Say, Do), phantom availability pain point.
+• Stage 6 (Statistical Findings): Gaussian density PDF, Pearson r=0.78, two-sample t(183)=11.42, p<0.0001.
+• Stage 7 (Define): Persona (Aarav Sharma), POV, HMW spatial routing, MoSCoW prioritization.
+• Stage 8 (Ideation): Crazy Eights, SCAMPER, 4 multidisciplinary engineering pillars & sketches.
+• Stage 9 (Idea Selection): Weighted MCDA matrix (89.5/100 for biophilic web architecture) & hypotheses.
+• Stage 10 (Prototype): Fullstack React 18, Node Express REST, FastAPI AI NLP microservice, WAL SQLite.
+• Stage 11 (Testing & Validation): TCR (96.8%), SUS score 88.6/100 (A+ grade), paired t=9.87, p<0.0001.
+• Stage 12 (Results & Iterations): 12-hr AM/PM slots, responsive touch layouts, 85% search time reduction.
+• Stage 13 (Impact & Limitations): 600+ monthly study hours saved, single-scan desk, boundary constraints.
+• Stage 14 (Conclusion & Roadmap): Spatial certainty primacy, IoT RFID smart drop bins, vector embeddings.
+• Stage 15 (References & Q&A): Brown, Norman, ACRL, Kleinrock, Vaswani academic citations & viva defense.
 `;
 
 // Helper: Download as Markdown file

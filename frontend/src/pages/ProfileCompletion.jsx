@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import {
   User,
+  Phone,
   Camera,
   CheckCircle2,
   Sparkles,
@@ -14,14 +15,15 @@ import {
 } from 'lucide-react';
 
 const WEBSITE_CATEGORIES = [
-  { id: 'Emotional Fiction', label: 'Emotional Fiction', desc: 'Heartwarming narratives, drama & human empathy' },
-  { id: 'Motivation & Self-Help', label: 'Motivation & Self-Help', desc: 'Mindset mastery, resilience & daily focus' },
-  { id: 'Spiritual & Wisdom', label: 'Spiritual & Wisdom', desc: 'Ancient philosophy, inner peace & mindfulness' },
-  { id: 'Science & Technology', label: 'Science & Technology', desc: 'AI, computing, physics & future innovation' },
-  { id: 'Philosophy & Ethics', label: 'Philosophy & Ethics', desc: 'Moral thinking, logic & classical debates' },
-  { id: 'History & Culture', label: 'History & Culture', desc: 'World civilizations, archival lore & memoirs' },
-  { id: 'Classics & Literature', label: 'Classics & Literature', desc: 'Timeless masterpieces and literary canon' },
-  { id: 'Psychology & Mind', label: 'Psychology & Mind', desc: 'Human behavior, cognition & emotional depth' }
+  { id: 'AI & Data Science', label: 'AI & Data Science', desc: 'Machine cognition, neural architectures & algorithm foundations' },
+  { id: 'Classic Novels', label: 'Classic Novels', desc: 'Timeless literary masterpieces, Dostoevsky, Austen, Orwell & world classics' },
+  { id: 'Emotional Fiction', label: 'Emotional Fiction', desc: 'Profound stories of empathy, heart, personal journeys and human connection' },
+  { id: 'Fiction & Mystery', label: 'Fiction & Mystery', desc: 'Enthralling whodunits, dystopian thrillers, Agatha Christie and suspense' },
+  { id: 'Indian Literature', label: 'Indian Literature', desc: 'Rich cultural narratives, heritage writings, and classical Indian stories' },
+  { id: 'Modern Novels', label: 'Modern Novels', desc: 'Contemporary narrative prose, modern literature, and modern-day journeys' },
+  { id: 'Personal Growth', label: 'Personal Growth', desc: 'Atomic habits, psychological resilience & deep focus treatises' },
+  { id: 'Programming & Technology', label: 'Programming & Technology', desc: 'Clean architecture, modern software systems & engineering' },
+  { id: 'Spiritual & Wisdom', label: 'Spiritual & Wisdom', desc: 'Epistemology, ancient wisdom, Bhagavad Gita, Tao Te Ching & philosophical inquiries' }
 ];
 
 export default function ProfileCompletion({ onNavigate }) {
@@ -30,6 +32,7 @@ export default function ProfileCompletion({ onNavigate }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('Male');
   const [bio, setBio] = useState('');
   const [department, setDepartment] = useState('Literature & Humanities');
@@ -48,6 +51,7 @@ export default function ProfileCompletion({ onNavigate }) {
       if (user.first_name) setFirstName(user.first_name);
       if (user.last_name) setLastName(user.last_name);
       if (user.name && user.name !== 'New Scholar') setFullName(user.name);
+      if (user.phone) setPhone(user.phone);
       if (user.gender) setGender(user.gender);
       if (user.bio) setBio(user.bio);
       if (user.profile_photo) setProfilePhoto(user.profile_photo);
@@ -107,6 +111,7 @@ export default function ProfileCompletion({ onNavigate }) {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         name: computedName,
+        phone: phone.trim(),
         gender,
         bio: bio.trim(),
         profile_photo: profilePhoto,
@@ -351,6 +356,23 @@ export default function ProfileCompletion({ onNavigate }) {
             />
             <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginTop: '3px', display: 'block' }}>
               This name will be displayed across your library membership card, reservations, and reading pod desks.
+            </span>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '18px' }}>
+            <label className="form-label" style={{ fontSize: '0.80rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Phone size={14} color="var(--editorial-accent)" />
+              Mobile Phone Number (for SMS OTP & Security Alerts)
+            </label>
+            <input
+              type="tel"
+              className="form-control"
+              placeholder="e.g. +91 9876543210"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginTop: '3px', display: 'block' }}>
+              Used to recover your password via 60-second SMS OTP verification.
             </span>
           </div>
 

@@ -8,7 +8,7 @@ export default function ResetPassword({ onNavigate }) {
   const [validating, setValidating] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
   const [tokenError, setTokenError] = useState('');
-  const [accountInfo, setAccountInfo] = useState({ maskedEmail: '', userName: '' });
+  const [accountInfo, setAccountInfo] = useState({ maskedPhone: '', maskedEmail: '', userName: '' });
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,7 +26,7 @@ export default function ResetPassword({ onNavigate }) {
     if (!urlToken) {
       setValidating(false);
       setTokenValid(false);
-      setTokenError('No password reset token was detected in the URL. Please use the complete link dispatched to your email.');
+      setTokenError('No password reset session token found. Please verify your mobile number using the 60-second SMS OTP on the Forgot Password page.');
       return;
     }
 
@@ -37,12 +37,13 @@ export default function ResetPassword({ onNavigate }) {
         if (res.valid) {
           setTokenValid(true);
           setAccountInfo({
+            maskedPhone: res.maskedPhone || '',
             maskedEmail: res.maskedEmail || '',
             userName: res.userName || 'LibraMind Member'
           });
         } else {
           setTokenValid(false);
-          setTokenError(res.error || 'This reset link is invalid or expired.');
+          setTokenError(res.error || 'This reset session is invalid or expired.');
         }
       })
       .catch((err) => {
@@ -228,7 +229,7 @@ export default function ResetPassword({ onNavigate }) {
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '12px', fontSize: '0.92rem' }}
               >
-                Request a New Reset Link →
+                Request SMS OTP →
               </button>
 
               <button
@@ -291,7 +292,7 @@ export default function ResetPassword({ onNavigate }) {
           </div>
         ) : (
           <div>
-            {accountInfo.maskedEmail && (
+            {(accountInfo.maskedPhone || accountInfo.maskedEmail) && (
               <div
                 style={{
                   padding: '10px 16px',
@@ -308,7 +309,7 @@ export default function ResetPassword({ onNavigate }) {
                 }}
               >
                 <span>Account: <strong>{accountInfo.userName}</strong></span>
-                <span style={{ fontFamily: 'monospace' }}>{accountInfo.maskedEmail}</span>
+                <span style={{ fontFamily: 'monospace' }}>{accountInfo.maskedPhone || accountInfo.maskedEmail}</span>
               </div>
             )}
 

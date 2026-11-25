@@ -17,16 +17,17 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
+export default function Navbar({ activePage, onNavigate, onOpenBlueprints, onOpenPresentation, compareCount = 0 }) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
+  const isAuthPage = activePage === 'login' || activePage === 'register';
 
   const handleLogout = async () => {
     setMobileOpen(false);
     await logout();
-    onNavigate('home');
+    onNavigate('login');
   };
 
   const isItemActive = (id) => {
@@ -40,6 +41,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
     if (id === 'compare' && activePage === 'compare') return true;
     if (id === 'visit-planner' && activePage === 'visit-planner') return true;
     if (id === 'reservations' && activePage === 'reservations') return true;
+    if (id === 'blueprints' && activePage === 'blueprints') return true;
     if (id === 'terms' && activePage === 'terms') return true;
     if (id === 'about' && activePage === 'about') return true;
     if (id === 'contact' && activePage === 'contact') return true;
@@ -67,14 +69,19 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
 
   const handleLogoClick = () => {
     setMobileOpen(false);
-    if (activePage === 'home') {
-      const el = document.getElementById('hero-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
+    if (!user) {
+      if (activePage === 'home') {
+        const el = document.getElementById('hero-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
       }
+      onNavigate('home', { scrollTo: 'hero-section' });
+    } else {
+      // Logged in user: direct to user dashboard
+      onNavigate(getHomeTarget());
     }
-    onNavigate('home', { scrollTo: 'hero-section' });
   };
 
   const navItems = [
@@ -83,7 +90,9 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
     { id: 'seats', label: 'Study Pods', action: () => { setMobileOpen(false); onNavigate('seats'); } },
     { id: 'compare', label: `Compare${compareCount > 0 ? ` (${compareCount})` : ''}`, action: () => { setMobileOpen(false); onNavigate('compare'); } },
     { id: 'visit-planner', label: 'Plan Visit', action: () => { setMobileOpen(false); onNavigate('visit-planner'); } },
-    { id: 'reservations', label: 'Hold Queues', action: () => { setMobileOpen(false); onNavigate('reservations'); } }
+    { id: 'reservations', label: 'Hold Queues', action: () => { setMobileOpen(false); onNavigate('reservations'); } },
+    { id: 'blueprints', label: 'Blueprints', action: () => { setMobileOpen(false); onNavigate('blueprints'); } },
+    { id: 'presentation', label: 'Download PPT', action: () => { setMobileOpen(false); if (onOpenPresentation) onOpenPresentation(); } }
   ];
 
   const publicNavItems = [
@@ -91,6 +100,8 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
     { id: 'rules', label: 'Direct Rules', action: () => scrollToLandingSection('rules-section') },
     { id: 'genres', label: 'Genres', action: () => scrollToLandingSection('genres-section') },
     { id: 'heritage', label: 'Heritage', action: () => scrollToLandingSection('heritage-section') },
+    { id: 'blueprints', label: 'Blueprints', action: () => { setMobileOpen(false); onNavigate('blueprints'); } },
+    { id: 'presentation', label: 'Download PPT', action: () => { setMobileOpen(false); if (onOpenPresentation) onOpenPresentation(); } },
     { id: 'about', label: 'About', action: () => scrollToLandingSection('about-section') },
     { id: 'contact', label: 'Help Desk', action: () => { setMobileOpen(false); onNavigate('contact'); } }
   ];
@@ -155,33 +166,17 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span
+                className="libramind-heading"
                 style={{
-                  fontFamily: 'var(--font-serif)',
+                  fontFamily: 'var(--font-libramind)',
                   fontSize: 'clamp(1.2rem, 3.5vw, 1.45rem)',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '0.02em',
                   lineHeight: 1
                 }}
               >
                 LibraMind
-              </span>
-              <span
-                className="navbar-badge-hide"
-                style={{
-                  fontSize: '0.64rem',
-                  padding: '2px 6px',
-                  backgroundColor: 'var(--editorial-bg-subtle)',
-                  color: 'var(--editorial-accent)',
-                  border: '1px solid var(--editorial-border)',
-                  fontFamily: 'var(--font-sans)',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  borderRadius: '2px'
-                }}
-              >
-                Vol. XXIV
               </span>
             </div>
             <p className="navbar-subtitle" style={{ margin: 0, fontSize: '0.72rem', color: 'var(--editorial-text-muted)', fontWeight: 500, letterSpacing: '0.02em', marginTop: '1px' }}>
@@ -190,30 +185,32 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
           </div>
         </div>
 
-        {/* Desktop Navigation Links */}
-        <nav
-          style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 1.3vw, 18px)' }}
-          className="desktop-nav"
-        >
-          {(user ? navItems : publicNavItems).map(item => {
-            const active = isItemActive(item.id);
-            return (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className={`nav-link-editorial ${active ? 'active' : ''}`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  whiteSpace: 'nowrap',
-                  fontSize: '0.86rem'
-                }}
-              >
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Desktop Navigation Links (Hidden on Sign In / Register pages per user request) */}
+        {!isAuthPage && (
+          <nav
+            style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 1.3vw, 18px)' }}
+            className="desktop-nav"
+          >
+            {(user ? navItems : publicNavItems).map(item => {
+              const active = isItemActive(item.id);
+              return (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className={`nav-link-editorial ${active ? 'active' : ''}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.86rem'
+                  }}
+                >
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Right Action Cluster */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1.5vw, 10px)', flexShrink: 0 }}>
@@ -358,6 +355,16 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                 <LogOut size={15} strokeWidth={2} />
               </button>
             </div>
+          ) : isAuthPage ? (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => onNavigate('home')}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.80rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <span>← Return to Sanctuary</span>
+              </button>
+            </div>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -411,42 +418,70 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
             <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--editorial-accent)' }}>
               EDITORIAL CATALOGUE &amp; CHAMBERS
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-              {(user ? navItems : publicNavItems).map(item => {
-                const active = isItemActive(item.id);
-                return (
-                  <button
-                    key={item.id}
-                    onClick={item.action}
-                    style={{
-                      background: active ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
-                      border: '1px solid var(--editorial-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '12px 16px',
-                      fontSize: '0.90rem',
-                      fontWeight: active ? 700 : 500,
-                      color: 'var(--editorial-text)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {item.icon && <item.icon size={15} color="var(--editorial-accent)" />}
-                      <span>{item.label}</span>
-                    </div>
-                    <ArrowRight size={14} color="var(--editorial-border)" />
-                  </button>
-                );
-              })}
-            </div>
+            {/* Navigation links (Hidden on Sign In / Register) */}
+            {!isAuthPage ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
+                {(user ? navItems : publicNavItems).filter(item => !item.desktopOnly).map(item => {
+                  const active = isItemActive(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={item.action}
+                      style={{
+                        background: active ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                        border: '1px solid var(--editorial-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '12px 16px',
+                        fontSize: '0.90rem',
+                        fontWeight: active ? 700 : 500,
+                        color: 'var(--editorial-text)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {item.icon && <item.icon size={15} color="var(--editorial-accent)" />}
+                        <span>{item.label}</span>
+                      </div>
+                      <ArrowRight size={14} color="var(--editorial-border)" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={() => { setMobileOpen(false); onNavigate('home'); }}
+                  className="btn btn-outline"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  <span>← Return to Sanctuary Stacks</span>
+                </button>
+              </div>
+            )}
 
             {/* Quick Access to User Library / Auth in Drawer */}
             <div style={{ borderTop: '1px solid var(--editorial-border)', paddingTop: '16px' }}>
               {user ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    onClick={() => { setMobileOpen(false); onNavigate('notifications'); }}
+                    className="btn btn-outline"
+                    style={{ width: '100%', justifyContent: 'space-between', display: 'flex' }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Bell size={15} color="var(--editorial-accent)" />
+                      <span>Notifications</span>
+                    </span>
+                    {unreadCount > 0 && (
+                      <span style={{ fontSize: '0.72rem', padding: '1px 6px', borderRadius: '8px', backgroundColor: 'var(--editorial-accent)', color: '#fff', fontWeight: 700 }}>
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </button>
                   <button
                     onClick={() => { setMobileOpen(false); onNavigate(getDashboardTarget()); }}
                     className="btn btn-primary"
@@ -464,7 +499,7 @@ export default function Navbar({ activePage, onNavigate, compareCount = 0 }) {
                     <span>Sign Out ({user.name.split(' ')[0]})</span>
                   </button>
                 </div>
-              ) : (
+              ) : isAuthPage ? null : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <button
                     onClick={() => { setMobileOpen(false); onNavigate('login'); }}

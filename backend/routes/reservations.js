@@ -13,7 +13,41 @@ const { JWT_SECRET, authenticateToken, requireRole, logAudit } = require('../mid
 const { checkUserPenaltyStatus } = require('../utils/penalties');
 const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
+let sqliteDb = null;
+try {
+  sqliteDb = require('../db/database');
+} catch (e) {
+  console.warn('SQLite database connection failed in reservations router:', e.message);
+}
+
 const router = express.Router();
+
+async function resolveUserDocAndIds(userIdOrMembership, fallbackEmail = null) {
+  if (!userIdOrMembership && !fallbackEmail) return { userDoc: null, mongoUserId: null, sqliteUserId: null };
+  let userDoc = null;
+  if (mongoose.connection.readyState === 1) {
+    try {
+      if (userIdOrMembership) userDoc = await User.findOne(buildIdFilter(userIdOrMembership));
+      if (!userDoc && fallbackEmail) userDoc = await User.findOne({ email: String(fallbackEmail).toLowerCase() });
+    } catch (_) {}
+  }
+  let mongoUserId = userDoc?._id || (mongoose.Types.ObjectId.isValid(String(userIdOrMembership)) ? new mongoose.Types.ObjectId(String(userIdOrMembership)) : null);
+  let sqliteUserId = userDoc?.sqlite_id || (!isNaN(Number(userIdOrMembership)) ? Number(userIdOrMembership) : null);
+  if (!sqliteUserId && sqliteDb) {
+    try {
+      const emailToTry = userDoc?.email || fallbackEmail || (typeof userIdOrMembership === 'string' && userIdOrMembership.includes('@') ? userIdOrMembership : null);
+      if (emailToTry) {
+        const sUser = sqliteDb.prepare('SELECT id FROM users WHERE lower(email) = lower(?)').get(emailToTry);
+        if (sUser) sqliteUserId = sUser.id;
+      }
+      if (!sqliteUserId && userIdOrMembership) {
+        const sUser = sqliteDb.prepare('SELECT id FROM users WHERE id = ? OR membership_id = ?').get(userIdOrMembership, userIdOrMembership);
+        if (sUser) sqliteUserId = sUser.id;
+      }
+    } catch (_) {}
+  }
+  return { userDoc, mongoUserId, sqliteUserId };
+}
 
 // Get waiting queue stats and active reservation info for a book
 router.get('/book/:bookId', async (req, res) => {
@@ -71,11 +105,51 @@ router.get('/book/:bookId', async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status } = req.query;
+    const { mongoUserId, sqliteUserId } = await resolveUserDocAndIds(req.user.id, req.user?.email);
+
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      let sql = `
+        SELECT r.*, b.title as book_title, b.author as book_author, b.cover_image, b.category,
+               b.available_copies, b.total_copies, b.floor, b.section, b.shelf, b.rack,
+               u.name as student_name, u.email as student_email, u.membership_id
+        FROM reservations r
+        LEFT JOIN books b ON r.book_id = b.id
+        LEFT JOIN users u ON r.user_id = u.id
+        WHERE 1=1
+      `;
+      const params = [];
+      if (req.user.role === 'student') {
+        sql += ' AND r.user_id = ?';
+        params.push(sqliteUserId || req.user.id);
+      }
+      if (status && status !== 'all') {
+        if (status === 'active') {
+          sql += " AND r.status IN ('waiting', 'ready_for_pickup')";
+        } else {
+          sql += ' AND r.status = ?';
+          params.push(status);
+        }
+      }
+      sql += ' ORDER BY r.queue_position ASC, r.reservation_date ASC';
+      const rows = sqliteDb.prepare(sql).all(...params);
+      return res.json(rows.map(r => ({
+        ...r,
+        book_id: String(r.book_id),
+        shelf_location: r.floor ? `${r.floor} · ${r.section || 'Main'} · ${r.shelf || 'A-1'}` : ''
+      })));
+    }
+
     const query = {};
 
     if (req.user.role === 'student') {
-      const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
-      Object.assign(query, uFilter);
+      const orClauses = [];
+      if (mongoUserId) orClauses.push({ user_id: mongoUserId });
+      if (sqliteUserId) orClauses.push({ sqlite_user_id: sqliteUserId });
+      if (orClauses.length > 0) {
+        query.$or = orClauses;
+      } else {
+        Object.assign(query, buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id'));
+      }
     }
 
     if (status && status !== 'all') {
@@ -140,6 +214,32 @@ router.get('/', authenticateToken, async (req, res) => {
     res.json(formatted);
   } catch (err) {
     console.error('Fetch reservations error:', err);
+    if (sqliteDb) {
+      try {
+        const { sqliteUserId } = await resolveUserDocAndIds(req.user.id);
+        let sql = `
+          SELECT r.*, b.title as book_title, b.author as book_author, b.cover_image, b.category,
+                 b.available_copies, b.total_copies, b.floor, b.section, b.shelf, b.rack,
+                 u.name as student_name, u.email as student_email, u.membership_id
+          FROM reservations r
+          LEFT JOIN books b ON r.book_id = b.id
+          LEFT JOIN users u ON r.user_id = u.id
+          WHERE 1=1
+        `;
+        const params = [];
+        if (req.user.role === 'student') {
+          sql += ' AND r.user_id = ?';
+          params.push(sqliteUserId || req.user.id);
+        }
+        sql += ' ORDER BY r.queue_position ASC, r.reservation_date ASC';
+        const rows = sqliteDb.prepare(sql).all(...params);
+        return res.json(rows.map(r => ({
+          ...r,
+          book_id: String(r.book_id),
+          shelf_location: r.floor ? `${r.floor} · ${r.section || 'Main'} · ${r.shelf || 'A-1'}` : ''
+        })));
+      } catch (sqErr) {}
+    }
     res.status(500).json({ error: 'Failed to retrieve reservations' });
   }
 });
@@ -152,7 +252,57 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Book ID is required' });
     }
 
-    const penaltyStatus = await checkUserPenaltyStatus(req.user.id);
+    const { userDoc, mongoUserId, sqliteUserId } = await resolveUserDocAndIds(req.user.id, req.user?.email);
+
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      const sUser = sqliteDb.prepare('SELECT * FROM users WHERE id = ? OR email = ?').get(sqliteUserId || req.user.id, String(req.user.email || '').toLowerCase());
+      if (!sUser) return res.status(404).json({ error: 'User not found' });
+      const sBook = sqliteDb.prepare('SELECT * FROM books WHERE id = ? OR isbn = ?').get(rawBookId, rawBookId);
+      if (!sBook) return res.status(404).json({ error: 'Book not found' });
+
+      const existing = sqliteDb.prepare("SELECT * FROM reservations WHERE book_id = ? AND user_id = ? AND status IN ('waiting', 'ready_for_pickup', 'ready', 'pending', 'active')").get(sBook.id, sUser.id);
+      if (existing) {
+        return res.status(400).json({
+          error: `You have already joined the waiting list for this volume (Queue Position #${existing.queue_position || 1}).`
+        });
+      }
+
+      const activeLoan = sqliteDb.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(sBook.id, sUser.id);
+      if (activeLoan) {
+        return res.status(400).json({
+          error: 'You already have this book borrowed on active loan! Under circulation rules, you cannot borrow or place a hold on the same title twice at the same time.'
+        });
+      }
+
+      const holds = sqliteDb.prepare("SELECT queue_position FROM reservations WHERE book_id = ? AND status IN ('waiting', 'ready_for_pickup')").all(sBook.id);
+      const queuePos = holds.reduce((max, r) => Math.max(max, r.queue_position || 0), 0) + 1;
+      let initialStatus = 'waiting';
+      let pickupDeadline = null;
+
+      if (sBook.available_copies > 0 && holds.length === 0) {
+        initialStatus = 'ready_for_pickup';
+        pickupDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+        const availCopy = sqliteDb.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(sBook.id);
+        if (availCopy) {
+          sqliteDb.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(availCopy.id);
+        }
+        sqliteDb.prepare("UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?").run(sBook.id);
+      }
+
+      const resIns = sqliteDb.prepare(`
+        INSERT INTO reservations (book_id, user_id, reservation_date, status, queue_position, pickup_deadline)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(sBook.id, sUser.id, new Date().toISOString(), initialStatus, queuePos, pickupDeadline ? pickupDeadline.toISOString() : null);
+
+      return res.status(201).json({
+        message: 'Reservation placed successfully',
+        reservationId: String(resIns.lastInsertRowid),
+        queuePosition: queuePos,
+        status: initialStatus
+      });
+    }
+
+    const penaltyStatus = await checkUserPenaltyStatus(mongoUserId || req.user.id);
     if (penaltyStatus.isBlocked) {
       return res.status(403).json({
         error: `Cannot place book hold: Your account is blocked due to unpaid circulation penalties ($${penaltyStatus.unpaidFines.toFixed(2)}) or overdue loans. Please settle your fines in your Reading Room to unblock reservations.`,
@@ -168,25 +318,27 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     const bFilter = buildIdFilter(book._id, 'book_id', 'sqlite_book_id');
-    const uFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const userOr = [];
+    if (mongoUserId) userOr.push({ user_id: mongoUserId });
+    if (sqliteUserId) userOr.push({ sqlite_user_id: sqliteUserId });
 
     // Check if user already has an active hold
     const existing = await Reservation.findOne({
       ...bFilter,
-      ...uFilter,
-      status: { $in: ['waiting', 'ready_for_pickup'] }
+      ...(userOr.length > 0 ? { $or: userOr } : buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id')),
+      status: { $in: ['waiting', 'ready_for_pickup', 'ready', 'pending', 'active'] }
     });
 
     if (existing) {
       return res.status(400).json({
-        error: `You already have an active hold on this book (Queue Position #${existing.queue_position}).`
+        error: `You have already joined the waiting list for this volume (Queue Position #${existing.queue_position || 1}).`
       });
     }
 
     // Check if user currently has this book borrowed
     const currentLoan = await Loan.findOne({
       ...bFilter,
-      ...uFilter,
+      ...(userOr.length > 0 ? { $or: userOr } : buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id')),
       status: { $in: ['active', 'borrowed', 'overdue'] }
     });
 
@@ -224,23 +376,44 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const reservation = await Reservation.create({
       book_id: book._id,
-      user_id: req.user.id,
+      sqlite_book_id: book.sqlite_id || null,
+      user_id: mongoUserId,
+      sqlite_user_id: sqliteUserId,
       status: initialStatus,
       queue_position: queuePos,
       pickup_deadline: pickupDeadline,
       reservation_date: new Date()
     });
 
-    await Notification.create({
-      user_id: req.user.id,
-      title: 'Reservation Confirmed',
-      message: initialStatus === 'ready_for_pickup'
-        ? `Your hold on "${book.title}" is ready for pickup at the front desk!`
-        : `You are in waiting position #${queuePos} for "${book.title}".`,
-      type: 'reservation',
-      link: '/dashboard',
-      created_at: new Date()
-    });
+    if (mongoUserId) {
+      try {
+        await Notification.create({
+          user_id: mongoUserId,
+          title: 'Reservation Confirmed',
+          message: initialStatus === 'ready_for_pickup'
+            ? `Your hold on "${book.title}" is ready for pickup at the front desk!`
+            : `You are in waiting position #${queuePos} for "${book.title}".`,
+          type: 'reservation',
+          link: '/dashboard',
+          created_at: new Date()
+        });
+      } catch (_) {}
+    }
+
+    // Mirror to SQLite
+    if (sqliteDb && sqliteUserId) {
+      try {
+        const sBookId = book.sqlite_id || sqliteDb.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn)?.id;
+        if (sBookId) {
+          sqliteDb.prepare(`
+            INSERT INTO reservations (book_id, user_id, reservation_date, status, queue_position, pickup_deadline)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).run(sBookId, sqliteUserId, new Date().toISOString(), initialStatus, queuePos, pickupDeadline ? pickupDeadline.toISOString() : null);
+        }
+      } catch (sqErr) {
+        console.warn('SQLite mirror reservation warning:', sqErr.message);
+      }
+    }
 
     logAudit(req.user.id, 'BOOK_RESERVED', `User reserved "${book.title}" (Queue: ${queuePos})`);
 
@@ -259,12 +432,37 @@ router.post('/', authenticateToken, async (req, res) => {
 // Cancel reservation (Student or Librarian)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
+    const { mongoUserId, sqliteUserId } = await resolveUserDocAndIds(req.user.id, req.user?.email);
+
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      const sRes = sqliteDb.prepare('SELECT * FROM reservations WHERE id = ?').get(req.params.id);
+      if (!sRes) return res.status(404).json({ error: 'Reservation not found' });
+      if (req.user.role === 'student' && sRes.user_id !== sqliteUserId && sRes.user_id !== Number(req.user.id)) {
+        return res.status(403).json({ error: 'Not authorized to cancel this reservation' });
+      }
+      sqliteDb.prepare("UPDATE reservations SET status = 'cancelled' WHERE id = ?").run(sRes.id);
+      return res.json({ message: 'Reservation cancelled successfully' });
+    }
+
     const reservation = await Reservation.findOne(buildIdFilter(req.params.id));
     if (!reservation) {
+      if (sqliteDb) {
+        const sRes = sqliteDb.prepare('SELECT * FROM reservations WHERE id = ?').get(req.params.id);
+        if (sRes) {
+          sqliteDb.prepare("UPDATE reservations SET status = 'cancelled' WHERE id = ?").run(sRes.id);
+          return res.json({ message: 'Reservation cancelled successfully' });
+        }
+      }
       return res.status(404).json({ error: 'Reservation not found' });
     }
 
-    if (req.user.role === 'student' && String(reservation.user_id) !== String(req.user.id)) {
+    const matchesUser =
+      (mongoUserId && String(reservation.user_id) === String(mongoUserId)) ||
+      (sqliteUserId && String(reservation.sqlite_user_id) === String(sqliteUserId)) ||
+      String(reservation.user_id) === String(req.user.id) ||
+      String(reservation.sqlite_user_id) === String(req.user.id);
+
+    if (req.user.role === 'student' && !matchesUser) {
       return res.status(403).json({ error: 'Not authorized to cancel this reservation' });
     }
 
@@ -303,6 +501,16 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     reservation.status = 'cancelled';
     await reservation.save();
+
+    // Mirror cancellation to SQLite
+    if (sqliteDb) {
+      try {
+        const sResId = reservation.sqlite_id || (!isNaN(Number(req.params.id)) ? Number(req.params.id) : null);
+        if (sResId) {
+          sqliteDb.prepare("UPDATE reservations SET status = 'cancelled' WHERE id = ?").run(sResId);
+        }
+      } catch (sqErr) {}
+    }
 
     // Shift queue positions for remaining waiting patrons
     await Reservation.updateMany(

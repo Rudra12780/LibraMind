@@ -3673,12 +3673,12 @@ export const BLUEPRINT_PAGES = [
   {
     id: 'admin',
     pageNumber: 10,
-    name: '10. Administrator Central Control Console',
-    shortTitle: 'Admin Console',
+    name: '10. Administrator Central Control & Inventory Console',
+    shortTitle: 'Admin Console & Inventory',
     route: '/admin',
     category: 'Admin Tier',
-    desc: 'Central administrator control wireframe with admin operation tabs, 4 vital system health metrics, user role management & elevation table, rapid cataloging actions, and security audit log stream.',
-    sections: ['1. Navigation Bar (Admin Shield)', '2. Admin Console Tabs', '3. System Vital Health Cards', '4. User Role Management Table', '5. Cataloging Action Triggers', '6. Security Audit Log Stream', '7. Footer'],
+    desc: 'Central administrator control wireframe featuring dedicated sovereign authentication gateway, complete library physical inventory table with real-time catalog search, category filters, and live copy replenishment (+1/+2 physical copies), user elevation directory, and security audit trail.',
+    sections: ['1. Admin Navigation Bar (Shield)', '2. Admin Console Tabs (Overview, Inventory, Users, Messages, Audit)', '3. Complete Physical Catalog Inventory Table', '4. Live 1-Click Copy Replenishment', '5. User Role Management & Elevated Controls', '6. Security Audit Log Stream', '7. Footer'],
     svg: wrapPageSVG({
       pageNumber: 10,
       pageTotal: 21,
@@ -3709,12 +3709,12 @@ export const BLUEPRINT_PAGES = [
   {
     id: 'login',
     pageNumber: 12,
-    name: '12. Reader & Staff Authentication Portal',
-    shortTitle: 'Authentication Portal',
+    name: '12. Reader & Member Authentication Portal',
+    shortTitle: 'Member Sign-In',
     route: '/login',
     category: 'Public Tier',
-    desc: 'Authentication and onboarding wireframe with two-column layout: left branding illustration box [X] & 4 feature checklist items; right card with sign-in/register tabs, form inputs, and 1-click role demo switchers.',
-    sections: ['1. Navigation Bar', '2. Branding Illustration Box [X]', '3. Feature Checklist', '4. Sign In / Register Tabbed Card', '5. Form Fields (Email, Password, Remember)', '6. 1-Click Demo Role Switcher', '7. Footer'],
+    desc: 'Dedicated Reader & Student Member Authentication Portal at /login, providing card/email and mobile OTP authentication, instant student demo access, with strict administrative boundary separation (zero admin hints for public readers).',
+    sections: ['1. Public Sanctuary Navigation', '2. Member Authentication Header', '3. Card / Email & Mobile OTP Sign-in', '4. 1-Click Student & Staff Demo Accounts', '5. Safe Boundary Defense (Zero Admin Hints)', '6. Footer'],
     svg: wrapPageSVG({
       pageNumber: 12,
       pageTotal: 21,

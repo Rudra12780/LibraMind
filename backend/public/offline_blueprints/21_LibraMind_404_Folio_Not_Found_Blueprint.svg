@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-21" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-21" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-21)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 21 OF 21: 404 FOLIO NOT FOUND · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-21)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/not-found</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#000000" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. 404 FOLIO MISSING HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. 404 STATUS</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">HISTORICAL ARCHIVE NOT FOUND // ERROR 404</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">The requested manuscript, catalogue shelf index, or chamber does not exist in the collection.</text>
+      </g>
+    </g>
+
+    <!-- 3. BROKEN BOOKPLATE &amp; 404 EMBLEM CONTAINER -->
+    <g transform="translate(48, 180)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. LOST MANUSCRIPT [X]</text>
+
+      <rect width="764" height="420" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Centered Broken Book Illustration Box [X] -->
+      <g transform="translate(257, 36)">
+        <rect width="250" height="210" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+        <line x1="0" y1="0" x2="250" y2="210" stroke="#000000" stroke-width="1.2" />
+        <line x1="250" y1="0" x2="0" y2="210" stroke="#000000" stroke-width="1.2" />
+        <rect x="40" y="85" width="170" height="38" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="48" y="108" font-size="10" font-weight="bold">MISSING FOLIO [X]</text>
+      </g>
+
+      <!-- 404 Typography -->
+      <g transform="translate(0, 270)">
+        <text x="382" y="32" font-size="34" font-weight="bold" text-anchor="middle">FOLIO UNRESOLVED: 404</text>
+        <text x="382" y="58" font-size="11" fill="#444444" text-anchor="middle">The page or volume you are seeking has either been de-accessioned, relocated to closed reserves,</text>
+        <text x="382" y="76" font-size="11" fill="#444444" text-anchor="middle">or the accession address contains an orthographical discrepancy.</text>
+
+        <!-- Search Bar within 404 -->
+        <g transform="translate(182, 96)">
+          <rect width="400" height="40" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="16" y="25" font-size="10" fill="#777777">Search archive by title, author, or Dewey call number...</text>
+          <rect x="306" y="5" width="88" height="30" rx="3" fill="#000000" />
+          <text x="320" y="24" font-size="9" font-weight="bold" fill="#FFFFFF">Search</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. QUICK RECOVERY RESCUE TILES -->
+    <g transform="translate(48, 630)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">4. RESCUE HUBS</text>
+
+      <text x="0" y="14" font-size="13" font-weight="bold">RETURN TO ACTIVE SANCTUARY CHAMBERS</text>
+
+      <g transform="translate(0, 26)">
+        <!-- Tile 1: Home Sanctuary -->
+        <g transform="translate(0, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🏛️</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Home Sanctuary</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Main entrance, showcase, and statistics</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="44" y="127" font-size="8.5" font-weight="bold">Visit Home →</text>
+        </g>
+
+        <!-- Tile 2: Book Catalog -->
+        <g transform="translate(196, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">📚</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Book Catalog</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Browse all 120,000+ indexed books</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="40" y="127" font-size="8.5" font-weight="bold">Open Catalog →</text>
+        </g>
+
+        <!-- Tile 3: AI Book Oracle -->
+        <g transform="translate(392, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🤖</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">AI Book Oracle</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Semantic search across full abstracts</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="42" y="127" font-size="8.5" font-weight="bold">Consult Oracle →</text>
+        </g>
+
+        <!-- Tile 4: Study Seat Map -->
+        <g transform="translate(588, 0)">
+          <rect width="176" height="150" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <rect x="16" y="16" width="32" height="32" rx="4" fill="#000000" />
+          <text x="24" y="38" font-size="16" fill="#FFFFFF">🪑</text>
+          <text x="16" y="74" font-size="11" font-weight="bold">Study Seat Map</text>
+          <text x="16" y="92" font-size="8.5" fill="#666666">Live floor availability &amp; focus pods</text>
+          <rect x="16" y="110" width="144" height="26" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+          <text x="42" y="127" font-size="8.5" font-weight="bold">Find a Seat →</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // 404 ARCHIVAL NOT FOUND BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 21 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

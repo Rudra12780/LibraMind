@@ -104,10 +104,11 @@ export default function BlueprintModal({ isOpen, onClose }) {
                 Official Spec
               </span>
               <h2
+                className="libramind-heading"
                 style={{
                   margin: 0,
                   fontSize: '1.4rem',
-                  fontFamily: 'var(--font-serif)',
+                  fontFamily: 'var(--font-libramind)',
                   color: 'var(--forest-dark)'
                 }}
               >

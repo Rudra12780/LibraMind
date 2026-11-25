@@ -123,12 +123,14 @@ export default function VisualBlueprintModal({ isOpen, onClose, initialPage = 'h
                 </span>
               </div>
               <h2
+                className="libramind-heading"
                 style={{
                   margin: '2px 0 0',
                   fontSize: '1.20rem',
                   fontWeight: 900,
                   textTransform: 'uppercase',
-                  color: 'var(--editorial-text)'
+                  color: 'var(--editorial-text)',
+                  fontFamily: 'var(--font-libramind)'
                 }}
               >
                 LibraMind – {activePage.name}

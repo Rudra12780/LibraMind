@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, BookOpen, Heart, GitCompare, Compass, ArrowRight, Bookmark, RotateCcw } from 'lucide-react';
+import { MapPin, BookOpen, Heart, GitCompare, Compass, ArrowRight, Bookmark, RotateCcw, Clock } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,7 +16,8 @@ export default function BookCard({
   onToggleCompare,
   isCompared,
   onAddToPlanner,
-  isBorrowedByUser = false
+  isBorrowedByUser = false,
+  isReservedByUser = false
 }) {
   const { user } = useAuth();
   const bookIdentifier = book.id !== undefined ? book.id : book._id;
@@ -26,6 +27,53 @@ export default function BookCard({
     if (!book.cover_image) return offlineFallback;
     return book.cover_image;
   });
+
+  const cardRef = React.useRef(null);
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [tiltStyle, setTiltStyle] = React.useState({
+    transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)',
+    boxShadow: 'var(--shadow-card)',
+    glareX: 50,
+    glareY: 50,
+    glareOpacity: 0
+  });
+
+  const handleMouseMove = React.useCallback((e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Subtle, modern tilt: max 5.5 degrees
+    const rotateX = (((centerY - y) / centerY) * 5.5).toFixed(2);
+    const rotateY = (((x - centerX) / centerX) * 5.5).toFixed(2);
+
+    // Soft dynamic shadow that shifts realistically with the tilt
+    const shadowX = (-rotateY * 1.5).toFixed(1);
+    const shadowY = (16 + Math.max(0, rotateX * 1.2)).toFixed(1);
+
+    setTiltStyle({
+      transform: `perspective(1000px) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.025, 1.025, 1.025)`,
+      boxShadow: `${shadowX}px ${shadowY}px 28px -6px rgba(37, 40, 32, 0.18), 0 10px 16px -4px rgba(37, 40, 32, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)`,
+      glareX: Math.round((x / rect.width) * 100),
+      glareY: Math.round((y / rect.height) * 100),
+      glareOpacity: 0.15
+    });
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = React.useCallback(() => {
+    setIsHovered(false);
+    setTiltStyle({
+      transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)',
+      boxShadow: 'var(--shadow-card)',
+      glareX: 50,
+      glareY: 50,
+      glareOpacity: 0
+    });
+  }, []);
 
   React.useEffect(() => {
     if (!book.cover_image) {
@@ -37,8 +85,11 @@ export default function BookCard({
 
   return (
     <article
-      className="bio-card"
+      ref={cardRef}
+      className={`bio-card book-card-3d ${isHovered ? 'is-hovered' : 'is-resting'}`}
       onClick={() => onViewDetails && onViewDetails(bookIdentifier)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -47,12 +98,30 @@ export default function BookCard({
         cursor: 'pointer',
         backgroundColor: '#FFFFFF',
         borderRadius: 'var(--radius-sm)',
-        border: '1px solid var(--editorial-border)',
-        boxShadow: 'var(--shadow-card)',
-        overflow: 'hidden',
-        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease'
+        border: isHovered ? '1px solid var(--editorial-border-dark)' : '1px solid var(--editorial-border)',
+        transform: tiltStyle.transform,
+        boxShadow: tiltStyle.boxShadow,
+        transformStyle: 'preserve-3d',
+        transition: isHovered
+          ? 'transform 0.10s ease-out, box-shadow 0.14s ease-out, border-color 0.2s ease'
+          : 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease',
+        willChange: 'transform, box-shadow'
       }}
     >
+      {/* Dynamic 3D Specular Light Sheen Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 15,
+          opacity: isHovered ? tiltStyle.glareOpacity : 0,
+          background: `radial-gradient(circle at ${tiltStyle.glareX}% ${tiltStyle.glareY}%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 70%)`,
+          transition: isHovered ? 'opacity 0.2s ease' : 'opacity 0.45s ease',
+          mixBlendMode: 'overlay'
+        }}
+      />
+
       {/* Editorial Cover Canvas */}
       <div
         style={{
@@ -63,9 +132,13 @@ export default function BookCard({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderBottom: '1px solid var(--editorial-border)'
+          borderBottom: '1px solid var(--editorial-border)',
+          transformStyle: 'preserve-3d'
         }}
       >
+        {/* Subtle hardcover spine crease depth */}
+        <div className="book-card-spine-crease" />
+
         <img
           src={imgSrc}
           alt={book.title}
@@ -74,7 +147,9 @@ export default function BookCard({
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover'
+            objectFit: 'cover',
+            transform: isHovered ? 'scale(1.03)' : 'scale(1)',
+            transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
           loading="lazy"
           decoding="async"
@@ -158,7 +233,7 @@ export default function BookCard({
         </h3>
 
         <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', marginBottom: '14px', lineHeight: 1.4 }}>
-          by <span style={{ fontWeight: 600, color: 'var(--editorial-text)' }}>{book.author}</span>
+          by <span className="author-signature" style={{ fontSize: '1.02rem', fontWeight: 600, color: 'var(--editorial-text)' }}>{book.author}</span>
         </p>
 
         {/* Shelf & Stack Location */}
@@ -176,7 +251,7 @@ export default function BookCard({
             color: 'var(--editorial-text)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="blueprint-annotation">
             <MapPin size={13} color="var(--editorial-accent)" />
             <span style={{ fontWeight: 600 }}>{book.floor}</span>
             <span style={{ color: 'var(--editorial-border-dark)' }}>•</span>
@@ -270,25 +345,50 @@ export default function BookCard({
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: onReserve ? '1fr 1fr' : '1fr', gap: '8px' }}>
               {onReserve && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onReserve(bookIdentifier);
-                  }}
-                  className="btn btn-secondary btn-sm"
-                  style={{
-                    fontSize: '0.78rem',
-                    padding: '6px 12px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <Bookmark size={13} strokeWidth={2.2} />
-                  <span>Join Waiting List</span>
-                </button>
+                isReservedByUser ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="btn btn-outline btn-sm"
+                    style={{
+                      fontSize: '0.78rem',
+                      padding: '6px 12px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                      cursor: 'not-allowed',
+                      opacity: 0.75,
+                      backgroundColor: 'var(--editorial-bg-subtle)',
+                      borderColor: 'var(--editorial-border)',
+                      color: 'var(--editorial-text-muted)'
+                    }}
+                    title="You have already joined the waiting list for this volume"
+                  >
+                    <Clock size={12} strokeWidth={2.2} />
+                    <span>In Waitlist</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReserve(bookIdentifier);
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      fontSize: '0.78rem',
+                      padding: '6px 12px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Bookmark size={13} strokeWidth={2.2} />
+                    <span>Join Waiting List</span>
+                  </button>
+                )
               )}
               <button
                 type="button"

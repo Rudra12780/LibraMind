@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -27,7 +27,15 @@ import {
   ShieldAlert,
   Lock,
   AlertCircle,
-  Key
+  User,
+  Key,
+  Zap,
+  Monitor,
+  UserCheck,
+  CheckCircle2,
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
@@ -37,7 +45,7 @@ export function resolveBookCoverUrl(url, title = 'Classical Book', author = 'Aut
 }
 
 export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' }) {
-  const { user, login, loginWithGithub, logout } = useAuth();
+  const { user, login, register, loginWithGithub, logout } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -52,6 +60,19 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
+  const [returnSubTab, setReturnSubTab] = useState('active'); // 'active' | 'history'
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [selectedReturnDate, setSelectedReturnDate] = useState(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  });
+  const [showAllReturnHistory, setShowAllReturnHistory] = useState(false);
+  const [seatFloorFilter, setSeatFloorFilter] = useState('All');
+  const [seatSectionFilter, setSeatSectionFilter] = useState('All');
+  const [seatStatusFilter, setSeatStatusFilter] = useState('All');
 
   // Librarian Portal Gateway Sign-in state
   const [libEmail, setLibEmail] = useState('');
@@ -107,24 +128,23 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   });
   const [imagePreview, setImagePreview] = useState(null);
 
-  // 3. Add More Copies to Existing Book
+  // 3. Add More Copies to Existing Book (Typeable & Searchable with Verification)
   const [copyBookId, setCopyBookId] = useState('');
+  const [copySearchQuery, setCopySearchQuery] = useState('');
+  const [selectedCopyBook, setSelectedCopyBook] = useState(null);
+  const [copyBookError, setCopyBookError] = useState('');
+  const [copySearchOpen, setCopySearchOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(1);
   const [copyCondition, setCopyCondition] = useState('New');
   const [addingCopies, setAddingCopies] = useState(false);
 
-  // 4. Message Administration (Librarian -> Admin Direct Hotline)
+  // 4. Unified Administrative Messenger (Librarian -> Admin Direct Hotline & Restock Dispatch)
+  const [adminMsgCategory, setAdminMsgCategory] = useState('Book Restock / Procurement Request');
   const [adminMsgTitle, setAdminMsgTitle] = useState('');
+  const [adminMsgBookDetails, setAdminMsgBookDetails] = useState('');
+  const [adminMsgPriority, setAdminMsgPriority] = useState('Standard');
   const [adminMsgBody, setAdminMsgBody] = useState('');
   const [sendingAdminMsg, setSendingAdminMsg] = useState(false);
-
-  // 4b. Inventory Requisition to Admin
-  const [restockBookId, setRestockBookId] = useState('');
-  const [restockQty, setRestockQty] = useState(2);
-  const [restockPriority, setRestockPriority] = useState('Standard');
-  const [restockReason, setRestockReason] = useState('Out of stock (0 available copies)');
-  const [restockNotes, setRestockNotes] = useState('');
-  const [sendingRestock, setSendingRestock] = useState(false);
 
   // 5. Announcement
   const [annTitle, setAnnTitle] = useState('');
@@ -140,35 +160,66 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   const [inventoryPhotoPreview, setInventoryPhotoPreview] = useState(null);
   const [inventoryPhotoUploading, setInventoryPhotoUploading] = useState(false);
 
-  const fetchLibrarianData = useCallback(async () => {
-    if (!user || (user.role !== 'librarian' && user.role !== 'admin')) {
+  const fetchLibrarianData = useCallback(async (forcedUser = null) => {
+    const activeUser = forcedUser || user;
+    const token = sessionStorage.getItem('libramind_librarian_token') || sessionStorage.getItem('libramind_session_token');
+    if (!activeUser && !token) {
+      setLoading(false);
+      return;
+    }
+    if (activeUser && activeUser.role !== 'librarian' && activeUser.role !== 'admin') {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
       const [overviewData, loansData, resData, booksData, seatsData] = await Promise.all([
-        api.getAnalyticsOverview(),
-        api.getLoans(),
-        api.getReservations(),
-        api.getBooks({ limit: 250 }),
-        api.getSeats()
+        api.getAnalyticsOverview().catch(() => ({})),
+        api.getLoans().catch(() => []),
+        api.getReservations().catch(() => []),
+        api.getBooks({ limit: 500 }).catch(() => ({ books: [] })),
+        api.getSeats().catch(() => [])
       ]);
-      setOverview(overviewData);
-      setLoans(loansData || []);
-      setReservations(resData || []);
-      setBooks(booksData.books || []);
-      setSeats(seatsData.seats || []);
+      setOverview(overviewData || {});
+      setLoans(Array.isArray(loansData) ? loansData : []);
+      setReservations(Array.isArray(resData) ? resData : []);
+      const loadedBooks = Array.isArray(booksData) ? booksData : (booksData?.books || []);
+      setBooks(loadedBooks);
+      const loadedSeats = Array.isArray(seatsData) ? seatsData : (seatsData?.seats || []);
+      setSeats(loadedSeats);
     } catch (err) {
       console.error('Failed to load librarian data', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchLibrarianData();
-  }, [fetchLibrarianData]);
+
+    const handleUpdate = () => {
+      fetchLibrarianData();
+    };
+    window.addEventListener('libramind:data-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    let bc = null;
+    try {
+      bc = new BroadcastChannel('libramind_sync');
+      bc.onmessage = () => fetchLibrarianData();
+    } catch (_) {}
+
+    const interval = setInterval(() => {
+      fetchLibrarianData();
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('libramind:data-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      if (bc) bc.close();
+      clearInterval(interval);
+    };
+  }, [fetchLibrarianData, user]);
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ msg, isError });
@@ -216,6 +267,12 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
       const res = await api.returnBook(loanId);
       showToast(`Book returned! ${res.fineAmount > 0 ? `Late fine: $${res.fineAmount.toFixed(2)}` : 'No fine'}`);
       fetchLibrarianData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'book_returned', loanId });
+        bc.close();
+      } catch (e) {}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -251,19 +308,37 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
     }
   };
 
-  // Add Copies to Existing Book Handler
+  // Add Copies to Existing Book Handler (Enforce that book MUST exist in catalog)
   const handleAddCopiesToExisting = async (e) => {
     e.preventDefault();
-    if (!copyBookId) {
-      showToast('Please select an existing book from the catalog first', true);
+
+    // Verify that the book exists in the library catalog
+    let targetBook = selectedCopyBook;
+    if (!targetBook && copyBookId) {
+      targetBook = books.find(b => String(b.id || b._id) === String(copyBookId));
+    }
+    if (!targetBook && copySearchQuery.trim()) {
+      const q = copySearchQuery.trim().toLowerCase();
+      targetBook = books.find(b => b.title.toLowerCase() === q || (b.isbn && b.isbn.toLowerCase() === q));
+    }
+
+    if (!targetBook) {
+      setCopyBookError('⚠️ Cannot add copies: This book does not exist in the library catalog. You can only add copies to existing cataloged books. Please register this title in "Catalog New Book Title" below first.');
+      showToast('Cannot add copies: This book does not exist in the library catalog!', true);
       return;
     }
+
     setAddingCopies(true);
+    setCopyBookError('');
     try {
-      const res = await api.addBookCopy(copyBookId, { count: copyCount, condition: copyCondition });
-      showToast(res.message || `Added ${copyCount} copies to book!`);
+      const res = await api.addBookCopy(targetBook.id || targetBook._id, { count: copyCount, condition: copyCondition });
+      showToast(res.message || `Successfully added ${copyCount} copies to "${targetBook.title}"!`);
       setCopyCount(1);
+      setSelectedCopyBook(null);
+      setCopySearchQuery('');
+      setCopyBookId('');
       fetchLibrarianData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
     } catch (err) {
       showToast(err.message, true);
     } finally {
@@ -271,7 +346,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
     }
   };
 
-  // Message Administrator Hotline Handler (Only Librarian can message Admin)
+  // Unified Message Administrator & Restock Dispatch Handler
   const handleSendMessageToAdmin = async (e) => {
     e.preventDefault();
     if (!adminMsgTitle.trim() || !adminMsgBody.trim()) {
@@ -280,9 +355,19 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
     }
     setSendingAdminMsg(true);
     try {
-      const res = await api.messageAdmin({ title: adminMsgTitle.trim(), message: adminMsgBody.trim() });
+      const fullMessage = [
+        `[Category: ${adminMsgCategory}] [Priority: ${adminMsgPriority}]`,
+        adminMsgBookDetails.trim() ? `Target Volumes / Restock Details:\n${adminMsgBookDetails.trim()}\n` : '',
+        `Dispatch Content:\n${adminMsgBody.trim()}`,
+        '',
+        `Dispatched by Desk Librarian: ${user?.name || 'Librarian'} (${user?.email || ''})`
+      ].filter(Boolean).join('\n');
+
+      const title = `[${adminMsgCategory.includes('Restock') ? 'RESTOCK DISPATCH' : 'ADMIN DISPATCH'}] ${adminMsgTitle.trim()}`;
+      const res = await api.messageAdmin({ title, message: fullMessage });
       showToast(res.message || 'Direct dispatch securely sent to Library Administration!');
       setAdminMsgTitle('');
+      setAdminMsgBookDetails('');
       setAdminMsgBody('');
     } catch (err) {
       showToast(err.message, true);
@@ -291,50 +376,18 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
     }
   };
 
-  // Restock Requisition Handler
-  const handleSendRestockRequisition = async (e) => {
-    e.preventDefault();
-    if (!restockBookId) {
-      showToast('Please select a catalog book to restock', true);
-      return;
-    }
-    const book = books.find(b => String(b.id) === String(restockBookId));
-    if (!book) {
-      showToast('Selected book not found', true);
-      return;
-    }
-    setSendingRestock(true);
-    try {
-      const title = `[RESTOCK REQUISITION] ${book.title} (${restockPriority} Priority)`;
-      const message = `INVENTORY REQUISITION:
-Book: "${book.title}" (ISBN: ${book.isbn}, ID #${book.id})
-Category: ${book.category}
-Current Stock: ${book.available_copies} available / ${book.total_copies} total
-Requested Copies: ${restockQty}
-Priority: ${restockPriority}
-Reason: ${restockReason}
-${restockNotes ? `Librarian Note: ${restockNotes.trim()}\n` : ''}
-Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
-
-      const res = await api.messageAdmin({ title, message });
-      showToast(res.message || `Restock requisition for "${book.title}" sent to Administration!`);
-      setRestockBookId('');
-      setRestockQty(2);
-      setRestockNotes('');
-    } catch (err) {
-      showToast(err.message, true);
-    } finally {
-      setSendingRestock(false);
-    }
-  };
-
   // Seat toggle
-  const handleToggleSeat = async (seatId, currentStatus) => {
-    const nextStatus = currentStatus === 'available' ? 'occupied' : 'available';
+  const handleToggleSeat = async (seatId, nextStatus) => {
     try {
       await api.updateSeatStatus(seatId, { status: nextStatus });
-      showToast(`Seat marked as ${nextStatus}`);
+      showToast(`Study Pod status updated to ${nextStatus}`);
       fetchLibrarianData();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'seat_updated', seatId });
+        bc.close();
+      } catch (e) {}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -468,6 +521,9 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
       let queryEmail = libEmail.trim();
       if (
         queryEmail.toLowerCase() === 'librarian' ||
+        queryEmail.toLowerCase() === 'lib' ||
+        queryEmail.toLowerCase() === 'lib@1234' ||
+        queryEmail.toLowerCase() === 'lib1234' ||
         queryEmail.toLowerCase() === 'librarian@1234' ||
         queryEmail.toLowerCase() === 'librarian1234'
       ) {
@@ -477,7 +533,8 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
       if (res.user.role !== 'librarian' && res.user.role !== 'admin') {
         setLibLoginError('Access Denied: This account is not authorized as library circulation staff.');
       } else {
-        fetchLibrarianData();
+        if (onNavigate) onNavigate('librarian', { user: res.user, tab: 'issue' });
+        fetchLibrarianData(res.user);
       }
     } catch (err) {
       setLibLoginError(err.message || 'Invalid librarian credentials');
@@ -486,7 +543,174 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
     }
   };
 
-  const activeLoans = loans.filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
+  const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
+  const [libRegName, setLibRegName] = useState('');
+  const [libRegEmail, setLibRegEmail] = useState('');
+  const [libRegPassword, setLibRegPassword] = useState('');
+  const [libRegConfirmPassword, setLibRegConfirmPassword] = useState('');
+  const [registeringLib, setRegisteringLib] = useState(false);
+
+  const handleLibrarianRegister = async (e) => {
+    e.preventDefault();
+    setLibLoginError('');
+    if (!libRegName.trim() || !libRegEmail.trim() || !libRegPassword) {
+      setLibLoginError('Full name, email address, and password are required.');
+      return;
+    }
+    if (libRegPassword.length < 6) {
+      setLibLoginError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (libRegPassword !== libRegConfirmPassword) {
+      setLibLoginError('Password and Confirm Password do not match.');
+      return;
+    }
+    setRegisteringLib(true);
+    try {
+      const res = await register(
+        libRegName.trim(),
+        libRegEmail.trim(),
+        libRegPassword,
+        'Circulation Desk, Book Curation, Library Operations',
+        '',
+        'librarian'
+      );
+      if (res.user) {
+        if (onNavigate) onNavigate('librarian', { user: res.user, tab: 'issue' });
+        fetchLibrarianData(res.user);
+      }
+    } catch (err) {
+      setLibLoginError(err.message || 'Librarian registration failed');
+    } finally {
+      setRegisteringLib(false);
+    }
+  };
+
+  const activeLoans = loans.filter(l => (l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active) && l.status !== 'returned');
+  const returnedLoans = useMemo(() => {
+    return loans
+      .filter(l => l.status === 'returned')
+      .sort((a, b) => {
+        const da = new Date(a.return_date || a.updated_at || a.created_at || 0);
+        const db = new Date(b.return_date || b.updated_at || b.created_at || 0);
+        return db - da;
+      });
+  }, [loans]);
+
+  const getLoanDateKey = (loan) => {
+    const raw = loan.return_date || loan.updated_at || loan.created_at;
+    if (!raw) return '';
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const returnsByDate = useMemo(() => {
+    const map = {};
+    returnedLoans.forEach(loan => {
+      const key = getLoanDateKey(loan);
+      if (key) {
+        if (!map[key]) map[key] = [];
+        map[key].push(loan);
+      }
+    });
+    return map;
+  }, [returnedLoans]);
+
+  const datesWithReturns = useMemo(() => {
+    return Object.keys(returnsByDate).sort().reverse();
+  }, [returnsByDate]);
+
+  const todayDate = new Date();
+  const todayDateKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+
+  // If selected return date has no records, auto-select the latest date that has returns
+  useEffect(() => {
+    if (returnedLoans.length > 0) {
+      if (!returnsByDate[todayDateKey] && (!selectedReturnDate || !returnsByDate[selectedReturnDate])) {
+        if (datesWithReturns.length > 0) {
+          setSelectedReturnDate(datesWithReturns[0]);
+          const [y, m] = datesWithReturns[0].split('-').map(Number);
+          setCalendarMonth(new Date(y, m - 1, 1));
+        }
+      }
+    }
+  }, [returnsByDate, datesWithReturns, returnedLoans.length, selectedReturnDate, todayDateKey]);
+
+  const handlePrevMonth = () => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const handleJumpToToday = () => {
+    const now = new Date();
+    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedReturnDate(todayDateKey);
+    setShowAllReturnHistory(false);
+  };
+
+  const calYear = calendarMonth.getFullYear();
+  const calMonth = calendarMonth.getMonth();
+  const calMonthName = calendarMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+  const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
+  const daysInCurrentMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+
+  const prevMonthOverflow = [];
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    prevMonthOverflow.push({
+      dayNum: daysInPrevMonth - i,
+      isCurrentMonth: false,
+      dateKey: null
+    });
+  }
+
+  const currentMonthDays = [];
+  for (let d = 1; d <= daysInCurrentMonth; d++) {
+    const dateKey = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    currentMonthDays.push({
+      dayNum: d,
+      isCurrentMonth: true,
+      dateKey,
+      returnCount: returnsByDate[dateKey]?.length || 0
+    });
+  }
+
+  const totalRendered = prevMonthOverflow.length + currentMonthDays.length;
+  const totalGridCells = totalRendered <= 35 ? 35 : 42;
+  const nextMonthOverflow = [];
+  for (let d = 1; d <= (totalGridCells - totalRendered); d++) {
+    nextMonthOverflow.push({
+      dayNum: d,
+      isCurrentMonth: false,
+      dateKey: null
+    });
+  }
+
+  const allCalendarCells = [...prevMonthOverflow, ...currentMonthDays, ...nextMonthOverflow];
+
+  const displayedLoans = showAllReturnHistory
+    ? returnedLoans
+    : (selectedReturnDate ? (returnsByDate[selectedReturnDate] || []) : []);
+
+  const selectedDateLabel = useMemo(() => {
+    if (!selectedReturnDate) return '';
+    const [y, m, d] = selectedReturnDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString(undefined, {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }, [selectedReturnDate]);
 
   // Case 1: Logged-in user is NOT a Librarian or Admin -> 403 Forbidden Access Denied Screen
   if (user && user.role !== 'librarian' && user.role !== 'admin') {
@@ -562,7 +786,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             <button
               onClick={async () => {
                 await logout();
-                onNavigate('librarian');
+                onNavigate('lib@1234');
               }}
               className="btn btn-outline"
               style={{ padding: '10px', width: '100%', fontSize: '0.88rem' }}
@@ -582,13 +806,14 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
       setLibLoginError('');
       setLibGithubLoading(true);
       try {
-        await loginWithGithub({
+        const res = await loginWithGithub({
           githubUsername: libGithubUsername.trim() || 'marcus-librarian',
           name: libGithubName.trim() || 'Marcus Thorne (Librarian)',
           email: libGithubEmail.trim() || 'librarian@libramind.edu'
         }, 'librarian');
         setShowLibGithubModal(false);
-        fetchLibrarianData();
+        if (res?.user && onNavigate) onNavigate('librarian', { user: res.user, tab: 'issue' });
+        fetchLibrarianData(res?.user);
       } catch (err) {
         setLibLoginError(err.message || 'GitHub staff SSO failed');
       } finally {
@@ -599,232 +824,298 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
     return (
       <div
         style={{
-          minHeight: '80vh',
+          minHeight: '100vh',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '50px 20px',
-          backgroundColor: '#FFFFFF'
+          padding: '40px 20px',
+          backgroundColor: 'var(--editorial-bg)'
         }}
       >
         <div
-          className="bio-card"
           style={{
-            width: '480px',
+            width: '440px',
             maxWidth: '100%',
             backgroundColor: '#FFFFFF',
-            padding: '38px',
-            borderRadius: 'var(--radius-xl)',
-            boxShadow: 'var(--shadow-xl)',
-            border: '1.5px solid var(--editorial-border)',
-            position: 'relative'
+            padding: '36px 32px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--editorial-border)',
+            boxShadow: 'var(--shadow-md)'
           }}
         >
-          {/* Top Maximalist Organic Accent Ribbon */}
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h2
+              style={{
+                fontSize: '1.5rem',
+                fontFamily: 'var(--font-serif)',
+                color: 'var(--editorial-text)',
+                fontWeight: 700,
+                margin: '0 0 6px'
+              }}
+            >
+              Librarian Portal
+            </h2>
+            <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', margin: 0, lineHeight: 1.45 }}>
+              {authMode === 'signin'
+                ? 'Sign in to access the library circulation desk.'
+                : 'Create a new staff account to manage circulation.'}
+            </p>
+          </div>
+
+          {/* Clean Segmented Tab Toggle: Sign In vs Sign Up */}
           <div
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '5px',
-              borderTopLeftRadius: 'var(--radius-xl)',
-              borderTopRightRadius: 'var(--radius-xl)',
-              background: 'linear-gradient(90deg, var(--editorial-green) 0%, var(--editorial-border) 50%, var(--editorial-accent) 100%)'
+              display: 'flex',
+              backgroundColor: 'var(--editorial-bg)',
+              padding: '4px',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '20px',
+              border: '1px solid var(--editorial-border)'
             }}
-          />
-
-          {/* Brand Header */}
-          <div style={{ textAlign: 'center', marginBottom: '26px', marginTop: '4px' }}>
-            <div
+          >
+            <button
+              type="button"
+              onClick={() => { setAuthMode('signin'); setLibLoginError(''); }}
               style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, var(--editorial-green), var(--editorial-border))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 14px',
-                boxShadow: '0 8px 20px rgba(96, 108, 56, 0.26)'
+                flex: 1,
+                padding: '8px 12px',
+                fontSize: '0.86rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: authMode === 'signin' ? '#FFFFFF' : 'transparent',
+                color: authMode === 'signin' ? 'var(--editorial-green)' : 'var(--editorial-text-muted)',
+                boxShadow: authMode === 'signin' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
-              <Layers size={28} color="#FFFFFF" />
-            </div>
-            <div
-              className="pill-badge"
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthMode('signup'); setLibLoginError(''); }}
               style={{
-                backgroundColor: '#FFFFFF',
-                color: 'var(--editorial-green)',
-                borderColor: 'rgba(96, 108, 56, 0.3)',
-                marginBottom: '10px'
+                flex: 1,
+                padding: '8px 12px',
+                fontSize: '0.86rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: authMode === 'signup' ? '#FFFFFF' : 'transparent',
+                color: authMode === 'signup' ? 'var(--editorial-green)' : 'var(--editorial-text-muted)',
+                boxShadow: authMode === 'signup' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
-              🌿 Circulation Desk • Staff Gateway
-            </div>
-            <h2 style={{ fontSize: '1.9rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '4px 0 6px' }}>
-              Librarian Portal Gateway
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', margin: 0 }}>
-              Sign in with staff credentials or GitHub Staff SSO to manage circulation, loans, and inventory.
-            </p>
+              Register (Sign Up)
+            </button>
           </div>
 
           {libLoginError && (
             <div
               style={{
-                padding: '12px 14px',
-                borderRadius: 'var(--radius-md)',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
                 backgroundColor: 'var(--status-danger-bg)',
                 color: 'var(--status-danger-text)',
                 border: '1px solid rgba(150, 49, 36, 0.2)',
-                fontSize: '0.86rem',
-                fontWeight: 600,
+                fontSize: '0.84rem',
+                fontWeight: 500,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                marginBottom: '20px'
+                marginBottom: '18px'
               }}
             >
               <AlertCircle size={16} />
-              {libLoginError}
+              <span>{libLoginError}</span>
             </div>
           )}
 
-          {/* Continue with GitHub for Librarian Staff */}
+          {authMode === 'signin' ? (
+            <>
+              <form onSubmit={handleLibrarianLogin}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '6px' }}>
+                    Email or Username
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="librarian@libramind.edu or lib@1234"
+                    value={libEmail}
+                    onChange={(e) => setLibEmail(e.target.value)}
+                    autoComplete="username"
+                    required
+                    style={{
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                      fontSize: '0.90rem',
+                      border: '1px solid var(--editorial-border)'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '6px' }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Enter password"
+                    value={libPassword}
+                    onChange={(e) => setLibPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    style={{
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                      fontSize: '0.90rem',
+                      border: '1px solid var(--editorial-border)'
+                    }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loggingInLib}
+                  style={{
+                    width: '100%',
+                    padding: '11px',
+                    fontSize: '0.92rem',
+                    fontWeight: 600,
+                    borderRadius: 'var(--radius-sm)'
+                  }}
+                >
+                  {loggingInLib ? 'Signing in...' : 'Sign In as Librarian'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <form onSubmit={handleLibrarianRegister}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '5px' }}>
+                  Full Staff Name
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Marcus Thorne"
+                  value={libRegName}
+                  onChange={(e) => setLibRegName(e.target.value)}
+                  required
+                  style={{
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px',
+                    fontSize: '0.90rem',
+                    border: '1px solid var(--editorial-border)'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '5px' }}>
+                  Staff Email Address
+                </label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="e.g. librarian@libramind.edu"
+                  value={libRegEmail}
+                  onChange={(e) => setLibRegEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                  style={{
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px',
+                    fontSize: '0.90rem',
+                    border: '1px solid var(--editorial-border)'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '5px' }}>
+                  Create Password (min. 6 characters)
+                </label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter secure password"
+                  value={libRegPassword}
+                  onChange={(e) => setLibRegPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                  style={{
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px',
+                    fontSize: '0.90rem',
+                    border: '1px solid var(--editorial-border)'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--editorial-text)', marginBottom: '5px' }}>
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Confirm password"
+                  value={libRegConfirmPassword}
+                  onChange={(e) => setLibRegConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                  style={{
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px',
+                    fontSize: '0.90rem',
+                    border: '1px solid var(--editorial-border)'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={registeringLib}
+                style={{
+                  width: '100%',
+                  padding: '11px',
+                  fontSize: '0.92rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)'
+                }}
+              >
+                {registeringLib ? 'Creating Account...' : 'Create Librarian Account →'}
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Return to Public Home */}
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
           <button
             type="button"
-            onClick={() => setShowLibGithubModal(true)}
+            onClick={() => onNavigate && onNavigate('home')}
             style={{
-              width: '100%',
-              padding: '12px 18px',
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: '#24292F',
-              color: '#FFFFFF',
+              background: 'none',
               border: 'none',
-              fontSize: '0.92rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
+              color: 'var(--editorial-text-muted)',
+              fontSize: '0.82rem',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(36, 41, 47, 0.2)',
-              transition: 'all 0.2s ease',
-              marginBottom: '20px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#1F2328';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#24292F';
-              e.currentTarget.style.transform = 'none';
+              textDecoration: 'underline'
             }}
           >
-            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-            </svg>
-            <span>Continue with GitHub (Staff SSO)</span>
+            ← Back to Library Home
           </button>
-
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', gap: '14px' }}>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--editorial-border)' }} />
-            <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              or staff credentials
-            </span>
-            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--editorial-border)' }} />
-          </div>
-
-          <form onSubmit={handleLibrarianLogin}>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label">
-                Staff Email or Staff ID
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="librarian@libramind.edu or LIB-5001"
-                value={libEmail}
-                onChange={(e) => setLibEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '22px' }}>
-              <label className="form-label">
-                Staff Password / Key
-              </label>
-              <input
-                type="password"
-                className="form-control"
-                placeholder="••••••••"
-                value={libPassword}
-                onChange={(e) => setLibPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-botanical"
-              disabled={loggingInLib}
-              style={{ width: '100%', padding: '13px', fontSize: '0.96rem' }}
-            >
-              {loggingInLib ? 'Verifying Staff Credentials...' : 'Sign In to Librarian Desk'}
-            </button>
-          </form>
-
-          {/* 1-Click Quick Demo Login for Librarian */}
-          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--editorial-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
-                ⚡ 1-Click Staff Demo Access:
-              </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-green)', fontWeight: 600 }}>
-                Pass: Librarian@123
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={async () => {
-                setLibEmail('librarian@libramind.edu');
-                setLibPassword('Librarian@123');
-                setLibLoginError('');
-                setLoggingInLib(true);
-                try {
-                  await login('librarian@libramind.edu', 'Librarian@123', false);
-                  fetchLibrarianData();
-                } catch (err) {
-                  setLibLoginError(err.message || 'Login failed');
-                } finally {
-                  setLoggingInLib(false);
-                }
-              }}
-              className="btn btn-outline btn-sm"
-              style={{ width: '100%', fontSize: '0.84rem', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-            >
-              <span><strong>Marcus Thorne</strong> (LIB-5001 • Head Desk)</span>
-              <span style={{ fontSize: '0.76rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>Auto-fill & Enter →</span>
-            </button>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '22px' }}>
-            <button
-              onClick={() => onNavigate('home')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--editorial-accent)',
-                fontSize: '0.84rem',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              ← Return to Library Public Home
-            </button>
-          </div>
         </div>
 
         {/* Librarian GitHub Staff SSO Modal */}
@@ -1027,7 +1318,7 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
           Librarian Management Suite
         </h1>
         <p style={{ color: 'var(--muted-text)', fontSize: '1rem', margin: 0 }}>
-          Manage physical book copies, execute checkouts & returns, process hold pickup queues, and control study pod availability.
+          Manage physical book copies, execute checkouts & returns, process hold pickup queues, and catalog inventory.
         </p>
       </div>
 
@@ -1081,13 +1372,6 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             <span style={{ fontSize: '0.74rem', color: 'var(--sage)' }}>In queue & pickup</span>
           </div>
 
-          <div className="bio-card" style={{ padding: '18px', backgroundColor: '#FFFFFF', borderLeft: '4px solid var(--forest-dark)' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', textTransform: 'uppercase' }}>Seat Occupancy</span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--forest-dark)', marginTop: '2px' }}>
-              {overview.seatOccupancy?.percentage}%
-            </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>{overview.seatOccupancy?.occupied}/{overview.seatOccupancy?.total} seats</span>
-          </div>
         </div>
       )}
 
@@ -1258,8 +1542,8 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                 Click any specimen below to automatically populate the barcode input for checkout:
               </p>
 
-              <div style={{ maxHeight: '310px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {books.filter(b => b.available_copies > 0).slice(0, 10).map(b => (
+              <div style={{ maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {books.filter(b => b.available_copies > 0).map(b => (
                   <div
                     key={b.id}
                     onClick={() => {
@@ -1346,9 +1630,17 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                 No active loans currently in circulation.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{
+                maxHeight: '480px',
+                overflowY: 'auto',
+                overflowX: 'auto',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                scrollbarWidth: 'thin',
+                WebkitOverflowScrolling: 'touch'
+              }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
-                  <thead>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--editorial-bg-subtle)' }}>
                     <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
                       <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
                       <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
@@ -1525,150 +1817,575 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
       {activeTab === 'return' && (
         <div style={{ backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '28px', boxShadow: 'var(--shadow-sm)' }}>
           <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
-            CIRCULATION CHECK-IN
+            CIRCULATION CHECK-IN &amp; RETURNS
           </span>
-          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 8px' }}>
-            Active Loans & Book Returns ({activeLoans.length})
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', margin: '4px 0 16px' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: 0 }}>
+              Book Returns &amp; Circulation Ledger
+            </h3>
+
+            {/* Subtab Switcher */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setReturnSubTab('active')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: '1px solid var(--editorial-border)',
+                  backgroundColor: returnSubTab === 'active' ? 'var(--editorial-text)' : '#FFFFFF',
+                  color: returnSubTab === 'active' ? '#FFFFFF' : 'var(--editorial-text)'
+                }}
+              >
+                Pending Returns ({activeLoans.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setReturnSubTab('history')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: '1px solid var(--editorial-border)',
+                  backgroundColor: returnSubTab === 'history' ? 'var(--editorial-text)' : '#FFFFFF',
+                  color: returnSubTab === 'history' ? '#FFFFFF' : 'var(--editorial-text)'
+                }}
+              >
+                Returned History ({returnedLoans.length})
+              </button>
+            </div>
+          </div>
+
           <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', marginBottom: '22px', lineHeight: 1.5 }}>
-            Process book check-ins. If overdue, fine is computed automatically. If scholars are on the hold waitlist, the book is routed to pickup automatically.
+            Process book check-ins. If overdue, fine is computed automatically. Completed returns are archived in the circulation history ledger below.
           </p>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-              <thead>
-                <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Copy Barcode</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Due Date</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Circulation Status</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeLoans.map(loan => {
-                  const dueDate = new Date(loan.due_date);
-                  const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
+          {returnSubTab === 'active' ? (
+            activeLoans.length === 0 ? (
+              <div style={{ padding: '36px 20px', textAlign: 'center', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <CheckCircle size={32} color="var(--editorial-green)" style={{ margin: '0 auto 8px' }} />
+                <h4 style={{ fontFamily: 'var(--font-serif)', margin: '0 0 4px', color: 'var(--editorial-text)' }}>All Volumes Checked In</h4>
+                <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--editorial-text-muted)' }}>There are no active loans currently pending check-in.</p>
+              </div>
+            ) : (
+              <div style={{
+                maxHeight: '480px',
+                overflowY: 'auto',
+                overflowX: 'auto',
+                scrollbarWidth: 'thin',
+                WebkitOverflowScrolling: 'touch'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 5, backgroundColor: 'var(--editorial-bg-subtle)' }}>
+                    <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Copy Barcode</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Due Date</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Circulation Status</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeLoans.map(loan => {
+                      const dueDate = new Date(loan.due_date);
+                      const isOverdue = loan.status === 'overdue' || new Date() > dueDate;
 
-                  return (
-                    <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
-                      <td style={{ padding: '12px 14px' }}>
-                        <strong style={{ color: 'var(--editorial-text)' }}>{loan.student_name}</strong>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>{loan.membership_id}</div>
-                      </td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
-                        {loan.book_title}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
-                        {loan.copy_code}
-                      </td>
-                      <td style={{ padding: '12px 14px', color: isOverdue ? '#C5221F' : 'var(--editorial-text)' }}>
-                        {dueDate.toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '12px 14px' }}>
-                        {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
-                          <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #F87171' }}>
-                            ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
-                          </span>
-                        ) : (loan.warning_sent || loan.return_warning_active) ? (
-                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
-                            ● RETURN WARNING SENT
-                          </span>
-                        ) : isOverdue ? (
-                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
-                            ● Overdue (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
-                            Active Loan
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
-                          {(isOverdue || (loan.borrow_date && Math.floor((new Date() - new Date(loan.borrow_date)) / (1000 * 60 * 60 * 24)) >= 14)) && (
-                            loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
-                              <button
-                                type="button"
-                                onClick={() => handleCancelPenalty(loan.id)}
-                                className="btn btn-sm"
-                                style={{
-                                  padding: '5px 10px',
-                                  fontSize: '0.74rem',
-                                  backgroundColor: '#374151',
-                                  color: '#FFFFFF',
-                                  border: 'none',
-                                  fontWeight: 700,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px'
-                                }}
-                                title="Cancel / waive penalty fine and restore member privileges immediately"
-                              >
-                                ❌ Cancel Penalty
-                              </button>
+                      return (
+                        <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
+                          <td style={{ padding: '12px 14px' }}>
+                            <strong style={{ color: 'var(--editorial-text)' }}>{loan.student_name}</strong>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>{loan.membership_id}</div>
+                          </td>
+                          <td style={{ padding: '12px 14px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
+                            {loan.book_title}
+                          </td>
+                          <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                            {loan.copy_code}
+                          </td>
+                          <td style={{ padding: '12px 14px', color: isOverdue ? '#C5221F' : 'var(--editorial-text)' }}>
+                            {dueDate.toLocaleDateString()}
+                          </td>
+                          <td style={{ padding: '12px 14px' }}>
+                            {loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                              <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '2px 8px', borderRadius: '2px', border: '1px solid #F87171' }}>
+                                ● PENALTY QR SENT (${loan.penalty_amount ? Number(loan.penalty_amount).toFixed(2) : (loan.fine_amount ? Number(loan.fine_amount).toFixed(2) : '15.00')})
+                              </span>
+                            ) : (loan.warning_sent || loan.return_warning_active) ? (
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCD34D' }}>
+                                ● RETURN WARNING SENT
+                              </span>
+                            ) : isOverdue ? (
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#C5221F', backgroundColor: '#FDECE7', padding: '2px 8px', borderRadius: '2px', border: '1px solid #FCA5A5' }}>
+                                ● Overdue (${loan.fine_amount ? loan.fine_amount.toFixed(2) : '1.00'})
+                              </span>
                             ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSendReturnWarning(loan.id)}
-                                  className="btn btn-sm"
-                                  style={{
-                                    padding: '5px 9px',
-                                    fontSize: '0.73rem',
-                                    backgroundColor: '#D97706',
-                                    color: '#FFFFFF',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                  title="Notify user that return date has passed. Warning banner appears upon user sign-in."
-                                >
-                                  <AlertCircle size={13} />
-                                  {loan.warning_sent ? 'Re-send Return Warning' : 'Send Book Return Warning'}
-                                </button>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 600, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                Active Loan
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                              {(isOverdue || (loan.borrow_date && Math.floor((new Date() - new Date(loan.borrow_date)) / (1000 * 60 * 60 * 24)) >= 14)) && (
+                                loan.penalty_status === 'pending' || Boolean(loan.penalty_qr_code) ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelPenalty(loan.id)}
+                                    className="btn btn-sm"
+                                    style={{
+                                      padding: '5px 10px',
+                                      fontSize: '0.74rem',
+                                      backgroundColor: '#374151',
+                                      color: '#FFFFFF',
+                                      border: 'none',
+                                      fontWeight: 700,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                    title="Cancel / waive penalty fine and restore member privileges immediately"
+                                  >
+                                    ❌ Cancel Penalty
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSendReturnWarning(loan.id)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        padding: '5px 9px',
+                                        fontSize: '0.73rem',
+                                        backgroundColor: '#D97706',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Notify user that return date has passed. Warning banner appears upon user sign-in."
+                                    >
+                                      <AlertCircle size={13} />
+                                      {loan.warning_sent ? 'Re-send Return Warning' : 'Send Book Return Warning'}
+                                    </button>
 
-                                <button
-                                  type="button"
-                                  onClick={() => handleIssuePenaltyQR(loan.id)}
-                                  className="btn btn-sm"
-                                  style={{
-                                    padding: '5px 10px',
-                                    fontSize: '0.74rem',
-                                    backgroundColor: '#B91C1C',
-                                    color: '#FFFFFF',
-                                    border: 'none',
-                                    fontWeight: 700,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                  title="Send penalty payment request and QR code to user"
-                                >
-                                  <AlertTriangle size={13} />
-                                  Send Penalty Payment Request
-                                </button>
-                              </>
-                            )
-                          )}
-                          <button
-                            onClick={() => handleReturnBook(loan.id)}
-                            className="btn btn-primary btn-sm"
-                            style={{ padding: '5px 12px', fontSize: '0.76rem' }}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleIssuePenaltyQR(loan.id)}
+                                      className="btn btn-sm"
+                                      style={{
+                                        padding: '5px 10px',
+                                        fontSize: '0.74rem',
+                                        backgroundColor: '#B91C1C',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Send penalty payment request and QR code to user"
+                                    >
+                                      <AlertTriangle size={13} />
+                                      Send Penalty Payment Request
+                                    </button>
+                                  </>
+                                )
+                              )}
+                              <button
+                                onClick={() => handleReturnBook(loan.id)}
+                                className="btn btn-primary btn-sm"
+                                style={{ padding: '5px 12px', fontSize: '0.76rem' }}
+                              >
+                                Process Return
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            returnedLoans.length === 0 ? (
+              <div style={{ padding: '36px 20px', textAlign: 'center', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <RotateCcw size={32} color="var(--editorial-accent)" style={{ margin: '0 auto 8px' }} />
+                <h4 style={{ fontFamily: 'var(--font-serif)', margin: '0 0 4px', color: 'var(--editorial-text)' }}>No Returned Records Yet</h4>
+                <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--editorial-text-muted)' }}>Completed return transactions will be archived here upon desk check-in.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-start' }}>
+                {/* Left Column: Interactive Calendar Card */}
+                <div style={{
+                  flex: '0 0 340px',
+                  maxWidth: '380px',
+                  width: '100%',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '20px',
+                  boxShadow: 'var(--shadow-sm)'
+                }}>
+                  {/* Calendar Navigation Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Calendar size={18} color="var(--editorial-accent)" />
+                      <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: '1.02rem', color: 'var(--editorial-text)' }}>
+                        {calMonthName}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={handlePrevMonth}
+                        style={{
+                          padding: '4px 7px',
+                          border: '1px solid var(--editorial-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: '#FFFFFF',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--editorial-text)'
+                        }}
+                        title="Previous Month"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleJumpToToday}
+                        style={{
+                          padding: '4px 8px',
+                          border: '1px solid var(--editorial-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: '#FFFFFF',
+                          cursor: 'pointer',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          color: 'var(--editorial-text)'
+                        }}
+                        title="Jump to Today"
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextMonth}
+                        style={{
+                          padding: '4px 7px',
+                          border: '1px solid var(--editorial-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: '#FFFFFF',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--editorial-text)'
+                        }}
+                        title="Next Month"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Day of Week Headers */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, idx) => (
+                      <div key={idx} style={{ fontSize: '0.70rem', fontWeight: 800, color: 'var(--editorial-text-muted)', textTransform: 'uppercase' }}>
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Days Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                    {allCalendarCells.map((cell, idx) => {
+                      if (!cell.isCurrentMonth) {
+                        return (
+                          <div
+                            key={`overflow-${idx}`}
+                            style={{
+                              minHeight: '46px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.76rem',
+                              color: '#CBD5E1',
+                              borderRadius: 'var(--radius-sm)'
+                            }}
                           >
-                            Process Return
+                            {cell.dayNum}
+                          </div>
+                        );
+                      }
+
+                      const isSelected = selectedReturnDate === cell.dateKey && !showAllReturnHistory;
+                      const isToday = cell.dateKey === todayDateKey;
+                      const hasReturns = cell.returnCount > 0;
+
+                      return (
+                        <button
+                          key={cell.dateKey}
+                          type="button"
+                          onClick={() => {
+                            setSelectedReturnDate(cell.dateKey);
+                            setShowAllReturnHistory(false);
+                          }}
+                          style={{
+                            minHeight: '46px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '2px',
+                            padding: '4px 1px',
+                            border: isSelected
+                              ? '2px solid var(--editorial-text)'
+                              : isToday
+                                ? '2px solid var(--editorial-accent)'
+                                : hasReturns
+                                  ? '1px solid #86EFAC'
+                                  : '1px solid transparent',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: isSelected
+                              ? 'var(--editorial-text)'
+                              : hasReturns
+                                ? '#F0FDF4'
+                                : '#FFFFFF',
+                            color: isSelected
+                              ? '#FFFFFF'
+                              : 'var(--editorial-text)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            position: 'relative'
+                          }}
+                          title={hasReturns ? `${cell.returnCount} volume(s) returned on this date` : 'No returns recorded'}
+                        >
+                          <span style={{ fontSize: '0.80rem', fontWeight: (isSelected || hasReturns || isToday) ? 800 : 500 }}>
+                            {cell.dayNum}
+                          </span>
+                          {hasReturns && (
+                            <span style={{
+                              fontSize: '0.60rem',
+                              fontWeight: 800,
+                              padding: '1px 4px',
+                              borderRadius: '6px',
+                              backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : '#16A34A',
+                              color: '#FFFFFF',
+                              lineHeight: '1.1'
+                            }}>
+                              {cell.returnCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Calendar Legend & View All Toggle */}
+                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)', fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16A34A', display: 'inline-block' }} />
+                      <span>Dates with return records ({datesWithReturns.length} active days)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <span style={{ width: '8px', height: '8px', border: '2px solid var(--editorial-accent)', borderRadius: '2px', display: 'inline-block' }} />
+                      <span>Current date (Today)</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowAllReturnHistory(prev => !prev)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--editorial-border)',
+                        backgroundColor: showAllReturnHistory ? 'var(--editorial-text)' : '#FFFFFF',
+                        color: showAllReturnHistory ? '#FFFFFF' : 'var(--editorial-text)',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RotateCcw size={14} />
+                      {showAllReturnHistory ? 'Filter by Calendar Date' : `Show All Return History (${returnedLoans.length})`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Column: Daily Returns Ledger */}
+                <div style={{
+                  flex: '1 1 540px',
+                  minWidth: '320px',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid var(--editorial-border)',
+                  borderRadius: 'var(--radius-md)',
+                  overflow: 'hidden',
+                  boxShadow: 'var(--shadow-sm)'
+                }}>
+                  {/* Header of Daily Ledger */}
+                  <div style={{
+                    padding: '16px 20px',
+                    backgroundColor: 'var(--editorial-bg-subtle)',
+                    borderBottom: '1px solid var(--editorial-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar size={18} color="var(--editorial-accent)" />
+                        <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontSize: '1.02rem' }}>
+                          {showAllReturnHistory ? 'All Archived Circulation Returns' : `Returns on ${selectedDateLabel}`}
+                        </h4>
+                        <span style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          backgroundColor: displayedLoans.length > 0 ? '#DCFCE7' : '#F3F4F6',
+                          color: displayedLoans.length > 0 ? '#15803D' : '#6B7280',
+                          border: displayedLoans.length > 0 ? '1px solid #86EFAC' : '1px solid #E5E7EB'
+                        }}>
+                          {displayedLoans.length} {displayedLoans.length === 1 ? 'Volume' : 'Volumes'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', marginTop: '2px' }}>
+                        {showAllReturnHistory
+                          ? `Displaying all ${returnedLoans.length} returned volumes across all recorded dates.`
+                          : `Displaying volumes returned to stacks on ${selectedReturnDate}.`}
+                      </div>
+                    </div>
+
+                    {showAllReturnHistory && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllReturnHistory(false)}
+                        style={{
+                          padding: '5px 12px',
+                          fontSize: '0.76rem',
+                          fontWeight: 600,
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--editorial-border)',
+                          backgroundColor: '#FFFFFF',
+                          color: 'var(--editorial-text)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ← Return to Selected Date
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Ledger Table / Empty State */}
+                  {displayedLoans.length === 0 ? (
+                    <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                      <Calendar size={36} color="var(--editorial-accent)" style={{ margin: '0 auto 12px', opacity: 0.7 }} />
+                      <h5 style={{ fontFamily: 'var(--font-serif)', margin: '0 0 6px', color: 'var(--editorial-text)', fontSize: '1.05rem' }}>
+                        No Books Returned on this Date
+                      </h5>
+                      <p style={{ margin: '0 0 16px', fontSize: '0.84rem', color: 'var(--editorial-text-muted)', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                        No return transactions were archived for <strong>{selectedDateLabel}</strong>. Click any date with a green return badge on the calendar to view return logs.
+                      </p>
+                      {datesWithReturns.length > 0 && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>Quick jump:</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedReturnDate(datesWithReturns[0]);
+                              const [y, m] = datesWithReturns[0].split('-').map(Number);
+                              setCalendarMonth(new Date(y, m - 1, 1));
+                              setShowAllReturnHistory(false);
+                            }}
+                            style={{
+                              padding: '5px 12px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid #86EFAC',
+                              backgroundColor: '#F0FDF4',
+                              color: '#15803D',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            View Latest Returns ({datesWithReturns[0]})
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{
+                      maxHeight: '450px',
+                      overflowY: 'auto',
+                      overflowX: 'auto',
+                      scrollbarWidth: 'thin',
+                      WebkitOverflowScrolling: 'touch'
+                    }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 5, backgroundColor: 'var(--editorial-bg-subtle)' }}>
+                          <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
+                            <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrower</th>
+                            <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Book Title</th>
+                            <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Barcode</th>
+                            <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Borrow Date</th>
+                            <th style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)' }}>Return Date</th>
+                            <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)' }}>Circulation Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayedLoans.map(loan => (
+                            <tr key={loan.id} style={{ borderBottom: '1px solid var(--editorial-border)' }}>
+                              <td style={{ padding: '12px 14px' }}>
+                                <strong style={{ color: 'var(--editorial-text)' }}>{loan.student_name || 'Member'}</strong>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)' }}>{loan.membership_id}</div>
+                              </td>
+                              <td style={{ padding: '12px 14px', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', fontWeight: 700 }}>
+                                {loan.book_title}
+                              </td>
+                              <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                                {loan.copy_code}
+                              </td>
+                              <td style={{ padding: '12px 14px', color: 'var(--editorial-text-muted)', fontSize: '0.82rem' }}>
+                                {loan.borrow_date ? new Date(loan.borrow_date).toLocaleDateString() : '—'}
+                              </td>
+                              <td style={{ padding: '12px 14px', color: 'var(--editorial-text)', fontWeight: 600 }}>
+                                {loan.return_date ? new Date(loan.return_date).toLocaleDateString() : new Date().toLocaleDateString()}
+                              </td>
+                              <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '3px 8px', borderRadius: '2px', border: '1px solid var(--editorial-border)' }}>
+                                  ✓ Returned to Stacks
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          )}
         </div>
       )}
 
@@ -1685,9 +2402,17 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             Display of library patrons who have placed books on hold or are waiting for books (Waiting List). Confirm book pickup when copies arrive at the desk.
           </p>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{
+            maxHeight: '480px',
+            overflowY: 'auto',
+            overflowX: 'auto',
+            border: '1px solid var(--editorial-border)',
+            borderRadius: 'var(--radius-sm)',
+            scrollbarWidth: 'thin',
+            WebkitOverflowScrolling: 'touch'
+          }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-              <thead>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--cream)' }}>
                 <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
                   <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Student</th>
                   <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Book</th>
@@ -1812,21 +2537,216 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
             </p>
 
             <form onSubmit={handleAddCopiesToExisting} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', alignItems: 'end' }}>
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Select Existing Book *</label>
-                <select
-                  className="form-control"
-                  value={copyBookId}
-                  onChange={(e) => setCopyBookId(e.target.value)}
-                  required
-                >
-                  <option value="">-- Choose a title from catalog ({books.length} books) --</option>
-                  {books.map(b => (
-                    <option key={b.id} value={b.id}>
-                      {b.title} — by {b.author} (Current: {b.available_copies}/{b.total_copies} available • ISBN: {b.isbn})
-                    </option>
-                  ))}
-                </select>
+              <div className="form-group" style={{ gridColumn: 'span 2', position: 'relative' }}>
+                <label className="form-label" style={{ fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Type / Search Existing Book in Catalog *</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 500 }}>
+                    {books.length} titles in catalog
+                  </span>
+                </label>
+                
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Type book title, author, or ISBN (e.g. The Alchemist, Paulo Coelho)..."
+                    value={copySearchQuery}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCopySearchQuery(val);
+                      setCopySearchOpen(true);
+                      setCopyBookError('');
+                      if (!val.trim()) {
+                        setSelectedCopyBook(null);
+                        setCopyBookId('');
+                        return;
+                      }
+                      const exact = books.find(b => b.title.toLowerCase() === val.trim().toLowerCase() || (b.isbn && b.isbn.toLowerCase() === val.trim().toLowerCase()));
+                      if (exact) {
+                        setSelectedCopyBook(exact);
+                        setCopyBookId(exact.id || exact._id);
+                      } else {
+                        setSelectedCopyBook(null);
+                        setCopyBookId('');
+                      }
+                    }}
+                    onFocus={() => setCopySearchOpen(true)}
+                    required={!selectedCopyBook}
+                    style={{
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 14px',
+                      fontSize: '0.90rem',
+                      border: copyBookError ? '1px solid #DC2626' : selectedCopyBook ? '1px solid #16A34A' : '1px solid var(--editorial-border)'
+                    }}
+                  />
+                  {copySearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCopySearchQuery('');
+                        setSelectedCopyBook(null);
+                        setCopyBookId('');
+                        setCopyBookError('');
+                        setCopySearchOpen(false);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--muted-text)',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Auto-suggest dropdown when typing */}
+                {copySearchOpen && copySearchQuery.trim().length > 0 && !selectedCopyBook && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 50,
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid var(--editorial-border)',
+                      borderRadius: '4px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      maxHeight: '260px',
+                      overflowY: 'auto',
+                      marginTop: '4px'
+                    }}
+                  >
+                    {(() => {
+                      const q = copySearchQuery.trim().toLowerCase();
+                      const matches = books.filter(b =>
+                        b.title.toLowerCase().includes(q) ||
+                        (b.author && b.author.toLowerCase().includes(q)) ||
+                        (b.isbn && b.isbn.toLowerCase().includes(q))
+                      ).slice(0, 8);
+
+                      if (matches.length === 0) {
+                        return (
+                          <div style={{ padding: '14px 16px', color: '#DC2626', fontSize: '0.84rem', fontWeight: 600 }}>
+                            ⚠️ No book found matching "{copySearchQuery}".
+                            <div style={{ fontSize: '0.78rem', color: 'var(--muted-text)', marginTop: '4px', fontWeight: 400 }}>
+                              This book does not exist in the library catalog. You cannot add copies until it is cataloged below.
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return matches.map(b => (
+                        <div
+                          key={b.id || b._id}
+                          onClick={() => {
+                            setSelectedCopyBook(b);
+                            setCopyBookId(b.id || b._id);
+                            setCopySearchQuery(b.title);
+                            setCopySearchOpen(false);
+                            setCopyBookError('');
+                          }}
+                          style={{
+                            padding: '10px 14px',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid var(--editorial-border)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            transition: 'background-color 0.1s ease'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--editorial-bg)'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--editorial-text)' }}>
+                              {b.title}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>
+                              by {b.author} • ISBN: {b.isbn || 'N/A'} • {b.category}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '3px', backgroundColor: '#E0F2FE', color: '#0369A1' }}>
+                            {b.available_copies}/{b.total_copies} in stacks
+                          </span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                )}
+
+                {/* Validation Error: Book not in catalog */}
+                {copyBookError && (
+                  <div style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '4px', color: '#991B1B', fontSize: '0.82rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertCircle size={16} />
+                    <span>{copyBookError}</span>
+                  </div>
+                )}
+
+                {/* Verified Book Preview Card */}
+                {selectedCopyBook && (
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      padding: '12px 14px',
+                      backgroundColor: '#F0FDF4',
+                      border: '1px solid #86EFAC',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          ✓ Catalog Book Verified
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.94rem', fontWeight: 700, color: 'var(--forest-dark)', marginTop: '2px' }}>
+                        {selectedCopyBook.title}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--muted-text)' }}>
+                        Author: {selectedCopyBook.author} • Location: {selectedCopyBook.floor || 'Floor 1'}, {selectedCopyBook.section || 'General'} (Shelf {selectedCopyBook.shelf || 'Main'})
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#15803D' }}>
+                        Current Stock: {selectedCopyBook.available_copies}/{selectedCopyBook.total_copies}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCopyBook(null);
+                          setCopyBookId('');
+                          setCopySearchQuery('');
+                          setCopySearchOpen(false);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#DC2626',
+                          fontSize: '0.74rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          marginTop: '4px',
+                          padding: 0
+                        }}
+                      >
+                        Change Book
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -2145,250 +3065,381 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
         </div>
       )}
 
-      {/* TAB: Message Administrator (Librarian -> Admin Direct Hotline) */}
-      {activeTab === 'adminmsg' && (
-        <div style={{ maxWidth: '680px' }}>
-          <div className="bio-card" style={{ padding: '30px', backgroundColor: '#FFFFFF', borderLeft: '5px solid #2A9D8F' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <Send size={22} color="#2A9D8F" />
-              <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', margin: 0 }}>
-                Direct Hotline to Library Administration
-              </h3>
+      {/* TAB: Study Pods & Carrels Live Schedule (Read-Only Monitor) */}
+      {activeTab === 'seats' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', padding: '24px 28px', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--editorial-accent)', marginBottom: '4px' }}>
+              <Armchair size={18} />
+              <span className="editorial-kicker" style={{ color: 'var(--editorial-accent)' }}>
+                ARCHITECTURAL CARRELS &amp; DESKS
+              </span>
             </div>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '24px' }}>
-              Send an urgent notice, maintenance alert, or inventory incident report directly to Library Administration. Only Librarian accounts have access to dispatch messages to the Admin console.
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', margin: '4px 0 6px' }}>
+                  Study Pods Live Schedule &amp; Timings ({seats.length})
+                </h3>
+                <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                  Real-time read-only monitor of student study pod reservations and booked time slots. Reservations automatically confirm upon student booking and automatically release when time slot ends.
+                </p>
+              </div>
+
+              {/* Status summary pill indicators */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: 'var(--editorial-bg-subtle)', border: '1px solid var(--editorial-border)', color: 'var(--editorial-green)' }}>
+                  ● {seats.filter(s => s.effective_status === 'available').length} Available
+                </span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', color: '#B45309' }}>
+                  ● {seats.filter(s => s.effective_status === 'occupied').length} Booked / Occupied
+                </span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
+                  ● {seats.filter(s => s.effective_status === 'maintenance').length} Maintenance
+                </span>
+              </div>
+            </div>
+
+            {/* Filter controls */}
+            <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', alignItems: 'center', marginTop: '18px', paddingTop: '16px', borderTop: '1px solid var(--editorial-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Floor:</span>
+                {['All', 'Floor 1', 'Floor 2'].map(f => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setSeatFloorFilter(f)}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      borderRadius: '2px',
+                      border: '1px solid var(--editorial-border)',
+                      backgroundColor: seatFloorFilter === f ? 'var(--editorial-text)' : '#FFFFFF',
+                      color: seatFloorFilter === f ? '#FFFFFF' : 'var(--editorial-text)'
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--editorial-text)', textTransform: 'uppercase' }}>Status:</span>
+                {['All', 'Available', 'Occupied'].map(st => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setSeatStatusFilter(st)}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      borderRadius: '2px',
+                      border: '1px solid var(--editorial-border)',
+                      backgroundColor: seatStatusFilter.toLowerCase() === st.toLowerCase() ? 'var(--editorial-text)' : '#FFFFFF',
+                      color: seatStatusFilter.toLowerCase() === st.toLowerCase() ? '#FFFFFF' : 'var(--editorial-text)'
+                    }}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Seat Cards Grid - Pure Read-Only Monitor */}
+          {(() => {
+            const filteredSeats = seats
+              .filter(s => {
+                if (seatFloorFilter === 'All') return true;
+                const sf = String(s.floor || '').toLowerCase();
+                const tf = seatFloorFilter.toLowerCase();
+                return sf.includes(tf) || (tf.includes('1') && sf.includes('1')) || (tf.includes('2') && sf.includes('2'));
+              })
+              .filter(s => {
+                if (seatStatusFilter === 'All') return true;
+                const eff = String(s.effective_status || 'available').toLowerCase();
+                return eff === seatStatusFilter.toLowerCase();
+              });
+
+            if (filteredSeats.length === 0) {
+              return (
+                <div
+                  style={{
+                    padding: '48px 24px',
+                    textAlign: 'center',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid var(--editorial-border)',
+                    borderRadius: 'var(--radius-sm)'
+                  }}
+                >
+                  <Armchair size={36} color="var(--editorial-accent)" style={{ margin: '0 auto 12px' }} />
+                  <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', color: 'var(--editorial-text)', margin: '0 0 8px' }}>
+                    No Study Pods Found
+                  </h4>
+                  <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', maxWidth: '440px', margin: '0 auto 18px' }}>
+                    No study pods match the selected filters.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setSeatFloorFilter('All'); setSeatStatusFilter('All'); fetchLibrarianData(); }}
+                    className="btn btn-primary btn-sm"
+                    style={{ padding: '7px 16px', fontSize: '0.82rem' }}
+                  >
+                    Reset Pod Filters &amp; Show All →
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
+                {filteredSeats.map(seat => {
+                  const effStatus = seat.effective_status || 'available';
+                  const isAvail = effStatus === 'available';
+                  const isOccupied = effStatus === 'occupied';
+                  const isMaint = effStatus === 'maintenance';
+
+                  return (
+                    <div
+                      key={seat.id || seat._id}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid var(--editorial-border)',
+                        borderTop: isAvail
+                          ? '3px solid var(--editorial-green)'
+                          : isOccupied
+                            ? '3px solid #D97706'
+                            : '3px solid #EF4444',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '14px',
+                        boxShadow: 'var(--shadow-sm)'
+                      }}
+                    >
+                      <div>
+                        {/* Top: Floor, Section & Status */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <div>
+                            <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {seat.floor} • {seat.section}
+                            </span>
+                            <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--editorial-text)', margin: '2px 0 0' }}>
+                              Study Pod {seat.seat_number}
+                            </h4>
+                          </div>
+
+                          {isAvail && (
+                            <span className="badge badge-available">● Available</span>
+                          )}
+                          {isOccupied && (
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#B45309', backgroundColor: '#FEF3C7', padding: '3px 8px', borderRadius: '4px', border: '1px solid #FCD34D' }}>
+                              ● Booked
+                            </span>
+                          )}
+                          {isMaint && (
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#991B1B', backgroundColor: '#FEE2E2', padding: '3px 8px', borderRadius: '4px', border: '1px solid #FCA5A5' }}>
+                              ● Maintenance
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Features */}
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                          {seat.has_power === 1 && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Zap size={10} /> Power
+                            </span>
+                          )}
+                          {seat.has_monitor === 1 && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--editorial-green)', backgroundColor: 'var(--editorial-bg-subtle)', padding: '2px 6px', borderRadius: '2px', border: '1px solid var(--editorial-border)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Monitor size={10} /> Screen
+                            </span>
+                          )}
+                        </div>
+
+                        {/* LIVE BOOKING DETAILS: STUDENT NAME & TIMING */}
+                        {isOccupied ? (
+                          <div
+                            style={{
+                              backgroundColor: '#FFFBEB',
+                              border: '1px solid #FDE68A',
+                              borderRadius: '4px',
+                              padding: '12px 14px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px'
+                            }}
+                          >
+                            <div style={{ fontSize: '0.82rem', color: '#92400E', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <UserCheck size={14} color="#B45309" />
+                              <span>Booked by: <strong>{seat.current_user_name || 'Library Patron'}</strong></span>
+                            </div>
+                            <div style={{ fontSize: '0.80rem', color: '#B45309', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Clock size={14} color="#B45309" />
+                              <span>Timing: <strong>{seat.booking_timing || 'Active Time Slot'}</strong></span>
+                            </div>
+                            {seat.booking_date && (
+                              <div style={{ fontSize: '0.72rem', color: '#92400E', opacity: 0.85, paddingLeft: '20px' }}>
+                                Date: {seat.booking_date}
+                              </div>
+                            )}
+
+                            {/* Additional bookings today if any */}
+                            {Array.isArray(seat.all_bookings_today) && seat.all_bookings_today.length > 1 && (
+                              <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed #FCD34D', fontSize: '0.72rem', color: '#78350F' }}>
+                                <span style={{ fontWeight: 700 }}>Other Slots Today ({seat.all_bookings_today.length - 1}):</span>
+                                <ul style={{ margin: '3px 0 0 16px', padding: 0 }}>
+                                  {seat.all_bookings_today.slice(1).map((b, bIdx) => (
+                                    <li key={bIdx}>
+                                      {b.time_slot} ({b.student_name})
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ) : isAvail ? (
+                          <div
+                            style={{
+                              backgroundColor: 'var(--editorial-bg-subtle)',
+                              border: '1px solid var(--editorial-border)',
+                              borderRadius: '4px',
+                              padding: '10px 12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              fontSize: '0.78rem',
+                              color: 'var(--editorial-green)',
+                              fontWeight: 600
+                            }}
+                          >
+                            <CheckCircle2 size={15} />
+                            <span>Available for booking • Self-service reservation active</span>
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              backgroundColor: '#FEE2E2',
+                              border: '1px solid #FCA5A5',
+                              borderRadius: '4px',
+                              padding: '10px 12px',
+                              fontSize: '0.78rem',
+                              color: '#991B1B',
+                              fontWeight: 600
+                            }}
+                          >
+                            Under scheduled acoustic / technical maintenance
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer notice: Read-only automated system */}
+                      <div style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)', paddingTop: '10px', borderTop: '1px solid var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>⚡ Automated release on slot expiration</span>
+                        <span style={{ fontWeight: 700, color: 'var(--editorial-text)' }}>Read-Only Monitor</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* TAB: Unified Message Admin & Restock Messenger */}
+      {activeTab === 'adminmsg' && (
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div className="bio-card" style={{ padding: '32px', backgroundColor: '#FFFFFF', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--editorial-accent)', marginBottom: '8px' }}>
+              <Send size={18} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Direct Staff Dispatch</span>
+            </div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', color: 'var(--editorial-text)', marginBottom: '6px' }}>
+              Administrative Messenger & Restock Dispatch
+            </h3>
+            <p style={{ fontSize: '0.86rem', color: 'var(--editorial-text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
+              Send restock requests for books, operational updates, or official notices directly to the system administrator. You can manually specify book titles, required quantities, and notes below.
             </p>
 
             <form onSubmit={handleSendMessageToAdmin}>
-              <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label">Subject / Alert Title *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g. Urgent: Floor 2 Rack 03 Shelf Damaged / High Demand for AI Books"
-                  value={adminMsgTitle}
-                  onChange={(e) => setAdminMsgTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Message Details for Administration *</label>
-                <textarea
-                  className="form-control"
-                  rows={5}
-                  placeholder="Describe the facility issue, inventory replenishment request, or administrative note..."
-                  value={adminMsgBody}
-                  onChange={(e) => setAdminMsgBody(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.78rem', color: 'var(--sage)' }}>
-                  🔒 Transmitted directly to all logged Admin consoles with [LIBRARIAN NOTICE] tag.
-                </span>
-                <button
-                  type="submit"
-                  disabled={sendingAdminMsg}
-                  className="btn btn-botanical"
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px' }}
-                >
-                  <Send size={16} />
-                  {sendingAdminMsg ? 'Dispatching...' : 'Dispatch Message to Admin'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-
-      {/* TAB 5: Live Study Pod Status */}
-      {activeTab === 'seats' && (
-        <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-          <h3 style={{ fontSize: '1.3rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-            Live Study Seat Occupancy Controller
-          </h3>
-          <p style={{ fontSize: '0.88rem', color: 'var(--muted-text)', marginBottom: '20px' }}>
-            Click any seat to toggle between Available and Occupied. Live updates reflect immediately for students.
-          </p>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: '16px'
-            }}
-          >
-            {seats.map(seat => (
-              <div
-                key={seat.id}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  backgroundColor: seat.status === 'available' ? 'var(--status-available-bg)' : '#FEEFE6',
-                  border: '1.5px solid var(--editorial-border)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '1.1rem', color: 'var(--forest-dark)' }}>{seat.seat_number}</strong>
-                  <span className={`badge ${seat.status === 'available' ? 'badge-available' : 'badge-borrowed'}`}>
-                    {seat.status}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--muted-text)' }}>
-                  {seat.floor} • {seat.section}
-                </div>
-                <button
-                  onClick={() => handleToggleSeat(seat.id, seat.status)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ marginTop: '6px' }}
-                >
-                  Set to {seat.status === 'available' ? 'Occupied' : 'Available'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TAB: Message Admin & Inventory Requisition */}
-      {activeTab === 'adminmsg' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
-          {/* Form 1: Out-of-Stock / Low Stock Book Requisition */}
-          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', marginBottom: '8px' }}>
-              <Plus size={18} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Procurement Request</span>
-            </div>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
-              Report Out-of-Stock / Restock Request
-            </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px', lineHeight: 1.45 }}>
-              Officially report low or zero-stock books to Administration for physical copy acquisition.
-            </p>
-
-            <form onSubmit={handleSendRestockRequisition}>
-              <div className="form-group" style={{ marginBottom: '14px' }}>
-                <label className="form-label">Select Book from Catalog *</label>
-                <select
-                  className="form-control"
-                  value={restockBookId}
-                  onChange={(e) => setRestockBookId(e.target.value)}
-                  required
-                >
-                  <option value="">-- Choose Book to Restock --</option>
-                  {books.map(b => (
-                    <option key={b.id} value={b.id}>
-                      {b.title} ({b.available_copies === 0 ? 'OUT OF STOCK' : `${b.available_copies} avail`}) — ISBN: {b.isbn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">Requested Quantity</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    className="form-control"
-                    value={restockQty}
-                    onChange={(e) => setRestockQty(parseInt(e.target.value) || 1)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Priority</label>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Dispatch Category *</label>
                   <select
                     className="form-control"
-                    value={restockPriority}
-                    onChange={(e) => setRestockPriority(e.target.value)}
+                    value={adminMsgCategory}
+                    onChange={(e) => setAdminMsgCategory(e.target.value)}
+                    style={{ fontSize: '0.86rem' }}
+                  >
+                    <option value="Book Restock / Procurement Request">Book Restock / Procurement Request</option>
+                    <option value="Circulation & Patron Alert">Circulation & Patron Alert</option>
+                    <option value="Inventory Audit / Barcode Issue">Inventory Audit / Barcode Issue</option>
+                    <option value="Facilities & IT Support">Facilities & IT Support</option>
+                    <option value="General Administrative Note">General Administrative Note</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Priority Level</label>
+                  <select
+                    className="form-control"
+                    value={adminMsgPriority}
+                    onChange={(e) => setAdminMsgPriority(e.target.value)}
+                    style={{ fontSize: '0.86rem' }}
                   >
                     <option value="Standard">Standard</option>
-                    <option value="High">High Priority</option>
-                    <option value="Urgent">Urgent / Course Reserve</option>
+                    <option value="High Priority">High Priority</option>
+                    <option value="Urgent / Immediate Attention">Urgent / Immediate Attention</option>
                   </select>
                 </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '14px' }}>
-                <label className="form-label">Reason for Request</label>
-                <select
-                  className="form-control"
-                  value={restockReason}
-                  onChange={(e) => setRestockReason(e.target.value)}
-                >
-                  <option value="Out of stock (0 available copies)">Out of stock (0 available copies)</option>
-                  <option value="High student hold queue depth">High student hold queue depth</option>
-                  <option value="Damaged / Worn copies in circulation">Damaged / Worn copies in circulation</option>
-                  <option value="Curriculum & exam requirement">Curriculum & exam requirement</option>
-                  <option value="Anticipated seasonal demand spike">Anticipated seasonal demand spike</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '18px' }}>
-                <label className="form-label">Justification / Librarian Notes (Optional)</label>
-                <textarea
-                  className="form-control"
-                  rows={3}
-                  placeholder="e.g. 4 students currently in hold queue; faculty recommended additional copies..."
-                  value={restockNotes}
-                  onChange={(e) => setRestockNotes(e.target.value)}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={sendingRestock}
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                <Send size={15} />
-                {sendingRestock ? 'Dispatching to Administration...' : 'Submit Restock Requisition'}
-              </button>
-            </form>
-          </div>
-
-          {/* Form 2: Direct Administrative Message Hotline */}
-          <div className="bio-card" style={{ padding: '28px', backgroundColor: '#FFFFFF' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', marginBottom: '8px' }}>
-              <Send size={18} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Administration Hotline</span>
-            </div>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '6px' }}>
-              Direct Message to Administration
-            </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', marginBottom: '20px', lineHeight: 1.45 }}>
-              Send an operational inquiry, facilities alert, or administrative message directly to library administrators.
-            </p>
-
-            <form onSubmit={handleSendMessageToAdmin}>
-              <div className="form-group" style={{ marginBottom: '14px' }}>
-                <label className="form-label">Subject / Title *</label>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Subject / Dispatch Title *</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. Air Conditioning in Garden Window Pods or Shelf Audit"
+                  placeholder="e.g. Restock request for 1984 and Clean Code, or Shelf Repair Notice"
                   value={adminMsgTitle}
                   onChange={(e) => setAdminMsgTitle(e.target.value)}
+                  style={{ fontSize: '0.86rem' }}
                   required
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: '18px' }}>
-                <label className="form-label">Message Details *</label>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>
+                  Books to Restock / Volume Details (Title, Author, ISBN, Quantity)
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. 1984 by George Orwell (ISBN: 978-0451524935) - 5 copies; Clean Code - 3 copies"
+                  value={adminMsgBookDetails}
+                  onChange={(e) => setAdminMsgBookDetails(e.target.value)}
+                  style={{ fontSize: '0.86rem' }}
+                />
+                <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', marginTop: '4px', display: 'block' }}>
+                  You can freely type any book name, author, edition, or copy count you want the administrator to restock.
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '22px' }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Message Details & Operational Notes *</label>
                 <textarea
                   className="form-control"
-                  rows={7}
-                  placeholder="Type your official administrative dispatch here..."
+                  rows={5}
+                  placeholder="Type your complete message to the administration here..."
                   value={adminMsgBody}
                   onChange={(e) => setAdminMsgBody(e.target.value)}
+                  style={{ fontSize: '0.86rem', lineHeight: 1.5 }}
                   required
                 />
               </div>
@@ -2397,15 +3448,15 @@ Dispatched by Desk Librarian: ${user?.name} (${user?.email})`;
                 type="submit"
                 disabled={sendingAdminMsg}
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 600 }}
               >
-                <Send size={15} />
-                {sendingAdminMsg ? 'Sending to Admin...' : 'Send Administrative Dispatch'}
+                <Send size={16} />
+                {sendingAdminMsg ? 'Dispatching to Administration...' : 'Send Administrative Dispatch'}
               </button>
             </form>
 
-            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--warm-beige-light)', borderRadius: '8px', fontSize: '0.78rem', color: 'var(--muted-text)', lineHeight: 1.45 }}>
-              <strong>Audit Policy:</strong> All dispatches are recorded with cryptographic timestamps in system audit logs and delivered to administrator notification inboxes. Approving a request does not artificially fabricate inventory; physical copies are only added when received and registered.
+            <div style={{ marginTop: '18px', padding: '12px 14px', backgroundColor: 'var(--editorial-bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)', fontSize: '0.78rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5 }}>
+              <strong>Official Record:</strong> Dispatches are logged with cryptographic timestamps in system audit logs and transmitted directly to the library administration inbox.
             </div>
           </div>
         </div>

@@ -27,6 +27,8 @@ import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCover
 
 export default function BookDetails({
   bookId,
+  originCategory,
+  originPage,
   onBack,
   onNavigate,
   onAddToCompare,
@@ -51,6 +53,23 @@ export default function BookDetails({
   const [returning, setReturning] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [penaltyStatus, setPenaltyStatus] = useState(null);
+
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
+
+  useEffect(() => {
+    let timer = null;
+    const handleResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setWindowWidth(window.innerWidth), 80);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const isMobile = windowWidth < 768;
 
   const fetchBookDetails = useCallback(async () => {
     if (!bookId) {
@@ -110,6 +129,10 @@ export default function BookDetails({
     if (!user) {
       setPendingActionName('place a hold for front desk pickup');
       setShowAuthModal(true);
+      return;
+    }
+    if (userReservation) {
+      showToast('You are already on the waiting list for this volume.', true);
       return;
     }
     setReserving(true);
@@ -276,16 +299,23 @@ export default function BookDetails({
       setShowAuthModal(true);
       return;
     }
+    const bId = book?.id !== undefined ? book.id : (book?._id !== undefined ? book._id : bookId);
     try {
       if (isWishlisted) {
-        await api.removeFromWishlist(book.id);
+        await api.removeFromWishlist(bId);
         setIsWishlisted(false);
         showToast('Removed from wishlist');
       } else {
-        await api.addToWishlist(book.id);
+        await api.addToWishlist(bId);
         setIsWishlisted(true);
         showToast('Saved to your wishlist');
       }
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'wishlist_updated', bookId: bId });
+        bc.close();
+      } catch (e) {}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -369,20 +399,56 @@ export default function BookDetails({
   const isLibrarianOrAdmin = user && (user.role === 'librarian' || user.role === 'admin');
 
   return (
-    <div className="container" style={{ padding: '40px 24px 80px' }}>
+    <div
+      className="container"
+      style={{
+        padding: isMobile ? '12px 10px 60px' : '40px 24px 80px',
+        maxWidth: '100%',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
+      }}
+    >
       {/* Responsive style overrides */}
       <style>{`
         @media (max-width: 860px) {
           .book-detail-grid {
-            grid-template-columns: 1fr !important;
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+          }
+          .book-detail-grid > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+          }
+          .bio-card {
+            padding: 14px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
           }
         }
         @media (max-width: 640px) {
           .book-detail-grid {
-            gap: 24px !important;
+            gap: 14px !important;
           }
           .book-cover-img {
-            height: 280px !important;
+            height: 240px !important;
+            max-width: 100% !important;
+          }
+          .book-cover-img img {
+            max-width: 100% !important;
+            object-fit: contain !important;
+            background-color: var(--editorial-bg-subtle) !important;
           }
           .book-action-row {
             flex-direction: column !important;
@@ -392,10 +458,10 @@ export default function BookDetails({
             width: 100% !important;
           }
           .book-meta-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-columns: 1fr 1fr !important;
           }
           .shelf-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-columns: 1fr 1fr !important;
           }
         }
       `}</style>
@@ -440,11 +506,11 @@ export default function BookDetails({
           alignItems: 'center',
           gap: '6px',
           cursor: 'pointer',
-          marginBottom: '24px',
+          marginBottom: isMobile ? '16px' : '24px',
           padding: 0
         }}
       >
-        <ArrowLeft size={16} /> Back to Catalog
+        <ArrowLeft size={16} /> {originCategory && originCategory !== 'All' ? `Back to ${originCategory}` : 'Back to Catalog'}
       </button>
 
       {/* Main Book Detail Grid */}
@@ -452,26 +518,28 @@ export default function BookDetails({
         className="book-detail-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(280px, 340px) 1fr',
-          gap: '40px',
-          marginBottom: '48px',
+          gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 340px) 1fr',
+          gap: isMobile ? '20px' : '40px',
+          marginBottom: isMobile ? '28px' : '48px',
           alignItems: 'start'
         }}
-      >        {/* Left Column: Cover & Quick Actions */}
+      >
+        {/* Left Column: Cover & Quick Actions */}
         <div>
           <div
             className="bio-card"
             style={{
-              padding: '16px',
+              padding: isMobile ? '12px' : '16px',
               backgroundColor: '#FFFFFF',
-              marginBottom: '20px'
+              marginBottom: isMobile ? '14px' : '20px'
             }}
           >
             <div
+              className="book-cover-img"
               style={{
                 borderRadius: 'var(--radius-sm)',
                 overflow: 'hidden',
-                height: '420px',
+                height: isMobile ? '260px' : '420px',
                 backgroundColor: 'var(--warm-beige)',
                 boxShadow: '0 8px 20px rgba(52, 78, 65, 0.1)'
               }}
@@ -642,23 +710,27 @@ export default function BookDetails({
               /* User Active Loan Status Banner */
               <div
                 style={{
-                  padding: '14px 16px',
+                  padding: isMobile ? '12px 10px' : '14px 16px',
                   borderRadius: '10px',
                   backgroundColor: 'var(--soft-sage-light)',
                   border: '1.5px solid var(--botanical)',
-                  marginBottom: '8px'
+                  marginBottom: '8px',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--forest-dark)', fontWeight: 700, fontSize: '0.92rem' }}>
-                  <CheckCircle2 size={18} color="var(--botanical)" />
-                  Currently Borrowed by You
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--forest-dark)', fontWeight: 700, fontSize: isMobile ? '0.86rem' : '0.92rem' }}>
+                  <CheckCircle2 size={16} color="var(--botanical)" style={{ flexShrink: 0 }} />
+                  <span>Currently Borrowed by You</span>
                 </div>
-                <p style={{ margin: '4px 0 10px', fontSize: '0.82rem', color: 'var(--muted-text)' }}>
+                <p style={{ margin: '4px 0 10px', fontSize: '0.80rem', color: 'var(--muted-text)' }}>
                   Due date: <strong>{new Date(userLoan.due_date).toLocaleDateString()}</strong>
                   {userLoan.status === 'overdue' && <span style={{ color: '#C5221F', fontWeight: 700, marginLeft: '6px' }}>(OVERDUE)</span>}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: isMobile ? '6px' : '8px', width: '100%', boxSizing: 'border-box' }}>
                     <button
                       onClick={handleReturnBook}
                       disabled={returning}
@@ -667,10 +739,10 @@ export default function BookDetails({
                         backgroundColor: 'var(--editorial-accent)',
                         color: '#FFFFFF',
                         fontWeight: 700,
-                        padding: '8px 6px',
+                        padding: isMobile ? '8px 4px' : '8px 6px',
                         minWidth: 0,
                         width: '100%',
-                        fontSize: '0.80rem',
+                        fontSize: isMobile ? '0.74rem' : '0.80rem',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -685,10 +757,10 @@ export default function BookDetails({
                       className="btn btn-outline btn-sm"
                       style={{
                         fontWeight: 600,
-                        padding: '8px 6px',
+                        padding: isMobile ? '8px 4px' : '8px 6px',
                         minWidth: 0,
                         width: '100%',
-                        fontSize: '0.80rem',
+                        fontSize: isMobile ? '0.74rem' : '0.80rem',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -709,23 +781,30 @@ export default function BookDetails({
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '6px',
-                      padding: '8px 12px',
-                      fontSize: '0.82rem'
+                      padding: '8px 10px',
+                      fontSize: '0.80rem',
+                      boxSizing: 'border-box'
                     }}
                   >
-                    <BookOpen size={14} /> Open My Loans Hub →
+                    <BookOpen size={14} style={{ flexShrink: 0 }} />
+                    <span>Open My Loans Hub →</span>
                   </button>
 
                   <div
                     style={{
-                      fontSize: '0.74rem',
+                      fontSize: '0.70rem',
                       color: 'var(--editorial-text-muted)',
                       backgroundColor: 'rgba(38, 61, 50, 0.05)',
-                      padding: '6px 10px',
+                      padding: '8px 10px',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px dashed var(--editorial-border)',
                       lineHeight: 1.4,
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      boxSizing: 'border-box',
+                      width: '100%',
+                      maxWidth: '100%',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal'
                     }}
                   >
                     🔒 <strong>1 Copy Rule:</strong> Only 1 copy allowed at a time. Return your copy to borrow this title again.
@@ -848,10 +927,14 @@ export default function BookDetails({
               <div
                 style={{
                   marginTop: '16px',
-                  padding: '14px 16px',
+                  padding: isMobile ? '12px 10px' : '14px 16px',
                   backgroundColor: 'var(--editorial-bg-subtle)',
                   border: '1px solid var(--editorial-border)',
-                  borderRadius: 'var(--radius-sm)'
+                  borderRadius: 'var(--radius-sm)',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -871,7 +954,7 @@ export default function BookDetails({
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: isMobile ? '6px' : '8px', marginBottom: '8px', width: '100%', boxSizing: 'border-box' }}>
                   <button
                     type="button"
                     onClick={handleToggleWishlist}
@@ -880,11 +963,11 @@ export default function BookDetails({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '5px',
-                      fontSize: '0.78rem',
+                      gap: '4px',
+                      fontSize: isMobile ? '0.74rem' : '0.78rem',
                       width: '100%',
                       minWidth: 0,
-                      padding: '8px 4px',
+                      padding: isMobile ? '8px 4px' : '8px 4px',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -893,7 +976,7 @@ export default function BookDetails({
                     }}
                   >
                     <Heart size={13} fill={isWishlisted ? '#FFFFFF' : 'none'} color={isWishlisted ? '#FFFFFF' : 'currentColor'} style={{ flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{isWishlisted ? 'In Wishlist' : 'Add Wishlist'}</span>
                   </button>
 
                   <button
@@ -904,11 +987,11 @@ export default function BookDetails({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '5px',
-                      fontSize: '0.78rem',
+                      gap: '4px',
+                      fontSize: isMobile ? '0.74rem' : '0.78rem',
                       width: '100%',
                       minWidth: 0,
-                      padding: '8px 4px',
+                      padding: isMobile ? '8px 4px' : '8px 4px',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -917,7 +1000,7 @@ export default function BookDetails({
                     }}
                   >
                     <GitCompare size={13} style={{ flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'In Compare' : 'Compare Volume'}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{compareBookIds.includes(parseInt(book.id, 10)) || compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}</span>
                   </button>
                 </div>
 
@@ -982,74 +1065,74 @@ export default function BookDetails({
             )}
           </div>
 
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 3.2vw, 2.7rem)', fontWeight: 800, color: 'var(--editorial-text)', marginBottom: '8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1.5rem' : 'clamp(2rem, 3.2vw, 2.7rem)', fontWeight: 800, color: 'var(--editorial-text)', marginBottom: '8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
             {book.title}
           </h1>
 
-          <p style={{ fontSize: '1.15rem', color: 'var(--editorial-text-muted)', marginBottom: '24px' }}>
+          <p style={{ fontSize: isMobile ? '0.92rem' : '1.15rem', color: 'var(--editorial-text-muted)', marginBottom: isMobile ? '16px' : '24px' }}>
             by <strong style={{ color: 'var(--editorial-text)' }}>{book.author}</strong>
           </p>
 
           {/* EXACT SHELF & RACK LOCATION CARD */}
           <div
             style={{
-              padding: '24px',
+              padding: isMobile ? '16px 14px' : '24px',
               backgroundColor: 'var(--editorial-bg-subtle)',
               border: '1px solid var(--editorial-border)',
               borderLeft: '4px solid var(--editorial-green)',
               borderRadius: 'var(--radius-sm)',
-              marginBottom: '32px'
+              marginBottom: isMobile ? '20px' : '32px'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
               <MapPin size={20} color="var(--editorial-accent)" strokeWidth={2.2} />
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: 'var(--editorial-text)', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1rem' : '1.15rem', color: 'var(--editorial-text)', fontWeight: 700 }}>
                 Exact Physical Shelf Location
               </h3>
             </div>
-            <p style={{ fontSize: '0.90rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, marginBottom: '16px' }}>
+            <p style={{ fontSize: isMobile ? '0.82rem' : '0.90rem', color: 'var(--editorial-text-muted)', lineHeight: 1.5, marginBottom: '14px' }}>
               Find this volume in the physical library stacks using these accession coordinates:
             </p>
 
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-                gap: '12px'
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: '10px'
               }}
             >
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
-                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Floor Level
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                <span style={{ fontSize: isMobile ? '0.94rem' : '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.floor}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
-                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Section
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                <span style={{ fontSize: isMobile ? '0.94rem' : '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.section}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
-                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Shelf Code
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-green)' }}>
+                <span style={{ fontSize: isMobile ? '0.94rem' : '1.05rem', fontWeight: 700, color: 'var(--editorial-green)' }}>
                   {book.shelf}
                 </span>
               </div>
 
-              <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
-                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '8px 10px' : '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--editorial-border)' }}>
+                <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, display: 'block', marginBottom: '2px' }}>
                   Rack Unit
                 </span>
-                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                <span style={{ fontSize: isMobile ? '0.94rem' : '1.05rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
                   {book.rack}
                 </span>
               </div>
@@ -1057,11 +1140,11 @@ export default function BookDetails({
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '12px', color: 'var(--editorial-text)', fontWeight: 700 }}>
+          <div style={{ marginBottom: isMobile ? '20px' : '32px' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1.1rem' : '1.25rem', marginBottom: '10px', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Synopsis & Description
             </h3>
-            <p style={{ fontSize: '0.96rem', color: 'var(--editorial-text)', lineHeight: 1.75 }}>
+            <p style={{ fontSize: isMobile ? '0.88rem' : '0.96rem', color: 'var(--editorial-text)', lineHeight: 1.65 }}>
               {book.description || 'No description provided for this volume.'}
             </p>
           </div>
@@ -1070,13 +1153,13 @@ export default function BookDetails({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-              gap: '16px',
-              padding: '20px 24px',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(170px, 1fr))',
+              gap: isMobile ? '10px' : '16px',
+              padding: isMobile ? '14px 12px' : '20px 24px',
               backgroundColor: '#FFFFFF',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
-              marginBottom: '36px',
+              marginBottom: isMobile ? '24px' : '36px',
               boxShadow: 'var(--shadow-sm)'
             }}
           >
@@ -1103,33 +1186,42 @@ export default function BookDetails({
           </div>
 
           {/* PHYSICAL COPIES TRACKING TABLE */}
-          <div>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '14px', color: 'var(--editorial-text)', fontWeight: 700 }}>
+          <div style={{ maxWidth: '100%', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: isMobile ? '1.10rem' : '1.25rem', marginBottom: '10px', color: 'var(--editorial-text)', fontWeight: 700 }}>
               Physical Copy Inventory ({book.copies?.length || 0})
             </h3>
+            {isMobile && (
+              <div style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span>↔ Scroll table horizontally to view copy actions</span>
+              </div>
+            )}
             <div
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--editorial-border)',
                 overflowX: 'auto',
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                WebkitOverflowScrolling: 'touch',
                 boxShadow: 'var(--shadow-sm)'
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+              <table style={{ width: '100%', minWidth: isMobile ? '380px' : '100%', borderCollapse: 'collapse', fontSize: isMobile ? '0.78rem' : '0.86rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: 'var(--editorial-bg-subtle)', borderBottom: '1px solid var(--editorial-border)' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <th style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Copy Identifier
                     </th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <th style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Condition
                     </th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <th style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Status
                     </th>
                     {user && (
-                      <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.76rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      <th style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--editorial-text)', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                         Circulation Action
                       </th>
                     )}
@@ -1141,27 +1233,27 @@ export default function BookDetails({
 
                     return (
                       <tr key={copy.id} style={{ borderBottom: '1px solid var(--editorial-border)', backgroundColor: isMyCopy ? 'var(--editorial-bg-subtle)' : 'transparent' }}>
-                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
+                        <td style={{ padding: isMobile ? '8px 10px' : '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--editorial-text)' }}>
                           {copy.copy_code}
                         </td>
-                        <td style={{ padding: '12px 16px', color: 'var(--editorial-text-muted)' }}>
+                        <td style={{ padding: isMobile ? '8px 10px' : '12px 16px', color: 'var(--editorial-text-muted)' }}>
                           {copy.condition}
                         </td>
-                        <td style={{ padding: '12px 16px' }}>
+                        <td style={{ padding: isMobile ? '8px 10px' : '12px 16px' }}>
                           {isMyCopy ? (
-                            <span className="badge" style={{ backgroundColor: 'var(--editorial-green)', color: '#FFFFFF', fontWeight: 700 }}>
+                            <span className="badge" style={{ backgroundColor: 'var(--editorial-green)', color: '#FFFFFF', fontWeight: 700, fontSize: '0.70rem' }}>
                               ✓ In Your Possession
                             </span>
                           ) : copy.status === 'available' ? (
-                            <span className="badge badge-available">Available on Shelf</span>
+                            <span className="badge badge-available" style={{ fontSize: '0.70rem' }}>Available on Shelf</span>
                           ) : copy.status === 'borrowed' ? (
-                            <span className="badge badge-borrowed">Currently Borrowed</span>
+                            <span className="badge badge-borrowed" style={{ fontSize: '0.70rem' }}>Currently Borrowed</span>
                           ) : (
-                            <span className="badge badge-reserved">Reserved for Member</span>
+                            <span className="badge badge-reserved" style={{ fontSize: '0.70rem' }}>Reserved for Member</span>
                           )}
                         </td>
                         {user && (
-                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                          <td style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'right' }}>
                             {isMyCopy ? (
                               <button
                                 type="button"
@@ -1246,8 +1338,10 @@ export default function BookDetails({
           <div
             style={{
               width: '460px',
+              maxWidth: 'calc(100vw - 32px)',
+              boxSizing: 'border-box',
               backgroundColor: '#FFFFFF',
-              padding: '32px',
+              padding: isMobile ? '20px 16px' : '32px',
               border: '1px solid var(--editorial-border)',
               borderRadius: 'var(--radius-sm)',
               boxShadow: 'var(--shadow-xl)'
@@ -1338,8 +1432,10 @@ export default function BookDetails({
           <div
             style={{
               width: '420px',
+              maxWidth: 'calc(100vw - 32px)',
+              boxSizing: 'border-box',
               backgroundColor: '#FFFFFF',
-              padding: '34px 28px',
+              padding: isMobile ? '24px 18px' : '34px 28px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-xl)',
@@ -1374,31 +1470,14 @@ export default function BookDetails({
             </p>
 
             <button
-              onClick={async () => {
-                try {
-                  await login('student@libramind.edu', 'Student@123');
-                  setShowAuthModal(false);
-                  showToast('Signed in as Student (Aarav Sharma)!');
-                  fetchBookDetails();
-                } catch (e) {
-                  showToast(e.message, true);
-                }
-              }}
-              className="btn btn-primary"
-              style={{ width: '100%', marginBottom: '10px', padding: '12px', justifyContent: 'center' }}
-            >
-              ⚡ 1-Click Sign In as Student (Aarav)
-            </button>
-
-            <button
               onClick={() => {
                 setShowAuthModal(false);
                 onNavigate('login');
               }}
-              className="btn btn-outline"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
             >
-              Sign In with Another Account
+              Sign In to Continue →
             </button>
           </div>
         </div>

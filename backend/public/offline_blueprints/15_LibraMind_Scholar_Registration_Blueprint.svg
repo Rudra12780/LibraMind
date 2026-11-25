@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-15" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-15" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-15)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 15 OF 21: SCHOLAR REGISTRATION PORTAL · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-15)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/register</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#000000" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. REGISTRATION HEADER -->
+    <g transform="translate(0, 95)">
+      <rect x="650" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="660" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. REGISTRATION HEADER</text>
+
+      <g transform="translate(48, 16)">
+        <text x="0" y="18" font-size="16" font-weight="bold" letter-spacing="0.5">SCHOLAR FOLIO ENROLLMENT</text>
+        <text x="0" y="36" font-size="10.5" fill="#555555">Create your academic borrowing profile to reserve books, study pods, and view AI recommendations.</text>
+      </g>
+    </g>
+
+    <!-- 3. REGISTRATION FORM CARD (CENTERED BALSAMIQ FORM CONTAINER) -->
+    <g transform="translate(48, 175)">
+      <rect x="622" y="-12" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="632" y="1" font-size="9.5" font-weight="bold" fill="#000000">3. ENROLLMENT FORM</text>
+
+      <rect width="764" height="1060" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+
+      <!-- Left Column: Primary Credential Inputs -->
+      <g transform="translate(36, 28)">
+        <text x="0" y="16" font-size="13" font-weight="bold">PATRON CREDENTIALS &amp; ACADEMIC FOLIO</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Fields marked with (*) are recorded in SQLite archive</text>
+
+        <!-- Full Name -->
+        <g transform="translate(0, 48)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">FULL NAME *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ e.g. Aarav Sharma ]</text>
+        </g>
+
+        <!-- Email -->
+        <g transform="translate(0, 118)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">INSTITUTIONAL / STUDENT EMAIL *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ scholar@libramind.edu ]</text>
+        </g>
+
+        <!-- Password -->
+        <g transform="translate(0, 188)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">CHOOSE PASSWORD *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="41" font-size="13" font-family="monospace">••••••••••••</text>
+          <rect x="296" y="24" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+          <text x="302" y="40" font-size="11">👁</text>
+        </g>
+
+        <!-- Student / Folio ID -->
+        <g transform="translate(0, 258)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">STUDENT ROLL / FOLIO ID *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#777777">[ STU-1002 ]</text>
+        </g>
+
+        <!-- Academic Department -->
+        <g transform="translate(0, 328)">
+          <text x="0" y="12" font-size="9.5" font-weight="bold">DEPARTMENT / FACULTY *</text>
+          <rect x="0" y="18" width="330" height="36" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="40" font-size="10" fill="#222222">Computer Science &amp; Engineering</text>
+          <text x="306" y="40" font-size="10">▼</text>
+        </g>
+      </g>
+
+      <!-- Right Column: Reading Interest Pills &amp; SSO -->
+      <g transform="translate(396, 28)">
+        <text x="0" y="16" font-size="13" font-weight="bold">RESEARCH &amp; READING INTERESTS</text>
+        <text x="0" y="32" font-size="9.5" fill="#666666">Powers initial TF-IDF recommendation seeds</text>
+
+        <!-- Interest Tags Multi-Select Pills -->
+        <g transform="translate(0, 48)">
+          <!-- Row 1 -->
+          <rect x="0" y="0" width="160" height="28" rx="14" fill="#000000" />
+          <text x="14" y="18" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Fiction &amp; Novels</text>
+
+          <rect x="170" y="0" width="160" height="28" rx="14" fill="#000000" />
+          <text x="180" y="18" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Artificial Intelligence</text>
+
+          <!-- Row 2 -->
+          <rect x="0" y="36" width="145" height="28" rx="14" fill="#000000" />
+          <text x="12" y="54" font-size="9" font-weight="bold" fill="#FFFFFF">✓ Computer Science</text>
+
+          <rect x="155" y="36" width="145" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="168" y="54" font-size="9" font-weight="bold">+ Philosophy &amp; Ethics</text>
+
+          <!-- Row 3 -->
+          <rect x="0" y="72" width="150" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="90" font-size="9" font-weight="bold">+ Classic Literature</text>
+
+          <rect x="160" y="72" width="155" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="172" y="90" font-size="9" font-weight="bold">+ Science &amp; Technology</text>
+
+          <!-- Row 4 -->
+          <rect x="0" y="108" width="140" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="12" y="126" font-size="9" font-weight="bold">+ History &amp; Heritage</text>
+
+          <rect x="150" y="108" width="145" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <text x="162" y="126" font-size="9" font-weight="bold">+ Business &amp; Startups</text>
+        </g>
+
+        <!-- Terms Agreement Checkbox -->
+        <g transform="translate(0, 215)">
+          <rect x="0" y="0" width="18" height="18" rx="3" fill="#000000" />
+          <text x="4" y="14" font-size="12" fill="#FFFFFF">✓</text>
+          <text x="28" y="14" font-size="9.5" font-weight="bold">I accept the Library Circulation Code and Policies</text>
+          <text x="28" y="28" font-size="8.5" fill="#666666">Standard 14-day student borrowing terms with automated hold cues</text>
+        </g>
+
+        <!-- GitHub SSO Button Option -->
+        <g transform="translate(0, 265)">
+          <rect width="330" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+          <!-- Octocat / GitHub Icon Placeholder -->
+          <circle cx="28" cy="21" r="10" fill="#000000" />
+          <text x="24" y="25" font-size="11" fill="#FFFFFF">🐙</text>
+          <text x="52" y="25" font-size="11" font-weight="bold">Continue with GitHub SSO Account</text>
+        </g>
+
+        <!-- Submit Button -->
+        <g transform="translate(0, 325)">
+          <rect width="330" height="44" rx="6" fill="#000000" />
+          <text x="64" y="27" font-size="11.5" font-weight="bold" fill="#FFFFFF">Complete Registration &amp; Enter</text>
+        </g>
+
+        <!-- Existing Member Login Link -->
+        <g transform="translate(0, 390)">
+          <text x="0" y="14" font-size="9.5" fill="#555555">Already possess an accession folio? <tspan font-weight="bold" fill="#000000" text-decoration="underline">Sign in to Member Hub</tspan></text>
+        </g>
+      </g>
+
+      <!-- Bottom Form Diagram: 4-Step Registration to Access Flow -->
+      <g transform="translate(36, 520)">
+        <text x="0" y="14" font-size="11.5" font-weight="bold">NEW SCHOLAR ONBOARDING WORKFLOW</text>
+        <line x1="0" y1="24" x2="692" y2="24" stroke="#000000" stroke-width="1" />
+
+        <g transform="translate(0, 40)">
+          <!-- Step 1 -->
+          <rect x="0" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="24" cy="24" r="12" fill="#000000" />
+          <text x="20" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">1</text>
+          <text x="44" y="28" font-size="10" font-weight="bold">Folio Entry</text>
+          <line x1="12" y1="52" x2="143" y2="52" stroke="#CCCCCC" stroke-width="3" />
+          <line x1="12" y1="64" x2="110" y2="64" stroke="#CCCCCC" stroke-width="3" />
+          <line x1="12" y1="76" x2="130" y2="76" stroke="#CCCCCC" stroke-width="3" />
+          <rect x="12" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="28" y="114" font-size="8.5">Enter Credentials</text>
+
+          <text x="162" y="70" font-size="18">→</text>
+
+          <!-- Step 2 -->
+          <rect x="178" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="202" cy="24" r="12" fill="#000000" />
+          <text x="198" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">2</text>
+          <text x="222" y="28" font-size="10" font-weight="bold">Password Hash</text>
+          <rect x="190" y="52" width="131" height="40" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+          <text x="196" y="74" font-size="8" font-family="monospace">bcrypt.hash(10)</text>
+          <rect x="190" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="200" y="114" font-size="8.5">Salted Encryption</text>
+
+          <text x="340" y="70" font-size="18">→</text>
+
+          <!-- Step 3 -->
+          <rect x="356" y="0" width="155" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="380" cy="24" r="12" fill="#000000" />
+          <text x="376" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">3</text>
+          <text x="400" y="28" font-size="10" font-weight="bold">DB Insertion</text>
+          <rect x="368" y="52" width="131" height="40" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+          <text x="376" y="74" font-size="8" font-family="monospace">INSERT INTO users</text>
+          <rect x="368" y="98" width="131" height="24" rx="3" fill="#EEEEEE" />
+          <text x="382" y="114" font-size="8.5">SQLite Persistence</text>
+
+          <text x="518" y="70" font-size="18">→</text>
+
+          <!-- Step 4 -->
+          <rect x="534" y="0" width="158" height="140" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+          <circle cx="558" cy="24" r="12" fill="#000000" />
+          <text x="554" y="28" font-size="11" font-weight="bold" fill="#FFFFFF">4</text>
+          <text x="578" y="28" font-size="10" font-weight="bold">JWT Issued</text>
+          <rect x="546" y="52" width="134" height="40" rx="3" fill="#000000" />
+          <text x="556" y="74" font-size="8.5" font-weight="bold" fill="#FFFFFF">ACCESS SANCTUARY</text>
+          <rect x="546" y="98" width="134" height="24" rx="3" fill="#EEEEEE" />
+          <text x="554" y="114" font-size="8.5">Auto-Redirect to Hub</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. FOOTER -->
+    <g transform="translate(0, 1315)">
+      <rect width="860" height="90" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <text x="48" y="48" font-size="11" font-weight="bold">LIBRAMIND SANCTUARY // SCHOLAR REGISTRATION BLUEPRINT</text>
+      <text x="590" y="48" font-size="9.5" fill="#666666">Page 15 of 21 · Balsamiq Low-Fidelity</text>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

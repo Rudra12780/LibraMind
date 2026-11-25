@@ -58,6 +58,29 @@ export function NotificationProvider({ children }) {
     }
   };
 
+  const deleteNotification = async (id) => {
+    try {
+      await api.deleteNotification(id);
+      const target = notifications.find(n => n.id === id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      if (target && !target.is_read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Failed to delete notification', err);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await api.clearAllNotifications();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to clear notifications', err);
+    }
+  };
+
   return (
     <NotificationContext.Provider value={{
       notifications,
@@ -65,6 +88,8 @@ export function NotificationProvider({ children }) {
       loading,
       markAsRead,
       markAllAsRead,
+      deleteNotification,
+      clearAllNotifications,
       refreshNotifications: fetchNotifications
     }}>
       {children}

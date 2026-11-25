@@ -7,15 +7,21 @@ export default defineConfig({
   server: {
     port: 5000,
     host: true,
+    cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true
       },
       '/uploads': {
-        target: 'http://localhost:5001',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true
       }
     }
+  },
+  preview: {
+    port: 5000,
+    host: true,
+    cors: true
   }
 })

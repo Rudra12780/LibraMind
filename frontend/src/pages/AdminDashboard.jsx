@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import AdminLogin from './AdminLogin';
 import {
   Shield,
   Users,
@@ -89,6 +91,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
   // Daily Reading Velocity & Inventory Intelligence State
   const [overviewData, setOverviewData] = useState(null);
   const [addingCopyId, setAddingCopyId] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [inventoryCategory, setInventoryCategory] = useState('All');
+  const [inventoryAvailability, setInventoryAvailability] = useState('all');
 
   // Add Librarian Modal State
   const [showAddLibrarianModal, setShowAddLibrarianModal] = useState(false);
@@ -136,7 +141,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
     if (user && user.role === 'admin' && adminVerified) {
       fetchUsers();
     }
-  }, [user, adminVerified, fetchUsers]);
+  }, [user, adminVerified, activeTab, fetchUsers]);
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ msg, isError });
@@ -411,7 +416,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             <button
               onClick={async () => {
                 await logout();
-                onNavigate('admin');
+                onNavigate('admin@1234');
               }}
               className="btn btn-outline"
               style={{ padding: '10px', width: '100%', fontSize: '0.88rem' }}
@@ -424,216 +429,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
     );
   }
 
-  // Case 2: Not authenticated through the Admin Portal Gateway -> Secure Admin Sign-in Gateway
+  // Case 2: Not authenticated through the Admin Portal Gateway -> Dedicated Admin Login Portal
   if (!user || !adminVerified) {
-    return (
-      <div
-        style={{
-          minHeight: '80vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '50px 20px',
-          backgroundColor: 'var(--cream)'
-        }}
-      >
-        <div
-          className="bio-card"
-          style={{
-            width: '460px',
-            maxWidth: '100%',
-            backgroundColor: '#FFFFFF',
-            padding: '36px',
-            borderRadius: '20px',
-            boxShadow: 'var(--shadow-xl)',
-            border: '1px solid rgba(197, 34, 31, 0.22)'
-          }}
-        >
-          {/* Brand Header */}
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                backgroundColor: '#A51D24',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 14px',
-                boxShadow: '0 6px 18px rgba(197, 34, 31, 0.3)'
-              }}
-            >
-              <Shield size={28} color="#FAF8F1" />
-            </div>
-            <div
-              style={{
-                display: 'inline-block',
-                backgroundColor: '#FCE8E6',
-                color: '#C5221F',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                padding: '3px 10px',
-                borderRadius: '12px',
-                marginBottom: '8px'
-              }}
-            >
-              Master Security Boundary
-            </div>
-            <h2 style={{ fontSize: '1.75rem', color: 'var(--forest-dark)', margin: '4px 0 6px' }}>
-              Admin Portal Gateway
-            </h2>
-            <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', margin: 0 }}>
-              {user && user.role === 'admin'
-                ? 'Confirm your master administrator password to unlock the Admin Portal.'
-                : 'Sign in with administrator credentials to access governance and user records.'}
-            </p>
-          </div>
-
-          {/* User Mode Notice if admin logged in through user portal */}
-          {user && user.role === 'admin' && !adminVerified && (
-            <div
-              style={{
-                backgroundColor: '#FCE8E6',
-                border: '1px solid rgba(197, 34, 31, 0.25)',
-                borderRadius: '10px',
-                padding: '12px 14px',
-                marginBottom: '20px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#A51D24', marginBottom: '4px' }}>
-                <ShieldAlert size={15} />
-                User Mode Active
-              </div>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#8C1D18', lineHeight: 1.4 }}>
-                You are currently browsing the sanctuary as a regular member (<strong>{user.name}</strong>). To open the master Admin Portal, please verify your administrator credentials.
-              </p>
-            </div>
-          )}
-
-          {adminLoginError && (
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--status-danger-bg)',
-                color: 'var(--status-danger-text)',
-                fontSize: '0.86rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '20px'
-              }}
-            >
-              <AlertCircle size={16} />
-              {adminLoginError}
-            </div>
-          )}
-
-          <form onSubmit={handleAdminLogin}>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
-                Administrator Email / ID
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="admin@libramind.edu or admin@1234"
-                value={adminEmail || (user?.email && user.role === 'admin' ? user.email : '')}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '22px' }}>
-              <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>
-                Master Password
-              </label>
-              <input
-                type="password"
-                className="form-control"
-                placeholder="••••••••"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loggingIn}
-              style={{ width: '100%', padding: '12px', fontSize: '0.96rem', backgroundColor: '#A51D24', borderColor: '#8C1D18' }}
-            >
-              {loggingIn ? 'Verifying Administrator Credentials...' : 'Sign In to Admin Portal'}
-            </button>
-
-            {user && user.role === 'admin' && !adminVerified && (
-              <button
-                type="button"
-                onClick={() => onNavigate('dashboard')}
-                className="btn btn-outline"
-                style={{ width: '100%', marginTop: '10px', fontSize: '0.88rem' }}
-              >
-                ← Continue Using Website as Regular User
-              </button>
-            )}
-          </form>
-
-          {/* 1-Click Quick Demo Login for Administrator */}
-          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--subtle-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--forest-dark)', textTransform: 'uppercase' }}>
-                ⚡ 1-Click Admin Demo Access:
-              </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--sage)', fontWeight: 600 }}>
-                Pass: Admin@123
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={async () => {
-                setAdminEmail('admin@libramind.edu');
-                setAdminPassword('Admin@123');
-                setAdminLoginError('');
-                setLoggingIn(true);
-                try {
-                  await login('admin@libramind.edu', 'Admin@123', true);
-                  fetchUsers();
-                } catch (err) {
-                  setAdminLoginError(err.message || 'Login failed');
-                } finally {
-                  setLoggingIn(false);
-                }
-              }}
-              className="btn btn-secondary btn-sm"
-              style={{ width: '100%', fontSize: '0.82rem', padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-            >
-              <span><strong>Dr. Elena Vance</strong> (Chief Library Administrator)</span>
-              <span style={{ fontSize: '0.74rem', color: 'var(--forest)', fontWeight: 700 }}>Auto-fill & Enter →</span>
-            </button>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '22px' }}>
-            <button
-              onClick={() => onNavigate('home')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--botanical)',
-                fontSize: '0.84rem',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              ← Return to Library Public Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminLogin onNavigate={onNavigate} />;
   }
 
   return (
@@ -663,21 +461,20 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
       )}
 
       {/* Add New Librarian Staff Modal */}
-      {showAddLibrarianModal && (
+      {showAddLibrarianModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            backdropFilter: 'blur(3px)',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 2500,
-            padding: '20px'
+            zIndex: 999999,
+            padding: '20px',
+            overflowY: 'auto'
           }}
         >
           <div
@@ -685,6 +482,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             style={{
               width: '520px',
               maxWidth: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              margin: 'auto',
               backgroundColor: '#FFFFFF',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
@@ -809,25 +609,25 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Add New Book Modal */}
-      {showAddBookModal && (
+      {showAddBookModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            backdropFilter: 'blur(3px)',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 2500,
-            padding: '20px'
+            zIndex: 999999,
+            padding: '20px',
+            overflowY: 'auto'
           }}
         >
           <div
@@ -837,6 +637,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               maxWidth: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
+              margin: 'auto',
               backgroundColor: '#FFFFFF',
               padding: '28px',
               boxShadow: 'var(--shadow-xl)',
@@ -1048,25 +849,25 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Direct Message to User Modal */}
-      {messageModalUser && (
+      {messageModalUser && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            backdropFilter: 'blur(3px)',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 2500,
-            padding: '20px'
+            zIndex: 999999,
+            padding: '20px',
+            overflowY: 'auto'
           }}
         >
           <div
@@ -1074,6 +875,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             style={{
               width: '520px',
               maxWidth: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              margin: 'auto',
               backgroundColor: '#FFFFFF',
               border: '1.5px solid var(--editorial-border)',
               padding: '28px',
@@ -1189,7 +993,8 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Header */}
@@ -1197,6 +1002,9 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--botanical)', fontSize: '0.84rem', fontWeight: 700, textTransform: 'uppercase' }}>
             <Shield size={16} /> Security & System Governance
+            <span className="library-stamp" style={{ fontSize: '0.64rem', padding: '1px 6px', border: '1px dashed var(--editorial-accent)', borderRadius: '2px', color: 'var(--editorial-accent)' }}>
+              SOVEREIGN ARCHIVE
+            </span>
           </div>
           <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginTop: '4px', marginBottom: '6px' }}>
             Admin Control Center
@@ -1361,23 +1169,23 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
           </div>
 
           <div
-            onClick={() => { setActiveTab('audit'); if (onNavigate) onNavigate('admin', { tab: 'audit' }); }}
+            onClick={() => { if (onNavigate) onNavigate('analytics'); }}
             className="bio-card"
-            style={{ padding: '24px', backgroundColor: '#FFFFFF', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--sage)' }}
+            style={{ padding: '24px', backgroundColor: '#FFFFFF', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid var(--forest)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'var(--soft-sage-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--forest)' }}>
-                <Lock size={20} />
+                <BarChart3 size={20} />
               </div>
               <div>
-                <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--forest-dark)' }}>Audit Trail & Governance</h4>
-                <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)' }}>{auditLogs.length} audit events logged</span>
+                <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--forest-dark)' }}>Library Analytics</h4>
+                <span style={{ fontSize: '0.8rem', color: 'var(--muted-text)' }}>5 Dynamic Copy Metrics</span>
               </div>
             </div>
             <p style={{ fontSize: '0.86rem', color: 'var(--muted-text)', margin: '0 0 12px' }}>
-              Immutable security logs of all system events, fine calculations, and manual scheduler runs.
+              Inspect physical copies, borrowed/reserved ratios, waiting lists, and machine learning demand models.
             </p>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest)' }}>View Security Logs →</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--forest)' }}>Open Analytics Console →</span>
           </div>
         </div>
       </div>
@@ -1448,124 +1256,202 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             <span style={{ fontSize: '0.78rem', color: 'var(--muted-text)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Copies Needing Restock
             </span>
-            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: overviewData?.popularBooks?.some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
-              {overviewData?.popularBooks?.filter(b => b.available_copies <= 1).length || 0} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>titles</span>
+            <div style={{ fontSize: '2.1rem', fontWeight: 800, color: (overviewData?.allBooks || overviewData?.popularBooks || []).some(b => b.available_copies <= 1) ? '#C5221F' : 'var(--forest)', marginTop: '4px' }}>
+              {(overviewData?.allBooks || overviewData?.popularBooks || []).filter(b => b.available_copies <= 1).length} <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--muted-text)' }}>titles</span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#C5221F' }}>
-              Popular titles with 0 or 1 copy available for readers
+              Titles with 0 or 1 copy available for readers
             </p>
           </div>
         </div>
 
-        {/* Popular Books Copy Management Table */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <h4 style={{ fontSize: '1.1rem', color: 'var(--forest-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookOpen size={18} color="var(--forest)" />
-              Most Popular Titles & Fast Copy Replenishment
-            </h4>
-            <span style={{ fontSize: '0.80rem', color: 'var(--muted-text)' }}>
-              Click "+1 Copy" or "+2 Copies" to instantly expand physical copies for any title.
-            </span>
-          </div>
+        {/* Full Catalog Physical Inventory & Copy Management Table */}
+        {(() => {
+          const allInventoryBooks = overviewData?.allBooks || overviewData?.catalogInventory || overviewData?.popularBooks || [];
+          const categoriesList = ['All', ...Array.from(new Set(allInventoryBooks.map(b => b.category).filter(Boolean))).sort()];
+          
+          const filteredInventory = allInventoryBooks.filter(b => {
+            if (inventoryCategory !== 'All' && b.category !== inventoryCategory) return false;
+            if (inventoryAvailability === 'available' && b.available_copies <= 0) return false;
+            if (inventoryAvailability === 'low' && b.available_copies > 2) return false;
+            if (inventorySearch.trim()) {
+              const q = inventorySearch.toLowerCase();
+              const matchTitle = b.title?.toLowerCase().includes(q);
+              const matchAuthor = b.author?.toLowerCase().includes(q);
+              const matchCat = b.category?.toLowerCase().includes(q);
+              const matchShelf = (b.shelf || '').toLowerCase().includes(q) || (b.floor || '').toLowerCase().includes(q);
+              if (!matchTitle && !matchAuthor && !matchCat && !matchShelf) return false;
+            }
+            return true;
+          });
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
-              <thead>
-                <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Title & Author</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Category & Shelf</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--forest-dark)' }}>Total Copies</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--forest-dark)' }}>Available</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--forest-dark)' }}>Total Reads</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Circulation Status</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--forest-dark)' }}>Manage Copies</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(overviewData?.popularBooks || []).map(b => (
-                  <tr key={b.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
-                    <td style={{ padding: '12px' }}>
-                      <strong style={{ color: 'var(--forest-dark)' }}>{b.title}</strong>
-                      <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>by {b.author}</div>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <span className="badge badge-category" style={{ fontSize: '0.72rem' }}>{b.category}</span>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--muted-text)', marginTop: '2px' }}>
-                        {b.floor} • {b.shelf}
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>
-                      {b.total_copies}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span
-                        className={`badge ${b.available_copies === 0 ? 'badge-reserved' : b.available_copies === 1 ? 'badge-warning' : 'badge-available'}`}
-                        style={{ fontWeight: 700 }}
-                      >
-                        {b.available_copies} avail
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 600, color: 'var(--forest)' }}>
-                      {b.total_reads} reads
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.76rem',
-                          fontWeight: 600,
-                          color: b.available_copies === 0 ? '#C5221F' : b.available_copies === 1 ? '#D97706' : 'var(--botanical)',
-                          display: 'inline-block'
-                        }}
-                      >
-                        {b.demandStatus}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                        <button
-                          onClick={() => handleAddCopiesToBook(b.id, b.title, 1)}
-                          disabled={addingCopyId === b.id}
-                          className="btn btn-sm"
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.76rem',
-                            backgroundColor: 'var(--soft-sage-light)',
-                            color: 'var(--forest-dark)',
-                            border: '1px solid rgba(82, 115, 77, 0.3)',
-                            borderRadius: '6px',
-                            cursor: 'pointer'
-                          }}
-                          title={`Add 1 new physical copy of ${b.title}`}
-                        >
-                          {addingCopyId === b.id ? 'Adding...' : '+1 Copy'}
-                        </button>
+          return (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h4 style={{ fontSize: '1.15rem', color: 'var(--forest-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BookOpen size={20} color="var(--forest)" />
+                    Complete Library Physical Inventory ({filteredInventory.length} of {allInventoryBooks.length} Titles)
+                  </h4>
+                  <span style={{ fontSize: '0.80rem', color: 'var(--muted-text)' }}>
+                    Displaying every book in the collection with live copy distribution and fast 1-click replenishment.
+                  </span>
+                </div>
 
-                        <button
-                          onClick={() => handleAddCopiesToBook(b.id, b.title, 2)}
-                          disabled={addingCopyId === b.id}
-                          className="btn btn-sm"
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.76rem',
-                            backgroundColor: '#FFFFFF',
-                            color: 'var(--forest)',
-                            border: '1.5px solid var(--editorial-border)',
-                            borderRadius: '6px',
-                            cursor: 'pointer'
-                          }}
-                          title={`Add 2 new physical copies of ${b.title}`}
-                        >
-                          +2 Copies
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                {/* Filter and Search Toolbar */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search title, author, shelf..."
+                      value={inventorySearch}
+                      onChange={(e) => setInventorySearch(e.target.value)}
+                      style={{ padding: '6px 10px 6px 30px', fontSize: '0.82rem', width: '220px', borderRadius: '8px' }}
+                    />
+                    <Search size={14} style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-text)' }} />
+                  </div>
+
+                  <select
+                    className="form-control"
+                    value={inventoryCategory}
+                    onChange={(e) => setInventoryCategory(e.target.value)}
+                    style={{ padding: '6px 10px', fontSize: '0.82rem', borderRadius: '8px', width: '150px' }}
+                  >
+                    {categoriesList.map(cat => (
+                      <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    className="form-control"
+                    value={inventoryAvailability}
+                    onChange={(e) => setInventoryAvailability(e.target.value)}
+                    style={{ padding: '6px 10px', fontSize: '0.82rem', borderRadius: '8px', width: '130px' }}
+                  >
+                    <option value="all">All Copies</option>
+                    <option value="available">In Stock (&gt;0)</option>
+                    <option value="low">Low Stock (&le;2)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{
+                maxHeight: '480px',
+                overflowY: 'auto',
+                overflowX: 'auto',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: '10px',
+                scrollbarWidth: 'thin',
+                WebkitOverflowScrolling: 'touch',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--cream)' }}>
+                    <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1.5px solid var(--editorial-border)' }}>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Title &amp; Author</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Category &amp; Location</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--forest-dark)' }}>Total Copies</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--forest-dark)' }}>Available</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'center', color: 'var(--forest-dark)' }}>Total Reads</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Circulation Status</th>
+                      <th style={{ padding: '12px 14px', textAlign: 'right', color: 'var(--forest-dark)' }}>Manage Copies</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInventory.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--muted-text)' }}>
+                          No books matched the filter criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredInventory.map(b => (
+                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.08)' }}>
+                          <td style={{ padding: '12px 14px' }}>
+                            <strong style={{ color: 'var(--forest-dark)' }}>{b.title}</strong>
+                            <div style={{ fontSize: '0.76rem', color: 'var(--muted-text)' }}>by {b.author}</div>
+                          </td>
+                          <td style={{ padding: '12px 14px' }}>
+                            <span className="badge badge-category" style={{ fontSize: '0.72rem' }}>{b.category}</span>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--muted-text)', marginTop: '2px' }}>
+                              {b.floor} &bull; {b.shelf}
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 700 }}>
+                            {b.total_copies}
+                          </td>
+                          <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                            <span
+                              className={`badge ${b.available_copies === 0 ? 'badge-reserved' : b.available_copies <= 2 ? 'badge-warning' : 'badge-available'}`}
+                              style={{ fontWeight: 700 }}
+                            >
+                              {b.available_copies} avail
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 600, color: 'var(--forest)' }}>
+                            {b.total_reads} reads
+                          </td>
+                          <td style={{ padding: '12px 14px' }}>
+                            <span
+                              style={{
+                                fontSize: '0.76rem',
+                                fontWeight: 600,
+                                color: b.available_copies === 0 ? '#C5221F' : b.available_copies <= 2 ? '#D97706' : 'var(--botanical)',
+                                display: 'inline-block'
+                              }}
+                            >
+                              {b.demandStatus}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                              <button
+                                onClick={() => handleAddCopiesToBook(b.id, b.title, 1)}
+                                disabled={addingCopyId === b.id}
+                                className="btn btn-sm"
+                                style={{
+                                  padding: '4px 10px',
+                                  fontSize: '0.76rem',
+                                  backgroundColor: 'var(--soft-sage-light)',
+                                  color: 'var(--forest-dark)',
+                                  border: '1px solid rgba(82, 115, 77, 0.3)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                                title={`Add 1 new physical copy of ${b.title}`}
+                              >
+                                {addingCopyId === b.id ? 'Adding...' : '+1 Copy'}
+                              </button>
+
+                              <button
+                                onClick={() => handleAddCopiesToBook(b.id, b.title, 2)}
+                                disabled={addingCopyId === b.id}
+                                className="btn btn-sm"
+                                style={{
+                                  padding: '4px 10px',
+                                  fontSize: '0.76rem',
+                                  backgroundColor: '#FFFFFF',
+                                  color: 'var(--forest)',
+                                  border: '1.5px solid var(--editorial-border)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                                title={`Add 2 new physical copies of ${b.title}`}
+                              >
+                                +2 Copies
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
       </div>
       )}
 
@@ -1706,24 +1592,43 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   </span>
                 </div>
 
-                <button
-                  onClick={() => setShowAddLibrarianModal(true)}
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '9px 18px',
-                    fontWeight: 600,
-                    fontSize: '0.86rem',
-                    backgroundColor: '#A51D24',
-                    borderColor: '#8C1D18',
-                    boxShadow: '0 2px 8px rgba(165, 29, 36, 0.25)'
-                  }}
-                >
-                  <UserPlus size={16} />
-                  + Add New Librarian
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => fetchUsers()}
+                    className="btn btn-outline btn-sm"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '9px 14px',
+                      fontWeight: 600,
+                      fontSize: '0.84rem'
+                    }}
+                    title="Refresh live user directory from database"
+                  >
+                    <Users size={15} />
+                    Refresh List
+                  </button>
+                  <button
+                    onClick={() => setShowAddLibrarianModal(true)}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '9px 18px',
+                      fontWeight: 600,
+                      fontSize: '0.86rem',
+                      backgroundColor: '#A51D24',
+                      borderColor: '#8C1D18',
+                      boxShadow: '0 2px 8px rgba(165, 29, 36, 0.25)'
+                    }}
+                  >
+                    <UserPlus size={16} />
+                    + Add New Librarian
+                  </button>
+                </div>
               </div>
 
               {/* Sub-Filter Tabs & Search Bar */}
@@ -1794,9 +1699,18 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
               </div>
 
               {/* Table */}
-              <div style={{ overflowX: 'auto' }}>
+              <div style={{
+                maxHeight: '480px',
+                overflowY: 'auto',
+                overflowX: 'auto',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: '10px',
+                scrollbarWidth: 'thin',
+                WebkitOverflowScrolling: 'touch',
+                boxShadow: 'var(--shadow-sm)'
+              }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                  <thead>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--cream)' }}>
                     <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
                       <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>User / Staff Name</th>
                       <th style={{ padding: '12px 14px', textAlign: 'left', color: 'var(--forest-dark)' }}>Email Address</th>
@@ -1820,9 +1734,11 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <div
                                 style={{
-                                  width: '30px',
-                                  height: '30px',
+                                  width: '32px',
+                                  height: '32px',
                                   borderRadius: '50%',
+                                  overflow: 'hidden',
+                                  flexShrink: 0,
                                   backgroundColor: u.role === 'admin' ? '#FCE8E6' : u.role === 'librarian' ? 'var(--soft-sage-light)' : 'var(--cream)',
                                   color: u.role === 'admin' ? '#C5221F' : u.role === 'librarian' ? 'var(--forest)' : 'var(--muted-text)',
                                   display: 'flex',
@@ -1832,10 +1748,34 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                                   fontWeight: 800
                                 }}
                               >
-                                {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                                {u.profile_photo ? (
+                                  <img
+                                    src={u.profile_photo}
+                                    alt={u.name || 'User'}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                  />
+                                ) : (
+                                  u.name ? u.name.charAt(0).toUpperCase() : 'U'
+                                )}
                               </div>
                               <div>
-                                <div>{u.name}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  <span>{u.name}</span>
+                                  {(u.bio && u.bio.toLowerCase().includes('google')) && (
+                                    <span style={{
+                                      fontSize: '0.66rem',
+                                      padding: '1px 6px',
+                                      borderRadius: '10px',
+                                      backgroundColor: '#E8F0FE',
+                                      color: '#1A73E8',
+                                      fontWeight: 700,
+                                      border: '1px solid #D2E3FC'
+                                    }}>
+                                      Google
+                                    </span>
+                                  )}
+                                </div>
                                 {u.created_at && (
                                   <span style={{ fontSize: '0.70rem', color: 'var(--muted-text)', fontWeight: 400 }}>
                                     Registered: {new Date(u.created_at).toLocaleDateString()}
@@ -1879,29 +1819,26 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             {u.id === user?.id ? (
-                              <span className="badge badge-danger" style={{ textTransform: 'capitalize', fontWeight: 600 }}>
+                              <span className="badge badge-danger" style={{ textTransform: 'capitalize', fontWeight: 700, padding: '4px 10px', borderRadius: '6px' }}>
                                 {u.role} (Current)
                               </span>
                             ) : (
-                              <select
-                                value={u.role}
-                                disabled={updatingRoleId === u.id}
-                                onChange={(e) => handleRoleChange(u, e.target.value)}
+                              <span
+                                className="badge"
                                 style={{
-                                  padding: '4px 8px',
+                                  padding: '4px 10px',
                                   borderRadius: '6px',
-                                  fontSize: '0.82rem',
-                                  fontWeight: 600,
+                                  fontSize: '0.80rem',
+                                  fontWeight: 700,
                                   backgroundColor: u.role === 'admin' ? '#FCE8E6' : u.role === 'librarian' ? 'var(--soft-sage-light)' : 'var(--cream)',
-                                  color: u.role === 'admin' ? '#C5221F' : 'var(--forest-dark)',
+                                  color: u.role === 'admin' ? '#C5221F' : u.role === 'librarian' ? 'var(--botanical)' : 'var(--forest-dark)',
                                   border: '1.5px solid var(--editorial-border)',
-                                  cursor: updatingRoleId === u.id ? 'wait' : 'pointer'
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
                                 }}
                               >
-                                <option value="student">Student Member</option>
-                                <option value="librarian">Librarian Staff</option>
-                                <option value="admin">Administrator</option>
-                              </select>
+                                {u.role === 'admin' ? 'Administrator' : u.role === 'librarian' ? 'Librarian Staff' : 'Student Member'}
+                              </span>
                             )}
                           </td>
                           <td style={{ padding: '12px 14px', textAlign: 'right' }}>
@@ -2033,88 +1970,24 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
         )
       )}
 
-      {/* TAB 5: Audit Trail */}
-      {activeTab === 'audit' && (
-      <div className="bio-card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={20} color="var(--forest)" />
-              System Audit Trail & Security Logs ({auditLogs.length})
-            </h3>
-            <span style={{ fontSize: '0.82rem', color: 'var(--muted-text)' }}>
-              Immutable record of borrowing, returns, holds, messages, and role changes.
-            </span>
-          </div>
-
-          <button
-            onClick={handleRunScheduler}
-            disabled={triggeringCron}
-            className="btn btn-primary btn-sm"
-          >
-            {triggeringCron ? 'Running Due-Date & Expiry Cycle...' : 'Run Due-Date & Expiry Scheduler Now'}
-          </button>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--cream)', borderBottom: '1px solid var(--subtle-border)' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Timestamp</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Action</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Initiator</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--forest-dark)' }}>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: 'var(--muted-text)' }}>
-                    No administrative audit logs recorded yet.
-                  </td>
-                </tr>
-              ) : (
-                auditLogs.slice(0, 30).map(log => (
-                  <tr key={log.id} style={{ borderBottom: '1px solid rgba(52, 78, 65, 0.06)' }}>
-                    <td style={{ padding: '10px 12px', color: 'var(--muted-text)', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
-                      {new Date(log.timestamp).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--forest-dark)' }}>
-                      {log.action}
-                    </td>
-                    <td style={{ padding: '10px 12px' }}>
-                      {log.user_name ? `${log.user_name} (${log.user_role})` : 'System / Guest'}
-                    </td>
-                    <td style={{ padding: '10px 12px', color: 'var(--dark-text)' }}>
-                      {log.details || 'N/A'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      )}
-
       {/* Custom Vintage Administrative Confirmation Modal */}
-      {adminConfirmModal && (
+      {adminConfirmModal && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             backgroundColor: 'rgba(28, 15, 10, 0.70)',
-            backdropFilter: 'blur(5px)',
-            zIndex: 99999,
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 999999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '16px'
+            padding: '40px 20px',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
           }}
           onClick={() => setAdminConfirmModal(null)}
         >
@@ -2123,38 +1996,58 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
             style={{
               width: '100%',
               maxWidth: '460px',
-              backgroundColor: 'var(--vintage-vellum)',
+              backgroundColor: '#FFFFFF',
               borderRadius: 'var(--radius-lg)',
-              padding: '28px 24px',
-              border: '1.5px solid var(--vintage-brass)',
+              padding: '32px 28px',
+              border: '1.5px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-modal)',
-              textAlign: 'center'
+              textAlign: 'center',
+              position: 'relative',
+              margin: 'auto 0',
+              flexShrink: 0,
+              boxSizing: 'border-box'
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Top Security Accent Strip */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                borderTopLeftRadius: 'var(--radius-lg)',
+                borderTopRightRadius: 'var(--radius-lg)',
+                background: adminConfirmModal.isDanger
+                  ? 'linear-gradient(90deg, #A51D24, #E63946)'
+                  : 'linear-gradient(90deg, var(--editorial-green), var(--editorial-accent))'
+              }}
+            />
             <div
               style={{
                 width: '54px',
                 height: '54px',
                 borderRadius: '50%',
                 background: adminConfirmModal.isDanger
-                  ? 'linear-gradient(135deg, #6E1B24 0%, #8C2A35 100%)'
-                  : 'linear-gradient(135deg, #1E3A2B 0%, #2A4D3B 100%)',
-                border: '1px solid var(--editorial-border)',
+                  ? 'rgba(165, 29, 36, 0.12)'
+                  : 'rgba(38, 61, 50, 0.10)',
+                border: adminConfirmModal.isDanger
+                  ? '1px solid rgba(165, 29, 36, 0.3)'
+                  : '1px solid var(--editorial-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 14px',
-                fontSize: '24px',
-                boxShadow: '0 2px 8px rgba(42, 24, 16, 0.25)'
+                margin: '4px auto 14px',
+                fontSize: '24px'
               }}
             >
               {adminConfirmModal.isDanger ? '⚠️' : '🛡️'}
             </div>
-            <h3 style={{ fontSize: '1.30rem', fontFamily: 'var(--font-serif)', color: 'var(--vintage-walnut)', margin: '0 0 10px', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.30rem', fontFamily: 'var(--font-serif)', color: 'var(--editorial-text)', margin: '0 0 10px', fontWeight: 800 }}>
               {adminConfirmModal.title}
             </h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--vintage-sepia)', lineHeight: 1.6, margin: '0 0 20px', whiteSpace: 'pre-line' }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text-muted)', lineHeight: 1.6, margin: '0 0 20px', whiteSpace: 'pre-line' }}>
               {adminConfirmModal.desc}
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -2162,7 +2055,7 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                 type="button"
                 onClick={() => setAdminConfirmModal(null)}
                 className="btn btn-outline"
-                style={{ flex: 1, backgroundColor: 'var(--vintage-cream)', color: 'var(--vintage-walnut)' }}
+                style={{ flex: 1, backgroundColor: '#FFFFFF', color: 'var(--editorial-text)' }}
               >
                 Cancel
               </button>
@@ -2174,13 +2067,14 @@ export default function AdminDashboard({ onNavigate, initialTab = 'overview' }) 
                   if (cb) cb();
                 }}
                 className={adminConfirmModal.isDanger ? 'btn btn-botanical' : 'btn btn-primary'}
-                style={{ flex: 1.2 }}
+                style={{ flex: 1.2, backgroundColor: adminConfirmModal.isDanger ? '#A51D24' : 'var(--editorial-green)', color: '#FFFFFF', border: 'none' }}
               >
                 {adminConfirmModal.confirmLabel}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

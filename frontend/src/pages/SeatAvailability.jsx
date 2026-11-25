@@ -16,6 +16,82 @@ import {
   Lock
 } from 'lucide-react';
 
+function formatTimeSlot12h(slotStr) {
+  if (!slotStr) return '';
+  return String(slotStr)
+    .replace(/08:00\s*-\s*11:00/gi, '8:00 AM - 11:00 AM')
+    .replace(/11:00\s*-\s*14:00/gi, '11:00 AM - 2:00 PM')
+    .replace(/14:00\s*-\s*17:00/gi, '2:00 PM - 5:00 PM')
+    .replace(/17:00\s*-\s*20:00/gi, '5:00 PM - 8:00 PM')
+    .replace(/20:00\s*-\s*22:00/gi, '8:00 PM - 10:00 PM');
+}
+
+function normalizeSlotKey(slotStr) {
+  if (!slotStr) return '';
+  const s = String(slotStr).toLowerCase();
+  if (s.includes('08:00') || s.includes('8:00') || s.includes('morning')) return '08:00-11:00';
+  if (s.includes('11:00') || s.includes('mid-day') || s.includes('midday')) return '11:00-14:00';
+  if (s.includes('14:00') || s.includes('2:00') || s.includes('afternoon')) return '14:00-17:00';
+  if (s.includes('17:00') || s.includes('5:00') || s.includes('evening')) return '17:00-20:00';
+  if (s.includes('20:00') || s.includes('8:00 pm') || s.includes('night')) return '20:00-22:00';
+  return s.split('(')[0].trim();
+}
+
+function getSlotEndMinutes(slotStr) {
+  if (!slotStr) return 0;
+  const s = String(slotStr).trim();
+
+  // 1. Match 12-hour with AM/PM after hyphen: e.g. "- 4:00 PM", "- 2:00 PM", "- 10:00 PM", "- 4 PM"
+  const match12 = s.match(/-\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const min = match12[2] ? parseInt(match12[2], 10) : 0;
+    const ampm = match12[3].toUpperCase();
+    if (ampm === 'PM' && hour < 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    return hour * 60 + min;
+  }
+
+  // 2. Match 24-hour after hyphen: e.g. "- 16:00", "- 14:00", "- 22:00"
+  const match24 = s.match(/-\s*(\d{1,2}):(\d{2})/);
+  if (match24) {
+    const hour = parseInt(match24[1], 10);
+    const min = parseInt(match24[2], 10);
+    return hour * 60 + min;
+  }
+
+  // 3. Known slot key fallbacks:
+  if (s.includes('08:00-11:00') || s.includes('morning')) return 11 * 60;
+  if (s.includes('11:00-14:00') || s.includes('mid-day') || s.includes('midday')) return 14 * 60;
+  if (s.includes('14:00-17:00') || s.includes('afternoon')) return 17 * 60;
+  if (s.includes('17:00-20:00') || s.includes('evening')) return 20 * 60;
+  if (s.includes('20:00-22:00') || s.includes('night')) return 22 * 60;
+
+  return 24 * 60;
+}
+
+function normalizeDateString(d) {
+  if (!d) return '';
+  if (typeof d === 'string' && d.includes('T')) return d.split('T')[0];
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return String(d);
+  return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+}
+
+function isSlotExpired(dateStr, timeSlotStr, now = new Date()) {
+  if (!dateStr) return false;
+  const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const bookingYMD = normalizeDateString(dateStr);
+
+  if (bookingYMD < todayYMD) return true;
+  if (bookingYMD > todayYMD) return false;
+
+  // Same day: check if current time is at or past slot end time
+  const endMinutes = getSlotEndMinutes(timeSlotStr);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= endMinutes;
+}
+
 export default function SeatAvailability({ onNavigate }) {
   const { user } = useAuth();
   const [seats, setSeats] = useState([]);
@@ -30,18 +106,32 @@ export default function SeatAvailability({ onNavigate }) {
   // Booking Modal State
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
-  const [bookingSlot, setBookingSlot] = useState('08:00 - 11:00 (Morning Focus)');
+  const [bookingSlot, setBookingSlot] = useState('8:00 AM - 11:00 AM (Morning Focus)');
   const [seatSlots, setSeatSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
   const [penaltyStatus, setPenaltyStatus] = useState(null);
 
+  // Real-time slot timer to auto-release expired study pod bookings
+  const [currentSlotTick, setCurrentSlotTick] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentSlotTick(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeMyBookings = useMemo(() => {
+    return (myBookings || []).filter(b => {
+      if (b.status === 'cancelled' || b.status === 'completed') return false;
+      return !isSlotExpired(b.date, b.time_slot);
+    });
+  }, [myBookings, currentSlotTick]);
+
   const timeSlots = [
-    '08:00 - 11:00 (Morning Focus)',
-    '11:00 - 14:00 (Mid-day Reading)',
-    '14:00 - 17:00 (Afternoon Study)',
-    '17:00 - 20:00 (Evening Pod)',
-    '20:00 - 22:00 (Night Owl)'
+    '8:00 AM - 11:00 AM (Morning Focus)',
+    '11:00 AM - 2:00 PM (Mid-day Reading)',
+    '2:00 PM - 5:00 PM (Afternoon Study)',
+    '5:00 PM - 8:00 PM (Evening Pod)',
+    '8:00 PM - 10:00 PM (Night Owl)'
   ];
 
   const fetchSeats = useCallback(async () => {
@@ -142,16 +232,32 @@ export default function SeatAvailability({ onNavigate }) {
       return;
     }
 
+    const existingConflict = myBookings.find(b =>
+      (b.status === 'active' || !b.status) &&
+      b.date === bookingDate &&
+      normalizeSlotKey(b.time_slot) === normalizeSlotKey(bookingSlot)
+    );
+    if (existingConflict) {
+      showToast(`You already have Study Pod ${existingConflict.seat_number || 'another pod'} reserved for ${formatTimeSlot12h(existingConflict.time_slot)} on ${bookingDate}. You cannot reserve multiple study pods for the same time slot.`, true);
+      return;
+    }
+
     try {
       await api.reserveSeat({
         seat_id: selectedSeat.id,
         date: bookingDate,
         time_slot: bookingSlot
       });
-      showToast(`Reserved ${selectedSeat.seat_number} for ${bookingDate} (${bookingSlot})!`);
+      showToast(`Reserved Study Pod ${selectedSeat.seat_number} for ${bookingDate} (${formatTimeSlot12h(bookingSlot)})!`);
       setSelectedSeat(null);
       fetchSeats();
       fetchMyBookings();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'seat_booked', seatId: selectedSeat.id });
+        bc.close();
+      } catch (e) {}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -163,6 +269,12 @@ export default function SeatAvailability({ onNavigate }) {
       showToast('Study seat reservation successfully released.');
       fetchSeats();
       fetchMyBookings();
+      window.dispatchEvent(new CustomEvent('libramind:data-updated'));
+      try {
+        const bc = new BroadcastChannel('libramind_sync');
+        bc.postMessage({ type: 'seat_cancelled', bookingId });
+        bc.close();
+      } catch (e) {}
     } catch (err) {
       showToast(err.message, true);
     }
@@ -208,8 +320,11 @@ export default function SeatAvailability({ onNavigate }) {
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
+        <span className="blueprint-annotation" style={{ fontSize: '0.94rem', color: 'var(--editorial-accent)', display: 'block', marginBottom: '4px' }}>
+          📐 Architectural Floorplan • Quiet Study Pod Stacks
+        </span>
         <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
-          Study Pods & Seat Availability
+          Study Pods &amp; Seat Availability
         </h1>
         <p style={{ fontSize: '1rem', color: 'var(--muted-text)', maxWidth: '680px' }}>
           Experience nature-infused reading quietude. Check live vacancy across Floor 1 and Floor 2, review power outlet and monitor setups, and reserve your study slot.
@@ -548,7 +663,7 @@ export default function SeatAvailability({ onNavigate }) {
       </div>
 
       {/* Student's Active Seat Bookings */}
-      {user && myBookings.length > 0 && (
+      {user && activeMyBookings.length > 0 && (
         <div style={{ marginTop: '40px' }}>
           <h3 style={{ fontSize: '1.25rem', color: 'var(--forest-dark)', marginBottom: '16px' }}>
             Your Upcoming Seat Bookings
@@ -558,9 +673,9 @@ export default function SeatAvailability({ onNavigate }) {
             style={{ backgroundColor: '#FFFFFF', padding: '16px' }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-              {myBookings.map(b => (
+              {activeMyBookings.map(b => (
                 <div
-                  key={b.id}
+                  key={b.id || b._id}
                   style={{
                     padding: '14px',
                     borderRadius: 'var(--radius-sm)',
@@ -569,7 +684,7 @@ export default function SeatAvailability({ onNavigate }) {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem' }}>{b.seat_number}</strong>
+                    <strong style={{ color: 'var(--forest-dark)', fontSize: '1rem' }}>Study Pod {b.seat_number}</strong>
                     <span className="badge badge-available">Confirmed</span>
                   </div>
                   <div style={{ fontSize: '0.84rem', color: 'var(--muted-text)', marginBottom: '4px' }}>
@@ -577,11 +692,11 @@ export default function SeatAvailability({ onNavigate }) {
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--dark-text)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                     <Clock size={14} color="var(--botanical)" />
-                    {b.date} • {b.time_slot}
+                    {b.date} • {formatTimeSlot12h(b.time_slot)}
                   </div>
                   {b.status === 'active' && (
                     <button
-                      onClick={() => handleCancelBooking(b.id)}
+                      onClick={() => handleCancelBooking(b.id || b._id)}
                       className="btn btn-outline btn-sm"
                       style={{
                         color: '#C5221F',
@@ -724,28 +839,39 @@ export default function SeatAvailability({ onNavigate }) {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {timeSlots.map((ts, idx) => {
-                      const slotInfo = seatSlots.find(s => s.slot === ts);
-                      const isAvail = slotInfo ? slotInfo.isAvailable : true;
-                      const isBooked = slotInfo ? slotInfo.isBooked : false;
-                      const isSelected = bookingSlot === ts;
+                      const slotInfo = seatSlots.find(s => s.slot === ts || normalizeSlotKey(s.slot) === normalizeSlotKey(ts));
+                      const isSeatBooked = slotInfo ? slotInfo.isBooked : false;
+                      const userBookingForThisSlot = myBookings.find(b =>
+                        (b.status === 'active' || !b.status) &&
+                        b.date === bookingDate &&
+                        normalizeSlotKey(b.time_slot) === normalizeSlotKey(ts)
+                      );
+                      const isUserConflict = Boolean(userBookingForThisSlot);
+                      const isAvail = (slotInfo ? slotInfo.isAvailable : true) && !isUserConflict && !isSeatBooked;
+                      const isSelected = bookingSlot === ts || normalizeSlotKey(bookingSlot) === normalizeSlotKey(ts);
 
                       return (
                         <div
                           key={idx}
                           onClick={() => {
                             if (isAvail) setBookingSlot(ts);
+                            else if (isUserConflict) {
+                              showToast(`You already hold an active reservation for Study Pod ${userBookingForThisSlot.seat_number} during this time slot on ${bookingDate}.`, true);
+                            }
                           }}
                           style={{
                             padding: '12px 16px',
                             borderRadius: '10px',
-                            border: isSelected ? '2px solid var(--forest)' : '1px solid var(--subtle-border)',
+                            border: isSelected ? '2px solid var(--forest)' : isUserConflict ? '1.5px solid #FCA5A5' : '1px solid var(--subtle-border)',
                             backgroundColor: isSelected
                               ? 'var(--soft-sage-light)'
-                              : isBooked
+                              : isUserConflict
+                              ? '#FFF5F5'
+                              : isSeatBooked
                               ? '#F5F5F5'
                               : '#FFFFFF',
                             cursor: isAvail ? 'pointer' : 'not-allowed',
-                            opacity: isAvail ? 1 : 0.65,
+                            opacity: isAvail ? 1 : 0.75,
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
@@ -764,17 +890,40 @@ export default function SeatAvailability({ onNavigate }) {
                               }}
                             />
                             <div>
-                              <strong style={{ fontSize: '0.9rem', color: isSelected ? 'var(--forest-dark)' : 'var(--dark-text)', display: 'block' }}>
-                                {ts}
+                              <strong style={{ fontSize: '0.9rem', color: isSelected ? 'var(--forest-dark)' : isUserConflict ? '#991B1B' : 'var(--dark-text)', display: 'block' }}>
+                                {formatTimeSlot12h(ts)}
                               </strong>
-                              <span style={{ fontSize: '0.74rem', color: 'var(--muted-text)' }}>
-                                {isBooked ? 'Booked by another student at this time' : isAvail ? 'Available for booking' : 'Slot unavailable'}
+                              <span style={{ fontSize: '0.74rem', color: isUserConflict ? '#DC2626' : 'var(--muted-text)' }}>
+                                {isUserConflict
+                                  ? `You already have Study Pod ${userBookingForThisSlot.seat_number} reserved for this slot`
+                                  : isSeatBooked
+                                  ? 'Booked by another student at this time'
+                                  : isAvail
+                                  ? 'Available for booking'
+                                  : 'Slot unavailable'}
                               </span>
                             </div>
                           </div>
 
                           <div>
-                            {isBooked ? (
+                            {isUserConflict ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  color: '#991B1B',
+                                  backgroundColor: '#FEE2E2',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #FCA5A5'
+                                }}
+                              >
+                                <Lock size={12} /> Reserved by You
+                              </span>
+                            ) : isSeatBooked ? (
                               <span
                                 style={{
                                   display: 'inline-flex',

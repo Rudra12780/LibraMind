@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -39,6 +39,23 @@ export default function AiBookFinder({
   const [searched, setSearched] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
+
+  useEffect(() => {
+    let timer = null;
+    const handleResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setWindowWidth(window.innerWidth), 80);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const isMobile = windowWidth < 640;
+
   const sampleQueries = [
     "Find beginner-friendly books about machine learning",
     "Suggest books for learning Python",
@@ -49,12 +66,15 @@ export default function AiBookFinder({
 
   const categories = [
     'All',
-    'Computer Science',
-    'Artificial Intelligence',
-    'Architecture & Design',
-    'Data Science',
-    'Software Engineering',
-    'Mathematics'
+    'AI & Data Science',
+    'Classic Novels',
+    'Emotional Fiction',
+    'Fiction & Mystery',
+    'Indian Literature',
+    'Modern Novels',
+    'Personal Growth',
+    'Programming & Technology',
+    'Spiritual & Wisdom'
   ];
 
   const showToast = (msg, isError = false) => {
@@ -115,7 +135,7 @@ export default function AiBookFinder({
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '85vh', padding: '40px 24px 80px' }}>
+    <div style={{ backgroundColor: 'var(--editorial-bg)', minHeight: '85vh', padding: isMobile ? '20px 12px 60px' : '40px 24px 80px' }}>
       <div className="container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Toast Alert */}
         {toastMessage && (
@@ -123,7 +143,8 @@ export default function AiBookFinder({
             style={{
               position: 'fixed',
               bottom: '30px',
-              right: '30px',
+              right: isMobile ? '12px' : '30px',
+              left: isMobile ? '12px' : 'auto',
               backgroundColor: toastMessage.isError ? 'var(--editorial-accent)' : 'var(--editorial-border)',
               color: toastMessage.isError ? '#FFFFFF' : 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
@@ -144,7 +165,7 @@ export default function AiBookFinder({
         )}
 
         {/* Header */}
-        <div style={{ maxWidth: '780px', margin: '0 auto 32px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '780px', margin: isMobile ? '0 auto 20px' : '0 auto 32px', textAlign: 'center' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -155,28 +176,28 @@ export default function AiBookFinder({
               color: 'var(--editorial-text)',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-sm)',
-              fontSize: '0.78rem',
+              fontSize: isMobile ? '0.70rem' : '0.78rem',
               fontWeight: 900,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
-              marginBottom: '16px'
+              marginBottom: '14px'
             }}
           >
-            <Sparkles size={15} strokeWidth={2.4} />
+            <Sparkles size={14} strokeWidth={2.4} />
             TF-IDF Vector Space & Cosine Similarity Ranking
           </div>
 
-          <h1 style={{ fontSize: '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '14px' }}>
+          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2.5rem', color: 'var(--editorial-text)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: '10px', lineHeight: 1.2 }}>
             AI-Powered Book Finder
           </h1>
 
-          <p style={{ fontSize: '1rem', color: 'var(--editorial-text)', opacity: 0.85, lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.85rem' : '1rem', color: 'var(--editorial-text)', opacity: 0.85, lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
             Describe what you want to learn or study in natural language. Our NLP vector engine analyzes titles, syllabi, subject descriptions, and shelf catalog tags.
           </p>
         </div>
 
         {/* Natural Language Query Bar */}
-        <div style={{ maxWidth: '760px', margin: '0 auto 16px' }}>
+        <div style={{ maxWidth: '860px', margin: '0 auto 16px' }}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -184,45 +205,53 @@ export default function AiBookFinder({
             }}
             style={{
               display: 'flex',
-              alignItems: 'center',
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'stretch' : 'center',
               backgroundColor: '#FFFFFF',
               border: '1px solid var(--editorial-border)',
               boxShadow: 'var(--shadow-lg)',
-              padding: '8px 12px'
+              padding: isMobile ? '10px 12px' : '8px 12px',
+              gap: isMobile ? '10px' : '10px'
             }}
           >
-            <Sparkles size={20} color="var(--editorial-accent)" strokeWidth={2.4} style={{ marginLeft: '6px', marginRight: '8px', flexShrink: 0 }} />
-            <input
-              type="text"
-              placeholder="Type your study goal (e.g. 'I want to build web apps' or 'begin machine learning')..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              style={{
-                flex: 1,
-                border: 'none',
-                outline: 'none',
-                fontSize: '0.98rem',
-                fontFamily: 'var(--font-sans)',
-                fontWeight: 600,
-                color: 'var(--editorial-text)'
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn btn-outline btn-sm"
-              style={{ marginRight: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <Filter size={14} strokeWidth={2.2} /> Filters
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-              style={{ padding: '10px 22px', fontSize: '0.9rem' }}
-            >
-              {loading ? 'Analyzing...' : 'Search →'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, paddingRight: isMobile ? '0' : '8px' }}>
+              <Sparkles size={18} color="var(--editorial-accent)" strokeWidth={2.4} style={{ marginLeft: '4px', marginRight: '8px', flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder={isMobile ? "Type study goal or keywords..." : "Type your study goal (e.g. web apps, ML, data science)..."}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: isMobile ? '0.90rem' : '0.96rem',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 500,
+                  color: 'var(--editorial-text)',
+                  padding: '4px 6px'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className="btn btn-outline btn-sm"
+                style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: isMobile ? '8px 12px' : undefined, whiteSpace: 'nowrap' }}
+              >
+                <Filter size={14} strokeWidth={2.2} /> Filters
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+                style={{ flex: isMobile ? 1 : 'none', padding: isMobile ? '8px 16px' : '10px 22px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+              >
+                {loading ? 'Analyzing...' : 'Search →'}
+              </button>
+            </div>
           </form>
 
           {/* Filters Panel */}
@@ -417,106 +446,152 @@ export default function AiBookFinder({
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
               {results.map((book, idx) => (
                 <div
                   key={book.id}
                   style={{
-                    padding: '24px',
+                    padding: isMobile ? '14px 12px' : '24px',
                     backgroundColor: '#FFFFFF',
                     border: '1px solid var(--editorial-border)',
                     boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
-                    gap: '24px',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap'
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '12px' : '24px',
+                    alignItems: 'flex-start'
                   }}
                 >
-                  {/* Book Thumbnail */}
-                  <div
-                    style={{
-                      width: '120px',
-                      height: '160px',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      backgroundColor: 'var(--editorial-bg-subtle)',
-                      border: '1px solid var(--editorial-border)',
-                      boxShadow: 'var(--shadow-sm)'
-                    }}
-                  >
-                    <img
-                      src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
-                      alt={book.title}
-                      onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                  {/* Book Thumbnail & Mobile Header */}
+                  <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto', alignItems: 'flex-start' }}>
+                    <div
+                      style={{
+                        width: isMobile ? '72px' : '120px',
+                        height: isMobile ? '98px' : '160px',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        backgroundColor: 'var(--editorial-bg-subtle)',
+                        border: '1px solid var(--editorial-border)',
+                        boxShadow: 'var(--shadow-sm)'
+                      }}
+                    >
+                      <img
+                        src={book.cover_image || getOfflineBookCover(book.title, book.author, book.category)}
+                        alt={book.title}
+                        onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+
+                    {isMobile && (
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '4px' }}>
+                          <span className="badge badge-category" style={{ fontSize: '0.66rem', padding: '2px 6px' }}>{book.category}</span>
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              backgroundColor: 'var(--editorial-border)',
+                              color: 'var(--editorial-text)',
+                              padding: '2px 6px',
+                              fontSize: '0.68rem',
+                              fontWeight: 800
+                            }}
+                          >
+                            <Sparkles size={11} strokeWidth={2.4} />
+                            {book.score}%
+                          </div>
+                        </div>
+                        <h3
+                          style={{
+                            fontSize: '0.96rem',
+                            color: 'var(--editorial-text)',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            margin: '0 0 3px',
+                            lineHeight: 1.25,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => onViewBookDetails(book.id)}
+                        >
+                          {book.title}
+                        </h3>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--editorial-text-muted)', margin: 0 }}>
+                          by <strong>{book.author}</strong> ({book.publication_year})
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Details & Similarity Explanation */}
-                  <div style={{ flex: 1, minWidth: '260px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <span className="badge badge-category">{book.category}</span>
-                        <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
-                          Rank #{idx + 1}
-                        </span>
-                      </div>
+                  <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                    {!isMobile && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span className="badge badge-category">{book.category}</span>
+                            <span style={{ fontSize: '0.76rem', color: 'var(--editorial-text)', fontWeight: 800, textTransform: 'uppercase' }}>
+                              Rank #{idx + 1}
+                            </span>
+                          </div>
 
-                      {/* Similarity Score Pill */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          backgroundColor: 'var(--editorial-border)',
-                          color: 'var(--editorial-text)',
-                          border: '1px solid var(--editorial-border)',
-                          boxShadow: 'var(--shadow-sm)',
-                          padding: '4px 10px',
-                          fontSize: '0.78rem',
-                          fontWeight: 900,
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        <Sparkles size={13} strokeWidth={2.4} />
-                        {book.score}% Vector Match
-                      </div>
-                    </div>
+                          {/* Similarity Score Pill */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              backgroundColor: 'var(--editorial-border)',
+                              color: 'var(--editorial-text)',
+                              border: '1px solid var(--editorial-border)',
+                              boxShadow: 'var(--shadow-sm)',
+                              padding: '4px 10px',
+                              fontSize: '0.78rem',
+                              fontWeight: 900,
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            <Sparkles size={13} strokeWidth={2.4} />
+                            {book.score}% Vector Match
+                          </div>
+                        </div>
 
-                    <h3
-                      style={{
-                        fontSize: '1.3rem',
-                        color: 'var(--editorial-text)',
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
-                        letterSpacing: '-0.02em',
-                        marginBottom: '4px',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => onViewBookDetails(book.id)}
-                    >
-                      {book.title}
-                    </h3>
+                        <h3
+                          style={{
+                            fontSize: '1.3rem',
+                            color: 'var(--editorial-text)',
+                            fontWeight: 900,
+                            textTransform: 'uppercase',
+                            letterSpacing: '-0.02em',
+                            marginBottom: '4px',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => onViewBookDetails(book.id)}
+                        >
+                          {book.title}
+                        </h3>
 
-                    <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '12px', fontWeight: 600 }}>
-                      by <strong>{book.author}</strong> ({book.publication_year})
-                    </p>
+                        <p style={{ fontSize: '0.88rem', color: 'var(--editorial-text)', opacity: 0.85, marginBottom: '12px', fontWeight: 600 }}>
+                          by <strong>{book.author}</strong> ({book.publication_year})
+                        </p>
+                      </>
+                    )}
 
                     {/* Why it matches */}
                     <div
                       style={{
-                        padding: '10px 14px',
+                        padding: isMobile ? '8px 10px' : '10px 14px',
                         backgroundColor: 'var(--editorial-bg-subtle)',
                         borderLeft: '4px solid var(--editorial-accent)',
                         borderTop: '1px solid var(--editorial-text)',
                         borderRight: '1px solid var(--editorial-text)',
                         borderBottom: '1px solid var(--editorial-text)',
-                        fontSize: '0.84rem',
+                        fontSize: isMobile ? '0.78rem' : '0.84rem',
                         color: 'var(--editorial-text)',
                         fontWeight: 600,
-                        marginBottom: '14px'
+                        marginBottom: isMobile ? '10px' : '14px'
                       }}
                     >
                       <strong>Why this matches:</strong> {book.matchReason}
@@ -526,52 +601,53 @@ export default function AiBookFinder({
                     <div
                       style={{
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: isMobile ? 'stretch' : 'center',
+                        flexDirection: isMobile ? 'column' : 'row',
                         justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        paddingTop: '12px',
+                        gap: isMobile ? '8px' : '12px',
+                        paddingTop: '10px',
                         borderTop: '1px solid var(--editorial-border)'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--editorial-text)', fontWeight: 700 }}>
-                        <MapPin size={15} color="var(--editorial-accent)" strokeWidth={2.4} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.76rem' : '0.82rem', color: 'var(--editorial-text)', fontWeight: 700, flexWrap: 'wrap' }}>
+                        <MapPin size={14} color="var(--editorial-accent)" strokeWidth={2.4} />
                         <span>{book.floor} • {book.section} • <strong>{book.shelf}</strong> ({book.rack})</span>
                         {book.available_copies > 0 ? (
-                          <span className="badge badge-available" style={{ marginLeft: '6px' }}>
+                          <span className="badge badge-available" style={{ marginLeft: '4px', fontSize: '0.68rem', padding: '2px 6px' }}>
                             ● {book.available_copies} on shelf
                           </span>
                         ) : (
-                          <span className="badge badge-borrowed" style={{ marginLeft: '6px' }}>
+                          <span className="badge badge-borrowed" style={{ marginLeft: '4px', fontSize: '0.68rem', padding: '2px 6px' }}>
                             ● On loan
                           </span>
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : undefined, gap: isMobile ? '6px' : '8px', width: isMobile ? '100%' : 'auto' }}>
                         <button
                           onClick={() => handleToggleCompare(book.id, book.title)}
                           className={`btn btn-sm ${compareBookIds.includes(book.id) ? 'btn-primary' : 'btn-outline'}`}
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: isMobile ? '6px 4px' : undefined, fontSize: isMobile ? '0.72rem' : undefined, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                         >
-                          <GitCompare size={14} strokeWidth={2.4} />
-                          {compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}
+                          <GitCompare size={13} strokeWidth={2.4} />
+                          <span>{compareBookIds.includes(book.id) ? 'In Compare' : 'Compare'}</span>
                         </button>
 
                         <button
                           onClick={() => handleAddToPlanner(book.id, book.title)}
                           className="btn btn-outline btn-sm"
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: isMobile ? '6px 4px' : undefined, fontSize: isMobile ? '0.72rem' : undefined, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                         >
-                          <Compass size={14} strokeWidth={2.4} /> Add to Visit
+                          <Compass size={13} strokeWidth={2.4} />
+                          <span>Add Visit</span>
                         </button>
 
                         <button
                           onClick={() => onViewBookDetails(book.id)}
                           className="btn btn-secondary btn-sm"
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: isMobile ? '6px 4px' : undefined, fontSize: isMobile ? '0.72rem' : undefined, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                         >
-                          Details <ArrowRight size={14} strokeWidth={2.4} />
+                          <span>Details</span> <ArrowRight size={13} strokeWidth={2.4} />
                         </button>
                       </div>
                     </div>

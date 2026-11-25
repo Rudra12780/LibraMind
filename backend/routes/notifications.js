@@ -96,6 +96,63 @@ router.put('/read-all', authenticateToken, async (req, res) => {
   }
 });
 
+// Clear all notifications for user
+router.delete('/', authenticateToken, async (req, res) => {
+  try {
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    await Notification.deleteMany(userFilter);
+
+    try {
+      const sqliteDb = require('../db/database');
+      if (sqliteDb && typeof sqliteDb.prepare === 'function') {
+        const numUid = parseInt(req.user.id, 10);
+        if (!isNaN(numUid)) {
+          sqliteDb.prepare('DELETE FROM notifications WHERE user_id = ?').run(numUid);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({ message: 'All notifications cleared successfully' });
+  } catch (err) {
+    console.error('Clear all notifications error:', err);
+    res.status(500).json({ error: 'Failed to clear notifications' });
+  }
+});
+
+// Delete single notification
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const notifFilter = buildIdFilter(req.params.id);
+    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+
+    await Notification.deleteOne({ ...notifFilter, ...userFilter });
+
+    try {
+      const sqliteDb = require('../db/database');
+      if (sqliteDb && typeof sqliteDb.prepare === 'function') {
+        const numId = parseInt(req.params.id, 10);
+        const numUid = parseInt(req.user.id, 10);
+        if (!isNaN(numId)) {
+          if (!isNaN(numUid)) {
+            sqliteDb.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(numId, numUid);
+          } else {
+            sqliteDb.prepare('DELETE FROM notifications WHERE id = ?').run(numId);
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (err) {
+    console.error('Delete notification error:', err);
+    res.status(500).json({ error: 'Failed to delete notification' });
+  }
+});
+
 // Librarian / Admin: Send broadcast announcement to all library members
 router.post('/announcement', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {

@@ -40,7 +40,7 @@ function getVerifiedCover(b) {
 
 const router = express.Router();
 
-function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', sort = 'title_asc', limit = 200, offset = 0 } = {}) {
+function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', sort = 'title_asc', limit = 200, offset = 0, userId = null } = {}) {
   if (!sqliteDb) return null;
   try {
     let sql = 'SELECT * FROM books WHERE 1=1';
@@ -51,13 +51,22 @@ function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', 
       params.push(term, term, term, term, term);
     }
     if (category && category !== 'All') {
-      sql += ' AND category = ?';
-      params.push(category);
+      sql += ' AND LOWER(TRIM(category)) = LOWER(TRIM(?))';
+      params.push(category.trim());
     }
     if (availability === 'available') {
       sql += ' AND available_copies > 0';
     } else if (availability === 'unavailable') {
       sql += ' AND available_copies = 0';
+    } else if (availability === 'borrowed' || availability === 'on_loan') {
+      sql += " AND (available_copies < total_copies OR id IN (SELECT DISTINCT book_id FROM loans WHERE status IN ('active', 'borrowed', 'overdue')))";
+    } else if (availability === 'my_loans') {
+      if (userId) {
+        sql += " AND id IN (SELECT DISTINCT book_id FROM loans WHERE user_id = ? AND status IN ('active', 'borrowed', 'overdue'))";
+        params.push(userId);
+      } else {
+        sql += ' AND 1=0';
+      }
     }
     if (sort === 'title_desc') sql += ' ORDER BY title DESC';
     else if (sort === 'year_desc') sql += ' ORDER BY publication_year DESC';
@@ -69,6 +78,15 @@ function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', 
 
     const books = sqliteDb.prepare(sql).all(...params);
     const categories = sqliteDb.prepare('SELECT DISTINCT category FROM books ORDER BY category ASC').all().map(c => c.category);
+    const catRows = sqliteDb.prepare('SELECT category, COUNT(*) as cnt FROM books GROUP BY category').all();
+    const categoryCounts = {};
+    let totalBooksCount = 0;
+    catRows.forEach(r => {
+      categoryCounts[r.category] = r.cnt;
+      totalBooksCount += r.cnt;
+    });
+    categoryCounts['All'] = totalBooksCount;
+
     return {
       books: books.map(b => ({
         ...b,
@@ -80,7 +98,9 @@ function queryBooksFromSqlite({ q = '', category = 'All', availability = 'all', 
         location_section: b.section || 'Main Hall'
       })),
       categories,
-      count: books.length
+      categoryCounts,
+      count: books.length,
+      totalCount: totalBooksCount
     };
   } catch (err) {
     console.error('Error executing queryBooksFromSqlite:', err);
@@ -163,7 +183,7 @@ router.get('/', async (req, res) => {
       category = 'All',
       availability = 'all',
       sort = 'title_asc',
-      limit = 200,
+      limit = 500,
       offset = 0
     } = req.query;
 
@@ -176,8 +196,19 @@ router.get('/', async (req, res) => {
       }
     }
 
+    // Optional user token extraction for availability filter
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let tokenUserId = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.id) tokenUserId = decoded.id;
+      } catch (e) {}
+    }
+
     if (mongoose.connection.readyState !== 1) {
-      const sqliteResult = queryBooksFromSqlite(req.query);
+      const sqliteResult = queryBooksFromSqlite({ ...req.query, userId: tokenUserId || req.query.userId });
       if (sqliteResult) return res.json(sqliteResult);
     }
 
@@ -195,20 +226,10 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Category filter
+    // Category filter (safe regex for case-insensitive and trimmed category matching)
     if (category && category !== 'All') {
-      query.category = category;
-    }
-
-    // Optional user token extraction for availability filter
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    let tokenUserId = null;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded && decoded.id) tokenUserId = decoded.id;
-      } catch (e) {}
+      const safeCat = category.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.category = { $regex: new RegExp(`^${safeCat}$`, 'i') };
     }
 
     if (availability === 'available') {
@@ -216,16 +237,37 @@ router.get('/', async (req, res) => {
     } else if (availability === 'unavailable') {
       query.available_copies = 0;
     } else if (availability === 'borrowed' || availability === 'on_loan') {
-      query.$expr = { $lt: ['$available_copies', '$total_copies'] };
+      const activeLoanBookIds = await Loan.find({
+        status: { $in: ['active', 'borrowed', 'overdue'] }
+      }).distinct('book_id');
+      query.$or = [
+        { $expr: { $lt: ['$available_copies', '$total_copies'] } },
+        { _id: { $in: activeLoanBookIds } }
+      ];
     } else if (availability === 'my_loans') {
       const targetUserId = tokenUserId || req.query.userId;
       if (targetUserId) {
         const uFilter = buildIdFilter(targetUserId, 'user_id', 'sqlite_user_id');
-        const activeLoans = await Loan.find({
+        const userLoans = await Loan.find({
           ...uFilter,
           status: { $in: ['active', 'borrowed', 'overdue'] }
-        }).distinct('book_id');
-        query._id = { $in: activeLoans };
+        }).select('book_id sqlite_book_id').lean();
+        const bIds = [];
+        const sIds = [];
+        for (const l of userLoans) {
+          if (l.book_id) bIds.push(l.book_id);
+          if (l.sqlite_book_id) sIds.push(l.sqlite_book_id);
+        }
+        if (bIds.length || sIds.length) {
+          query.$or = [
+            ...(bIds.length ? [{ _id: { $in: bIds } }] : []),
+            ...(sIds.length ? [{ sqlite_id: { $in: sIds } }] : [])
+          ];
+        } else {
+          query._id = { $in: [] };
+        }
+      } else {
+        query._id = { $in: [] };
       }
     }
 
@@ -251,7 +293,7 @@ router.get('/', async (req, res) => {
     const books = await Book.find(query)
       .sort(sortObj)
       .skip(parseInt(offset) || 0)
-      .limit(parseInt(limit) || 200)
+      .limit(parseInt(limit) || 500)
       .lean();
 
     // High-performance single batch query for available copy codes (1 query instead of 50 individual queries)
@@ -298,10 +340,40 @@ router.get('/', async (req, res) => {
       res.setHeader('Cache-Control', 'public, max-age=10, stale-while-revalidate=60');
     }
 
+    const categoryCounts = {};
+    let totalBooksCount = 0;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const mongoAgg = await Book.aggregate([
+          { $group: { _id: '$category', cnt: { $sum: 1 } } }
+        ]);
+        mongoAgg.forEach(r => {
+          if (r._id) {
+            categoryCounts[r._id] = r.cnt;
+            totalBooksCount += r.cnt;
+          }
+        });
+      } catch (aggErr) {
+        console.warn('MongoDB category agg error:', aggErr.message);
+      }
+    }
+
+    if (totalBooksCount === 0 && sqliteDb) {
+      const catRows = sqliteDb.prepare('SELECT category, COUNT(*) as cnt FROM books GROUP BY category').all();
+      catRows.forEach(r => {
+        categoryCounts[r.category] = r.cnt;
+        totalBooksCount += r.cnt;
+      });
+    }
+    categoryCounts['All'] = totalBooksCount;
+
     const responseData = {
       books: enrichedBooks,
       categories,
-      count: enrichedBooks.length
+      categoryCounts,
+      count: enrichedBooks.length,
+      totalCount: totalBooksCount
     };
 
     if (availability !== 'my_loans') {
@@ -311,7 +383,7 @@ router.get('/', async (req, res) => {
     res.json(responseData);
   } catch (err) {
     console.error('Fetch books error:', err);
-    const sqliteFallback = queryBooksFromSqlite(req.query);
+    const sqliteFallback = queryBooksFromSqlite({ ...req.query, userId: tokenUserId || req.query.userId });
     if (sqliteFallback) {
       return res.json(sqliteFallback);
     }
@@ -575,6 +647,43 @@ router.delete('/:id', authenticateToken, requireRole(['admin', 'librarian']), as
 // Add physical copies to existing book
 router.post('/:id/copies', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
+    if (sqliteDb) {
+      let numericId = parseInt(req.params.id, 10);
+      let sBook = isNaN(numericId) ? null : sqliteDb.prepare('SELECT * FROM books WHERE id = ?').get(numericId);
+      if (!sBook) {
+        sBook = sqliteDb.prepare('SELECT * FROM books WHERE title = ?').get(req.params.id);
+      }
+      if (sBook) {
+        const { condition = 'New', count = 1 } = req.body;
+        const copiesToAdd = Math.max(1, parseInt(count) || 1);
+        const existingCodes = sqliteDb.prepare('SELECT copy_code FROM book_copies WHERE book_id = ?').all(sBook.id).map(c => c.copy_code);
+        let nextIndex = existingCodes.length + 1;
+        const addedCodes = [];
+        const catPrefix = (sBook.category || 'BK').substring(0, 2).toUpperCase();
+        for (let i = 0; i < copiesToAdd; i++) {
+          let copyCode = `LM-${catPrefix}-${sBook.id}-C${nextIndex}`;
+          while (existingCodes.includes(copyCode)) {
+            nextIndex++;
+            copyCode = `LM-${catPrefix}-${sBook.id}-C${nextIndex}`;
+          }
+          existingCodes.push(copyCode);
+          addedCodes.push(copyCode);
+          sqliteDb.prepare("INSERT INTO book_copies (book_id, copy_code, status, condition) VALUES (?, ?, 'available', ?)").run(sBook.id, copyCode, condition);
+        }
+        const newTotal = sBook.total_copies + copiesToAdd;
+        const newAvail = sBook.available_copies + copiesToAdd;
+        sqliteDb.prepare('UPDATE books SET total_copies = ?, available_copies = ? WHERE id = ?').run(newTotal, newAvail, sBook.id);
+        catalogResponseCache.clear();
+        logAudit(req.user.id, 'COPY_ADDED', `Added ${copiesToAdd} copies for book: "${sBook.title}" (${addedCodes.join(', ')})`);
+        return res.status(201).json({
+          message: `Successfully added ${copiesToAdd} physical cop${copiesToAdd > 1 ? 'ies' : 'y'} to "${sBook.title}"!`,
+          addedCount: copiesToAdd,
+          copyCodes: addedCodes,
+          book: { ...sBook, total_copies: newTotal, available_copies: newAvail }
+        });
+      }
+    }
+
     const book = await Book.findOne(buildIdFilter(req.params.id));
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });

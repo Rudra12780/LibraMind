@@ -11,6 +11,13 @@ const Wishlist = require('../models/Wishlist');
 const { authenticateToken } = require('../middleware/auth');
 const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
+let sqliteDb = null;
+try {
+  sqliteDb = require('../db/database');
+} catch (e) {
+  console.warn('SQLite database connection failed in ai router:', e.message);
+}
+
 const router = express.Router();
 
 // Common stopwords for NLP
@@ -226,6 +233,104 @@ router.post('/search', handleAiSearch);
 // 2. Personalized Book Recommendations
 router.get('/recommendations', authenticateToken, async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      let sUser = sqliteDb.prepare('SELECT * FROM users WHERE id = ? OR email = ?').get(req.user.id, String(req.user.email || '').toLowerCase());
+      const sUserId = sUser?.id || req.user.id;
+      const sBooks = sqliteDb.prepare('SELECT * FROM books').all();
+      const pastLoans = sqliteDb.prepare('SELECT l.*, b.category FROM loans l LEFT JOIN books b ON l.book_id = b.id WHERE l.user_id = ?').all(sUserId);
+      const borrowedBookIds = new Set(pastLoans.map(p => String(p.book_id)));
+
+      let wishlistIds = new Set();
+      try {
+        const wishRows = sqliteDb.prepare('SELECT book_id FROM wishlists WHERE user_id = ?').all(sUserId);
+        wishlistIds = new Set(wishRows.map(w => String(w.book_id)));
+      } catch (_) {}
+
+      const rawInterests = (sUser?.interests || '').trim();
+      // If user has not selected any topics/interests: show nothing (0 books)
+      if (!rawInterests) {
+        return res.json({
+          recommendations: [],
+          hasBorrowingHistory: pastLoans.length > 0,
+          userInterests: ''
+        });
+      }
+
+      // Parse user's selected topics (comma-separated or words)
+      const userSelectedTopics = rawInterests
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(Boolean);
+
+      const interestTokens = rawInterests
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 2 && !STOPWORDS.has(w));
+
+      const scored = sBooks.map(book => {
+        let score = 0;
+        let reason = '';
+        const bookCat = (book.category || '').trim().toLowerCase();
+        const bookTitle = (book.title || '').trim().toLowerCase();
+
+        let matchedTopic = null;
+        for (const topic of userSelectedTopics) {
+          if (bookCat === topic || bookCat.includes(topic) || topic.includes(bookCat)) {
+            matchedTopic = book.category;
+            score += 50;
+            break;
+          }
+        }
+
+        const bookTokens = new Set([
+          ...tokenize(book.title),
+          ...tokenize(book.category),
+          ...tokenize(book.description)
+        ]);
+
+        let tokenMatches = 0;
+        for (const pt of interestTokens) {
+          if (bookTokens.has(pt) || bookCat.includes(pt) || bookTitle.includes(pt)) {
+            tokenMatches++;
+          }
+        }
+
+        if (tokenMatches > 0) {
+          score += tokenMatches * 15;
+          if (!matchedTopic) matchedTopic = book.category;
+        }
+
+        if (score > 0 && wishlistIds.has(String(book.id))) {
+          score += 20;
+        }
+
+        if (score > 0) {
+          reason = `Matches your selected topic in ${matchedTopic || book.category}`;
+        }
+
+        return {
+          ...book,
+          id: String(book.id),
+          _id: String(book.id),
+          recScore: score,
+          recommendationReason: reason
+        };
+      });
+
+      // Strictly return only books matching the selected topics (recScore > 0)
+      const recommendations = scored
+        .filter(b => !borrowedBookIds.has(String(b.id)) && b.recScore > 0)
+        .sort((a, b) => b.recScore - a.recScore)
+        .slice(0, 16);
+
+      return res.json({
+        recommendations,
+        hasBorrowingHistory: pastLoans.length > 0,
+        userInterests: rawInterests
+      });
+    }
+
     const user = await User.findOne(buildIdFilter(req.user.id));
     const books = await Book.find({});
 
@@ -236,13 +341,41 @@ router.get('/recommendations', authenticateToken, async (req, res) => {
     const wishList = await Wishlist.find(uFilter);
     const wishlistIds = new Set(wishList.map(w => w.book_id?.toString()).filter(Boolean));
 
-    const userInterestTokens = tokenize(user?.interests || '');
-    const userLoanCategoryTokens = pastLoans.flatMap(p => tokenize(p.book_id?.category || ''));
-    const preferenceTokens = [...userInterestTokens, ...userLoanCategoryTokens];
+    const rawInterests = (user?.interests || '').trim();
+    // If user has not selected any topics/interests: show nothing (0 books)
+    if (!rawInterests) {
+      return res.json({
+        recommendations: [],
+        hasBorrowingHistory: pastLoans.length > 0,
+        userInterests: ''
+      });
+    }
+
+    const userSelectedTopics = rawInterests
+      .split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    const interestTokens = rawInterests
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 2 && !STOPWORDS.has(w));
 
     const scored = books.map(book => {
       let score = 0;
-      let reason = 'General Popular Selection';
+      let reason = '';
+      const bookCat = (book.category || '').trim().toLowerCase();
+      const bookTitle = (book.title || '').trim().toLowerCase();
+
+      let matchedTopic = null;
+      for (const topic of userSelectedTopics) {
+        if (bookCat === topic || bookCat.includes(topic) || topic.includes(bookCat)) {
+          matchedTopic = book.category;
+          score += 50;
+          break;
+        }
+      }
 
       const bookTokens = new Set([
         ...tokenize(book.title),
@@ -250,19 +383,24 @@ router.get('/recommendations', authenticateToken, async (req, res) => {
         ...tokenize(book.description)
       ]);
 
-      let matches = 0;
-      for (const pt of preferenceTokens) {
-        if (bookTokens.has(pt)) matches++;
+      let tokenMatches = 0;
+      for (const pt of interestTokens) {
+        if (bookTokens.has(pt) || bookCat.includes(pt) || bookTitle.includes(pt)) {
+          tokenMatches++;
+        }
       }
 
-      if (matches > 0) {
-        score = matches * 15;
-        reason = `Matches your stated reading interest in ${book.category}`;
-      } else if (wishlistIds.has(book._id.toString())) {
-        score += 25;
-        reason = 'From your saved wishlist';
-      } else {
-        score = book.available_copies > 0 ? 10 : 5;
+      if (tokenMatches > 0) {
+        score += tokenMatches * 15;
+        if (!matchedTopic) matchedTopic = book.category;
+      }
+
+      if (score > 0 && wishlistIds.has(book._id.toString())) {
+        score += 20;
+      }
+
+      if (score > 0) {
+        reason = `Matches your selected topic in ${matchedTopic || book.category}`;
       }
 
       return {
@@ -273,14 +411,14 @@ router.get('/recommendations', authenticateToken, async (req, res) => {
     });
 
     const recommendations = scored
-      .filter(b => !borrowedBookIds.has(b.id))
+      .filter(b => !borrowedBookIds.has(b.id) && b.recScore > 0)
       .sort((a, b) => b.recScore - a.recScore)
-      .slice(0, 6);
+      .slice(0, 16);
 
     res.json({
       recommendations,
       hasBorrowingHistory: pastLoans.length > 0,
-      userInterests: user?.interests || 'None specified'
+      userInterests: rawInterests
     });
   } catch (err) {
     console.error('Recommendations error:', err);

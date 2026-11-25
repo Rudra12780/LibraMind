@@ -402,61 +402,31 @@ export default function ReservationsPage({ onNavigate, onSelectBook }) {
             <button
               onClick={() => setActiveTab('all')}
               className={`btn btn-sm ${activeTab === 'all' ? 'btn-secondary' : 'btn-outline'}`}
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+              style={{ padding: '6px 14px', fontSize: '0.80rem', fontWeight: 600 }}
             >
-              All Holds ({reservations.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('ready')}
-              className={`btn btn-sm ${activeTab === 'ready' ? 'btn-secondary' : 'btn-outline'}`}
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-            >
-              ● Pickup Ready ({readyCount})
+              All Holds
             </button>
             <button
               onClick={() => setActiveTab('waiting')}
               className={`btn btn-sm ${activeTab === 'waiting' ? 'btn-secondary' : 'btn-outline'}`}
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+              style={{ padding: '6px 14px', fontSize: '0.80rem', fontWeight: 600 }}
             >
-              Waiting Queue ({waitingCount})
+              Waiting Queue
             </button>
             <button
               onClick={() => setActiveTab('fulfilled')}
               className={`btn btn-sm ${activeTab === 'fulfilled' ? 'btn-secondary' : 'btn-outline'}`}
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+              style={{ padding: '6px 14px', fontSize: '0.80rem', fontWeight: 600 }}
             >
-              Fulfilled ({fulfilledCount})
+              Fulfilled
             </button>
             <button
               onClick={() => setActiveTab('archived')}
               className={`btn btn-sm ${activeTab === 'archived' ? 'btn-secondary' : 'btn-outline'}`}
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+              style={{ padding: '6px 14px', fontSize: '0.80rem', fontWeight: 600 }}
             >
-              Archived ({archivedCount})
+              Archived
             </button>
-          </div>
-
-          {/* Search Input */}
-          <div style={{ position: 'relative', minWidth: '240px', flex: '1 1 240px', maxWidth: '360px' }}>
-            <Search
-              size={16}
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--editorial-text)',
-                pointerEvents: 'none'
-              }}
-            />
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search title, author, or student..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '36px', fontSize: '0.86rem', height: '38px' }}
-            />
           </div>
         </div>
 

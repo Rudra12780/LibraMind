@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { api } from '../api';
 import BookCard from '../components/BookCard';
 import CircularBookCarousel from '../components/CircularBookCarousel';
 import { useAuth } from '../context/AuthContext';
-import { Search, Filter, SlidersHorizontal, BookOpen, AlertCircle, Check, BookPlus, X, PlusCircle, RotateCcw, LayoutGrid } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, BookOpen, AlertCircle, Check, BookPlus, X, PlusCircle, RotateCcw, LayoutGrid, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 
 export default function Catalog({
   initialQuery = '',
   initialCategory = 'All',
+  onCategoryChange,
   onViewBookDetails,
   onNavigate,
   onAddToCompare,
@@ -23,7 +24,21 @@ export default function Catalog({
   }, [user]);
 
   const [books, setBooks] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    'AI & Data Science',
+    'Classic Novels',
+    'Emotional Fiction',
+    'Fiction & Mystery',
+    'Indian Literature',
+    'Modern Novels',
+    'Personal Growth',
+    'Programming & Technology',
+    'Spiritual & Wisdom'
+  ]);
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
+  const categoryScrollRef = useRef(null);
+
   const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [search, setSearch] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'All');
@@ -33,7 +48,17 @@ export default function Catalog({
   const [isSearching, setIsSearching] = useState(false);
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [userBorrowedBookIds, setUserBorrowedBookIds] = useState(new Set());
+  const [userReservedBookIds, setUserReservedBookIds] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
+
+  const scrollCategories = (direction) => {
+    if (categoryScrollRef.current) {
+      categoryScrollRef.current.scrollBy({
+        left: direction === 'left' ? -220 : 220,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Add Book state for Admin / Librarian
   const [showAddModal, setShowAddModal] = useState(false);
@@ -84,6 +109,19 @@ export default function Catalog({
     }
   }, [initialQuery]);
 
+  const handleSelectCategory = (cat) => {
+    setSelectedCategory(cat);
+    if (onCategoryChange) {
+      onCategoryChange(cat);
+    }
+  };
+
+  const handleViewBook = (bookId) => {
+    if (onViewBookDetails) {
+      onViewBookDetails(bookId, { fromPage: 'catalog', fromCategory: selectedCategory });
+    }
+  };
+
   const handleAddBook = async (e) => {
     e.preventDefault();
     setAddingBook(true);
@@ -127,24 +165,40 @@ export default function Catalog({
       if (cached.categories && cached.categories.length) {
         setCategories(cached.categories);
       }
+      if (cached.categoryCounts) {
+        setCategoryCounts(cached.categoryCounts);
+      }
       setLoading(false);
     } else {
       setLoading(true);
     }
 
     try {
+      const targetUserId = user?.id || user?._id;
       const data = await api.getBooks({
         q: search,
         category: selectedCategory,
         availability,
         sort: sortBy,
         limit: 200,
-        ...(availability === 'my_loans' && user ? { userId: user.id } : {})
+        ...(availability === 'my_loans' && targetUserId ? { userId: targetUserId } : {})
       });
       booksCache.current.set(cacheKey, data);
-      setBooks(data.books || []);
+      let fetchedBooks = data.books || [];
+      if (availability === 'my_loans') {
+        fetchedBooks = fetchedBooks.filter(b => {
+          const bId = b.id !== undefined ? b.id : b._id;
+          return userBorrowedBookIds.has(bId) || userBorrowedBookIds.has(String(bId));
+        });
+      } else if (availability === 'borrowed') {
+        fetchedBooks = fetchedBooks.filter(b => (b.available_copies !== undefined && b.available_copies < b.total_copies) || b.available_copies === 0 || b.is_borrowed);
+      }
+      setBooks(fetchedBooks);
       if (data.categories && data.categories.length) {
         setCategories(data.categories);
+      }
+      if (data.categoryCounts) {
+        setCategoryCounts(data.categoryCounts);
       }
     } catch (err) {
       console.error('Failed to fetch books', err);
@@ -179,11 +233,12 @@ export default function Catalog({
       const active = (loansData || []).filter(l => l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue' || l.is_active);
       const ids = new Set();
       active.forEach(l => {
-        if (l.book_id !== undefined) {
-          ids.add(l.book_id);
-          ids.add(String(l.book_id));
+        const rawId = l.book_id && typeof l.book_id === 'object' ? (l.book_id._id || l.book_id.id) : l.book_id;
+        if (rawId !== undefined && rawId !== null) {
+          ids.add(rawId);
+          ids.add(String(rawId));
         }
-        if (l.sqlite_book_id !== undefined) {
+        if (l.sqlite_book_id !== undefined && l.sqlite_book_id !== null) {
           ids.add(l.sqlite_book_id);
           ids.add(String(l.sqlite_book_id));
         }
@@ -194,6 +249,32 @@ export default function Catalog({
     }
   }, [user]);
 
+  const fetchUserReservations = useCallback(async () => {
+    if (!user) {
+      setUserReservedBookIds(new Set());
+      return;
+    }
+    try {
+      const resData = await api.getReservations();
+      const activeHolds = (resData || []).filter(r => r.status === 'waiting' || r.status === 'ready_for_pickup' || r.status === 'ready');
+      const ids = new Set();
+      activeHolds.forEach(r => {
+        const rawId = r.book_id && typeof r.book_id === 'object' ? (r.book_id._id || r.book_id.id) : r.book_id;
+        if (rawId !== undefined && rawId !== null) {
+          ids.add(rawId);
+          ids.add(String(rawId));
+        }
+        if (r.sqlite_book_id !== undefined && r.sqlite_book_id !== null) {
+          ids.add(r.sqlite_book_id);
+          ids.add(String(r.sqlite_book_id));
+        }
+      });
+      setUserReservedBookIds(ids);
+    } catch (err) {
+      console.error('User reservations fetch error', err);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchBooks();
   }, [fetchBooks]);
@@ -201,10 +282,12 @@ export default function Catalog({
   useEffect(() => {
     fetchWishlist();
     fetchUserLoans();
+    fetchUserReservations();
 
     const handleDataUpdate = () => {
       fetchBooks();
       fetchUserLoans();
+      fetchUserReservations();
       fetchWishlist();
     };
     window.addEventListener('libramind:data-updated', handleDataUpdate);
@@ -214,6 +297,7 @@ export default function Catalog({
       bc.onmessage = () => {
         fetchBooks();
         fetchUserLoans();
+        fetchUserReservations();
         fetchWishlist();
       };
     } catch (e) {}
@@ -222,7 +306,7 @@ export default function Catalog({
       window.removeEventListener('libramind:data-updated', handleDataUpdate);
       if (bc) bc.close();
     };
-  }, [fetchBooks, fetchWishlist, fetchUserLoans]);
+  }, [fetchBooks, fetchWishlist, fetchUserLoans, fetchUserReservations]);
 
   const handleToggleWishlist = async (bookId) => {
     if (!user) {
@@ -292,10 +376,17 @@ export default function Catalog({
       return;
     }
 
+    if (userReservedBookIds.has(bookId) || userReservedBookIds.has(String(bookId))) {
+      showToast('You are already on the waiting list for this volume.', true);
+      return;
+    }
+
     try {
       const res = await api.placeReservation(bookId);
       showToast(res.message || `Hold confirmed! Queue position: #${res.queuePosition}`);
+      setUserReservedBookIds(prev => new Set([...prev, bookId, String(bookId)]));
       fetchBooks();
+      fetchUserReservations();
       window.dispatchEvent(new CustomEvent('libramind:data-updated', { detail: { bookId } }));
       try { const bc = new BroadcastChannel('libramind_sync'); bc.postMessage({ type: 'UPDATE', bookId }); bc.close(); } catch(e){}
     } catch (err) {
@@ -362,7 +453,19 @@ export default function Catalog({
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '2.4rem', color: 'var(--forest-dark)', marginBottom: '8px' }}>
+          <h1
+            className="catalog-title"
+            style={{
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              color: 'var(--forest-dark)',
+              marginBottom: '8px',
+              fontFamily: "var(--font-oswald), 'BBH Bogle', 'Space Grotesk', sans-serif",
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              textTransform: 'uppercase',
+              lineHeight: 1.10
+            }}
+          >
             Library Book Catalog
           </h1>
           <p style={{ fontSize: '1rem', color: 'var(--muted-text)', maxWidth: '640px', margin: 0 }}>
@@ -685,113 +788,280 @@ export default function Catalog({
               </button>
             )}
           </div>
-
-          {/* Availability Toggle */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {[
-              { id: 'all', label: 'All Volumes' },
-              { id: 'available', label: 'Available In Stacks' },
-              { id: 'borrowed', label: 'Borrowed Books / On Loan' },
-              ...(user ? [{ id: 'my_loans', label: `My Borrowed Copies (${userBorrowedBookIds.size})` }] : []),
-              { id: 'unavailable', label: 'In Waiting' }
-            ].map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => setAvailability(opt.id)}
-                style={{
-                  padding: '7px 14px',
-                  border: availability === opt.id ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                  backgroundColor: availability === opt.id ? 'var(--editorial-green)' : '#FFFFFF',
-                  color: availability === opt.id ? '#FFFFFF' : 'var(--editorial-text)',
-                  fontSize: '0.80rem',
-                  fontWeight: 600,
-                  borderRadius: 'var(--radius-sm)',
-                  letterSpacing: '0.02em',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort Dropdown */}
-          <div style={{ minWidth: '180px' }}>
-            <select
-              className="form-control"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{ cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase' }}
-            >
-              <option value="title_asc">Title: A to Z</option>
-              <option value="title_desc">Title: Z to A</option>
-              <option value="popularity">Most Borrowed</option>
-              <option value="year_desc">Newest Year</option>
-              <option value="year_asc">Oldest Year</option>
-            </select>
-          </div>
         </div>
 
-        {/* Category Pills Filter */}
+        {/* Category Pills Filter & Responsive Mobile Swiper */}
         <div
-          className="catalog-category-bar"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px solid var(--editorial-border)' }}
+          className="catalog-category-bar-wrapper"
+          style={{
+            paddingTop: '12px',
+            borderTop: '1px solid var(--editorial-border)',
+            position: 'relative',
+            width: '100%'
+          }}
         >
-          <span style={{ fontSize: '0.78rem', fontWeight: 900, color: 'var(--editorial-text)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', letterSpacing: '0.04em', flexShrink: 0 }}>
-            <Filter size={14} strokeWidth={2.4} /> CATEGORIES:
-          </span>
-          <button
-            onClick={() => setSelectedCategory('All')}
-            style={{
-              padding: '5px 12px',
-              border: '1px solid var(--editorial-border)',
-              backgroundColor: selectedCategory === 'All' ? 'var(--editorial-border)' : '#FFFFFF',
-              color: 'var(--editorial-text)',
-              fontSize: '0.76rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.03em',
-              cursor: 'pointer',
-              flexShrink: 0,
-              boxShadow: selectedCategory === 'All' ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
-            }}
-          >
-            All
-          </button>
-
-          {categories
-            .filter(cat => cat && cat.toLowerCase() !== 'all')
-            .map(cat => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+            {/* Scroll Left Button for desktop/tablets */}
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => scrollCategories('left')}
+              className="hide-on-mobile"
               style={{
-                padding: '5px 12px',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
                 border: '1px solid var(--editorial-border)',
-                backgroundColor: selectedCategory === cat ? 'var(--editorial-border)' : '#FFFFFF',
+                backgroundColor: '#FFFFFF',
                 color: 'var(--editorial-text)',
-                fontSize: '0.76rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.03em',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'pointer',
                 flexShrink: 0,
-                boxShadow: selectedCategory === cat ? '2px 2px 0px var(--editorial-text)' : '1px 1px 0px var(--editorial-text)'
+                boxShadow: '0 1px 3px rgba(37, 40, 32, 0.05)'
+              }}
+              title="Scroll categories left"
+            >
+              <ChevronLeft size={14} />
+            </button>
+
+            {/* Horizontally Scrollable Category Pill Container */}
+            <div
+              ref={categoryScrollRef}
+              className="catalog-category-scroll-strip"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                overflowX: 'auto',
+                whiteSpace: 'nowrap',
+                flexWrap: 'nowrap',
+                padding: '4px 2px',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                flex: 1
               }}
             >
-              {cat}
+              {/* "All" Category Pill */}
+              <button
+                onClick={() => handleSelectCategory('All')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 18px',
+                  borderRadius: '9999px',
+                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-green)' : '#FFFFFF',
+                  color: selectedCategory === 'All' ? '#FFFFFF' : 'var(--editorial-text)',
+                  border: `1.5px solid ${selectedCategory === 'All' ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  boxShadow: selectedCategory === 'All' ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                  transition: 'all 0.2s ease',
+                  touchAction: 'manipulation'
+                }}
+              >
+                <span>All Books</span>
+              </button>
+
+              {/* Dynamic Category Pills */}
+              {categories
+                .filter(cat => cat && cat.toLowerCase() !== 'all')
+                .map(cat => {
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => handleSelectCategory(cat)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '7px 18px',
+                        borderRadius: '9999px',
+                        backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFFFFF',
+                        color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                        border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.02em',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        boxShadow: isSelected ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                        transition: 'all 0.2s ease',
+                        touchAction: 'manipulation'
+                      }}
+                    >
+                      <span>{cat}</span>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {/* Scroll Right Button for desktop/tablets */}
+            <button
+              onClick={() => scrollCategories('right')}
+              className="hide-on-mobile"
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                border: '1px solid var(--editorial-border)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--editorial-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                boxShadow: '0 1px 3px rgba(37, 40, 32, 0.05)'
+              }}
+              title="Scroll categories right"
+            >
+              <ChevronRight size={14} />
             </button>
-          ))}
+          </div>
         </div>
       </div>
 
-      {/* Results Count & View Mode Switcher */}
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <span style={{ fontSize: '0.9rem', color: 'var(--editorial-text-muted)' }}>
-          Showing <strong>{books.length}</strong> {books.length === 1 ? 'book' : 'books'} {selectedCategory !== 'All' ? `in ${selectedCategory}` : ''}
-        </span>
+      {/* Mobile & Tablet Full Category Grid Modal / Sheet */}
+      {showCategoryDrawer && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(28, 15, 10, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setShowCategoryDrawer(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 'var(--radius-lg, 12px)',
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 48px rgba(37, 40, 32, 0.22)',
+              border: '1.5px solid var(--editorial-border)',
+              overflow: 'hidden'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--editorial-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: 'var(--editorial-bg)'
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.20rem', fontWeight: 800, color: 'var(--editorial-text)' }}>
+                  Library Chambers &amp; Categories
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--editorial-text-muted)' }}>
+                  Select any category to filter the library stacks
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCategoryDrawer(false)}
+                className="btn btn-outline"
+                style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
 
+            {/* Categories Grid */}
+            <div
+              style={{
+                padding: '16px 20px',
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                gap: '10px'
+              }}
+            >
+              {/* All Books Option */}
+              <div
+                onClick={() => {
+                  handleSelectCategory('All');
+                  setShowCategoryDrawer(false);
+                }}
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: `1.5px solid ${selectedCategory === 'All' ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
+                  backgroundColor: selectedCategory === 'All' ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BookOpen size={16} color={selectedCategory === 'All' ? 'var(--editorial-green)' : 'var(--editorial-text-muted)'} />
+                  <span style={{ fontWeight: 700, fontSize: '0.86rem', color: 'var(--editorial-text)' }}>
+                    All Books Collection
+                  </span>
+                </div>
+              </div>
+
+              {/* Dynamic categories */}
+              {categories
+                .filter(cat => cat && cat.toLowerCase() !== 'all')
+                .map(cat => {
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <div
+                      key={cat}
+                      onClick={() => {
+                        handleSelectCategory(cat);
+                        setShowCategoryDrawer(false);
+                      }}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-sm, 6px)',
+                        border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
+                        backgroundColor: isSelected ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ fontWeight: 700, fontSize: '0.84rem', color: isSelected ? 'var(--editorial-green)' : 'var(--editorial-text)' }}>
+                        {cat}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Mode Switcher */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         {/* View Mode Toggle Switcher */}
         <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#FFFFFF', border: '1px solid var(--editorial-border)', borderRadius: 'var(--radius-sm)', padding: '2px', boxShadow: 'var(--shadow-sm)' }}>
           <button
@@ -810,10 +1080,10 @@ export default function Catalog({
               gap: '6px',
               transition: 'all 0.15s ease'
             }}
-            title="3D Circular Bookshelf Carousel view (Wall-clock bookshelf design)"
+            title="360° Bookshelf Carousel view"
           >
             <RotateCcw size={13} />
-            <span>3D Circular Bookshelf</span>
+            <span>360° Bookshelf</span>
           </button>
           <button
             onClick={() => setViewMode('grid')}
@@ -865,20 +1135,23 @@ export default function Catalog({
           </button>
         </div>
       ) : viewMode === 'circular' ? (
-        <CircularBookCarousel
-          books={books}
-          category={selectedCategory}
-          onViewDetails={onViewBookDetails}
-          onBorrow={handleQuickBorrow}
-          onReturn={handleQuickReturn}
-          onReserve={handleQuickReserve}
-          onToggleWishlist={handleToggleWishlist}
-          wishlistIds={wishlistIds}
-          onToggleCompare={handleToggleCompare}
-          compareBookIds={compareBookIds}
-          onAddToPlanner={handleAddToPlanner}
-          userBorrowedBookIds={userBorrowedBookIds}
-        />
+        <div style={{ marginTop: '16px', paddingTop: '8px', overflow: 'visible', width: '100%' }}>
+          <CircularBookCarousel
+            books={books}
+            category={selectedCategory}
+            onViewDetails={handleViewBook}
+            onBorrow={handleQuickBorrow}
+            onReturn={handleQuickReturn}
+            onReserve={handleQuickReserve}
+            onToggleWishlist={handleToggleWishlist}
+            wishlistIds={wishlistIds}
+            onToggleCompare={handleToggleCompare}
+            compareBookIds={compareBookIds}
+            onAddToPlanner={handleAddToPlanner}
+            userBorrowedBookIds={userBorrowedBookIds}
+            userReservedBookIds={userReservedBookIds}
+          />
+        </div>
       ) : (
         <div
           style={{
@@ -893,7 +1166,7 @@ export default function Catalog({
               <BookCard
                 key={bId}
                 book={book}
-                onViewDetails={onViewBookDetails}
+                onViewDetails={handleViewBook}
                 onBorrow={handleQuickBorrow}
                 onReturn={handleQuickReturn}
                 onReserve={handleQuickReserve}
@@ -903,6 +1176,7 @@ export default function Catalog({
                 isCompared={compareBookIds.some(id => String(id) === String(bId))}
                 onAddToPlanner={handleAddToPlanner}
                 isBorrowedByUser={userBorrowedBookIds.has(bId) || userBorrowedBookIds.has(String(bId))}
+                isReservedByUser={userReservedBookIds.has(bId) || userReservedBookIds.has(String(bId))}
               />
             );
           })}

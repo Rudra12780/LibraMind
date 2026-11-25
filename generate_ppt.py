@@ -12,18 +12,19 @@ def create_presentation():
     prs.slide_height = Inches(7.5)
     blank_slide_layout = prs.slide_layouts[6]
 
-    # Biophilic Color Palette
-    C_FOREST_DARK = RGBColor(0x23, 0x33, 0x29)    # #233329
-    C_FOREST = RGBColor(0x34, 0x4E, 0x41)         # #344E41
-    C_BOTANICAL = RGBColor(0x52, 0x73, 0x4D)      # #52734D
-    C_SAGE = RGBColor(0x82, 0x97, 0x79)           # #829779
-    C_SOFT_SAGE = RGBColor(0xDC, 0xE5, 0xD5)      # #DCE5D5
-    C_CREAM = RGBColor(0xFA, 0xF8, 0xF1)          # #FAF8F1
-    C_WARM_BEIGE = RGBColor(0xF3, 0xEB, 0xDD)     # #F3EBDD
-    C_TEXT_DARK = RGBColor(0x26, 0x35, 0x2B)      # #26352B
-    C_TEXT_MUTED = RGBColor(0x5A, 0x6E, 0x60)     # #5A6E60
+    # Bohemian Minimalist Editorial Palette
+    C_FOREST_DARK = RGBColor(0x24, 0x21, 0x20)    # #242120 Espresso charcoal ink
+    C_FOREST = RGBColor(0x43, 0x53, 0x40)         # #435340 Bohemian olive sage
+    C_BOTANICAL = RGBColor(0x43, 0x53, 0x40)      # #435340 Olive sage
+    C_SAGE = RGBColor(0x62, 0x72, 0x54)           # #627254 Muted sage
+    C_SOFT_SAGE = RGBColor(0xE9, 0xEF, 0xE7)      # #E9EFE7 Soft sage tint
+    C_CREAM = RGBColor(0xFA, 0xF7, 0xF2)          # #FAF7F2 Raw bohemian linen
+    C_WARM_BEIGE = RGBColor(0xF3, 0xEC, 0xE2)     # #F3ECE2 Earthy sandstone surface
+    C_TEXT_DARK = RGBColor(0x24, 0x21, 0x20)      # #242120 Espresso charcoal ink
+    C_TEXT_MUTED = RGBColor(0x6D, 0x64, 0x5D)     # #6D645D Bohemian warm slate
     C_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-    C_AMBER = RGBColor(0xD4, 0xA3, 0x73)
+    C_AMBER = RGBColor(0xC8, 0x8E, 0x46)          # #C88E46 Golden ochre / honey
+    C_TERRACOTTA = RGBColor(0xB9, 0x5D, 0x3B)     # #B95D3B Bohemian terracotta
 
     def set_slide_background(slide, color):
         bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, prs.slide_height)

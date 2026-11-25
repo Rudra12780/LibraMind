@@ -1,13 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../api';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api, getActiveAuthToken, clearAllPortalTokens } from '../api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => getActiveAuthToken());
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('libramind_token') || null);
   const [adminVerified, setAdminVerified] = useState(() => sessionStorage.getItem('libramind_admin_verified') === 'true');
   const [loading, setLoading] = useState(true);
+
+  // Sync token whenever active portal/token changes
+  useEffect(() => {
+    const currentToken = getActiveAuthToken();
+    if (currentToken && currentToken !== token) {
+      setToken(currentToken);
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -21,23 +29,58 @@ export function AuthProvider({ children }) {
         })
         .catch(err => {
           console.error('Failed to load profile:', err);
-          logout();
+          const errMsg = (err?.message || '').toLowerCase();
+          if (
+            errMsg.includes('401') ||
+            errMsg.includes('403') ||
+            errMsg.includes('unauthorized') ||
+            errMsg.includes('invalid token') ||
+            errMsg.includes('jwt expired')
+          ) {
+            logout();
+          }
         })
         .finally(() => {
           setLoading(false);
         });
     } else {
+      setUser(null);
       setLoading(false);
     }
   }, [token]);
 
+  const saveTokenByRole = (newToken, role) => {
+    if (!newToken) return;
+    const cleanRole = (role || 'student').toLowerCase();
+
+    // Remove any persistent localStorage tokens so reloading entry URLs never auto-logs in
+    ['libramind_librarian_token', 'libramind_admin_token', 'libramind_student_token', 'libramind_token'].forEach(k => {
+      try { localStorage.removeItem(k); } catch (_) {}
+    });
+
+    // Store active in-tab session token only in sessionStorage
+    sessionStorage.setItem('libramind_session_token', newToken);
+    sessionStorage.setItem('libramind_session_role', cleanRole);
+
+    if (cleanRole === 'librarian') {
+      sessionStorage.setItem('libramind_librarian_token', newToken);
+    } else if (cleanRole === 'admin') {
+      sessionStorage.setItem('libramind_admin_token', newToken);
+      sessionStorage.setItem('libramind_admin_verified', 'true');
+      setAdminVerified(true);
+    } else {
+      sessionStorage.setItem('libramind_student_token', newToken);
+    }
+  };
+
   const login = async (email, password, adminPortal = false) => {
     const res = await api.login({ email, password, adminPortal });
-    localStorage.setItem('libramind_token', res.token);
+    const role = res.user?.role || (adminPortal ? 'admin' : 'student');
+    saveTokenByRole(res.token, role);
     setToken(res.token);
     setUser(res.user);
 
-    if (res.user && res.user.role === 'admin') {
+    if (role === 'admin') {
       sessionStorage.setItem('libramind_admin_verified', 'true');
       setAdminVerified(true);
     } else {
@@ -48,51 +91,85 @@ export function AuthProvider({ children }) {
     return res;
   };
 
-  const register = async (name, email, password, interests, adminSecret = '', role = '') => {
-    const res = await api.register({ name, email, password, interests, adminSecret, role });
-    localStorage.setItem('libramind_token', res.token);
+  const register = async (name, email, password, interests, adminSecret = '', role = '', phone = '') => {
+    const res = await api.register({ name, email, password, interests, adminSecret, role, phone });
+    const userRole = res.user?.role || role || 'student';
+    saveTokenByRole(res.token, userRole);
     setToken(res.token);
     setUser(res.user);
-    if (res.user && res.user.role === 'admin') {
+
+    if (userRole === 'admin') {
       sessionStorage.setItem('libramind_admin_verified', 'true');
       setAdminVerified(true);
     } else {
       sessionStorage.removeItem('libramind_admin_verified');
       setAdminVerified(false);
     }
+
+    return res;
+  };
+
+  const loginWithGoogle = async (googleData = {}, targetRole = 'student') => {
+    const res = await api.googleLogin({ ...googleData, role: targetRole, provider: 'google' });
+    const userRole = res.user?.role || targetRole;
+    saveTokenByRole(res.token, userRole);
+    setToken(res.token);
+    setUser(res.user);
+
+    if (userRole === 'admin') {
+      sessionStorage.setItem('libramind_admin_verified', 'true');
+      setAdminVerified(true);
+    } else {
+      sessionStorage.removeItem('libramind_admin_verified');
+      setAdminVerified(false);
+    }
+
     return res;
   };
 
   const loginWithGithub = async (githubData = {}, targetRole = 'student') => {
     const res = await api.githubLogin({ ...githubData, role: targetRole });
-    localStorage.setItem('libramind_token', res.token);
+    const userRole = res.user?.role || targetRole;
+    saveTokenByRole(res.token, userRole);
     setToken(res.token);
     setUser(res.user);
-    if (res.user && res.user.role === 'admin') {
+
+    if (userRole === 'admin') {
       sessionStorage.setItem('libramind_admin_verified', 'true');
       setAdminVerified(true);
     } else {
       sessionStorage.removeItem('libramind_admin_verified');
       setAdminVerified(false);
     }
+
     return res;
   };
 
   const logout = () => {
-    localStorage.removeItem('libramind_token');
-    sessionStorage.removeItem('libramind_admin_verified');
+    clearAllPortalTokens();
+    setAdminVerified(false);
     setToken(null);
     setUser(null);
-    setAdminVerified(false);
   };
+
+  const forceResetToGateway = useCallback(() => {
+    clearAllPortalTokens();
+    setAdminVerified(false);
+    setToken(null);
+    setUser(null);
+    setLoading(false);
+  }, []);
 
   const logoutAdminPortal = () => {
     sessionStorage.removeItem('libramind_admin_verified');
+    sessionStorage.removeItem('libramind_admin_token');
+    localStorage.removeItem('libramind_admin_token');
     setAdminVerified(false);
   };
 
   const reloadProfile = async () => {
-    if (token) {
+    const activeToken = getActiveAuthToken();
+    if (activeToken) {
       try {
         const userData = await api.getProfile();
         setUser(userData);
@@ -103,10 +180,11 @@ export function AuthProvider({ children }) {
   };
 
   const setAuthSession = (newToken, newUser) => {
-    localStorage.setItem('libramind_token', newToken);
+    const userRole = newUser?.role || 'student';
+    saveTokenByRole(newToken, userRole);
     setToken(newToken);
     setUser(newUser);
-    if (newUser && newUser.role === 'admin') {
+    if (userRole === 'admin') {
       sessionStorage.setItem('libramind_admin_verified', 'true');
       setAdminVerified(true);
     } else {
@@ -124,9 +202,11 @@ export function AuthProvider({ children }) {
       setAdminVerified,
       login,
       setAuthSession,
+      loginWithGoogle,
       loginWithGithub,
       register,
       logout,
+      forceResetToGateway,
       logoutAdminPortal,
       reloadProfile
     }}>

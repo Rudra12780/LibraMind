@@ -213,6 +213,9 @@ function initSchema() {
   const loanCols = db.pragma('table_info(loans)').map(c => c.name);
   if (!loanCols.includes('warning_sent')) db.exec("ALTER TABLE loans ADD COLUMN warning_sent INTEGER DEFAULT 0");
   if (!loanCols.includes('warning_sent_at')) db.exec("ALTER TABLE loans ADD COLUMN warning_sent_at DATETIME");
+
+  const otpCols = db.pragma('table_info(otps)').map(c => c.name);
+  if (!otpCols.includes('purpose')) db.exec("ALTER TABLE otps ADD COLUMN purpose TEXT DEFAULT 'login'");
 }
 
 initSchema();

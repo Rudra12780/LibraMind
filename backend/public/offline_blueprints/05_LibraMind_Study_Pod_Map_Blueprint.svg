@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-5" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-5" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-5)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 5 OF 21: STUDY SEAT &amp; FOCUS POD MAP · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-5)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/seats</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#000000" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. STUDY SANCTUARY HEADER &amp; SLOT CONTROLS -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="160" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. SEAT BOOKING CONTROLS</text>
+
+      <g transform="translate(40, 32)">
+        <text x="0" y="20" font-size="18" font-weight="bold" fill="#000000">Interactive Study Seat &amp; Focus Pod Reservation</text>
+        <text x="0" y="38" font-size="9.5" fill="#666666">Reserve silent carrels, collaborative tables, or biophilic garden pods for 2-hour and 3-hour focus sessions.</text>
+
+        <!-- Slot Control Bar -->
+        <g transform="translate(0, 52)">
+          <rect width="160" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <text x="18" y="22" font-size="10" font-weight="bold">Date: Today, Nov 1 v</text>
+
+          
+            <g transform="translate(175, 0)">
+              <rect width="140" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+              <text x="12" y="22" font-size="9.5" font-weight="bold" fill="#000000">09:00 - 11:00</text>
+            </g>
+          
+            <g transform="translate(323, 0)">
+              <rect width="140" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+              <text x="12" y="22" font-size="9.5" font-weight="bold" fill="#000000">11:00 - 13:00</text>
+            </g>
+          
+            <g transform="translate(471, 0)">
+              <rect width="140" height="36" rx="6" fill="#000000" stroke="#000000" stroke-width="1.5" />
+              <text x="12" y="22" font-size="9.5" font-weight="bold" fill="#FFFFFF">14:00 - 17:00 (Selected)</text>
+            </g>
+          
+            <g transform="translate(619, 0)">
+              <rect width="140" height="36" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+              <text x="12" y="22" font-size="9.5" font-weight="bold" fill="#000000">18:00 - 21:00</text>
+            </g>
+          
+        </g>
+      </g>
+    </g>
+
+    <!-- 3. INTERACTIVE SEAT MAP GRID (4 ZONES) -->
+    <g transform="translate(0, 250)">
+      <rect width="860" height="720" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="190" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">3. SANCTUARY FLOOR PLAN</text>
+
+      <g transform="translate(40, 34)">
+        <!-- Legend Strip -->
+        <g transform="translate(0, 0)">
+          <rect width="780" height="36" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.2" />
+          <g transform="translate(20, 10)">
+            <rect width="16" height="16" rx="3" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+            <text x="24" y="12" font-size="9">Available (White)</text>
+          </g>
+          <g transform="translate(180, 10)">
+            <rect width="16" height="16" rx="3" fill="#777777" />
+            <text x="24" y="12" font-size="9">Occupied (Dark)</text>
+          </g>
+          <g transform="translate(340, 10)">
+            <rect width="16" height="16" rx="3" fill="#EEEEEE" stroke="#000000" stroke-width="1.4" stroke-dasharray="2,2" />
+            <text x="24" y="12" font-size="9">Reserved in Queue</text>
+          </g>
+          <g transform="translate(520, 10)">
+            <rect width="16" height="16" rx="3" fill="#000000" />
+            <text x="24" y="12" font-size="9" font-weight="bold">Your Selection (Black)</text>
+          </g>
+        </g>
+
+        <!-- Floor Plan Graphic Box -->
+        <g transform="translate(0, 50)">
+          <rect width="780" height="580" rx="10" fill="#FAFAFA" stroke="#000000" stroke-width="1.8" />
+
+          <!-- Zone 1: Quiet Focus Pods (Top Left) -->
+          <g transform="translate(30, 30)">
+            <rect width="330" height="230" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" stroke-dasharray="4,4" />
+            <text x="16" y="24" font-size="11" font-weight="bold">ZONE A: QUIET FOCUS PODS</text>
+            
+              <g transform="translate(20, 45)">
+                <rect width="130" height="70" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+                <text x="14" y="26" font-size="11" font-weight="bold" fill="#000000">Pod #01</text>
+                <text x="14" y="44" font-size="8.5" fill="#666666">Silent · Outlet</text>
+                <text x="14" y="58" font-size="8.5" font-weight="bold" fill="#000000">Available</text>
+              </g>
+              <g transform="translate(170, 45)">
+                <rect width="130" height="70" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+                <text x="14" y="26" font-size="11" font-weight="bold" fill="#000000">Pod #02</text>
+                <text x="14" y="44" font-size="8.5" fill="#666666">Silent · Outlet</text>
+                <text x="14" y="58" font-size="8.5" font-weight="bold" fill="#000000">Available</text>
+              </g>
+              <g transform="translate(20, 130)">
+                <rect width="130" height="70" rx="6" fill="#000000" stroke="#000000" stroke-width="1.6" />
+                <text x="14" y="26" font-size="11" font-weight="bold" fill="#FFFFFF">Pod #03</text>
+                <text x="14" y="44" font-size="8.5" fill="#DDDDDD">Silent · Outlet</text>
+                <text x="14" y="58" font-size="8.5" font-weight="bold" fill="#FFFFFF">[ SELECTED ]</text>
+              </g>
+              <g transform="translate(170, 130)">
+                <rect width="130" height="70" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+                <text x="14" y="26" font-size="11" font-weight="bold" fill="#000000">Pod #04</text>
+                <text x="14" y="44" font-size="8.5" fill="#666666">Silent · Outlet</text>
+                <text x="14" y="58" font-size="8.5" font-weight="bold" fill="#000000">Available</text>
+              </g>
+          </g>
+
+          <!-- Zone 2: Collaborative Hub (Top Right) -->
+          <g transform="translate(410, 30)">
+            <rect width="340" height="230" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" stroke-dasharray="4,4" />
+            <text x="16" y="24" font-size="11" font-weight="bold">ZONE B: COLLABORATIVE HUB</text>
+            <!-- Large Table with Chairs -->
+            <rect x="70" y="60" width="200" height="110" rx="12" fill="#EEEEEE" stroke="#000000" stroke-width="1.6" />
+            <text x="115" y="120" font-size="11" font-weight="bold">Study Table #1</text>
+            <!-- 6 Chair Nodes -->
+            
+              <circle cx="95" cy="42" r="12" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+              <circle cx="95" cy="188" r="12" fill="#777777" />
+            
+              <circle cx="170" cy="42" r="12" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+              <circle cx="170" cy="188" r="12" fill="#777777" />
+            
+              <circle cx="245" cy="42" r="12" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+              <circle cx="245" cy="188" r="12" fill="#777777" />
+            
+          </g>
+
+          <!-- Zone 3: Garden Window Desks (Bottom Left) -->
+          <g transform="translate(30, 280)">
+            <rect width="330" height="260" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" stroke-dasharray="4,4" />
+            <text x="16" y="24" font-size="11" font-weight="bold">ZONE C: GARDEN WINDOW PODS</text>
+            <line x1="20" y1="40" x2="310" y2="40" stroke="#000000" stroke-width="3" />
+            <text x="90" y="52" font-size="8.5" font-weight="bold">GLASS WINDOW ARBORETUM VIEW</text>
+            
+              <g transform="translate(20, 68)">
+                <rect width="64" height="160" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="8" y="24" font-size="9" font-weight="bold">Desk #5</text>
+                <rect x="8" y="38" width="48" height="60" rx="4" fill="#EEEEEE" />
+                <circle cx="32" cy="120" r="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="10" y="150" font-size="8" font-weight="bold">Available</text>
+              </g>
+            
+              <g transform="translate(92, 68)">
+                <rect width="64" height="160" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="8" y="24" font-size="9" font-weight="bold">Desk #6</text>
+                <rect x="8" y="38" width="48" height="60" rx="4" fill="#EEEEEE" />
+                <circle cx="32" cy="120" r="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="10" y="150" font-size="8" font-weight="bold">Available</text>
+              </g>
+            
+              <g transform="translate(164, 68)">
+                <rect width="64" height="160" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="8" y="24" font-size="9" font-weight="bold">Desk #7</text>
+                <rect x="8" y="38" width="48" height="60" rx="4" fill="#EEEEEE" />
+                <circle cx="32" cy="120" r="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="10" y="150" font-size="8" font-weight="bold">Available</text>
+              </g>
+            
+              <g transform="translate(236, 68)">
+                <rect width="64" height="160" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="8" y="24" font-size="9" font-weight="bold">Desk #8</text>
+                <rect x="8" y="38" width="48" height="60" rx="4" fill="#EEEEEE" />
+                <circle cx="32" cy="120" r="14" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+                <text x="10" y="150" font-size="8" font-weight="bold">Available</text>
+              </g>
+            
+          </g>
+
+          <!-- Zone 4: Individual Focus Carrels (Bottom Right) -->
+          <g transform="translate(410, 280)">
+            <rect width="340" height="260" rx="8" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" stroke-dasharray="4,4" />
+            <text x="16" y="24" font-size="11" font-weight="bold">ZONE D: INDIVIDUAL FOCUS CARRELS</text>
+            
+              <g transform="translate(20, 50)">
+                <rect width="140" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+                <text x="12" y="24" font-size="10" font-weight="bold">Carrel #9</text>
+                <text x="12" y="42" font-size="8.5" fill="#666666">Dual Screen / Power</text>
+                <rect x="12" y="52" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+                <text x="20" y="64" font-size="8">Open Slot</text>
+              </g>
+              <g transform="translate(175, 50)">
+                <rect width="140" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+                <text x="12" y="24" font-size="10" font-weight="bold">Carrel #10</text>
+                <text x="12" y="42" font-size="8.5" fill="#666666">Dual Screen / Power</text>
+                <rect x="12" y="52" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+                <text x="20" y="64" font-size="8">Open Slot</text>
+              </g>
+              <g transform="translate(20, 145)">
+                <rect width="140" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+                <text x="12" y="24" font-size="10" font-weight="bold">Carrel #11</text>
+                <text x="12" y="42" font-size="8.5" fill="#666666">Dual Screen / Power</text>
+                <rect x="12" y="52" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+                <text x="20" y="64" font-size="8">Open Slot</text>
+              </g>
+              <g transform="translate(175, 145)">
+                <rect width="140" height="80" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+                <text x="12" y="24" font-size="10" font-weight="bold">Carrel #12</text>
+                <text x="12" y="42" font-size="8.5" fill="#666666">Dual Screen / Power</text>
+                <rect x="12" y="52" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#000000" stroke-width="1" />
+                <text x="20" y="64" font-size="8">Open Slot</text>
+              </g>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 4. SELECTED SEAT RESERVATION DRAWER -->
+    <g transform="translate(0, 970)">
+      <rect width="860" height="315" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">4. RESERVATION CONFIRMATION</text>
+
+      <g transform="translate(40, 34)">
+        <rect width="780" height="235" rx="8" fill="#F8F8F8" stroke="#000000" stroke-width="1.6" />
+
+        <g transform="translate(24, 20)">
+          <rect width="120" height="22" rx="4" fill="#000000" />
+          <text x="14" y="15" font-size="9" font-weight="bold" fill="#FFFFFF">ACTIVE SELECTION</text>
+
+          <text x="0" y="52" font-size="18" font-weight="bold">Pod #03 — Quiet Study Sanctuary (Window Garden)</text>
+          <text x="0" y="74" font-size="11" fill="#444444">Session Time: Today, 14:00 – 17:00 (3-Hour Block) · Max 1 Concurrent Booking Policy</text>
+
+          <!-- Amenity Badges -->
+          <g transform="translate(0, 90)">
+            
+              <g transform="translate(0, 0)">
+                <rect width="170" height="28" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                <text x="10" y="18" font-size="8.5" font-weight="bold">✓ High-Speed USB-C &amp; AC Power</text>
+              </g>
+            
+              <g transform="translate(180, 0)">
+                <rect width="170" height="28" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                <text x="10" y="18" font-size="8.5" font-weight="bold">✓ Silent Focus Acoustic Baffles</text>
+              </g>
+            
+              <g transform="translate(360, 0)">
+                <rect width="170" height="28" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                <text x="10" y="18" font-size="8.5" font-weight="bold">✓ Ergonomic Mesh Chair</text>
+              </g>
+            
+              <g transform="translate(540, 0)">
+                <rect width="170" height="28" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" />
+                <text x="10" y="18" font-size="8.5" font-weight="bold">✓ Direct Garden Daylight</text>
+              </g>
+            
+          </g>
+
+          <!-- Action Buttons -->
+          <g transform="translate(0, 140)">
+            <rect width="240" height="42" rx="6" fill="#000000" />
+            <text x="38" y="26" font-size="11.5" font-weight="bold" fill="#FFFFFF">Confirm 3-Hour Reservation</text>
+
+            <rect x="260" y="0" width="160" height="42" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" />
+            <text x="290" y="26" font-size="11" font-weight="bold">Change Slot</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

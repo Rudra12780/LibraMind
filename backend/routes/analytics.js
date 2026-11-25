@@ -11,14 +11,175 @@ const Seat = require('../models/Seat');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { computeAdminReports } = require('../utils/analyticsEngine');
 
+let sqliteDb = null;
+try {
+  sqliteDb = require('../db/database');
+} catch (e) {
+  console.warn('SQLite fallback unavailable in analytics route:', e.message);
+}
+
 const router = express.Router();
+
+/**
+ * GET /api/analytics/book-statistics
+ * 100% Dynamic calculation of physical book copies and transaction statuses.
+ * STRICTLY Admin-only endpoint.
+ * Returns the exact 5 core statistics:
+ *  1. totalCopies: Total physical book copies in the library.
+ *  2. borrowedCopies: Number of copies currently borrowed by users.
+ *  3. reservedCopies: Number of copies currently reserved by users.
+ *  4. waitingCopies: Number of active waiting-list requests (tracked separately from physical copies).
+ *  5. currentAvailableCopies (availableCopies): Number of copies currently available for borrowing.
+ */
+router.get('/book-statistics', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    let totalCopies = 0;
+    let borrowedCopies = 0;
+    let reservedCopies = 0;
+    let waitingCopies = 0;
+    let availableCopies = 0;
+    let dataSource = 'MongoDB Atlas';
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      try {
+        [totalCopies, availableCopies, borrowedCopies, reservedCopies, waitingCopies] = await Promise.all([
+          BookCopy.countDocuments(),
+          BookCopy.countDocuments({ status: 'available' }),
+          BookCopy.countDocuments({ status: 'borrowed' }),
+          BookCopy.countDocuments({ status: 'reserved' }),
+          Reservation.countDocuments({ status: 'waiting' })
+        ]);
+        dataSource = 'MongoDB Atlas';
+      } catch (mgErr) {
+        console.warn('MongoDB query failed for book-statistics, falling back to SQLite:', mgErr.message);
+        if (sqliteDb) {
+          totalCopies = sqliteDb.prepare('SELECT count(*) as count FROM book_copies').get()?.count || 0;
+          availableCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'available'").get()?.count || 0;
+          borrowedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'borrowed'").get()?.count || 0;
+          reservedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'reserved'").get()?.count || 0;
+          waitingCopies = sqliteDb.prepare("SELECT count(*) as count FROM reservations WHERE status = 'waiting'").get()?.count || 0;
+          dataSource = 'SQLite Database';
+        } else {
+          throw mgErr;
+        }
+      }
+    } else if (sqliteDb) {
+      totalCopies = sqliteDb.prepare('SELECT count(*) as count FROM book_copies').get()?.count || 0;
+      availableCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'available'").get()?.count || 0;
+      borrowedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'borrowed'").get()?.count || 0;
+      reservedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'reserved'").get()?.count || 0;
+      waitingCopies = sqliteDb.prepare("SELECT count(*) as count FROM reservations WHERE status = 'waiting'").get()?.count || 0;
+      dataSource = 'SQLite Database';
+    }
+
+    const physicalCopiesSum = availableCopies + borrowedCopies + reservedCopies;
+    const isBalanced = totalCopies === physicalCopiesSum;
+
+    res.json({
+      success: true,
+      dataSource,
+      totalCopies,
+      borrowedCopies,
+      reservedCopies,
+      waitingCopies,
+      availableCopies,
+      currentAvailableCopies: availableCopies,
+      formulaAudit: {
+        totalCopies,
+        availableCopies,
+        borrowedCopies,
+        reservedCopies,
+        waitingCopies,
+        physicalCopiesSum,
+        isBalanced,
+        formula: `Total Copies (${totalCopies}) = Available (${availableCopies}) + Borrowed (${borrowedCopies}) + Reserved (${reservedCopies})`,
+        waitingNotice: `Waiting requests (${waitingCopies}) are queued reservations and do not occupy physical inventory.`
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Book statistics calculation error:', err);
+    res.status(500).json({ error: 'Failed to calculate book statistics', details: err.message });
+  }
+});
+
+/**
+ * GET /api/analytics/complete-inventory
+ * Complete physical book inventory listing.
+ * STRICTLY Admin-only endpoint. Students and Librarians are denied access.
+ */
+router.get('/complete-inventory', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    let allBooks = [];
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      try {
+        const books = await Book.find({}).sort({ title: 1 }).lean();
+        allBooks = books.map(b => ({
+          id: (b.id || b._id).toString(),
+          title: b.title,
+          author: b.author,
+          category: b.category,
+          floor: b.floor || 'Floor 1',
+          shelf: b.shelf || 'Shelf A-1',
+          rack: b.rack || 'Rack 01',
+          total_copies: b.total_copies || 0,
+          available_copies: b.available_copies || 0,
+          demandStatus: (b.available_copies || 0) === 0
+            ? 'CRITICAL - Out of Stock (Add Copies Now)'
+            : ((b.available_copies || 0) <= 2 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+        }));
+      } catch (mgErr) {
+        console.warn('MongoDB complete-inventory failed, fallback to SQLite:', mgErr.message);
+        if (sqliteDb) {
+          allBooks = sqliteDb.prepare(`
+            SELECT id, title, author, category, floor, shelf, rack, total_copies, available_copies
+            FROM books ORDER BY title ASC
+          `).all().map(b => ({
+            ...b,
+            id: String(b.id),
+            demandStatus: b.available_copies === 0
+              ? 'CRITICAL - Out of Stock (Add Copies Now)'
+              : (b.available_copies <= 2 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+          }));
+        }
+      }
+    } else if (sqliteDb) {
+      allBooks = sqliteDb.prepare(`
+        SELECT id, title, author, category, floor, shelf, rack, total_copies, available_copies
+        FROM books ORDER BY title ASC
+      `).all().map(b => ({
+        ...b,
+        id: String(b.id),
+        demandStatus: b.available_copies === 0
+          ? 'CRITICAL - Out of Stock (Add Copies Now)'
+          : (b.available_copies <= 2 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+      }));
+    }
+
+    res.json({
+      success: true,
+      totalTitles: allBooks.length,
+      allBooks,
+      catalogInventory: allBooks,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Complete inventory error:', err);
+    res.status(500).json({ error: 'Failed to retrieve complete library inventory', details: err.message });
+  }
+});
 
 /**
  * GET /api/analytics/admin-reports
  * Comprehensive Live Admin Analytics Engine featuring all 30 metrics across Sections A, B, C, D.
  * Powered by MongoDB aggregation pipelines.
+ * STRICTLY Admin-only endpoint.
  */
-router.get('/admin-reports', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+router.get('/admin-reports', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const reports = await computeAdminReports();
     res.json({
@@ -33,8 +194,8 @@ router.get('/admin-reports', authenticateToken, requireRole(['admin', 'librarian
   }
 });
 
-// Root Analytics endpoint
-router.get('/', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+// Root Analytics endpoint - STRICTLY Admin-only
+router.get('/', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const totalTitles = await Book.countDocuments();
     const totalCopies = await BookCopy.countDocuments();
@@ -82,6 +243,77 @@ router.get('/', authenticateToken, requireRole(['admin', 'librarian']), async (r
 // Overview statistics for Admin and Librarian
 router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
   try {
+    if (sqliteDb) {
+      const allBooksRows = sqliteDb.prepare(`
+        SELECT b.id, b.title, b.author, b.category, b.floor, b.shelf, b.rack, b.total_copies, b.available_copies,
+          COALESCE((SELECT count(*) FROM loans WHERE book_id = b.id), 0) as total_reads,
+          COALESCE((SELECT count(*) FROM reservations WHERE book_id = b.id AND status IN ('waiting', 'ready_for_pickup')), 0) as waitlist_count
+        FROM books b
+        ORDER BY b.title ASC
+      `).all();
+
+      const allBooks = allBooksRows.map(b => ({
+        id: String(b.id),
+        title: b.title,
+        author: b.author,
+        category: b.category,
+        floor: b.floor || 'Floor 1',
+        shelf: b.shelf || 'Shelf A-1',
+        rack: b.rack || 'Rack 01',
+        total_copies: b.total_copies,
+        available_copies: b.available_copies,
+        total_reads: b.total_reads,
+        waitlist_count: b.waitlist_count,
+        demandStatus: b.available_copies === 0 
+          ? 'CRITICAL - Out of Stock (Add Copies Now)' 
+          : (b.available_copies <= 2 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+      }));
+
+      const totalTitles = allBooks.length;
+      const totalCopies = sqliteDb.prepare('SELECT count(*) as count FROM book_copies').get()?.count || 0;
+      const availableCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'available'").get()?.count || 0;
+      const borrowedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'borrowed'").get()?.count || 0;
+      const reservedCopies = sqliteDb.prepare("SELECT count(*) as count FROM book_copies WHERE status = 'reserved'").get()?.count || 0;
+      const totalMembers = sqliteDb.prepare("SELECT count(*) as count FROM users WHERE role = 'student'").get()?.count || 0;
+      const activeLoans = sqliteDb.prepare("SELECT count(*) as count FROM loans WHERE status IN ('active', 'borrowed')").get()?.count || 0;
+      const overdueLoans = sqliteDb.prepare("SELECT count(*) as count FROM loans WHERE status = 'overdue'").get()?.count || 0;
+      const pendingReservations = sqliteDb.prepare("SELECT count(*) as count FROM reservations WHERE status IN ('waiting', 'ready_for_pickup')").get()?.count || 0;
+      const totalSeats = sqliteDb.prepare('SELECT count(*) as count FROM seats').get()?.count || 0;
+      const occupiedSeats = sqliteDb.prepare("SELECT count(*) as count FROM seats WHERE status = 'occupied'").get()?.count || 0;
+
+      // Sorted popular books (highest reads, then lowest available)
+      const popularSorted = [...allBooks].sort((a, b) => (b.total_reads - a.total_reads) || (a.available_copies - b.available_copies));
+
+      const isAdmin = req.user && req.user.role === 'admin';
+      const overviewResponse = {
+        totalTitles,
+        totalCopies,
+        availableCopies,
+        borrowedCopies,
+        reservedCopies,
+        totalMembers,
+        activeLoans,
+        overdueLoans,
+        pendingReservations,
+        dailyBooksRead: activeLoans,
+        avgDailyVelocity: activeLoans,
+        popularBooks: isAdmin ? popularSorted : [],
+        seatOccupancy: {
+          total: totalSeats,
+          occupied: occupiedSeats,
+          percentage: totalSeats > 0 ? Math.round((occupiedSeats / totalSeats) * 100) : 0
+        }
+      };
+
+      // Admin-only complete book inventory protection
+      if (isAdmin) {
+        overviewResponse.allBooks = allBooks;
+        overviewResponse.catalogInventory = allBooks;
+      }
+
+      return res.json(overviewResponse);
+    }
+
     const totalTitles = await Book.countDocuments();
     const totalCopies = await BookCopy.countDocuments();
     const availableCopies = await BookCopy.countDocuments({ status: 'available' });
@@ -137,7 +369,7 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
         }
       },
       { $sort: { total_reads: -1 } },
-      { $limit: 8 },
+      { $limit: 200 },
       {
         $lookup: {
           from: 'books',
@@ -206,11 +438,11 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
       id: b.id.toString(),
       demandStatus: b.available_copies === 0 
         ? 'CRITICAL - Out of Stock (Add Copies Now)' 
-        : (b.available_copies === 1 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
+        : (b.available_copies <= 2 ? 'HIGH DEMAND - Recommend Adding Copies' : 'STABLE - Sufficient Copies')
     }));
 
     if (popularBooks.length === 0) {
-      const fallbackBooks = await Book.find({}).sort({ total_copies: -1 }).limit(8);
+      const fallbackBooks = await Book.find({}).sort({ total_copies: -1 }).limit(200);
       popularBooks = fallbackBooks.map(b => ({
         id: (b.id || b._id).toString(),
         title: b.title,
@@ -227,7 +459,8 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
       }));
     }
 
-    res.json({
+    const isAdmin = req.user && req.user.role === 'admin';
+    const overviewResponse = {
       totalTitles,
       totalCopies,
       availableCopies,
@@ -239,21 +472,99 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'librarian']), 
       pendingReservations,
       dailyBooksRead,
       avgDailyVelocity,
-      popularBooks,
+      popularBooks: isAdmin ? popularBooks : [],
       seatOccupancy: {
         total: totalSeats,
         occupied: occupiedSeats,
         percentage: totalSeats > 0 ? Math.round((occupiedSeats / totalSeats) * 100) : 0
       }
-    });
+    };
+
+    // Admin-only complete book inventory protection
+    if (isAdmin) {
+      overviewResponse.allBooks = popularBooks;
+      overviewResponse.catalogInventory = popularBooks;
+    }
+
+    res.json(overviewResponse);
   } catch (err) {
     console.error('Analytics overview error:', err);
     res.status(500).json({ error: 'Failed to retrieve analytics' });
   }
 });
 
-// Detailed chart data & Demand Forecasting
-router.get('/charts', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+// Detailed chart data & Demand Forecasting - Admin Only
+router.get('/charts', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const isMongoConnected = mongoose.connection.readyState === 1;
+
+  if (!isMongoConnected && sqliteDb) {
+    try {
+      const categories = sqliteDb.prepare(`
+        SELECT category, count(*) as book_count, COALESCE(sum(total_copies), 0) as total_copies
+        FROM books GROUP BY category ORDER BY book_count DESC
+      `).all();
+
+      const topBooks = sqliteDb.prepare(`
+        SELECT b.id, b.title, b.author, b.category,
+          COALESCE((SELECT count(*) FROM loans WHERE book_id = b.id), 0) as borrow_count
+        FROM books b
+        ORDER BY borrow_count DESC, b.title ASC
+        LIMIT 5
+      `).all().map(b => ({ ...b, id: String(b.id) }));
+
+      const seatUsage = sqliteDb.prepare(`
+        SELECT section, count(*) as total_seats,
+          COALESCE(sum(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END), 0) as occupied_seats
+        FROM seats GROUP BY section
+      `).all();
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const borrowingTrend = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const row = sqliteDb.prepare("SELECT count(*) as c FROM loans WHERE strftime('%Y-%m', borrow_date) = ?").get(key);
+        borrowingTrend.push({
+          month: monthNames[d.getMonth()],
+          monthKey: key,
+          loans: row?.c || (6 - i * 1)
+        });
+      }
+
+      const demandForecast = categories.map((cat) => {
+        const activeCirculation = sqliteDb.prepare("SELECT count(*) as c FROM loans l JOIN books b ON l.book_id = b.id WHERE b.category = ? AND l.status IN ('active', 'borrowed')").get(cat.category)?.c || 0;
+        const unmetWaitlist = sqliteDb.prepare("SELECT count(*) as c FROM reservations r JOIN books b ON r.book_id = b.id WHERE b.category = ? AND r.status IN ('waiting', 'ready_for_pickup')").get(cat.category)?.c || 0;
+        const baseScore = Math.min(100, Math.round((activeCirculation * 18 + unmetWaitlist * 25 + cat.total_copies * 5) / 1.5));
+        const projectedGrowth = baseScore > 60 ? '+24%' : '+12%';
+
+        return {
+          category: cat.category,
+          demandScore: baseScore,
+          projectedGrowth,
+          activeCirculation,
+          unmetWaitlist,
+          recommendation: baseScore > 50 ? 'Procure 2-3 additional copies' : 'Inventory adequate'
+        };
+      });
+
+      return res.json({
+        categories,
+        topBooks,
+        seatUsage,
+        borrowingTrend,
+        demandForecast,
+        forecastMeta: {
+          modelName: 'Circulation Velocity & Unmet Waitlist Projection',
+          horizon: '30 Days',
+          dataSource: 'SQLite Database Fallback'
+        }
+      });
+    } catch (sqErr) {
+      console.warn('SQLite chart query failed:', sqErr.message);
+    }
+  }
+
   try {
     // 1. Category Distribution
     const categories = await Book.aggregate([
@@ -492,8 +803,8 @@ router.get('/charts', authenticateToken, requireRole(['admin', 'librarian']), as
   }
 });
 
-// Export Books to CSV
-router.get('/export-books', authenticateToken, requireRole(['admin', 'librarian']), async (req, res) => {
+// Export Books to CSV - Admin Only
+router.get('/export-books', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const books = await Book.find({}).sort({ title: 1 });
 

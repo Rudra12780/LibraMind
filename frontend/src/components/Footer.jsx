@@ -46,12 +46,13 @@ export default function Footer({ onNavigate, onOpenBlueprints }) {
                 <BookOpen size={18} strokeWidth={2.2} />
               </div>
               <span
+                className="libramind-heading"
                 style={{
-                  fontFamily: 'var(--font-serif)',
+                  fontFamily: 'var(--font-libramind)',
                   fontSize: '1.45rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '0.02em',
                   lineHeight: 1
                 }}
               >
@@ -169,7 +170,7 @@ export default function Footer({ onNavigate, onOpenBlueprints }) {
               )}
               <li>
                 <button
-                  onClick={() => onOpenBlueprints ? onOpenBlueprints('home') : onNavigate('home')}
+                  onClick={() => onNavigate('blueprints')}
                   style={{
                     background: 'none',
                     border: 'none',

@@ -17,13 +17,17 @@ import {
   Heart,
   Menu,
   X,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 
 export default function UserNavbar({
+  activePage = 'dashboard',
   activeTab = 'all',
   onSelectTab,
   onNavigate,
+  onOpenBlueprints,
+  onOpenPresentation,
   loanCount = 0,
   holdCount = 0,
   seatCount = 0,
@@ -37,7 +41,7 @@ export default function UserNavbar({
 
   const handleLogout = async () => {
     await logout();
-    if (onNavigate) onNavigate('home');
+    if (onNavigate) onNavigate('login');
     setMobileMenuOpen(false);
   };
 
@@ -46,14 +50,40 @@ export default function UserNavbar({
     if (onSelectTab) onSelectTab(tabId);
   };
 
-  // Main Public Navigation Items
+  // Main Public Navigation Items (Deduplicated, zero repetitive links)
   const siteNavItems = [
-    { id: 'catalog', label: 'Books', action: () => { setMobileMenuOpen(false); onNavigate('catalog'); } },
-    { id: 'ai-finder', label: 'AI Oracle', action: () => { setMobileMenuOpen(false); onNavigate('ai-finder'); } },
-    { id: 'seats', label: 'Study Pods', action: () => { setMobileMenuOpen(false); onNavigate('seats'); } },
-    { id: 'compare', label: `Compare${compareCount > 0 ? ` (${compareCount})` : ''}`, action: () => { setMobileMenuOpen(false); onNavigate('compare'); } },
-    { id: 'visit-planner', label: 'Plan Visit', action: () => { setMobileMenuOpen(false); onNavigate('visit-planner'); } },
-    { id: 'reservations', label: 'Hold Queues', action: () => { setMobileMenuOpen(false); onNavigate('reservations'); } }
+    { id: 'catalog', label: 'All Books Catalog', icon: BookOpen, action: () => { setMobileMenuOpen(false); onNavigate('catalog'); } },
+    { id: 'ai-finder', label: 'AI Oracle Finder', icon: Sparkles, action: () => { setMobileMenuOpen(false); onNavigate('ai-finder'); } },
+    { id: 'seats', label: 'Study Pods Booking', icon: Armchair, action: () => { setMobileMenuOpen(false); onNavigate('seats'); } },
+    { id: 'visit-planner', label: 'Plan Your Visit', icon: Compass, action: () => { setMobileMenuOpen(false); onNavigate('visit-planner'); } },
+    { id: 'blueprints', label: 'Architectural Blueprints', icon: ShieldCheck, action: () => { setMobileMenuOpen(false); onNavigate('blueprints'); } },
+    { id: 'presentation', label: 'Download PPT', icon: FileText, action: () => { setMobileMenuOpen(false); if (onOpenPresentation) onOpenPresentation(); } }
+  ];
+
+  // Patron Folio Ledger Tabs for Mobile Navigation
+  const patronFolioTabs = [
+    {
+      id: 'all',
+      label: 'Reading Room Overview',
+      icon: LayoutDashboard,
+      badge: null,
+      action: () => {
+        setMobileMenuOpen(false);
+        if (onSelectTab) onSelectTab('all');
+        if (onNavigate) onNavigate('dashboard', { tab: 'all' });
+      }
+    },
+    {
+      id: 'compare',
+      label: 'Book Compare Matrix',
+      icon: GitCompare,
+      badge: compareCount,
+      action: () => {
+        setMobileMenuOpen(false);
+        if (onSelectTab) onSelectTab('compare');
+        if (onNavigate) onNavigate('dashboard', { tab: 'compare' });
+      }
+    }
   ];
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() || 'U';
@@ -105,12 +135,13 @@ export default function UserNavbar({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span
+                className="libramind-heading"
                 style={{
-                  fontFamily: 'var(--font-serif)',
+                  fontFamily: 'var(--font-libramind)',
                   fontSize: 'clamp(1.2rem, 3.5vw, 1.40rem)',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '0.02em',
                   lineHeight: 1
                 }}
               >
@@ -146,21 +177,26 @@ export default function UserNavbar({
           }}
           className="desktop-nav"
         >
-          {siteNavItems.map(item => (
-            <button
-              key={item.id}
-              onClick={item.action}
-              className="nav-link-editorial"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                whiteSpace: 'nowrap',
-                fontSize: '0.86rem'
-              }}
-            >
-              <span>{item.label}</span>
-            </button>
-          ))}
+          {siteNavItems.map(item => {
+            const isActive = activePage === item.id || (item.id === 'catalog' && activePage === 'book-details');
+            return (
+              <button
+                key={item.id}
+                onClick={item.action}
+                className={`nav-link-editorial ${isActive ? 'active' : ''}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  whiteSpace: 'nowrap',
+                  fontSize: '0.86rem',
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? 'var(--editorial-green)' : 'var(--editorial-text)'
+                }}
+              >
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* User Quick Actions */}
@@ -312,95 +348,211 @@ export default function UserNavbar({
           style={{
             backgroundColor: 'var(--editorial-bg)',
             borderTop: '1px solid var(--editorial-border)',
-            padding: '20px',
+            padding: '16px 14px 24px',
             boxShadow: '0 12px 32px rgba(37, 40, 32, 0.12)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '14px',
+            maxHeight: 'calc(100vh - 70px)',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch'
           }}
         >
-          {/* Public Navigation Links */}
-          <div>
-            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--editorial-accent)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '8px' }}>
-              EXPLORE LIBRARY CHAMBERS
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-              {siteNavItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={item.action}
-                  style={{
-                    background: '#FFFFFF',
-                    border: '1px solid var(--editorial-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '10px 14px',
-                    fontSize: '0.86rem',
-                    fontWeight: 500,
-                    color: 'var(--editorial-text)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{item.label}</span>
-                  </div>
-                  <ArrowRight size={13} color="var(--editorial-border)" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* User Profile Card & Sign Out */}
+          {/* User Profile Card */}
           {user && (
             <div
               style={{
                 backgroundColor: '#FFFFFF',
                 border: '1px solid var(--editorial-border)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '12px 14px',
+                padding: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px'
+                justifyContent: 'space-between',
+                gap: '10px'
               }}
             >
-              <div
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--editorial-green)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  flexShrink: 0
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--editorial-green)',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.90rem',
+                    flexShrink: 0
+                  }}
+                >
+                  {userInitial}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--editorial-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user.name}
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', fontWeight: 600 }}>
+                    {user.role === 'admin' ? 'Administrator' : 'Scholar'} · ID: {user.membership_id || 'STU-1001'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onSelectTab) onSelectTab('all');
+                  if (onNavigate) onNavigate('dashboard', { tab: 'all' });
                 }}
+                className="btn btn-primary btn-sm"
+                style={{ fontSize: '0.74rem', padding: '5px 10px', flexShrink: 0 }}
               >
-                {userInitial}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--editorial-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {user.name}
-                </span>
-                <span style={{ fontSize: '0.70rem', color: 'var(--editorial-accent)', fontWeight: 600 }}>
-                  {user.role === 'admin' ? 'Administrator' : 'Scholar'} · ID: {user.membership_id || 'STU-1001'}
-                </span>
-              </div>
+                Folio Hub →
+              </button>
             </div>
           )}
 
-          {/* Sign Out Button */}
-          <div style={{ borderTop: '1px solid var(--editorial-border)', paddingTop: '12px' }}>
+          {/* MY CIRCULATION FOLIO & RECORDS */}
+          <div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
+              MY PATRON FOLIO &amp; LEDGER
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '5px' }}>
+              {patronFolioTabs.map(tab => {
+                const isActive = activePage === 'dashboard' && activeTab === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={tab.action}
+                    style={{
+                      backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
+                      color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
+                      border: '1px solid var(--editorial-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '9px 12px',
+                      fontSize: '0.84rem',
+                      fontWeight: isActive ? 700 : 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Icon size={15} color={isActive ? '#FFFFFF' : 'var(--editorial-accent)'} style={{ flexShrink: 0 }} />
+                      <span>{tab.label}</span>
+                    </div>
+                    {tab.badge !== null && tab.badge !== undefined && (
+                      <span
+                        style={{
+                          fontSize: '0.70rem',
+                          fontWeight: 700,
+                          padding: '1px 7px',
+                          borderRadius: '10px',
+                          backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : 'var(--editorial-bg-subtle)',
+                          color: isActive ? '#FFFFFF' : 'var(--editorial-accent)',
+                          border: isActive ? 'none' : '1px solid var(--editorial-border)'
+                        }}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* EXPLORE ARCHIVE CHAMBERS */}
+          <div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--editorial-accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '6px' }}>
+              EXPLORE LIBRARY CHAMBERS
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '5px' }}>
+              {siteNavItems.filter(item => !item.desktopOnly).map(item => {
+                const isActive = activePage === item.id || (item.id === 'catalog' && activePage === 'book-details');
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={item.action}
+                    style={{
+                      background: isActive ? 'var(--editorial-bg-subtle)' : '#FFFFFF',
+                      border: '1px solid var(--editorial-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '9px 12px',
+                      fontSize: '0.84rem',
+                      fontWeight: isActive ? 700 : 500,
+                      color: 'var(--editorial-text)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {Icon && <Icon size={15} color="var(--editorial-accent)" style={{ flexShrink: 0 }} />}
+                      <span>{item.label}</span>
+                    </div>
+                    <ArrowRight size={13} color="var(--editorial-border)" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Notifications & Sign Out */}
+          <div style={{ borderTop: '1px solid var(--editorial-border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onNavigate) onNavigate('notifications');
+              }}
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid var(--editorial-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '9px 12px',
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                color: 'var(--editorial-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bell size={15} color="var(--editorial-accent)" />
+                <span>Sanctuary Notifications</span>
+              </div>
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.70rem',
+                    fontWeight: 700,
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--editorial-accent)',
+                    color: '#FFFFFF'
+                  }}
+                >
+                  {unreadCount} new
+                </span>
+              )}
+            </button>
+
             <button
               onClick={handleLogout}
-              className="btn btn-outline"
-              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
+              className="btn btn-outline btn-sm"
+              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', padding: '9px' }}
             >
-              <LogOut size={15} />
+              <LogOut size={14} />
               <span>Sign Out ({user?.name ? user.name.split(' ')[0] : 'Account'})</span>
             </button>
           </div>

@@ -132,7 +132,7 @@ export default function AiAssistantModal({ isOpen, onClose, onNavigate }) {
               <Sparkles size={18} color="var(--editorial-text)" strokeWidth={2.4} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#FFFFFF', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+              <h3 className="libramind-heading" style={{ margin: 0, fontSize: '1.05rem', color: '#FFFFFF', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: 'var(--font-libramind)' }}>
                 LibraMind AI Assistant
               </h3>
               <span style={{ fontSize: '0.74rem', color: 'var(--editorial-border)', fontWeight: 800, textTransform: 'uppercase' }}>

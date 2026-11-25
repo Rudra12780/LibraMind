@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNotifications } from '../context/NotificationContext';
-import { Bell, CheckCheck, Clock, Bookmark, BookOpen, AlertTriangle, Info, Megaphone, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { Bell, CheckCheck, Clock, Bookmark, BookOpen, AlertTriangle, Info, Megaphone, MessageSquare, ShieldCheck, Sparkles, Trash2 } from 'lucide-react';
 
 export default function NotificationDropdown({ onClose, onNavigate }) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   // Focused official and actionable notifications only (removed generic noisy activity)
   const displayedNotifications = notifications.filter(n => {
@@ -171,18 +171,41 @@ export default function NotificationDropdown({ onClose, onNavigate }) {
                   {n.message}
                 </p>
               </div>
-              {!n.is_read && (
-                <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--botanical)',
-                    alignSelf: 'center',
-                    flexShrink: 0
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                {!n.is_read && (
+                  <div
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--botanical)',
+                      flexShrink: 0
+                    }}
+                  />
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNotification(n.id);
                   }}
-                />
-              )}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--editorial-accent, #B95D3B)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.7
+                  }}
+                  title="Delete notification"
+                  aria-label="Delete"
+                >
+                  <Trash2 size={13} strokeWidth={2.2} />
+                </button>
+              </div>
             </div>
           ))
         )}

@@ -13,11 +13,45 @@ const { DAILY_FINE_RATE, refreshLoanStatuses, checkUserPenaltyStatus } = require
 const { generateQRCodeSVG } = require('../utils/qrGenerator');
 const { buildIdFilter, serializeDoc, serializeDocs } = require('../utils/idHelper');
 
+let sqliteDb = null;
+try {
+  sqliteDb = require('../db/database');
+} catch (e) {
+  console.warn('SQLite database connection failed in loans router:', e.message);
+}
+
 const router = express.Router();
 
 const MAX_LOANS_PER_STUDENT = 10;
 const MAX_RENEWALS = 2;
 const LOAN_DURATION_DAYS = 14;
+
+async function resolveUserDocAndIds(userIdOrMembership, fallbackEmail = null) {
+  if (!userIdOrMembership && !fallbackEmail) return { userDoc: null, mongoUserId: null, sqliteUserId: null };
+  let userDoc = null;
+  if (mongoose.connection.readyState === 1) {
+    try {
+      if (userIdOrMembership) userDoc = await User.findOne(buildIdFilter(userIdOrMembership));
+      if (!userDoc && fallbackEmail) userDoc = await User.findOne({ email: String(fallbackEmail).toLowerCase() });
+    } catch (_) {}
+  }
+  let mongoUserId = userDoc?._id || (mongoose.Types.ObjectId.isValid(String(userIdOrMembership)) ? new mongoose.Types.ObjectId(String(userIdOrMembership)) : null);
+  let sqliteUserId = userDoc?.sqlite_id || (!isNaN(Number(userIdOrMembership)) ? Number(userIdOrMembership) : null);
+  if (!sqliteUserId && sqliteDb) {
+    try {
+      const emailToTry = userDoc?.email || fallbackEmail || (typeof userIdOrMembership === 'string' && userIdOrMembership.includes('@') ? userIdOrMembership : null);
+      if (emailToTry) {
+        const sUser = sqliteDb.prepare('SELECT id FROM users WHERE lower(email) = lower(?)').get(emailToTry);
+        if (sUser) sqliteUserId = sUser.id;
+      }
+      if (!sqliteUserId && userIdOrMembership) {
+        const sUser = sqliteDb.prepare('SELECT id FROM users WHERE id = ? OR membership_id = ?').get(userIdOrMembership, userIdOrMembership);
+        if (sUser) sqliteUserId = sUser.id;
+      }
+    } catch (_) {}
+  }
+  return { userDoc, mongoUserId, sqliteUserId };
+}
 
 // Bulletproof Notification Dispatcher - Guarantees notification never throws or aborts transaction
 async function safeCreateNotification(data) {
@@ -664,11 +698,58 @@ router.get('/', authenticateToken, async (req, res) => {
     await refreshLoanStatuses();
     const { status, userId } = req.query;
 
+    const targetUserId = req.user.role === 'student' ? req.user.id : userId;
+    const { userDoc, mongoUserId, sqliteUserId } = await resolveUserDocAndIds(targetUserId, req.user.role === 'student' ? req.user.email : null);
+
+    if (mongoose.connection.readyState !== 1) {
+      if (sqliteDb) {
+        let sql = `
+          SELECT l.*, b.title as book_title, b.author as book_author, b.cover_image, b.isbn, b.category, b.floor, b.section, b.shelf, b.total_copies, b.available_copies,
+                 bc.copy_code, bc.condition as copy_condition,
+                 u.name as student_name, u.email as student_email, u.membership_id,
+                 u.penalty_status, u.penalty_amount, u.penalty_qr_code, u.return_warning_active, u.return_warning_message
+          FROM loans l
+          LEFT JOIN books b ON l.book_id = b.id
+          LEFT JOIN book_copies bc ON l.copy_id = bc.id
+          LEFT JOIN users u ON l.user_id = u.id
+          WHERE 1=1
+        `;
+        const params = [];
+        if (sqliteUserId) {
+          sql += ' AND l.user_id = ?';
+          params.push(sqliteUserId);
+        }
+        if (status && status !== 'all') {
+          if (status === 'borrowed' || status === 'active') {
+            sql += " AND l.status IN ('active', 'borrowed', 'overdue')";
+          } else {
+            sql += ' AND l.status = ?';
+            params.push(status);
+          }
+        }
+        sql += ' ORDER BY l.borrow_date DESC';
+        const rows = sqliteDb.prepare(sql).all(...params);
+        return res.json(rows.map(l => ({
+          ...l,
+          book_id: String(l.book_id),
+          borrow_status: l.status === 'active' ? 'borrowed' : l.status,
+          db_status: l.status,
+          is_active: (l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue') && l.status !== 'returned'
+        })));
+      }
+      return res.json([]);
+    }
+
     const query = {};
-    if (req.user.role === 'student') {
-      Object.assign(query, buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id'));
-    } else if (userId) {
-      Object.assign(query, buildIdFilter(userId, 'user_id', 'sqlite_user_id'));
+    if (targetUserId) {
+      const orClauses = [];
+      if (mongoUserId) orClauses.push({ user_id: mongoUserId });
+      if (sqliteUserId) orClauses.push({ sqlite_user_id: sqliteUserId });
+      if (orClauses.length > 0) {
+        query.$or = orClauses;
+      } else {
+        Object.assign(query, buildIdFilter(targetUserId, 'user_id', 'sqlite_user_id'));
+      }
     }
 
     if (status && status !== 'all') {
@@ -727,6 +808,36 @@ router.get('/', authenticateToken, async (req, res) => {
     res.json(loans);
   } catch (err) {
     console.error('Fetch loans error:', err);
+    if (sqliteDb) {
+      try {
+        const { sqliteUserId } = await resolveUserDocAndIds(req.user.role === 'student' ? req.user.id : req.query.userId);
+        let sql = `
+          SELECT l.*, b.title as book_title, b.author as book_author, b.cover_image, b.isbn, b.category, b.floor, b.section, b.shelf, b.total_copies, b.available_copies,
+                 bc.copy_code, bc.condition as copy_condition,
+                 u.name as student_name, u.email as student_email, u.membership_id,
+                 u.penalty_status, u.penalty_amount, u.penalty_qr_code, u.return_warning_active, u.return_warning_message
+          FROM loans l
+          LEFT JOIN books b ON l.book_id = b.id
+          LEFT JOIN book_copies bc ON l.copy_id = bc.id
+          LEFT JOIN users u ON l.user_id = u.id
+          WHERE 1=1
+        `;
+        const params = [];
+        if (sqliteUserId) {
+          sql += ' AND l.user_id = ?';
+          params.push(sqliteUserId);
+        }
+        sql += ' ORDER BY l.borrow_date DESC';
+        const rows = sqliteDb.prepare(sql).all(...params);
+        return res.json(rows.map(l => ({
+          ...l,
+          book_id: String(l.book_id),
+          borrow_status: l.status === 'active' ? 'borrowed' : l.status,
+          db_status: l.status,
+          is_active: (l.status === 'active' || l.status === 'borrowed' || l.status === 'overdue') && l.status !== 'returned'
+        })));
+      } catch (sqErr) {}
+    }
     res.status(500).json({ error: 'Failed to retrieve loans' });
   }
 });
@@ -869,6 +980,38 @@ router.post('/checkout', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Book ID or copy code is required' });
     }
 
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      const { sqliteUserId } = await resolveUserDocAndIds(req.user.id);
+      const sUser = sqliteDb.prepare('SELECT * FROM users WHERE id = ? OR email = ?').get(sqliteUserId || req.user.id, String(req.user.email || '').toLowerCase());
+      if (!sUser) return res.status(404).json({ error: 'User not found' });
+      const sBook = sqliteDb.prepare('SELECT * FROM books WHERE id = ? OR isbn = ?').get(rawBookId, rawBookId);
+      if (!sBook) return res.status(404).json({ error: 'Book not found' });
+      let copy = null;
+      if (rawCopyCode) {
+        copy = sqliteDb.prepare('SELECT * FROM book_copies WHERE copy_code = ?').get(rawCopyCode.trim());
+      } else {
+        copy = sqliteDb.prepare("SELECT * FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(sBook.id);
+      }
+      if (!copy) return res.status(400).json({ error: 'No physical copies currently available for checkout.' });
+      const existingLoan = sqliteDb.prepare("SELECT * FROM loans WHERE book_id = ? AND user_id = ? AND status IN ('active', 'borrowed', 'overdue')").get(sBook.id, sUser.id);
+      if (existingLoan) return res.status(400).json({ error: 'You already have an active borrowed copy of this book. Under library circulation policy, you can only borrow one copy of a title at a time.' });
+      const now = new Date();
+      const dueDate = new Date(now.getTime() + parseInt(loan_days) * 24 * 60 * 60 * 1000);
+      sqliteDb.prepare("UPDATE book_copies SET status = 'borrowed' WHERE id = ?").run(copy.id);
+      sqliteDb.prepare("UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?").run(sBook.id);
+      const resIns = sqliteDb.prepare(`
+        INSERT INTO loans (book_id, copy_id, user_id, borrow_date, due_date, status, created_at)
+        VALUES (?, ?, ?, ?, ?, 'active', ?)
+      `).run(sBook.id, copy.id, sUser.id, now.toISOString(), dueDate.toISOString(), now.toISOString());
+      return res.status(201).json({
+        message: 'Checkout successful',
+        loanId: String(resIns.lastInsertRowid),
+        bookTitle: sBook.title,
+        copyCode: copy.copy_code,
+        dueDate: dueDate.toISOString()
+      });
+    }
+
     const member = await User.findOne(buildIdFilter(req.user.id));
     if (!member) {
       return res.status(404).json({ error: 'User not found' });
@@ -949,8 +1092,11 @@ router.post('/checkout', authenticateToken, async (req, res) => {
 
     const loan = await Loan.create({
       book_id: book._id,
+      sqlite_book_id: book.sqlite_id || null,
       copy_id: copy._id,
+      sqlite_copy_id: copy.sqlite_id || null,
       user_id: member._id,
+      sqlite_user_id: member.sqlite_id || (!isNaN(Number(req.user.id)) ? Number(req.user.id) : null),
       borrow_date: now,
       due_date: dueDate,
       status: 'active',
@@ -962,6 +1108,31 @@ router.post('/checkout', authenticateToken, async (req, res) => {
 
     book.available_copies = Math.max(0, book.available_copies - 1);
     await book.save();
+
+    // Mirror to SQLite
+    if (sqliteDb) {
+      try {
+        const sUserId = member.sqlite_id || sqliteDb.prepare('SELECT id FROM users WHERE email = ?').get(member.email)?.id;
+        const sBookId = book.sqlite_id || sqliteDb.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn)?.id;
+        let sCopyId = copy.sqlite_id || null;
+        if (sUserId && sBookId) {
+          if (!sCopyId) {
+            const availCopy = sqliteDb.prepare("SELECT id FROM book_copies WHERE book_id = ? AND status = 'available' LIMIT 1").get(sBookId);
+            if (availCopy) sCopyId = availCopy.id;
+          }
+          if (sCopyId) {
+            sqliteDb.prepare("UPDATE book_copies SET status = 'borrowed' WHERE id = ?").run(sCopyId);
+          }
+          sqliteDb.prepare("UPDATE books SET available_copies = MAX(0, available_copies - 1) WHERE id = ?").run(sBookId);
+          sqliteDb.prepare(`
+            INSERT INTO loans (book_id, copy_id, user_id, borrow_date, due_date, status, created_at)
+            VALUES (?, ?, ?, ?, ?, 'active', ?)
+          `).run(sBookId, sCopyId, sUserId, now.toISOString(), dueDate.toISOString(), now.toISOString());
+        }
+      } catch (sqErr) {
+        console.warn('SQLite mirror checkout warning:', sqErr.message);
+      }
+    }
 
     await Notification.create({
       user_id: member._id,
@@ -990,12 +1161,63 @@ router.post('/checkout', authenticateToken, async (req, res) => {
 // Return book handler
 async function handleBookReturn(req, res) {
   try {
+    const now = new Date();
+    if (mongoose.connection.readyState !== 1 && sqliteDb) {
+      const sLoan = sqliteDb.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
+      if (!sLoan) return res.status(404).json({ error: 'Loan record not found' });
+      if (sLoan.status === 'returned' || sLoan.return_date) {
+        return res.json({
+          success: true,
+          message: 'This volume has already been marked as returned.',
+          fineAmount: sLoan.fine_amount || 0,
+          status: 'returned',
+          alreadyReturned: true
+        });
+      }
+      const dueDate = new Date(sLoan.due_date);
+      let fine = 0.0;
+      if (now > dueDate) {
+        const diffMs = now - dueDate;
+        const daysOverdue = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        fine = daysOverdue * DAILY_FINE_RATE;
+      }
+      sqliteDb.prepare("UPDATE loans SET status = 'returned', return_date = ?, fine_amount = ? WHERE id = ?").run(now.toISOString(), fine, sLoan.id);
+      const nextRes = sqliteDb.prepare("SELECT * FROM reservations WHERE book_id = ? AND status = 'waiting' ORDER BY queue_position ASC, reservation_date ASC LIMIT 1").get(sLoan.book_id);
+      if (nextRes) {
+        const pickupDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+        sqliteDb.prepare("UPDATE reservations SET status = 'ready_for_pickup', pickup_deadline = ? WHERE id = ?").run(pickupDeadline, nextRes.id);
+        if (sLoan.copy_id) {
+          sqliteDb.prepare("UPDATE book_copies SET status = 'reserved' WHERE id = ?").run(sLoan.copy_id);
+        }
+      } else {
+        if (sLoan.copy_id) {
+          sqliteDb.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(sLoan.copy_id);
+        }
+        sqliteDb.prepare("UPDATE books SET available_copies = MIN(total_copies, available_copies + 1) WHERE id = ?").run(sLoan.book_id);
+      }
+      return res.json({
+        success: true,
+        message: 'Book returned successfully',
+        fineAmount: fine,
+        status: 'returned'
+      });
+    }
+
     const loan = await Loan.findOne(buildIdFilter(req.params.id))
       .populate('book_id')
       .populate('copy_id')
       .populate('user_id');
 
     if (!loan) {
+      if (sqliteDb) {
+        const sLoan = sqliteDb.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
+        if (sLoan) {
+          sqliteDb.prepare("UPDATE loans SET status = 'returned', return_date = ? WHERE id = ?").run(now.toISOString(), sLoan.id);
+          if (sLoan.copy_id) sqliteDb.prepare("UPDATE book_copies SET status = 'available' WHERE id = ?").run(sLoan.copy_id);
+          sqliteDb.prepare("UPDATE books SET available_copies = MIN(total_copies, available_copies + 1) WHERE id = ?").run(sLoan.book_id);
+          return res.json({ success: true, message: 'Book returned successfully', fineAmount: 0, status: 'returned' });
+        }
+      }
       return res.status(404).json({ error: 'Loan record not found' });
     }
 
@@ -1022,7 +1244,6 @@ async function handleBookReturn(req, res) {
       copy = await BookCopy.findOne(buildIdFilter(loan.copy_id || loan.sqlite_copy_id));
     }
 
-    const now = new Date();
     const dueDate = new Date(loan.due_date);
     let fine = 0.0;
     if (now > dueDate) {
@@ -1047,6 +1268,30 @@ async function handleBookReturn(req, res) {
       );
     } catch (saveErr) {
       console.warn('Loan updateOne warning:', saveErr.message);
+    }
+
+    // Mirror return to SQLite
+    if (sqliteDb) {
+      try {
+        const sLoanId = loan.sqlite_id || (!isNaN(Number(req.params.id)) ? Number(req.params.id) : null);
+        if (sLoanId) {
+          sqliteDb.prepare("UPDATE loans SET status = 'returned', return_date = ?, fine_amount = ? WHERE id = ?").run(now.toISOString(), fine, sLoanId);
+        } else if (book?.isbn || book?.sqlite_id) {
+          const sBookId = book.sqlite_id || sqliteDb.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn)?.id;
+          const sUserId = user?.sqlite_id || (!isNaN(Number(req.user.id)) ? Number(req.user.id) : null);
+          if (sBookId && sUserId) {
+            sqliteDb.prepare("UPDATE loans SET status = 'returned', return_date = ?, fine_amount = ? WHERE book_id = ? AND user_id = ? AND status != 'returned'").run(now.toISOString(), fine, sBookId, sUserId);
+          }
+        }
+        if (book) {
+          const sBookId = book.sqlite_id || sqliteDb.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn)?.id;
+          if (sBookId) {
+            sqliteDb.prepare("UPDATE books SET available_copies = MIN(total_copies, available_copies + 1) WHERE id = ?").run(sBookId);
+          }
+        }
+      } catch (sqErr) {
+        console.warn('SQLite return sync warning:', sqErr.message);
+      }
     }
 
     const bookTitle = book?.title || 'Book';
@@ -1159,14 +1404,26 @@ async function handleBookReturn(req, res) {
 
 async function handleBookReturnWithOwnerCheck(req, res) {
   if (req.user.role === 'student') {
-    const loan = await Loan.findOne(buildIdFilter(req.params.id));
+    let loan = null;
+    if (mongoose.connection.readyState === 1) {
+      loan = await Loan.findOne(buildIdFilter(req.params.id));
+    }
+    if (!loan && sqliteDb) {
+      loan = sqliteDb.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
+      if (loan) {
+        loan.sqlite_id = loan.id;
+        loan.sqlite_user_id = loan.user_id;
+      }
+    }
     if (!loan) {
       return res.status(404).json({ error: 'Loan record not found' });
     }
+    const { mongoUserId, sqliteUserId } = await resolveUserDocAndIds(req.user.id);
     const matchesUser =
+      (mongoUserId && String(loan.user_id) === String(mongoUserId)) ||
+      (sqliteUserId && String(loan.sqlite_user_id) === String(sqliteUserId)) ||
       String(loan.user_id) === String(req.user.id) ||
-      (loan.sqlite_user_id && String(loan.sqlite_user_id) === String(req.user.id)) ||
-      (req.user.sqlite_id && String(loan.sqlite_user_id) === String(req.user.sqlite_id));
+      String(loan.sqlite_user_id) === String(req.user.id);
     if (!matchesUser) {
       return res.status(403).json({ error: 'You can only return your own borrowed books.' });
     }
@@ -1180,13 +1437,31 @@ router.put('/:id/return', authenticateToken, handleBookReturnWithOwnerCheck);
 // Renew loan
 router.post('/:id/renew', authenticateToken, async (req, res) => {
   try {
-    const loan = await Loan.findOne(buildIdFilter(req.params.id));
+    let loan = null;
+    if (mongoose.connection.readyState === 1) {
+      loan = await Loan.findOne(buildIdFilter(req.params.id));
+    }
+    if (!loan && sqliteDb) {
+      loan = sqliteDb.prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
+      if (loan) {
+        loan.sqlite_id = loan.id;
+        loan.sqlite_user_id = loan.user_id;
+      }
+    }
     if (!loan) {
       return res.status(404).json({ error: 'Loan not found' });
     }
 
-    if (req.user.role === 'student' && String(loan.user_id) !== String(req.user.id)) {
-      return res.status(403).json({ error: 'Not authorized to renew this loan' });
+    if (req.user.role === 'student') {
+      const { mongoUserId, sqliteUserId } = await resolveUserDocAndIds(req.user.id);
+      const matchesUser =
+        (mongoUserId && String(loan.user_id) === String(mongoUserId)) ||
+        (sqliteUserId && String(loan.sqlite_user_id) === String(sqliteUserId)) ||
+        String(loan.user_id) === String(req.user.id) ||
+        String(loan.sqlite_user_id) === String(req.user.id);
+      if (!matchesUser) {
+        return res.status(403).json({ error: 'Not authorized to renew this loan' });
+      }
     }
 
     if (loan.status === 'returned') {

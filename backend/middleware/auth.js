@@ -38,6 +38,10 @@ function requireRole(allowedRoles) {
 
 async function logAudit(userId, action, details, ipAddress = null) {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
+
     let mongoUserId = null;
     let sqliteId = null;
 

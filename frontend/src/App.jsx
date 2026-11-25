@@ -8,7 +8,6 @@ import UserNavbar from './components/UserNavbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import VisualBlueprintModal from './components/VisualBlueprintModal';
-// PresentationModal removed per user request
 
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
@@ -18,6 +17,7 @@ import SeatAvailability from './pages/SeatAvailability';
 import BookCompare from './pages/BookCompare';
 import VisitPlanner from './pages/VisitPlanner';
 import Login from './pages/Login';
+import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import About from './pages/About';
 import HelpContact from './pages/HelpContact';
@@ -28,32 +28,48 @@ import ResetPassword from './pages/ResetPassword';
 import ReservationsPage from './pages/ReservationsPage';
 import ProfileCompletion from './pages/ProfileCompletion';
 import NotFound from './pages/NotFound';
-import { api } from './api';
+import { api, getCleanPathname, getPortalGatewayKind, getActiveAuthToken } from './api';
 
 // Code-split heavy dashboard pages to optimize initial bundle size
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 const LibrarianDashboard = lazy(() => import('./pages/LibrarianDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const BlueprintsPage = lazy(() => import('./pages/BlueprintsPage'));
 
 function AppContent() {
-  const { user, loading, adminVerified, login, logout, reloadProfile } = useAuth();
-  const [activePage, setActivePage] = useState('home');
+  const { user, loading, adminVerified, login, logout, forceResetToGateway, reloadProfile } = useAuth();
+  const [activePage, setActivePage] = useState(() => {
+    try {
+      const cleanPath = getCleanPathname();
+      const gw = getPortalGatewayKind(cleanPath);
+      if (gw === 'admin') return 'admin-login';
+      if (gw === 'librarian') return 'librarian';
+      if (gw === 'student') return cleanPath === 'register' ? 'register' : 'login';
+    } catch (e) {}
+    return 'login';
+  });
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [catalogQuery, setCatalogQuery] = useState('');
   const [catalogCategory, setCatalogCategory] = useState('All');
+  const [bookNavigationOrigin, setBookNavigationOrigin] = useState({ page: 'catalog', category: 'All' });
   const [compareBookIds, setCompareBookIds] = useState([]);
   const [librarianTab, setLibrarianTab] = useState('issue');
   const [adminTab, setAdminTab] = useState('overview');
   const [userTab, setUserTab] = useState('all');
   const [userStats, setUserStats] = useState({ loanCount: 0, holdCount: 0, seatCount: 0, wishlistCount: 0 });
+  const [blueprintPageId, setBlueprintPageId] = useState('home');
   const [visualBlueprintModal, setVisualBlueprintModal] = useState({ isOpen: false, pageId: 'home' });
-  const [presentationModalOpen, setPresentationModalOpen] = useState(false);
   const [showPenaltyModal, setShowPenaltyModal] = useState(true);
   const [payingPenalty, setPayingPenalty] = useState(false);
 
-  const handleOpenPresentation = () => {
-    // disabled per user request
+  const handleDownloadPresentation = () => {
+    const link = document.createElement('a');
+    link.href = '/LibraMind_Design_Thinking_Presentation.pptx';
+    link.setAttribute('download', 'LibraMind_Design_Thinking_Presentation.pptx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handlePayPenalty = async () => {
@@ -77,20 +93,40 @@ function AppContent() {
 
   // Role-based protection: non-authenticated or unauthorized roles cannot enter restricted pages
   useEffect(() => {
+    const gw = getPortalGatewayKind(getCleanPathname());
+    if (gw === 'admin' && activePage === 'admin-login') {
+      if (user && user.role !== 'admin') {
+        forceResetToGateway();
+      }
+      return;
+    }
+    if (gw === 'librarian' && activePage === 'librarian') {
+      if (user && user.role !== 'librarian' && user.role !== 'admin') {
+        forceResetToGateway();
+      }
+      return;
+    }
+
     if (!loading && !user) {
-      if (['admin', 'librarian', 'dashboard', 'analytics'].includes(activePage)) {
+      if (activePage === 'admin' || activePage === 'analytics') {
+        setActivePage('admin-login');
+      } else if (activePage === 'dashboard' || activePage === 'home') {
         setActivePage('login');
       }
     } else if (user?.role === 'student') {
-      if (['admin', 'librarian', 'analytics'].includes(activePage)) {
+      if (['admin', 'admin-login', 'librarian', 'analytics'].includes(activePage)) {
         setActivePage('dashboard');
       }
     } else if (user?.role === 'librarian') {
-      if (['admin', 'analytics'].includes(activePage)) {
+      if (['admin', 'admin-login', 'analytics'].includes(activePage)) {
         setActivePage('librarian');
       }
+    } else if (user?.role === 'admin') {
+      if ((activePage === 'admin' || activePage === 'analytics') && !adminVerified) {
+        setActivePage('admin-login');
+      }
     }
-  }, [user, loading, activePage]);
+  }, [user, loading, activePage, adminVerified, forceResetToGateway]);
 
   // Synchronize route with browser URL & history
   useEffect(() => {
@@ -113,12 +149,24 @@ function AppContent() {
 
       if (cleanPath === 'presentation' || cleanPath === 'ppt' || cleanPath === 'download-ppt' || cleanPath === 'slides') {
         // disabled per user request
-        setActivePage('home');
+        setActivePage(user ? 'dashboard' : 'login');
       } else if (cleanPath.startsWith('books/') || cleanPath.startsWith('book-details/') || cleanPath === 'book-details') {
         setActivePage('book-details');
-      } else if (cleanPath === '' || cleanPath === 'home') {
-        // http://localhost:5000/ must always open the main LibraMind landing page by default
-        setActivePage('home');
+      } else if (cleanPath === '') {
+        // Entry portal http://localhost:5000/ ALWAYS opens Sign In / Register directly first
+        setActivePage('login');
+      } else if (cleanPath === 'home') {
+        if (loading) return;
+        if (!user) {
+          window.history.replaceState(null, '', '/');
+          setActivePage('login');
+        } else if (user.role === 'admin' && adminVerified) {
+          setActivePage('admin');
+        } else if (user.role === 'librarian') {
+          setActivePage('librarian');
+        } else {
+          setActivePage('home');
+        }
       } else if (cleanPath === 'books' || cleanPath === 'catalog') {
         setActivePage('catalog');
       } else if (cleanPath === 'ai-book-finder' || cleanPath === 'ai-finder') {
@@ -140,7 +188,7 @@ function AppContent() {
       ) {
         if (loading) return;
         if (!user) {
-          window.history.replaceState(null, '', '/login');
+          window.history.replaceState(null, '', '/');
           setActivePage('login');
           return;
         }
@@ -151,21 +199,14 @@ function AppContent() {
         } else {
           setActivePage('dashboard');
         }
-      } else if (
-        cleanPath === 'librarian@1234' ||
-        cleanPath === 'librarian1234' ||
-        cleanPath === 'librarian/dashboard' ||
-        cleanPath.startsWith('librarian')
-      ) {
+      } else if (getPortalGatewayKind(cleanPath) === 'librarian') {
+        // Librarian gateway entry URLs (/lib@123, /lib@1234, /lib, /librarian, etc.) ALWAYS show Sign In / Register first
+        setActivePage('librarian');
+      } else if (cleanPath.startsWith('librarian/') || cleanPath.startsWith('lib/')) {
         if (loading) return;
-        if (!user) {
-          window.history.replaceState(null, '', '/login');
-          setActivePage('login');
-          return;
-        }
-        if (user.role === 'student') {
-          window.history.replaceState(null, '', '/student/dashboard');
-          setActivePage('dashboard');
+        if (!user || (user.role !== 'librarian' && user.role !== 'admin')) {
+          window.history.replaceState(null, '', '/lib@1234');
+          setActivePage('librarian');
           return;
         }
         const parts = cleanPath.split('/');
@@ -173,29 +214,14 @@ function AppContent() {
           setLibrarianTab(parts[1]);
         }
         setActivePage('librarian');
-      } else if (
-        cleanPath === 'admin@1234' ||
-        cleanPath === 'admin1234' ||
-        cleanPath === 'admin/dashboard' ||
-        cleanPath === 'admin' ||
-        cleanPath.startsWith('admin')
-      ) {
+      } else if (getPortalGatewayKind(cleanPath) === 'admin') {
+        // Admin gateway entry URLs (/admin@1234, /admin@123, /admin, /admin-login, etc.) ALWAYS show Admin Sign In / Register first
+        setActivePage('admin-login');
+      } else if (cleanPath.startsWith('admin/')) {
         if (loading) return;
-        if (!user) {
-          // Unauthenticated visitor -> redirect to normal login page
-          window.history.replaceState(null, '', '/login');
-          setActivePage('login');
-          return;
-        }
-        if (user.role !== 'admin') {
-          // Normal student or librarian -> deny access and redirect
-          if (user.role === 'librarian') {
-            window.history.replaceState(null, '', '/librarian/dashboard');
-            setActivePage('librarian');
-          } else {
-            window.history.replaceState(null, '', '/student/dashboard');
-            setActivePage('dashboard');
-          }
+        if (!user || user.role !== 'admin' || !adminVerified) {
+          window.history.replaceState(null, '', '/admin@1234');
+          setActivePage('admin-login');
           return;
         }
         const parts = cleanPath.split('/');
@@ -205,9 +231,9 @@ function AppContent() {
         setActivePage('admin');
       } else if (cleanPath === 'analytics' || cleanPath === 'circulation-analytics') {
         if (loading) return;
-        if (!user) {
-          window.history.replaceState(null, '', '/login');
-          setActivePage('login');
+        if (!user || !adminVerified) {
+          window.history.replaceState(null, '', '/admin@1234');
+          setActivePage('admin-login');
           return;
         }
         if (user.role === 'student') {
@@ -215,7 +241,21 @@ function AppContent() {
           setActivePage('dashboard');
           return;
         }
+        if (user.role === 'librarian') {
+          window.history.replaceState(null, '', '/librarian/dashboard');
+          setActivePage('librarian');
+          return;
+        }
+        if (user.role !== 'admin') {
+          window.history.replaceState(null, '', '/admin@1234');
+          setActivePage('admin-login');
+          return;
+        }
         setActivePage('analytics');
+      } else if (cleanPath === 'blueprints' || cleanPath === 'blueprint' || cleanPath === 'wireframes' || cleanPath === 'wireframe') {
+        const pageParam = searchParams.get('page') || searchParams.get('id');
+        if (pageParam) setBlueprintPageId(pageParam);
+        setActivePage('blueprints');
       } else if (cleanPath === 'about') {
         setActivePage('about');
       } else if (cleanPath === 'help' || cleanPath === 'contact' || cleanPath === 'support') {
@@ -233,44 +273,42 @@ function AppContent() {
       } else if (cleanPath === 'notifications') {
         setActivePage('notifications');
       } else if (cleanPath === 'login') {
-        if (user) {
-          if (user.role === 'admin') setActivePage('admin');
-          else if (user.role === 'librarian') setActivePage('librarian');
-          else setActivePage('dashboard');
-        } else {
-          setActivePage('login');
-        }
+        setActivePage('login');
       } else if (cleanPath === 'register') {
-        if (user) {
-          if (user.role === 'admin') setActivePage('admin');
-          else if (user.role === 'librarian') setActivePage('librarian');
-          else setActivePage('dashboard');
-        } else {
-          setActivePage('register');
-        }
+        setActivePage('register');
       } else {
         // Unknown route -> 404 page
         setActivePage('not-found');
       }
     };
 
+    const handlePopState = () => {
+      const cleanPath = getCleanPathname();
+      if (getPortalGatewayKind(cleanPath) !== null) {
+        forceResetToGateway();
+      }
+      syncRouteFromLocation();
+    };
+
     syncRouteFromLocation();
-    window.addEventListener('popstate', syncRouteFromLocation);
-    return () => window.removeEventListener('popstate', syncRouteFromLocation);
-  }, [user, loading, adminVerified]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user, loading, adminVerified, forceResetToGateway]);
 
   const navigate = (page, params = {}) => {
     let cleanPage = (page || 'home').toString().replace(/^\/+/, '') || 'home';
     
-    // Direct Blueprint modal interception
+    // Direct Blueprint page routing
     if (cleanPage === 'blueprints' || cleanPage === 'blueprint' || cleanPage === 'wireframes' || cleanPage === 'visual-blueprints') {
-      handleOpenBlueprints(params.page || params.pageId || 'home');
-      return;
+      cleanPage = 'blueprints';
+      if (params.page || params.pageId) {
+        setBlueprintPageId(params.page || params.pageId);
+      }
     }
 
-    // Direct Presentation modal interception
+    // Direct Presentation download interception
     if (cleanPage === 'presentation' || cleanPage === 'ppt' || cleanPage === 'download-ppt' || cleanPage === 'slides') {
-      handleOpenPresentation();
+      handleDownloadPresentation();
       return;
     }
     
@@ -281,21 +319,72 @@ function AppContent() {
     if (cleanPage === 'help') cleanPage = 'contact';
     if (cleanPage === 'policies') cleanPage = 'terms';
 
+    // Explicit gateway login transitions always reset to clean Sign In / Register screen
+    if (
+      cleanPage === 'lib@1234' ||
+      cleanPage === 'lib@123' ||
+      cleanPage === 'librarian-login' ||
+      cleanPage === 'lib1234' ||
+      cleanPage === 'lib123' ||
+      cleanPage.startsWith('lib@') ||
+      cleanPage.startsWith('librarian@')
+    ) {
+      forceResetToGateway();
+      setActivePage('librarian');
+      try { window.history.pushState(null, '', '/lib@1234'); } catch (_) {}
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (
+      cleanPage === 'admin-login' ||
+      cleanPage === 'admin@1234' ||
+      cleanPage === 'admin@123' ||
+      cleanPage === 'admin1234' ||
+      cleanPage === 'admin123' ||
+      cleanPage.startsWith('admin@')
+    ) {
+      forceResetToGateway();
+      setActivePage('admin-login');
+      try { window.history.pushState(null, '', '/admin@1234'); } catch (_) {}
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (cleanPage === 'login' || cleanPage === 'register') {
+      forceResetToGateway();
+      setActivePage(cleanPage);
+      try { window.history.pushState(null, '', cleanPage === 'login' ? '/' : '/register'); } catch (_) {}
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     // Strict role-based navigation protection
-    if (!user) {
-      if (['admin', 'librarian', 'dashboard', 'analytics'].includes(cleanPage)) {
-        cleanPage = 'login';
+    const effectiveUser = params.user || user || null;
+
+    if (!effectiveUser) {
+      if (cleanPage === 'admin' || cleanPage === 'admin-login') {
+        cleanPage = 'admin-login';
+      } else if (['librarian', 'dashboard', 'analytics', 'home'].includes(cleanPage)) {
+        cleanPage = cleanPage === 'librarian' ? 'librarian' : 'login';
       }
-    } else if (user.role === 'student') {
-      if (['admin', 'librarian', 'analytics'].includes(cleanPage)) {
+    } else if (effectiveUser.role === 'student') {
+      if (['admin', 'admin-login', 'librarian', 'analytics'].includes(cleanPage)) {
         cleanPage = 'dashboard';
       }
-    } else if (user.role === 'librarian') {
-      if (['admin', 'analytics'].includes(cleanPage)) {
+    } else if (effectiveUser.role === 'librarian') {
+      if (['admin', 'admin-login', 'analytics'].includes(cleanPage)) {
         cleanPage = 'librarian';
       }
     }
     // Admin has access to all pages (admin, analytics, librarian, and all public pages)
+
+    // Logged-in users navigating to root/home default to their hub unless scrolling to landing section
+    if (effectiveUser && cleanPage === 'home' && !params.scrollTo) {
+      if (effectiveUser.role === 'admin' && (adminVerified || params.adminVerified)) cleanPage = 'admin';
+      else if (effectiveUser.role === 'librarian') cleanPage = 'librarian';
+      else cleanPage = 'dashboard';
+    }
 
     if (params.q !== undefined) {
       setCatalogQuery(params.q);
@@ -305,6 +394,11 @@ function AppContent() {
     }
     if (params.bookId !== undefined) {
       setSelectedBookId(params.bookId);
+    }
+    if (params.pageId !== undefined) {
+      setBlueprintPageId(params.pageId);
+    } else if (params.page !== undefined && cleanPage === 'blueprints') {
+      setBlueprintPageId(params.page);
     }
     if (params.adminTab !== undefined) {
       setAdminTab(params.adminTab);
@@ -338,22 +432,25 @@ function AppContent() {
 
     try {
       let targetUrl = '/';
-      if (cleanPage === 'home') targetUrl = '/';
+      if (cleanPage === 'login') targetUrl = '/';
+      else if (cleanPage === 'register') targetUrl = '/register';
+      else if (cleanPage === 'home') targetUrl = effectiveUser ? '/home' : '/';
       else if (cleanPage === 'catalog') targetUrl = '/books';
       else if (cleanPage === 'ai-finder') targetUrl = '/ai-book-finder';
       else if (cleanPage === 'dashboard') targetUrl = '/student/dashboard';
       else if (cleanPage === 'analytics') targetUrl = '/analytics';
-      else if (cleanPage === 'librarian' || cleanPage === 'librarian@1234') {
+      else if (cleanPage === 'librarian') {
         const currentTab = params.tab || librarianTab || 'issue';
-        targetUrl = user?.role === 'librarian' || user?.role === 'admin'
+        targetUrl = (effectiveUser?.role === 'librarian' || effectiveUser?.role === 'admin')
           ? (currentTab !== 'issue' ? `/librarian/${currentTab}` : '/librarian/dashboard')
-          : '/librarian@1234';
+          : '/lib@1234';
       }
-      else if (cleanPage === 'admin' || cleanPage === 'admin@1234') {
+      else if (cleanPage === 'admin-login') targetUrl = '/admin@1234';
+      else if (cleanPage === 'admin') {
         const currentTab = params.tab || adminTab || 'overview';
-        targetUrl = (user?.role === 'admin' && adminVerified)
-          ? (currentTab !== 'overview' ? `/admin/${currentTab}` : '/admin/dashboard') 
-          : '/admin';
+        targetUrl = (effectiveUser?.role === 'admin' && (adminVerified || params.adminVerified))
+          ? (currentTab !== 'overview' ? `/admin/${currentTab}` : '/admin/dashboard')
+          : '/admin@1234';
       }
       else if (cleanPage === 'book-details') targetUrl = selectedBookId ? `/books/${selectedBookId}` : '/books';
       else if (cleanPage === 'reservations') targetUrl = '/reservations';
@@ -371,9 +468,15 @@ function AppContent() {
     }
   };
 
-  const viewBookDetails = (bookId) => {
+  const viewBookDetails = (bookId, context = {}) => {
     const validId = /^\d+$/.test(String(bookId)) ? parseInt(bookId, 10) : String(bookId);
     setSelectedBookId(validId);
+    const origin = {
+      page: context.fromPage || activePage || 'catalog',
+      category: context.fromCategory || (activePage === 'catalog' ? catalogCategory : 'All'),
+      ...context
+    };
+    setBookNavigationOrigin(origin);
     setActivePage('book-details');
     try {
       window.history.pushState(null, '', `/books/${validId}`);
@@ -450,21 +553,28 @@ function AppContent() {
     );
   }
 
-  const isLibrarianPortal = activePage === 'librarian';
-  const isAdminPortal = (activePage === 'admin' || activePage === 'analytics') && adminVerified;
-  const isUserPortal = activePage === 'dashboard' && user;
+  const isAuthPageWithoutNav =
+    activePage === 'login' ||
+    activePage === 'register' ||
+    activePage === 'admin-login' ||
+    activePage === 'forgot-password' ||
+    activePage === 'reset-password' ||
+    (activePage === 'librarian' && (!user || (user.role !== 'librarian' && user.role !== 'admin')));
+  const isLibrarianPortal = activePage === 'librarian' && user && (user.role === 'librarian' || user.role === 'admin');
+  const isAdminPortal = (activePage === 'admin' || activePage === 'analytics') && user && user.role === 'admin' && adminVerified;
+  const isUserPortal = user?.role === 'student' && !isAuthPageWithoutNav;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
-      {/* 4 Distinct Navigation Portals: Librarian Desk, Admin Portal, Member Hub, or Public Sanctuary */}
-      {isLibrarianPortal ? (
+      {/* 4 Distinct Navigation Portals: Hidden on Auth, Librarian Desk, Admin Portal, Member Hub, or Public Sanctuary */}
+      {isAuthPageWithoutNav ? null : isLibrarianPortal ? (
         <LibrarianNavbar
           activePage={activePage}
           activeTab={librarianTab}
           onSelectTab={setLibrarianTab}
           onNavigate={navigate}
           onOpenBlueprints={handleOpenBlueprints}
-          onOpenPresentation={handleOpenPresentation}
+          onOpenPresentation={handleDownloadPresentation}
         />
       ) : isAdminPortal ? (
         <AdminNavbar
@@ -473,15 +583,16 @@ function AppContent() {
           onSelectTab={setAdminTab}
           onNavigate={navigate}
           onOpenBlueprints={handleOpenBlueprints}
-          onOpenPresentation={handleOpenPresentation}
+          onOpenPresentation={handleDownloadPresentation}
         />
       ) : isUserPortal ? (
         <UserNavbar
+          activePage={activePage}
           activeTab={userTab}
           onSelectTab={setUserTab}
           onNavigate={navigate}
           onOpenBlueprints={handleOpenBlueprints}
-          onOpenPresentation={handleOpenPresentation}
+          onOpenPresentation={handleDownloadPresentation}
           loanCount={userStats.loanCount}
           holdCount={userStats.holdCount}
           seatCount={userStats.seatCount}
@@ -493,7 +604,7 @@ function AppContent() {
           activePage={activePage}
           onNavigate={navigate}
           onOpenBlueprints={handleOpenBlueprints}
-          onOpenPresentation={handleOpenPresentation}
+          onOpenPresentation={handleDownloadPresentation}
           compareCount={compareBookIds.length}
         />
       )}
@@ -517,6 +628,7 @@ function AppContent() {
           <Catalog
             initialQuery={catalogQuery}
             initialCategory={catalogCategory}
+            onCategoryChange={(cat) => setCatalogCategory(cat)}
             onViewBookDetails={viewBookDetails}
             onNavigate={navigate}
             onAddToCompare={handleToggleCompare}
@@ -527,7 +639,20 @@ function AppContent() {
         {activePage === 'book-details' && (
           <BookDetails
             bookId={selectedBookId}
-            onBack={() => navigate('catalog')}
+            originCategory={bookNavigationOrigin?.category || catalogCategory}
+            originPage={bookNavigationOrigin?.page || 'catalog'}
+            onBack={() => {
+              const targetPage = bookNavigationOrigin?.page || 'catalog';
+              const targetCategory = bookNavigationOrigin?.category || catalogCategory || 'All';
+              if (targetPage === 'catalog') {
+                setCatalogCategory(targetCategory);
+                navigate('catalog', { category: targetCategory });
+              } else if (targetPage === 'home') {
+                navigate('home', { category: targetCategory });
+              } else {
+                navigate(targetPage, { category: targetCategory });
+              }
+            }}
             onNavigate={navigate}
             onAddToCompare={handleToggleCompare}
             compareBookIds={compareBookIds}
@@ -583,14 +708,32 @@ function AppContent() {
           <LibrarianDashboard initialTab={librarianTab} onNavigate={navigate} />
         )}
 
+        {activePage === 'admin-login' && (
+          <AdminLogin onNavigate={navigate} />
+        )}
+
         {activePage === 'admin' && (
-          user?.role === 'admin' ? (
+          (user?.role === 'admin' && adminVerified) ? (
             <AdminDashboard initialTab={adminTab} onNavigate={navigate} />
-          ) : null
+          ) : (
+            <AdminLogin onNavigate={navigate} />
+          )
         )}
 
         {activePage === 'analytics' && (
-          <AnalyticsPage onNavigate={navigate} />
+          (user?.role === 'admin' && adminVerified) ? (
+            <AnalyticsPage onNavigate={navigate} />
+          ) : (
+            <AdminLogin onNavigate={navigate} />
+          )
+        )}
+
+        {activePage === 'blueprints' && (
+          <BlueprintsPage
+            onNavigate={navigate}
+            initialPageId={blueprintPageId}
+            onOpenPresentation={handleDownloadPresentation}
+          />
         )}
 
         {activePage === 'about' && (
@@ -771,8 +914,8 @@ function AppContent() {
         </div>
       )}
 
-      {/* Main Website Footer (Hidden inside Librarian and Admin Portals for dedicated workspace feel) */}
-      {!isLibrarianPortal && !isAdminPortal && (
+      {/* Main Website Footer (Hidden inside Auth portals, Librarian and Admin Portals for dedicated workspace feel) */}
+      {!isAuthPageWithoutNav && !isLibrarianPortal && !isAdminPortal && (
         <Footer
           onNavigate={navigate}
           onOpenBlueprints={handleOpenBlueprints}
@@ -785,8 +928,6 @@ function AppContent() {
         onClose={() => setVisualBlueprintModal(prev => ({ ...prev, isOpen: false }))}
         initialPage={visualBlueprintModal.pageId}
       />
-
-      
     </div>
   );
 }

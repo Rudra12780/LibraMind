@@ -15,10 +15,12 @@ import {
   BookOpen,
   Menu,
   X,
-  ArrowRight
+  ArrowRight,
+  FileText,
+  Layers
 } from 'lucide-react';
 
-export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNavigate, activePage = 'admin' }) {
+export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNavigate, onOpenPresentation, activePage = 'admin' }) {
   const { user, logout, logoutAdminPortal } = useAuth();
   const { unreadCount } = useNotifications();
   const [showNotifs, setShowNotifs] = useState(false);
@@ -26,7 +28,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
 
   const handleLogout = async () => {
     await logout();
-    if (onNavigate) onNavigate('login');
+    if (onNavigate) onNavigate('admin-login');
   };
 
   const handleExitToUserMode = () => {
@@ -39,8 +41,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
     { id: 'users', label: 'Users', icon: Users, title: 'User Management & Role Elevation' },
     { id: 'inventory', label: 'Inventory', icon: Database, title: 'Physical Inventory & Book Velocity' },
     { id: 'messages', label: 'Broadcasts', icon: MessageSquare, title: 'Direct Messages & System Broadcasts' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, title: 'Circulation Velocity & Analytics', action: () => onNavigate && onNavigate('analytics') },
-    { id: 'audit', label: 'Audit Trail', icon: Lock, title: 'Security Event Logs & Administrative Audit' }
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, title: 'Circulation Velocity & Analytics', action: () => onNavigate && onNavigate('analytics') }
   ];
 
   const currentTab = activePage === 'analytics' ? 'analytics' : activeTab;
@@ -97,7 +98,7 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="portal-brand-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1.40rem', color: 'var(--editorial-text)' }}>LibraMind</span>
+              <span className="libramind-heading portal-brand-title" style={{ fontFamily: 'var(--font-libramind)', fontWeight: 700, fontSize: '1.40rem', color: 'var(--editorial-text)', letterSpacing: '0.02em' }}>LibraMind</span>
               <span
                 className="badge navbar-badge-hide"
                 style={{
@@ -149,17 +150,17 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
           })}
         </nav>
 
-        {/* Right Section: Auxiliary Actions + Notifications + Profile */}
+        {/* Right Section: Notifications + Profile + Logout */}
         <div className="portal-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          {/* Member View Switcher */}
+          {/* Public Website Shortcut */}
           <button
-            onClick={handleExitToUserMode}
+            onClick={() => onNavigate && onNavigate('home')}
             className="portal-desktop-only btn btn-outline btn-sm"
-            title="Browse Member Hub in Patron View"
+            title="Browse Public Archives"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
             <BookOpen size={13} />
-            <span>Member View</span>
+            <span>Public Site</span>
           </button>
 
           {/* Notifications Dropdown */}
@@ -313,11 +314,32 @@ export default function AdminNavbar({ activeTab = 'overview', onSelectTab, onNav
             </button>
           ))}
           <button
-            onClick={handleExitToUserMode}
+            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('notifications'); }}
+            className="btn btn-outline btn-sm"
+            style={{ width: '100%', justifyContent: 'space-between', display: 'flex', marginTop: '6px' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bell size={14} color="var(--editorial-accent)" /> Notifications
+            </span>
+            {unreadCount > 0 && (
+              <span style={{ fontSize: '0.70rem', padding: '1px 6px', borderRadius: '8px', backgroundColor: 'var(--editorial-accent)', color: '#fff', fontWeight: 700 }}>
+                {unreadCount} new
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); onNavigate && onNavigate('blueprints'); }}
             className="btn btn-outline btn-sm"
             style={{ width: '100%', justifyContent: 'center', marginTop: '6px' }}
           >
-            <BookOpen size={14} /> Switch to Member View
+            <Layers size={14} /> View 21 Architectural Blueprints
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+            className="btn btn-outline btn-sm"
+            style={{ width: '100%', justifyContent: 'center', marginTop: '6px', color: '#DC2626', borderColor: '#FECACA' }}
+          >
+            <LogOut size={14} /> Sign Out (Admin)
           </button>
         </div>
       )}

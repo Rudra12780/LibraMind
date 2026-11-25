@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
+import CircularBookCarousel from '../components/CircularBookCarousel';
 import VisualBlueprintModal from '../components/VisualBlueprintModal';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 import {
@@ -70,30 +71,30 @@ function useViewportWidth() {
   return width;
 }
 
-// 10-Card Desktop Overhead Dome Arch Configurations (Graceful overhead canopy, 0 overlap with text)
+// 10-Card Desktop Overhead Dome Arch Configurations (Graceful overhead canopy with guaranteed clearance from navbar and headline)
 const DESKTOP_CARDS_10 = [
-  { x: -620, y: 80,   rot: -44 },
-  { x: -520, y: -52,  rot: -35 },
-  { x: -395, y: -170, rot: -25 },
-  { x: -248, y: -255, rot: -14 },
-  { x: -84,  y: -288, rot: -5 },
-  { x: 84,   y: -288, rot: 5 },
-  { x: 248,  y: -255, rot: 14 },
-  { x: 395,  y: -170, rot: 25 },
-  { x: 520,  y: -52,  rot: 35 },
-  { x: 620,  y: 80,   rot: 44 }
+  { x: -600, y: 118,  rot: -42 },
+  { x: -485, y: 13,   rot: -32 },
+  { x: -355, y: -87,  rot: -21 },
+  { x: -220, y: -160, rot: -11 },
+  { x: -74,  y: -194, rot: -3 },
+  { x: 74,   y: -194, rot: 3 },
+  { x: 220,  y: -160, rot: 11 },
+  { x: 355,  y: -87,  rot: 21 },
+  { x: 485,  y: 13,   rot: 32 },
+  { x: 600,  y: 118,  rot: 42 }
 ];
 
 // 8-Card Tablet Overhead Arch Configurations (Sits cleanly overhead and flanks tablet headline)
 const TABLET_CARDS_8 = [
-  { x: -370, y: 35,   rot: -38 },
-  { x: -290, y: -65,  rot: -27 },
-  { x: -180, y: -160, rot: -16 },
-  { x: -62,  y: -205, rot: -5 },
-  { x: 62,   y: -205, rot: 5 },
-  { x: 180,  y: -160, rot: 16 },
-  { x: 290,  y: -65,  rot: 27 },
-  { x: 370,  y: 35,   rot: 38 }
+  { x: -355, y: 85,   rot: -34 },
+  { x: -270, y: 0,    rot: -24 },
+  { x: -165, y: -85,  rot: -13 },
+  { x: -54,  y: -130, rot: -4 },
+  { x: 54,   y: -130, rot: 4 },
+  { x: 165,  y: -85,  rot: 13 },
+  { x: 270,  y: 0,    rot: 24 },
+  { x: 355,  y: 85,   rot: 34 }
 ];
 
 // 5-Card Mobile Compact Overhead Fan (Guaranteed 0 overflow and never cut off on 320px-480px)
@@ -134,10 +135,16 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
   const [selectedBlueprintPage, setSelectedBlueprintPage] = useState('home');
   const [blueprintCategory, setBlueprintCategory] = useState('all');
 
+  const handleOpenBook = (bookId, cat) => {
+    if (onViewBookDetails) {
+      onViewBookDetails(bookId, { fromPage: 'home', fromCategory: cat || selectedCategory || 'All' });
+    }
+  };
+
   // Single fast unified query to eliminate database wait time & lag, randomized dynamically
   useEffect(() => {
     Promise.all([
-      api.getBooks({ limit: 80 }),
+      api.getBooks({ limit: 500 }),
       api.getSeats().catch(() => ({ stats: { total: 16, available: 12, occupied: 3 } }))
     ])
       .then(([booksData, seatsData]) => {
@@ -180,13 +187,38 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
 
 
 
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const allCategories = [
+    'All',
+    'AI & Data Science',
+    'Classic Novels',
+    'Emotional Fiction',
+    'Fiction & Mystery',
+    'Indian Literature',
+    'Modern Novels',
+    'Personal Growth',
+    'Programming & Technology',
+    'Spiritual & Wisdom'
+  ];
+
+  const filteredCircularBooks = useMemo(() => {
+    if (!catalogBooks || catalogBooks.length === 0) return [];
+    if (!selectedCategory || selectedCategory === 'All') return catalogBooks;
+    const target = selectedCategory.trim().toLowerCase();
+    return catalogBooks.filter(b => (b.category || '').trim().toLowerCase() === target);
+  }, [catalogBooks, selectedCategory]);
+
   const editorialGenres = [
-    { title: 'Classical Literature', slug: 'Classic Literature', desc: 'Homer, Austen, Tolstoy & the enduring Western & Eastern canon', count: '14 Volumes' },
-    { title: 'Philosophy & Wisdom', slug: 'Spiritual & Wisdom', desc: 'Epistemology, ancient logic, Bhagavad Gita & Stoic inquiries', count: '12 Volumes' },
-    { title: 'Artificial Intelligence', slug: 'AI & Data Science', desc: 'Machine cognition, neural architectures & algorithm foundations', count: '8 Volumes' },
-    { title: 'Programming & Tech', slug: 'Programming & Technology', desc: 'Clean architecture, modern software systems & engineering', count: '10 Volumes' },
-    { title: 'Novels & Modern Fiction', slug: 'Classic Novels', desc: 'Orwell, Lee, Fitzgerald, Brontë & literary narratives', count: '18 Volumes' },
-    { title: 'Personal Growth & Mind', slug: 'Personal Growth', desc: 'Atomic habits, psychological resilience & deep focus treatises', count: '9 Volumes' }
+    { title: 'AI & Data Science', slug: 'AI & Data Science', desc: 'Machine cognition, neural architectures & algorithm foundations' },
+    { title: 'Classic Novels', slug: 'Classic Novels', desc: 'Timeless literary masterpieces, Dostoevsky, Austen, Orwell & world classics' },
+    { title: 'Emotional Fiction', slug: 'Emotional Fiction', desc: 'Profound stories of empathy, heart, personal journeys and human connection' },
+    { title: 'Fiction & Mystery', slug: 'Fiction & Mystery', desc: 'Enthralling whodunits, dystopian thrillers, Agatha Christie and suspense' },
+    { title: 'Indian Literature', slug: 'Indian Literature', desc: 'Rich cultural narratives, heritage writings, and classical Indian stories' },
+    { title: 'Modern Novels', slug: 'Modern Novels', desc: 'Contemporary narrative prose, modern literature, and modern-day journeys' },
+    { title: 'Personal Growth', slug: 'Personal Growth', desc: 'Atomic habits, psychological resilience & deep focus treatises' },
+    { title: 'Programming & Technology', slug: 'Programming & Technology', desc: 'Clean architecture, modern software systems & engineering' },
+    { title: 'Spiritual & Wisdom', slug: 'Spiritual & Wisdom', desc: 'Epistemology, ancient wisdom, Bhagavad Gita, Tao Te Ching & philosophical inquiries' }
   ];
 
   const literaryAuthors = [
@@ -324,7 +356,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
           position: 'relative',
           overflow: 'hidden',
           backgroundColor: 'var(--editorial-bg)',
-          padding: isMobile ? '24px 0 36px' : (isTablet ? '36px 0 48px' : '48px 0 64px'),
+          padding: isMobile ? '28px 0 36px' : (isTablet ? '56px 0 60px' : '72px 0 76px'),
           borderBottom: '1px solid var(--editorial-border)',
           width: '100%'
         }}
@@ -346,7 +378,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
             style={{
               position: 'relative',
               width: '100%',
-              minHeight: isMobile ? 'auto' : (isTablet ? '560px' : '650px'),
+              minHeight: isMobile ? 'auto' : (isTablet ? '620px' : '720px'),
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -402,7 +434,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                         className="hero-card-motion"
                         onMouseEnter={() => setHoveredArcIndex(i)}
                         onMouseLeave={() => setHoveredArcIndex(null)}
-                        onClick={() => onViewBookDetails(book.id || book._id)}
+                        onClick={() => handleOpenBook(book.id || book._id, book.category)}
                         title={`${book.title} by ${book.author}`}
                         style={{
                           width: `${cardW}px`,
@@ -511,7 +543,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                       }}
                     >
                       <div
-                        onClick={() => onViewBookDetails(book.id || book._id)}
+                        onClick={() => handleOpenBook(book.id || book._id, book.category)}
                         className="hero-card-motion"
                         style={{
                           width: `${cardW}px`,
@@ -557,9 +589,22 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                 maxWidth: isMobile ? '100%' : (isTablet ? '480px' : '620px'),
                 margin: '0 auto',
                 padding: isMobile ? '0 12px' : '0 16px',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                transform: isMobile ? 'none' : (isTablet ? 'translateY(68px)' : 'translateY(98px)'),
+                transition: 'transform 0.3s ease'
               }}
             >
+              {/* Editorial Literary Kicker */}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span className="curator-badge-brush" style={{ fontSize: isMobile ? '0.90rem' : '1.05rem', color: 'var(--editorial-accent)' }}>
+                  ✦ The Literary Sanctuary
+                </span>
+                <span style={{ color: 'var(--editorial-border)' }}>•</span>
+                <span className="editorial-flourish" style={{ fontSize: isMobile ? '0.82rem' : '0.94rem', color: 'var(--editorial-green)' }}>
+                  Hand-Curated Volumes
+                </span>
+              </div>
+
               {/* Main Heading */}
               <h1
                 style={{
@@ -916,6 +961,9 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
             </div>
 
             <div>
+              <div className="curator-note-hand" style={{ color: 'var(--editorial-accent)', marginBottom: '6px', fontSize: '1.20rem' }}>
+                ✍ Specimen Accession Note
+              </div>
               <span className="badge badge-category" style={{ marginBottom: '12px' }}>
                 {bookOfTheWeek.category}
               </span>
@@ -943,7 +991,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => onViewBookDetails(bookOfTheWeek.id)}
+                  onClick={() => handleOpenBook(bookOfTheWeek.id, bookOfTheWeek.category)}
                   className="btn btn-primary"
                 >
                   <BookOpen size={15} /> Examine Volume Specimen
@@ -995,7 +1043,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                 </div>
                 <BookCard
                   book={book}
-                  onViewDetails={onViewBookDetails}
+                  onViewDetails={(bId) => handleOpenBook(bId, book.category)}
                   onToggleWishlist={() => {}}
                   onToggleCompare={() => onNavigate('compare')}
                   onAddToPlanner={() => onNavigate('visit-planner')}
@@ -1003,6 +1051,99 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 4.5. 180° HALF-CIRCLE BOOKSHELF & COMPLETE CATALOG SHOWCASE    */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <section
+        id="circular-catalog-showcase"
+        style={{
+          padding: '64px 0 72px',
+          borderBottom: '1px solid var(--editorial-border)',
+          backgroundColor: '#FAF8F4'
+        }}
+      >
+        <div className="container" style={{ textAlign: 'center' }}>
+          {/* Main Catalog Header Matching Image 4 Typography */}
+          <div style={{ marginBottom: '24px' }}>
+            <h2
+              style={{
+                fontFamily: "var(--font-oswald), 'BBH Bogle', 'Space Grotesk', sans-serif",
+                fontSize: 'clamp(2.2rem, 5vw, 3.6rem)',
+                fontWeight: 900,
+                color: 'var(--forest-dark)',
+                textTransform: 'uppercase',
+                letterSpacing: '-0.02em',
+                lineHeight: 1.05,
+                margin: '0 0 10px',
+                textAlign: 'center'
+              }}
+            >
+              LIBRARY BOOK CATALOG
+            </h2>
+            <p
+              style={{
+                fontSize: '1rem',
+                color: 'var(--editorial-text-muted)',
+                maxWidth: '640px',
+                margin: '0 auto',
+                textAlign: 'center'
+              }}
+            >
+              Explore our collection. View real-time availability, exact physical shelf and rack positions, or place reservations when copies are on loan.
+            </p>
+          </div>
+
+          {/* Categories Bar Above Circular Carousel (All 9 categories from Books menu, without numbers) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              flexWrap: 'wrap',
+              margin: '0 auto 28px',
+              maxWidth: '1000px',
+              padding: '4px'
+            }}
+          >
+            {allCategories.map(cat => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 18px',
+                    borderRadius: '9999px',
+                    backgroundColor: isSelected ? 'var(--editorial-green)' : '#FFFFFF',
+                    color: isSelected ? '#FFFFFF' : 'var(--editorial-text)',
+                    border: `1.5px solid ${isSelected ? 'var(--editorial-green)' : 'var(--editorial-border)'}`,
+                    fontSize: '0.80rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                    cursor: 'pointer',
+                    boxShadow: isSelected ? '0 3px 10px rgba(38, 61, 50, 0.22)' : '0 1px 3px rgba(37, 40, 32, 0.04)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span>{cat === 'All' ? 'All Books' : cat}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 3D Circular Bookshelf with all current books */}
+          <CircularBookCarousel
+            books={filteredCircularBooks}
+            category={selectedCategory}
+            onViewDetails={(bId) => onViewBookDetails && onViewBookDetails(bId, { fromPage: 'home', fromCategory: selectedCategory })}
+          />
         </div>
       </section>
 
@@ -1055,9 +1196,6 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
                       DISCIPLINE 0{i + 1}
-                    </span>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)' }}>
-                      {genre.count}
                     </span>
                   </div>
                   <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.30rem', color: 'var(--editorial-text)', marginBottom: '8px' }}>
@@ -1177,11 +1315,10 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
           >
             <Quote size={28} color="#D9D3C7" style={{ margin: '0 auto 12px', opacity: 0.7 }} />
             <blockquote
+              className="cursive-dedication"
               style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: 'clamp(1.3rem, 2.6vw, 1.85rem)',
-                lineHeight: 1.38,
+                fontSize: 'clamp(1.4rem, 2.8vw, 2.05rem)',
+                lineHeight: 1.45,
                 color: '#FFFFFF',
                 margin: '0 auto 12px',
                 maxWidth: '720px'
@@ -1277,9 +1414,14 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                         <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '1.22rem', color: 'var(--editorial-text)' }}>
                           {author.name}
                         </h4>
-                        <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          {author.era}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '0.74rem', color: 'var(--editorial-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            {author.era}
+                          </span>
+                          <span className="author-signature" style={{ fontSize: '0.90rem', color: 'var(--editorial-accent)' }}>
+                            ~ {author.name}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -1300,7 +1442,7 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
                           return (
                             <div
                               key={book.id || book._id}
-                              onClick={() => onViewBookDetails(book.id || book._id)}
+                              onClick={() => handleOpenBook(book.id || book._id, book.category)}
                               style={{
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -1468,208 +1610,6 @@ export default function Home({ onNavigate, onViewBookDetails, onOpenBlueprints }
               className="btn btn-outline"
             >
               Consult Librarian / Help Desk →
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* 8. COMPLETE 21-PAGE WIREFRAME BLUEPRINTS PORTFOLIO              */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <section
-        id="wireframe-blueprint"
-        style={{
-          padding: '68px 0',
-          backgroundColor: 'var(--editorial-bg-subtle)',
-          borderBottom: '1px solid var(--editorial-border)',
-          position: 'relative'
-        }}
-      >
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px', marginBottom: '32px' }}>
-            <div style={{ maxWidth: '720px' }}>
-              <div className="editorial-kicker">
-                <Layers size={13} /> Complete 21-Page UI Blueprint Portfolio
-              </div>
-              <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.3rem)', margin: 0 }}>
-                Website Architectural Wireframes
-              </h2>
-              <p style={{ color: 'var(--editorial-text-muted)', fontSize: '0.96rem', marginTop: '8px', marginBottom: 0 }}>
-                Clean, low-fidelity orthogonal black-and-white wireframe blueprints for all 21 pages of the LibraMind system.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <button
-                onClick={downloadAllBlueprintsZIP}
-                className="btn btn-primary btn-sm"
-              >
-                <Download size={14} /> Download All 21 (.ZIP)
-              </button>
-              <button
-                onClick={downloadAllBlueprintsSVG}
-                className="btn btn-outline btn-sm"
-              >
-                <FileCode size={14} /> Download All (.SVG)
-              </button>
-              <button
-                onClick={printAllBlueprints}
-                className="btn btn-outline btn-sm"
-              >
-                Print 21 Pages (Word Ready)
-              </button>
-            </div>
-          </div>
-
-          {/* Category Tabs for All 21 Blueprints */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              flexWrap: 'wrap',
-              marginBottom: '24px',
-              borderBottom: '1px solid var(--editorial-border)',
-              paddingBottom: '14px'
-            }}
-          >
-            {[
-              { id: 'all', label: 'All Blueprints (21)' },
-              { id: 'public', label: 'Public Tier (13)' },
-              { id: 'member', label: 'Member Tier (3)' },
-              { id: 'staff_admin', label: 'Staff & Governance (3)' },
-              { id: 'security_util', label: 'Security & Utility (2)' }
-            ].map(tab => {
-              const isActive = blueprintCategory === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setBlueprintCategory(tab.id)}
-                  style={{
-                    backgroundColor: isActive ? 'var(--editorial-green)' : '#FFFFFF',
-                    color: isActive ? '#FFFFFF' : 'var(--editorial-text)',
-                    border: isActive ? '1px solid var(--editorial-green)' : '1px solid var(--editorial-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '6px 14px',
-                    fontSize: '0.80rem',
-                    fontWeight: isActive ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isActive ? 'var(--shadow-sm)' : 'none'
-                  }}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Grid of All Matching Blueprints (Never Missing Any Page) */}
-          {(() => {
-            const filteredPages = BLUEPRINT_PAGES.filter(p => {
-              if (blueprintCategory === 'all') return true;
-              if (blueprintCategory === 'public') return p.category === 'Public Tier';
-              if (blueprintCategory === 'member') return p.category === 'Member Tier';
-              if (blueprintCategory === 'staff_admin') return p.category === 'Staff Tier' || p.category === 'Admin Tier';
-              if (blueprintCategory === 'security_util') return p.category === 'Security Tier' || p.category === 'Utility Tier';
-              return true;
-            });
-
-            return (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                  gap: '20px',
-                  marginBottom: '28px'
-                }}
-              >
-                {filteredPages.map((page) => (
-                  <div
-                    key={page.id}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--editorial-border)',
-                      boxShadow: 'var(--shadow-sm)',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
-                    }}
-                    onClick={() => {
-                      if (onOpenBlueprints) onOpenBlueprints(page.id);
-                      else {
-                        setSelectedBlueprintPage(page.id);
-                        setShowVisualBlueprintModal(true);
-                      }
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                      e.currentTarget.style.borderColor = 'var(--editorial-accent)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                      e.currentTarget.style.borderColor = 'var(--editorial-border)';
-                    }}
-                  >
-                    <div style={{ height: '220px', backgroundColor: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', overflow: 'hidden' }}>
-                      <div
-                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        dangerouslySetInnerHTML={{ __html: getThumbnailSVG(page.svg) }}
-                      />
-                    </div>
-                    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--editorial-border)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--editorial-accent)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                          PAGE {String(page.pageNumber).padStart(2, '0')} · {page.category}
-                        </span>
-                        <span style={{ fontSize: '0.64rem', fontFamily: 'monospace', color: 'var(--editorial-text-muted)' }}>
-                          {page.route}
-                        </span>
-                      </div>
-                      <h4 style={{ margin: '2px 0 8px', fontSize: '0.94rem', color: 'var(--editorial-text)' }}>
-                        {page.shortTitle}
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--editorial-text-muted)', lineHeight: 1.45, marginBottom: '12px' }}>
-                        {page.desc.substring(0, 85)}...
-                      </p>
-                      <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px dashed var(--editorial-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--editorial-accent)', fontWeight: 700 }}>
-                          Inspect Blueprint →
-                        </span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)' }}>
-                          {page.sections.length} Wireframe Sections
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-
-          <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => {
-                if (onOpenBlueprints) onOpenBlueprints('home');
-                else {
-                  setSelectedBlueprintPage('home');
-                  setShowVisualBlueprintModal(true);
-                }
-              }}
-              className="btn btn-outline"
-            >
-              Open Full 21-Page Interactive Blueprint Viewer →
-            </button>
-            <button
-              onClick={printAllBlueprints}
-              className="btn btn-secondary"
-            >
-              Print 21 Blueprint Sheets (Word Ready)
             </button>
           </div>
         </div>

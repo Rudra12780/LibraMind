@@ -1,7 +1,145 @@
 const API_BASE = '/api';
 
+export function getCleanPathname(pathname = (typeof window !== 'undefined' ? window.location.pathname : '')) {
+  try {
+    return decodeURIComponent(pathname || '').toLowerCase().replace(/^\/+|\/+$/g, '');
+  } catch (_) {
+    return '';
+  }
+}
+
+export function getPortalGatewayKind(cleanPath) {
+  if (cleanPath === '' || cleanPath === 'login' || cleanPath === 'register' || cleanPath === 'signin' || cleanPath === 'signup') {
+    return 'student';
+  }
+  if (
+    cleanPath === 'lib@123' ||
+    cleanPath === 'lib123' ||
+    cleanPath === 'lib@1234' ||
+    cleanPath === 'lib1234' ||
+    cleanPath === 'lib' ||
+    cleanPath === 'librarian@123' ||
+    cleanPath === 'librarian123' ||
+    cleanPath === 'librarian@1234' ||
+    cleanPath === 'librarian1234' ||
+    cleanPath === 'librarian' ||
+    cleanPath === 'librarian/login' ||
+    cleanPath === 'lib-login' ||
+    cleanPath.startsWith('lib@') ||
+    cleanPath.startsWith('librarian@')
+  ) {
+    return 'librarian';
+  }
+  if (
+    cleanPath === 'admin@123' ||
+    cleanPath === 'admin123' ||
+    cleanPath === 'admin@1234' ||
+    cleanPath === 'admin1234' ||
+    cleanPath === 'admin' ||
+    cleanPath === 'admin-login' ||
+    cleanPath === 'admin/login' ||
+    cleanPath.startsWith('admin@')
+  ) {
+    return 'admin';
+  }
+  return null;
+}
+
+export function clearAllPortalTokens() {
+  if (typeof window === 'undefined') return;
+  const keys = [
+    'libramind_session_token',
+    'libramind_session_role',
+    'libramind_librarian_token',
+    'libramind_admin_token',
+    'libramind_admin_verified',
+    'libramind_student_token',
+    'libramind_token'
+  ];
+  for (const k of keys) {
+    try { sessionStorage.removeItem(k); } catch (_) {}
+    try { localStorage.removeItem(k); } catch (_) {}
+  }
+}
+
+// Always force fresh Sign In / Register when loading any portal entry URL directly
+if (typeof window !== 'undefined' && getPortalGatewayKind(getCleanPathname()) !== null) {
+  clearAllPortalTokens();
+}
+
+export function decodeJwtRole(jwtToken) {
+  if (!jwtToken || typeof jwtToken !== 'string') return null;
+  try {
+    const parts = jwtToken.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    return parsed?.role || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function getActiveAuthToken() {
+  if (typeof window === 'undefined') return null;
+  const path = (window.location.pathname || '').toLowerCase();
+  const search = (window.location.search || '').toLowerCase();
+
+  // Only read active sessionStorage token (never auto-login from persistent localStorage)
+  // 1. Librarian portal context
+  if (path.includes('lib@') || path.includes('librarian') || search.includes('tab=librarian') || search.includes('role=librarian')) {
+    const libToken = sessionStorage.getItem('libramind_librarian_token') ||
+      (sessionStorage.getItem('libramind_session_role') === 'librarian' ? sessionStorage.getItem('libramind_session_token') : null);
+    if (libToken) {
+      const role = decodeJwtRole(libToken);
+      if (role === 'librarian' || role === 'admin') return libToken;
+    }
+    const sessToken = sessionStorage.getItem('libramind_session_token');
+    if (sessToken) {
+      const role = decodeJwtRole(sessToken);
+      if (role === 'librarian' || role === 'admin') return sessToken;
+    }
+    return null;
+  }
+
+  // 2. Admin portal context
+  if (path.includes('admin') || search.includes('tab=admin') || search.includes('role=admin')) {
+    const admToken = sessionStorage.getItem('libramind_admin_token') ||
+      (sessionStorage.getItem('libramind_session_role') === 'admin' ? sessionStorage.getItem('libramind_session_token') : null);
+    if (admToken && decodeJwtRole(admToken) === 'admin') {
+      return admToken;
+    }
+    const sessToken = sessionStorage.getItem('libramind_session_token');
+    if (sessToken && decodeJwtRole(sessToken) === 'admin') {
+      return sessToken;
+    }
+    return null;
+  }
+
+  // 3. Student / Public library portal context
+  const stuToken = sessionStorage.getItem('libramind_student_token') ||
+    (sessionStorage.getItem('libramind_session_role') === 'student' ? sessionStorage.getItem('libramind_session_token') : null);
+  if (stuToken && decodeJwtRole(stuToken) === 'student') {
+    return stuToken;
+  }
+
+  const sessToken = sessionStorage.getItem('libramind_session_token');
+  if (sessToken && decodeJwtRole(sessToken) === 'student') {
+    return sessToken;
+  }
+
+  return null;
+}
+
 function getAuthHeader() {
-  const token = localStorage.getItem('libramind_token');
+  const token = getActiveAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -22,7 +160,27 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
-  const response = await fetch(url, config);
+  let response;
+  try {
+    response = await fetch(url, config);
+    if (!response.ok && (response.status === 502 || response.status === 503 || response.status === 504)) {
+      throw new Error(`Proxy gateway error ${response.status}`);
+    }
+  } catch (netErr) {
+    // If request failed (e.g. mobile device connecting on LAN or dev proxy hiccup),
+    // attempt automatic direct fallback to backend port 5001 on the same host
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      const directUrl = `${window.location.protocol}//${window.location.hostname}:5001/api${endpoint}`;
+      try {
+        response = await fetch(directUrl, config);
+      } catch (_) {
+        throw new Error('Network error: Unable to connect to LibraMind server. Please verify your connection.');
+      }
+    } else {
+      throw netErr;
+    }
+  }
+
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -40,8 +198,10 @@ export const api = {
   sendOtp: (phone) => request('/auth/send-otp', { method: 'POST', body: { phone } }),
   verifyOtp: (phone, otp) => request('/auth/verify-otp', { method: 'POST', body: { phone, otp } }),
   updateProfile: (profileData) => request('/auth/profile', { method: 'PUT', body: profileData }),
+  googleLogin: (body) => request('/auth/google', { method: 'POST', body }),
   githubLogin: (body) => request('/auth/github', { method: 'POST', body }),
-  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
+  forgotPassword: (phone) => request('/auth/forgot-password', { method: 'POST', body: { phone } }),
+  verifyResetOtp: (phone, otp) => request('/auth/verify-reset-otp', { method: 'POST', body: { phone, otp } }),
   verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
   resetPassword: (body) => request('/auth/reset-password', { method: 'POST', body }),
   getProfile: () => request('/auth/me'),
@@ -108,12 +268,15 @@ export const api = {
   reserveSeat: (body) => request('/seats/reserve', { method: 'POST', body }),
   cancelSeatReservation: (bookingId) => request(`/seats/reserve/${bookingId}`, { method: 'DELETE' }),
   getMySeatBookings: () => request('/seats/my-bookings'),
+  getUserSeatReservations: () => request('/seats/my-bookings'),
   updateSeatStatus: (id, body) => request(`/seats/${id}/status`, { method: 'PUT', body }),
 
   // Notifications
   getNotifications: () => request('/notifications'),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PUT' }),
+  deleteNotification: (id) => request(`/notifications/${id}`, { method: 'DELETE' }),
+  clearAllNotifications: () => request('/notifications', { method: 'DELETE' }),
   sendAnnouncement: (body) => request('/notifications/announcement', { method: 'POST', body }),
   triggerScheduler: () => request('/notifications/run-cron', { method: 'POST' }),
 
@@ -125,7 +288,9 @@ export const api = {
   getRecommendations: () => request('/ai/recommendations'),
   askAiAssistant: (message) => request('/ai/assistant', { method: 'POST', body: { message } }),
 
-  // Analytics
+  // Analytics (Admin Only)
+  getBookStatistics: () => request('/analytics/book-statistics'),
+  getCompleteInventory: () => request('/analytics/complete-inventory'),
   getAnalyticsOverview: () => request('/analytics/overview'),
   getAnalyticsCharts: () => request('/analytics/charts'),
   exportBooksCsvUrl: () => `${API_BASE}/analytics/export-books`,

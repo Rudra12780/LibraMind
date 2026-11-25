@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Play,
-  Pause
+  Pause,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  Compass
 } from 'lucide-react';
 import { getOfflineBookCover, handleBookCoverError } from '../utils/offlineCovers';
 
 const EMPTY_SET = new Set();
 const EMPTY_ARRAY = [];
 
-// Deep Archival Library Leather & Bookcloth Palettes (Authentic physical hardcover colors)
+// Deep Archival Library Leather & Bookcloth Palettes for Desktop Hardcover Spines
 const ARCHIVAL_LEATHER_PALETTES = [
   { bg: '#2B100C', rib: '#D4AF37', text: '#FFF8E7', border: '#170805' }, // Antique Crimson Leather
   { bg: '#14241B', rib: '#E5C158', text: '#FAF8F0', border: '#0B140F' }, // Oxford Forest Green
@@ -26,39 +32,41 @@ function getArchivalSpineTheme(book, index) {
   return ARCHIVAL_LEATHER_PALETTES[hash];
 }
 
-
 export default function CircularBookCarousel({
   books = EMPTY_ARRAY,
   category = 'All',
   onViewDetails,
-  _onBorrow,
-  _onReturn,
-  _onReserve,
-  _onToggleWishlist,
-  _wishlistIds = EMPTY_SET,
-  _onToggleCompare,
-  _compareBookIds = EMPTY_ARRAY,
-  _onAddToPlanner,
-  _userBorrowedBookIds = EMPTY_SET
+  onBorrow: _onBorrow,
+  onReturn: _onReturn,
+  onReserve: _onReserve,
+  onToggleWishlist: _onToggleWishlist,
+  wishlistIds: _wishlistIds = EMPTY_SET,
+  onToggleCompare: _onToggleCompare,
+  compareBookIds: _compareBookIds = EMPTY_ARRAY,
+  onAddToPlanner: _onAddToPlanner,
+  userBorrowedBookIds: _userBorrowedBookIds = EMPTY_SET
 }) {
   const containerRef = useRef(null);
-  const wrapperRef = useRef(null);
+  const desktopWheelRef = useRef(null);
 
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  // Default state paused as requested by user
   const [isAutoRotating, setIsAutoRotating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  // RAF Direct Refs for 60fps buttery-smooth hardware acceleration
-  const targetAngleRef = useRef(0);
-  const currentAngleRef = useRef(0);
-  const bookElsRef = useRef([]);
-  const hoveredIndexRef = useRef(null);
-  const selectedIndexRef = useRef(null);
-  const isDraggingRef = useRef(false);
-  const isAutoRotatingRef = useRef(false);
-  const hasMovedRef = useRef(false);
-  const dragStartRef = useRef({ centerX: 0, centerY: 0, prevAngle: 0, startY: 0, startX: 0 });
+  // Rotation angles
+  const desktopRotationRef = useRef(0);
+  const [mobileScrollAngle, setMobileScrollAngle] = useState(0);
+  const mobileScrollAngleRef = useRef(0);
+  mobileScrollAngleRef.current = mobileScrollAngle;
+
+  const dragStartRef = useRef({ centerX: 0, centerY: 0, prevAngle: 0, startAngle: 0, startX: 0, startY: 0 });
+  const touchStartRef = useRef({ startX: 0, startY: 0, startAngle: 0 });
+  const hasDraggedRef = useRef(false);
+  const touchStartPosRef = useRef({ x: 0, y: 0, time: 0 });
+  const isUserTouchingRef = useRef(false);
+  const touchTargetBookRef = useRef(null);
 
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
 
@@ -78,289 +86,787 @@ export default function CircularBookCarousel({
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
-  useEffect(() => {
-    isAutoRotatingRef.current = isAutoRotating;
-  }, [isAutoRotating]);
-
-  useEffect(() => {
-    hoveredIndexRef.current = hoveredIndex;
-  }, [hoveredIndex]);
-
-  useEffect(() => {
-    selectedIndexRef.current = selectedIndex;
-  }, [selectedIndex]);
-
-  // Category specification:
-  // - "All" Category: ONLY show real book spines along the wheel.
-  // - All other categories: Show upright front covers along the wheel with adaptive radius.
-  const isAllOption = !category || category === 'All' || category === 'all';
-  const isSpineMode = isAllOption;
-
-  // Display books in this view
   const displayBooks = useMemo(() => {
-    return books || [];
+    return books || EMPTY_ARRAY;
   }, [books]);
 
   const N = Math.max(1, displayBooks.length);
+  const desktopStepAngle = 360 / N;
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // DYNAMIC SIZING & PROPORTIONAL RADIUS ADAPTATION:
-  // - Spine Mode (All Categories): Authentic 360° library rotunda wheel
-  // - Front Cover Mode (Other Categories): Radius adapts to book count N
-  //   (If 5 books, creates a compact, neat circle so it never looks empty)
-  // ═══════════════════════════════════════════════════════════════════════
-  const { carouselSize, shelfRadius, innerHubDiameter, cardW, cardH } = useMemo(() => {
-    if (isSpineMode) {
-      // ── ALL BOOKS CATEGORY: REAL HARDCOVER SPINES ──
-      const h = isMobile ? 58 : (isTablet ? 78 : 94);
-      let w;
-      if (isMobile) {
-        w = N <= 20 ? 13 : (N <= 50 ? 8.5 : (N <= 80 ? 6.5 : 5.5));
-      } else if (isTablet) {
-        w = N <= 20 ? 22 : (N <= 50 ? 15 : (N <= 80 ? 11 : 9.5));
-      } else {
-        w = N <= 20 ? 26 : (N <= 50 ? 18 : (N <= 80 ? 13 : 10.5));
+  // Reset selection when books change
+  useEffect(() => {
+    setSelectedIndex(null);
+    setHoveredIndex(null);
+    setMobileScrollAngle(0);
+  }, [displayBooks.length, category]);
+
+  // Direct redirection handler: clicking any book immediately opens its details page
+  const handleBookClick = useCallback((e, book) => {
+    if (e) {
+      e.stopPropagation();
+      if (hasDraggedRef.current && e.preventDefault) {
+        e.preventDefault();
       }
+    }
+    if (hasDraggedRef.current) {
+      return;
+    }
+    if (!book) return;
+    const bId = book.id !== undefined ? book.id : book._id;
+    if (onViewDetails && bId) {
+      onViewDetails(bId);
+    }
+  }, [onViewDetails]);
 
-      const size = isMobile ? Math.min(windowWidth - 28, 330) : (isTablet ? 490 : 600);
-      const radius = isMobile ? Math.round(size * 0.36) : (isTablet ? 180 : 224);
-      const hub = isMobile ? Math.round(size * 0.42) : (isTablet ? 230 : 280);
+  // ═════════════════════════════════════════════════════════════════
+  // DESKTOP: 360-DEGREE CIRCULAR ROTUNDA GEOMETRY (Zero lag)
+  // ═════════════════════════════════════════════════════════════════
+  const {
+    desktopSize,
+    desktopRadius,
+    desktopHubDiameter,
+    desktopCardW,
+    desktopCardH
+  } = useMemo(() => {
+    if (isTablet) {
+      const size = 410;
+      const r = 148;
+      const h = 70;
+      const hub = 196;
+      let w;
+      if (N <= 8) { w = 22; }
+      else if (N <= 16) { w = 17; }
+      else if (N <= 28) { w = 13; }
+      else if (N <= 45) { w = 10; }
+      else { w = Math.max(5.5, Math.floor((710 / N) - 2.5)); }
+      return { desktopSize: size, desktopRadius: r, desktopHubDiameter: hub, desktopCardW: w, desktopCardH: h };
+    }
+    const size = 480;
+    const r = 176;
+    const h = 82;
+    const hub = 236;
+    let w;
+    if (N <= 8) { w = 26; }
+    else if (N <= 16) { w = 20; }
+    else if (N <= 28) { w = 15; }
+    else if (N <= 45) { w = 12; }
+    else if (N <= 70) { w = 9.5; }
+    else { w = Math.max(6, Math.floor((848.2 / N) - 2.5)); }
+    return { desktopSize: size, desktopRadius: r, desktopHubDiameter: hub, desktopCardW: w, desktopCardH: h };
+  }, [isTablet, N]);
+
+  // Precomputed 360° Desktop items around the wheel
+  const desktopShelfItems = useMemo(() => {
+    if (isMobile) return EMPTY_ARRAY;
+    const stageCenter = desktopSize / 2;
+    return displayBooks.map((book, idx) => {
+      const angleDeg = (idx * desktopStepAngle) % 360;
+      const angleRad = (angleDeg * Math.PI) / 180;
+      const posX = stageCenter + desktopRadius * Math.cos(angleRad) - desktopCardW / 2;
+      const posY = stageCenter + desktopRadius * Math.sin(angleRad) - desktopCardH / 2;
+      const bookRotation = angleDeg + 90;
 
       return {
-        carouselSize: size,
-        shelfRadius: radius,
-        innerHubDiameter: hub,
-        cardW: w,
-        cardH: h
+        book,
+        idx,
+        posX,
+        posY,
+        bookRotation,
+        spineTheme: getArchivalSpineTheme(book, idx),
+        coverUrl: book.cover_image || getOfflineBookCover(book.title, book.author, book.category),
+        isBookAvailable: book.available_copies !== undefined ? book.available_copies > 0 : true
+      };
+    });
+  }, [isMobile, displayBooks, desktopSize, desktopRadius, desktopCardW, desktopCardH, desktopStepAngle]);
+
+  // GPU transform for desktop 360° wheel (Zero CPU lag)
+  const applyDesktopRotation = useCallback((angle) => {
+    desktopRotationRef.current = angle % 360;
+    if (desktopWheelRef.current) {
+      desktopWheelRef.current.style.transform = `rotate(${desktopRotationRef.current}deg)`;
+    }
+  }, []);
+
+  const rotateDesktopBy = useCallback((delta) => {
+    applyDesktopRotation(desktopRotationRef.current + delta);
+  }, [applyDesktopRotation]);
+
+  // ═════════════════════════════════════════════════════════════════
+  // MOBILE: 180-DEGREE VERTICAL HALF-CIRCLE GEOMETRY (RIGHT SIDE)
+  // - "phone version = 180 show vertical"
+  // - "in the phone version show the book frontpage instead of spine"
+  // - "screen ne adi ne rakh right side ma jethi lage screen ma thi books ave che"
+  // ═════════════════════════════════════════════════════════════
+  const MOBILE_ARC_START = 95;  // Bottom of the vertical half-circle (degrees)
+  const MOBILE_ARC_END = 265;    // Top of the vertical half-circle (degrees)
+  const MOBILE_ARC_SPAN = MOBILE_ARC_END - MOBILE_ARC_START; // 170° vertical arc
+
+  const {
+    mobileStageWidth,
+    mobileStageHeight,
+    mobileRadius,
+    mobileCenterX,
+    mobileCenterY,
+    mobileCardW,
+    mobileCardH,
+    mobileStepAngle,
+    mobileTotalSpan
+  } = useMemo(() => {
+    if (!isMobile) {
+      return {
+        mobileStageWidth: 320,
+        mobileStageHeight: 380,
+        mobileRadius: 138,
+        mobileCenterX: 320,
+        mobileCenterY: 190,
+        mobileCardW: 38,
+        mobileCardH: 54,
+        mobileStepAngle: 25,
+        mobileTotalSpan: 180
       };
     }
 
-    // ── ALL OTHER CATEGORIES: FRONT COVERS WITH ADAPTIVE RADIUS ──
-    let w, h;
-    if (isMobile) {
-      if (N <= 5) { w = 46; h = 68; }
-      else if (N <= 8) { w = 42; h = 62; }
-      else if (N <= 14) { w = 38; h = 56; }
-      else if (N <= 20) { w = 34; h = 50; }
-      else { w = 28; h = 42; }
-    } else if (isTablet) {
-      if (N <= 5) { w = 62; h = 92; }
-      else if (N <= 8) { w = 56; h = 84; }
-      else if (N <= 14) { w = 50; h = 74; }
-      else if (N <= 20) { w = 44; h = 66; }
-      else { w = 38; h = 56; }
-    } else {
-      // Desktop / Laptop
-      if (N <= 5) { w = 72; h = 106; }
-      else if (N <= 8) { w = 66; h = 98; }
-      else if (N <= 14) { w = 58; h = 86; }
-      else if (N <= 20) { w = 50; h = 74; }
-      else { w = 44; h = 65; }
-    }
+    const width = Math.min(windowWidth, 420);
+    const height = 410;
+    const r = Math.min(Math.round(width * 0.44), 154); // Radius of vertical arc
+    const cx = width; // Flush against the right edge of the screen
+    const cy = height / 2; // Vertically centered
+    const w = 38; // Frontpage cover width
+    const h = 54; // Frontpage cover height
 
-    // Circumference gap between adjacent book edges:
-    let desiredGap;
-    if (isMobile) {
-      desiredGap = N <= 4 ? 20 : (N <= 8 ? 16 : 12);
-    } else {
-      desiredGap = N <= 4 ? 32 : (N <= 6 ? 26 : (N <= 12 ? 22 : 18));
-    }
-
-    // Circumference C = 2 * PI * R => R = N * (w + desiredGap) / (2 * PI)
-    const idealR = (N * (w + desiredGap)) / (2 * Math.PI);
-
-    // Bounds: compact when N <= 5, spacious when N is large
-    const minR = isMobile ? 78 : 120;
-    const maxR = isMobile ? 122 : 225;
-    const radius = Math.round(Math.min(maxR, Math.max(minR, idealR)));
-
-    const size = isMobile
-      ? Math.min(windowWidth - 28, Math.round(radius * 2 + h + 22))
-      : Math.round(radius * 2 + h + 42);
-
-    const hub = Math.round(
-      Math.max(
-        isMobile ? 96 : 130,
-        radius * 2 - h - (isMobile ? 14 : 28)
-      )
-    );
+    // Spacing between books along the vertical arc - generous spacing for comfortable finger touch
+    const step = N <= 8 ? (N > 1 ? MOBILE_ARC_SPAN / (N - 1) : 0) : 26;
+    const totalSpan = N <= 8 ? MOBILE_ARC_SPAN + step : N * step;
 
     return {
-      carouselSize: size,
-      shelfRadius: radius,
-      innerHubDiameter: hub,
-      cardW: w,
-      cardH: h
+      mobileStageWidth: width,
+      mobileStageHeight: height,
+      mobileRadius: r,
+      mobileCenterX: cx,
+      mobileCenterY: cy,
+      mobileCardW: w,
+      mobileCardH: h,
+      mobileStepAngle: step,
+      mobileTotalSpan: totalSpan
     };
-  }, [isSpineMode, N, isMobile, isTablet, windowWidth]);
+  }, [isMobile, windowWidth, N, MOBILE_ARC_SPAN]);
 
-  const centerRadius = carouselSize / 2;
+  // Compute items along the 180° vertical arc for mobile
+  const mobileVisibleItems = useMemo(() => {
+    if (!isMobile || !displayBooks || displayBooks.length === 0) return EMPTY_ARRAY;
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // 60FPS HARDWARE-ACCELERATED CIRCULAR ROTARY ENGINE
-  // Spines radiate outward as spokes; Front covers sit along shelf arc
-  // ═══════════════════════════════════════════════════════════════════════
-  const applyCarouselPositions = useCallback((angle, scrollSpeed = 0) => {
-    if (!containerRef.current) return;
-    const total = displayBooks.length;
-    if (total === 0) return;
+    const items = [];
+    const isSmallCategory = N <= 12;
 
-    const step = 360 / total;
+    for (let idx = 0; idx < displayBooks.length; idx++) {
+      const book = displayBooks[idx];
 
-    for (let i = 0; i < total; i++) {
-      const el = bookElsRef.current[i];
-      if (!el) continue;
+      let angleDeg;
+      if (isSmallCategory && mobileTotalSpan <= MOBILE_ARC_SPAN + 0.1) {
+        // Evenly distributed along the vertical 180° arc
+        angleDeg = N > 1 ? MOBILE_ARC_START + idx * mobileStepAngle : 180;
+      } else {
+        // Continuous rolling track along vertical arc
+        let rawPos = (idx * mobileStepAngle + mobileScrollAngle) % mobileTotalSpan;
+        if (rawPos < 0) rawPos += mobileTotalSpan;
+        angleDeg = MOBILE_ARC_START + rawPos;
+      }
 
-      const angleDeg = (i * step + angle - 90) % 360;
+      // Check if book falls inside the visible vertical arc window
+      const buffer = mobileStepAngle * 0.9;
+      if (angleDeg < MOBILE_ARC_START - buffer || angleDeg > MOBILE_ARC_END + buffer) {
+        continue;
+      }
+
+      let opacity = 1;
+      if (angleDeg < MOBILE_ARC_START + 8) {
+        opacity = Math.max(0, Math.min(1, (angleDeg - (MOBILE_ARC_START - buffer)) / (buffer + 8)));
+      } else if (angleDeg > MOBILE_ARC_END - 8) {
+        opacity = Math.max(0, Math.min(1, ((MOBILE_ARC_END + buffer) - angleDeg) / (buffer + 8)));
+      }
+
       const angleRad = (angleDeg * Math.PI) / 180;
+      const posX = mobileCenterX + mobileRadius * Math.cos(angleRad) - mobileCardW / 2;
+      const posY = mobileCenterY + mobileRadius * Math.sin(angleRad) - mobileCardH / 2;
 
-      // 3D Perspective Depth: foreground slightly forward, background receding
-      const depthNorm = (Math.sin(angleRad) + 1) / 2;
-      const scrollRecess = Math.min(0.06, scrollSpeed * 0.05);
-      const baseScale = isSpineMode ? (0.88 + 0.12 * depthNorm) : (0.90 + 0.10 * depthNorm);
-      const scale = Math.max(0.80, baseScale * (1 - scrollRecess));
+      // Gently fan the front covers along the vertical curve
+      const bookRotation = (angleDeg - 180) * 0.62;
 
-      // Radial spoke angle: points cleanly outward from center
-      const rot = (angleDeg + 90).toFixed(1);
-
-      const isHov = hoveredIndexRef.current === i;
-      const isSel = selectedIndexRef.current === i;
-      const isActive = isHov || isSel;
-
-      if (isActive) {
-        // Active volume pulls proudly outward along its radial spoke
-        const pullDist = isSpineMode ? (isMobile ? 14 : 22) : (isMobile ? 8 : 14);
-        const posX = centerRadius + (shelfRadius + pullDist) * Math.cos(angleRad) - cardW / 2;
-        const posY = centerRadius + (shelfRadius + pullDist) * Math.sin(angleRad) - cardH / 2;
-        el.style.transform = `translate3d(${posX.toFixed(1)}px, ${posY.toFixed(1)}px, 0) rotate(${rot}deg) scale(${isMobile ? 1.08 : 1.15})`;
-        el.style.zIndex = 300;
-        el.style.opacity = '1';
-      } else {
-        const posX = centerRadius + shelfRadius * Math.cos(angleRad) - cardW / 2;
-        const posY = centerRadius + shelfRadius * Math.sin(angleRad) - cardH / 2;
-        el.style.transform = `translate3d(${posX.toFixed(1)}px, ${posY.toFixed(1)}px, 0) rotate(${rot}deg) scale(${scale.toFixed(3)})`;
-        el.style.zIndex = Math.round(10 + depthNorm * 30);
-        el.style.opacity = isSpineMode ? (0.76 + 0.24 * depthNorm).toFixed(2) : (0.80 + 0.20 * depthNorm).toFixed(2);
-      }
+      items.push({
+        book,
+        idx,
+        posX,
+        posY,
+        angleDeg,
+        bookRotation,
+        opacity,
+        coverUrl: book.cover_image || getOfflineBookCover(book.title, book.author, book.category),
+        isBookAvailable: book.available_copies !== undefined ? book.available_copies > 0 : true
+      });
     }
-  }, [displayBooks, centerRadius, shelfRadius, cardW, cardH, isSpineMode, isMobile]);
 
-  // RequestAnimationFrame rotation loop
+    return items;
+  }, [isMobile, displayBooks, N, mobileStepAngle, mobileScrollAngle, mobileTotalSpan, MOBILE_ARC_START, MOBILE_ARC_END, MOBILE_ARC_SPAN, mobileCenterX, mobileCenterY, mobileRadius, mobileCardW, mobileCardH]);
+
+  const addMobileScrollDelta = useCallback((deltaDeg) => {
+    setMobileScrollAngle(prev => {
+      let next = prev + deltaDeg;
+      if (mobileTotalSpan > 0) {
+        next = next % mobileTotalSpan;
+      }
+      return next;
+    });
+  }, [mobileTotalSpan]);
+
+  // ═════════════════════════════════════════════════════════════════
+  // UNIFIED AUTO-ROTATION (Constant speed, Paused by default)
+  // ═════════════════════════════════════════════════════════════════
+  const CONSTANT_SPEED_DPS = isMobile ? 8.5 : 12.0;
+  const lastFrameTimeRef = useRef(null);
+
   useEffect(() => {
-    let animId;
-    const tick = () => {
-      if (isAutoRotatingRef.current && !isDraggingRef.current && hoveredIndexRef.current === null) {
-        targetAngleRef.current += 0.22;
-      }
+    if (!isAutoRotating || isDragging || isUserTouchingRef.current) {
+      lastFrameTimeRef.current = null;
+      return;
+    }
 
-      const diff = targetAngleRef.current - currentAngleRef.current;
-      const scrollSpeed = Math.min(1.5, Math.abs(diff) / 2.0);
-      if (Math.abs(diff) > 0.005) {
-        currentAngleRef.current += diff * 0.18;
-        applyCarouselPositions(currentAngleRef.current, scrollSpeed);
-      } else {
-        applyCarouselPositions(currentAngleRef.current, 0);
+    let animId;
+    const tick = (now) => {
+      if (lastFrameTimeRef.current !== null) {
+        const deltaSec = Math.min((now - lastFrameTimeRef.current) / 1000, 0.08);
+        if (isMobile) {
+          addMobileScrollDelta(CONSTANT_SPEED_DPS * deltaSec);
+        } else {
+          rotateDesktopBy(CONSTANT_SPEED_DPS * deltaSec);
+        }
       }
+      lastFrameTimeRef.current = now;
       animId = requestAnimationFrame(tick);
     };
+
     animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [applyCarouselPositions]);
+    return () => {
+      cancelAnimationFrame(animId);
+      lastFrameTimeRef.current = null;
+    };
+  }, [isAutoRotating, isDragging, isMobile, addMobileScrollDelta, rotateDesktopBy, CONSTANT_SPEED_DPS]);
 
-  // Reset angle when books or category change
+  // ═════════════════════════════════════════════════════════════════
+  // WHEEL & SCROLL LISTENER
+  // ═════════════════════════════════════════════════════════════════
   useEffect(() => {
-    targetAngleRef.current = 0;
-    currentAngleRef.current = 0;
-    setHoveredIndex(null);
-    setSelectedIndex(null);
-    applyCarouselPositions(0, 0);
-  }, [books, category, applyCarouselPositions]);
+    const container = containerRef.current;
+    if (!container) return;
 
-  // Active book determination
-  const activeIndex = hoveredIndex !== null ? hoveredIndex : selectedIndex;
-  const activeBook = activeIndex !== null ? displayBooks[activeIndex] : null;
-  const activeBookId = activeBook ? (activeBook.id !== undefined ? activeBook.id : activeBook._id) : null;
-  const activeCoverUrl = activeBook ? (activeBook.cover_image || getOfflineBookCover(activeBook.title, activeBook.author, activeBook.category)) : null;
-
-  // Wheel interaction: scroll only when cursor is directly over the circle
-  useEffect(() => {
-    const stageEl = containerRef.current;
-    if (!stageEl) return;
-
-    const handleWheelEvent = (e) => {
-      const rect = stageEl.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const r = rect.width / 2;
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      if (dist > r) return;
-
+    const handleWheel = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      targetAngleRef.current += delta > 0 ? 3.6 : -3.6;
+
+      const rawDelta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (isMobile) {
+        const step = Math.sign(rawDelta) * Math.min(Math.max(Math.abs(rawDelta) * 0.08, 1.2), 8.0);
+        addMobileScrollDelta(step);
+      } else {
+        const step = Math.sign(rawDelta) * Math.min(Math.max(Math.abs(rawDelta) * 0.12, 1.5), 14);
+        rotateDesktopBy(step);
+      }
     };
 
-    stageEl.addEventListener('wheel', handleWheelEvent, { passive: false });
-    return () => stageEl.removeEventListener('wheel', handleWheelEvent);
-  }, []);
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [isMobile, addMobileScrollDelta, rotateDesktopBy]);
 
-  // Rotary steering wheel drag handlers (Desktop pointer & Mobile touch unified)
-  const handlePointerDown = (e) => {
-    if (!containerRef.current) return;
-    try {
-      e.target.setPointerCapture(e.pointerId);
-    } catch (_) {}
-    isDraggingRef.current = true;
+  // Desktop Pointer drag handlers
+  const handleDesktopPointerDown = (e) => {
+    if (isMobile || !containerRef.current) return;
     setIsDragging(true);
-    hasMovedRef.current = false;
     const rect = containerRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+    const cX = rect.left + rect.width / 2;
+    const cY = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - cY, e.clientX - cX) * (180 / Math.PI);
     dragStartRef.current = {
-      centerX: cx,
-      centerY: cy,
+      centerX: cX,
+      centerY: cY,
       prevAngle: startAngle,
-      startX: e.clientX,
-      startY: e.clientY
+      startAngle: desktopRotationRef.current
     };
   };
 
-  const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - dragStartRef.current.startX;
-    const dy = e.clientY - dragStartRef.current.startY;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-      hasMovedRef.current = true;
-    }
-    const { centerX, centerY, prevAngle } = dragStartRef.current;
-    const curAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+  const handleDesktopPointerMove = (e) => {
+    if (isMobile || !isDragging) return;
+    const { centerX: cX, centerY: cY, prevAngle } = dragStartRef.current;
+    const curAngle = Math.atan2(e.clientY - cY, e.clientX - cX) * (180 / Math.PI);
     let delta = curAngle - prevAngle;
     if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
 
-    targetAngleRef.current += delta;
+    rotateDesktopBy(delta);
     dragStartRef.current.prevAngle = curAngle;
   };
 
-  const handlePointerUp = (e) => {
-    try {
-      if (e?.target?.releasePointerCapture) {
-        e.target.releasePointerCapture(e.pointerId);
-      }
-    } catch (_) {}
-    isDraggingRef.current = false;
-    setIsDragging(false);
+  const handleDesktopPointerUp = () => {
+    if (!isMobile) setIsDragging(false);
   };
 
-  if (!books || books.length === 0) {
+  // Mobile Touch handlers (Swipe up/down along the vertical half-circle)
+  const handleMobileTouchStart = (e) => {
+    if (!isMobile || !e.touches || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    isUserTouchingRef.current = true;
+    hasDraggedRef.current = false;
+    touchStartPosRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+    touchStartRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startAngle: mobileScrollAngleRef.current
+    };
+  };
+
+  const handleMobileTouchMove = (e) => {
+    if (!isMobile || !e.touches || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const dist = Math.hypot(touch.clientX - touchStartPosRef.current.x, touch.clientY - touchStartPosRef.current.y);
+    if (dist > 8) {
+      hasDraggedRef.current = true;
+      setIsDragging(true);
+      // Vertical swipe moves the vertical half-circle up/down
+      const deltaY = (touch.clientY - touchStartRef.current.startY) * 0.45;
+      addMobileScrollDelta(deltaY);
+      touchStartRef.current.startY = touch.clientY;
+    }
+  };
+
+  const handleMobileTouchEnd = () => {
+    if (isMobile) {
+      setIsDragging(false);
+      isUserTouchingRef.current = false;
+      if (hasDraggedRef.current) {
+        setTimeout(() => {
+          hasDraggedRef.current = false;
+          touchTargetBookRef.current = null;
+        }, 220);
+      }
+    }
+  };
+
+  // Active book determination: ONLY when hovering or selected
+  const activeIndex = hoveredIndex !== null ? hoveredIndex : selectedIndex;
+  const activeBook = activeIndex !== null ? (displayBooks[activeIndex] || null) : null;
+  const activeBookId = activeBook ? (activeBook.id !== undefined ? activeBook.id : activeBook._id) : null;
+  const activeCoverUrl = activeBook ? (activeBook.cover_image || getOfflineBookCover(activeBook.title, activeBook.author, activeBook.category)) : '';
+
+  if (!displayBooks || displayBooks.length === 0) {
     return null;
   }
 
+  // ═════════════════════════════════════════════════════════════════
+  // RENDER PHONE VERSION: 180-DEGREE VERTICAL HALF-CIRCLE (RIGHT SIDE)
+  // ═════════════════════════════════════════════════════════════════
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          position: 'relative',
+          width: '100%',
+          maxWidth: '100vw',
+          margin: '0 auto 20px',
+          paddingTop: '2px',
+          userSelect: 'none',
+          overflow: 'hidden'
+        }}
+      >
+        {/* 180° Vertical Half-Circle Stage Flush with Right Edge */}
+        <div
+          ref={containerRef}
+          onTouchStart={handleMobileTouchStart}
+          onTouchMove={handleMobileTouchMove}
+          onTouchEnd={handleMobileTouchEnd}
+          style={{
+            position: 'relative',
+            width: `${mobileStageWidth}px`,
+            maxWidth: '100%',
+            height: `${mobileStageHeight}px`,
+            marginLeft: 'auto',
+            marginRight: 0,
+            touchAction: 'none',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Vertical Half-Circle Arch Backing Flush with Right Screen Edge */}
+          <div
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: `${mobileCenterY - (mobileRadius + mobileCardH / 2 + 10)}px`,
+              width: `${mobileRadius + mobileCardW / 2 + 10}px`,
+              height: `${(mobileRadius + mobileCardH / 2 + 10) * 2}px`,
+              borderTopLeftRadius: `${mobileRadius + mobileCardH / 2 + 10}px`,
+              borderBottomLeftRadius: `${mobileRadius + mobileCardH / 2 + 10}px`,
+              backgroundColor: '#FAF8F4',
+              border: '1.5px solid var(--editorial-border)',
+              borderRight: 'none',
+              boxShadow: 'inset 0 4px 14px rgba(37, 40, 32, 0.04), -6px 0 20px rgba(37, 40, 32, 0.06)',
+              pointerEvents: 'none',
+              zIndex: 1
+            }}
+          />
+
+          {/* SVG Vertical Arched Rails & Brass Mantle along Right Edge */}
+          <svg
+            width={mobileStageWidth}
+            height={mobileStageHeight}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              zIndex: 2
+            }}
+          >
+            <defs>
+              <linearGradient id="mobileBrassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#C5A059" stopOpacity="0.3" />
+                <stop offset="25%" stopColor="#D4AF37" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#F4D06F" stopOpacity="0.95" />
+                <stop offset="75%" stopColor="#D4AF37" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#C5A059" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+
+            {/* Outer Vertical Arc Rail curving in from right edge */}
+            <path
+              d={`M ${mobileCenterX} ${mobileCenterY - (mobileRadius + mobileCardH / 2 + 2)} A ${mobileRadius + mobileCardH / 2 + 2} ${mobileRadius + mobileCardH / 2 + 2} 0 0 0 ${mobileCenterX} ${mobileCenterY + (mobileRadius + mobileCardH / 2 + 2)}`}
+              fill="none"
+              stroke="url(#mobileBrassGrad)"
+              strokeWidth="2.5"
+            />
+
+            {/* Inner Vertical Arc Rail */}
+            <path
+              d={`M ${mobileCenterX} ${mobileCenterY - (mobileRadius - mobileCardH / 2 - 2)} A ${mobileRadius - mobileCardH / 2 - 2} ${mobileRadius - mobileCardH / 2 - 2} 0 0 0 ${mobileCenterX} ${mobileCenterY + (mobileRadius - mobileCardH / 2 - 2)}`}
+              fill="none"
+              stroke="rgba(212, 175, 55, 0.45)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+
+            {/* Vertical Mantle Spine Line along right edge */}
+            <line
+              x1={mobileCenterX - 1}
+              y1={mobileCenterY - (mobileRadius + mobileCardH / 2 + 8)}
+              x2={mobileCenterX - 1}
+              y2={mobileCenterY + (mobileRadius + mobileCardH / 2 + 8)}
+              stroke="#D4AF37"
+              strokeWidth="2.5"
+            />
+          </svg>
+
+          {/* ═══════════════════════════════════════════════════════ */}
+          {/* BOOKS ON VERTICAL 180° ARC (ALL SHOW FRONT COVERS)     */}
+          {/* ═══════════════════════════════════════════════════════ */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'auto',
+              zIndex: 10
+            }}
+          >
+            {mobileVisibleItems.map(({ book, idx, posX, posY, bookRotation, opacity, coverUrl, isBookAvailable }) => {
+              const bId = book.id !== undefined ? book.id : book._id;
+              const isSelected = selectedIndex === idx;
+
+              return (
+                <div
+                  key={bId ? `${bId}-${idx}` : idx}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open details for ${book.title}`}
+                  onTouchStart={() => {
+                    touchTargetBookRef.current = book;
+                    setSelectedIndex(idx);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (hasDraggedRef.current) {
+                      return;
+                    }
+                    const target = touchTargetBookRef.current || book;
+                    handleBookClick(e, target);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: `${posX}px`,
+                    top: `${posY}px`,
+                    width: `${mobileCardW}px`,
+                    height: `${mobileCardH}px`,
+                    transform: `rotate(${bookRotation}deg)${isSelected ? ' scale(1.15)' : ''}`,
+                    transformOrigin: 'center center',
+                    zIndex: isSelected ? 120 : 20,
+                    opacity,
+                    cursor: 'pointer',
+                    willChange: 'transform, opacity',
+                    WebkitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation',
+                    transition: 'transform 0.18s ease, opacity 0.18s ease'
+                  }}
+                  title={`${book.title} by ${book.author} — Tap to view details`}
+                >
+                  {/* FRONT PAGE OF THE BOOK (ON PHONE) */}
+                  <div
+                    className="shelf-front-cover-card"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '3.5px',
+                      backgroundColor: '#1E1E1E',
+                      overflow: 'hidden',
+                      border: isSelected
+                        ? '2px solid rgba(212, 175, 55, 0.95)'
+                        : '1px solid rgba(255, 255, 255, 0.70)',
+                      boxShadow: isSelected
+                        ? '0 6px 16px rgba(0, 0, 0, 0.45), 0 0 10px rgba(212, 175, 55, 0.70)'
+                        : '0 3px 8px rgba(0, 0, 0, 0.28)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      position: 'relative'
+                    }}
+                  >
+                    <img
+                      src={coverUrl}
+                      alt={book.title}
+                      onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                      loading="lazy"
+                    />
+
+                    {/* Subtle book sheen */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'none',
+                        background: 'linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(255,255,255,0.15) 6%, transparent 15%, transparent 88%, rgba(0,0,0,0.14) 100%)'
+                      }}
+                    />
+
+                    {/* Live Availability Status Pip */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        right: '2px',
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        backgroundColor: isBookAvailable ? '#27AE60' : '#C0392B',
+                        border: '0.6px solid #FFFFFF',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                        zIndex: 3
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════ */}
+          {/* LEFT SIDE DETAILS CARD (Beside Vertical Half-Circle)    */}
+          {/* ═══════════════════════════════════════════════════════ */}
+          <div
+            onClick={(e) => {
+              if (activeBook && !hasDraggedRef.current) handleBookClick(e, activeBook);
+            }}
+            style={{
+              position: 'absolute',
+              left: '12px',
+              top: `${mobileCenterY - 100}px`,
+              width: `${Math.min(180, mobileStageWidth - (mobileRadius + 32))}px`,
+              backgroundColor: '#FFFFFF',
+              borderRadius: '10px',
+              border: '1.5px solid var(--editorial-border)',
+              boxShadow: '0 4px 14px rgba(37, 40, 32, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '12px 10px',
+              zIndex: 60,
+              cursor: activeBook ? 'pointer' : 'default',
+              pointerEvents: 'auto'
+            }}
+          >
+            {activeBook ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '56px',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      boxShadow: '0 3px 8px rgba(0,0,0,0.22)',
+                      backgroundColor: '#1E1E1E'
+                    }}
+                  >
+                    <img
+                      src={activeCoverUrl}
+                      alt={activeBook.title}
+                      onError={(e) => handleBookCoverError(e, activeBook.title, activeBook.author, activeBook.category)}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '0.60rem', fontWeight: 700, color: 'var(--editorial-green)', textTransform: 'uppercase' }}>
+                      {activeBook.category || category}
+                    </div>
+                    <div style={{ fontSize: '0.64rem', color: (activeBook.available_copies !== undefined ? activeBook.available_copies > 0 : true) ? '#27AE60' : '#C0392B', fontWeight: 600 }}>
+                      {(activeBook.available_copies !== undefined ? activeBook.available_copies > 0 : true) ? '● In Stacks' : '● On Loan'}
+                    </div>
+                  </div>
+                </div>
+
+                <h4
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '0.80rem',
+                    fontWeight: 700,
+                    color: 'var(--editorial-text)',
+                    lineHeight: 1.25,
+                    margin: '0 0 2px',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}
+                  title={activeBook.title}
+                >
+                  {activeBook.title}
+                </h4>
+
+                <div style={{ fontSize: '0.68rem', color: 'var(--editorial-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {activeBook.author}
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '16px 6px', gap: '6px' }}>
+                <BookOpen size={24} style={{ color: 'var(--editorial-green)', opacity: 0.8 }} />
+                <div style={{ fontSize: '0.80rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                  {category === 'All' ? 'Collection' : category}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Up / Down Navigation Controls for Mobile Vertical Half-Circle */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '12px',
+              bottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              zIndex: 80
+            }}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addMobileScrollDelta(-mobileStepAngle * 2 || -14);
+              }}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: '#FFFFFF',
+                border: '1.5px solid var(--editorial-border)',
+                boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--editorial-text)'
+              }}
+              title="Scroll up"
+              aria-label="Scroll up"
+            >
+              <ChevronUp size={16} />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addMobileScrollDelta(mobileStepAngle * 2 || 14);
+              }}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: '#FFFFFF',
+                border: '1.5px solid var(--editorial-border)',
+                boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--editorial-text)'
+              }}
+              title="Scroll down"
+              aria-label="Scroll down"
+            >
+              <ChevronDown size={16} />
+            </button>
+
+            {/* Play / Pause Toggle Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAutoRotating(!isAutoRotating);
+              }}
+              style={{
+                padding: '5px 12px',
+                fontSize: '0.70rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                borderRadius: '9999px',
+                backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFFFFF',
+                color: isAutoRotating ? '#FFFFFF' : 'var(--editorial-text)',
+                border: '1.5px solid var(--editorial-border)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                boxShadow: '0 2px 6px rgba(37, 40, 32, 0.1)'
+              }}
+              title={isAutoRotating ? 'Pause rotation' : 'Play rotation'}
+            >
+              {isAutoRotating ? <Pause size={11} /> : <Play size={11} fill="currentColor" />}
+              <span>{isAutoRotating ? 'Pause' : 'Play'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  // RENDER PC VERSION: 360-DEGREE FULL CIRCULAR BOOKSHELF ROTUNDA
+  // ═════════════════════════════════════════════════════════════════
   return (
     <div
-      ref={wrapperRef}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -368,182 +874,160 @@ export default function CircularBookCarousel({
         position: 'relative',
         width: '100%',
         maxWidth: '100vw',
-        margin: isMobile ? '0 auto 20px' : '0 auto 36px',
-        userSelect: 'none'
+        margin: '0 auto 28px',
+        paddingTop: '12px',
+        userSelect: 'none',
+        overflow: 'visible'
       }}
     >
-      {/* Action Bar: Play/Pause continuous rotation */}
-      {displayBooks.length > 1 && (
-        <div
-          style={{
-            width: '100%',
-            maxWidth: `${carouselSize}px`,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            marginBottom: isMobile ? '8px' : '14px',
-            padding: '0 8px'
-          }}
-        >
-          <button
-            onClick={() => setIsAutoRotating(!isAutoRotating)}
-            className="btn btn-outline btn-sm"
-            style={{
-              padding: isMobile ? '3px 10px' : '4px 12px',
-              fontSize: isMobile ? '0.70rem' : '0.76rem',
-              fontWeight: 600,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              borderRadius: '9999px',
-              backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFFFFF',
-              color: isAutoRotating ? '#FFFFFF' : 'var(--editorial-text)',
-              borderColor: isAutoRotating ? 'var(--editorial-green)' : 'var(--editorial-border)',
-              boxShadow: '0 2px 6px rgba(37, 40, 32, 0.08)',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer'
-            }}
-            title={isAutoRotating ? 'Pause rotation' : 'Play continuous 360° rotation'}
-          >
-            {isAutoRotating ? <Pause size={isMobile ? 10 : 11} /> : <Play size={isMobile ? 10 : 11} />}
-            <span>{isAutoRotating ? 'Pause' : 'Play'}</span>
-          </button>
-        </div>
-      )}
 
-      {/* ── 360° Round / Circular Bookshelf Stage ── */}
+
+      {/* 360-Degree Circular Rotunda Stage */}
       <div
         ref={containerRef}
-        onPointerDown={(e) => {
-          if (e.target === containerRef.current) {
-            setSelectedIndex(null);
-            setHoveredIndex(null);
-          }
-          handlePointerDown(e);
-        }}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerDown={handleDesktopPointerDown}
+        onPointerMove={handleDesktopPointerMove}
+        onPointerUp={handleDesktopPointerUp}
+        onPointerLeave={handleDesktopPointerUp}
         style={{
           position: 'relative',
-          width: `${carouselSize}px`,
-          height: `${carouselSize}px`,
-          maxWidth: 'calc(100vw - 20px)',
-          maxHeight: 'calc(100vw - 20px)',
-          borderRadius: '50%',
-          backgroundColor: '#FAF8F4',
-          boxShadow: `
-            0 28px 64px -8px rgba(37, 40, 32, 0.24),
-            0 12px 28px -4px rgba(37, 40, 32, 0.14),
-            inset 0 0 0 ${isMobile ? '8px' : '12px'} #FFFFFF,
-            inset 0 0 0 ${isMobile ? '10px' : '14px'} var(--editorial-border),
-            inset 0 16px 36px rgba(37, 40, 32, 0.08)
-          `,
-          cursor: isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none',
+          width: `${desktopSize}px`,
+          height: `${desktopSize}px`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'visible',
-          margin: '0 auto'
+          margin: '0 auto',
+          borderRadius: '50%',
+          backgroundColor: '#FAF8F4',
+          boxShadow: `
+            0 24px 54px -8px rgba(37, 40, 32, 0.20),
+            0 8px 22px -4px rgba(37, 40, 32, 0.10),
+            inset 0 0 0 10px #FFFFFF,
+            inset 0 0 0 12px var(--editorial-border),
+            inset 0 12px 28px rgba(37, 40, 32, 0.06)
+          `,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
+          overflow: 'visible'
         }}
       >
-        {/* Outermost Architectural White Wall Rim Bezel */}
+        {/* Outermost Shelving Bezel Frame */}
         <div
           style={{
             position: 'absolute',
-            inset: isMobile ? '-6px' : '-10px',
+            width: `${(desktopRadius + desktopCardH / 2 + 10) * 2}px`,
+            height: `${(desktopRadius + desktopCardH / 2 + 10) * 2}px`,
             borderRadius: '50%',
-            border: `${isMobile ? '10px' : '16px'} solid #FFFFFF`,
-            boxShadow: '0 8px 30px rgba(37, 40, 32, 0.14), inset 0 2px 4px rgba(0,0,0,0.06)',
+            border: '12px solid #FFFFFF',
+            boxShadow: '0 8px 24px rgba(37, 40, 32, 0.12), inset 0 2px 4px rgba(0,0,0,0.04)',
             pointerEvents: 'none',
             zIndex: 1
           }}
         />
 
-        {/* Circular Recessed Shelf Track Floor Ring */}
+        {/* Gold Inlaid Circular Dial Accent */}
         <div
           style={{
             position: 'absolute',
-            width: `${shelfRadius * 2}px`,
-            height: `${shelfRadius * 2}px`,
+            width: `${(desktopRadius + desktopCardH / 2) * 2}px`,
+            height: `${(desktopRadius + desktopCardH / 2) * 2}px`,
             borderRadius: '50%',
-            border: '2px solid rgba(212, 175, 55, 0.32)',
-            boxShadow: 'inset 0 1px 4px rgba(37, 40, 32, 0.04)',
+            border: '1.5px solid rgba(212, 175, 55, 0.35)',
             pointerEvents: 'none',
-            zIndex: 2
+            zIndex: 1
           }}
         />
 
-        {/* ═════════════════════════════════════════════════════════ */}
-        {/* BOOKS POSITIONED ALONG THE CIRCULAR PATH                  */}
-        {/* Mode A (isSpineMode): PROPER ORIGINAL BOOK SPINES ONLY    */}
-        {/* Mode B (!isSpineMode): Upright Book Front Covers          */}
-        {/* ═════════════════════════════════════════════════════════ */}
-        {displayBooks.map((book, idx) => {
-          const bId = book.id !== undefined ? book.id : book._id;
-          const isHov = hoveredIndex === idx;
-          const isSel = selectedIndex === idx;
-          const isActive = isHov || isSel;
-          const coverUrl = book.cover_image || getOfflineBookCover(book.title, book.author, book.category);
-          const isBookAvailable = book.available_copies !== undefined ? book.available_copies > 0 : true;
-          const spineTheme = getArchivalSpineTheme(book, idx);
+        {/* Inner Shelving Rim Frame */}
+        <div
+          style={{
+            position: 'absolute',
+            width: `${(desktopRadius - desktopCardH / 2 - 2) * 2}px`,
+            height: `${(desktopRadius - desktopCardH / 2 - 2) * 2}px`,
+            borderRadius: '50%',
+            border: '2px solid #E2DDD0',
+            backgroundColor: '#FAF8F4',
+            boxShadow: 'inset 0 2px 6px rgba(37, 40, 32, 0.05)',
+            pointerEvents: 'none',
+            zIndex: 3
+          }}
+        />
 
-          return (
-            <div
-              key={bId || idx}
-              ref={el => (bookElsRef.current[idx] = el)}
-              onMouseEnter={() => {
-                if (!isMobile) setHoveredIndex(idx);
-              }}
-              onMouseLeave={() => {
-                if (!isMobile) setHoveredIndex(null);
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (hasMovedRef.current) return;
-                setSelectedIndex(idx);
-                if (onViewDetails) {
-                  onViewDetails(bId);
-                }
-              }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: `${cardW}px`,
-                height: `${cardH}px`,
-                willChange: 'transform',
-                zIndex: isActive ? 300 : 15,
-                cursor: 'pointer'
-              }}
-              title={`${book.title} by ${book.author}`}
-            >
-              {isSpineMode ? (
-                /* ═════════════════════════════════════════════════════════ */
-                /* ALL CATEGORIES: AUTHENTIC ORIGINAL BOOK SPINE             */
-                /* Slender hardcover physical spine with archival textures   */
-                /* ═════════════════════════════════════════════════════════ */
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* ROTATING 360° WHEEL CONTAINER (GPU TRANSFORMED, ZERO LAG)   */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <div
+          ref={desktopWheelRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: `${desktopSize}px`,
+            height: `${desktopSize}px`,
+            transform: 'rotate(0deg)',
+            transformOrigin: 'center center',
+            willChange: 'transform',
+            pointerEvents: 'auto',
+            zIndex: 5
+          }}
+        >
+          {desktopShelfItems.map(({ book, idx, posX, posY, bookRotation, spineTheme, coverUrl, isBookAvailable }) => {
+            const bId = book.id !== undefined ? book.id : book._id;
+            const isHovered = hoveredIndex === idx;
+            const isSelected = selectedIndex === idx;
+            const isActive = isHovered || isSelected;
+
+            return (
+              <div
+                key={bId ? `${bId}-${idx}` : idx}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open details for ${book.title}`}
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                onClick={(e) => handleBookClick(e, book)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleBookClick(e, book);
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  left: `${posX}px`,
+                  top: `${posY}px`,
+                  width: `${desktopCardW}px`,
+                  height: `${desktopCardH}px`,
+                  transform: `rotate(${bookRotation}deg)${isActive ? ' translateY(-8px) scale(1.03)' : ''}`,
+                  transformOrigin: 'center center',
+                  zIndex: isActive ? 100 : 10,
+                  cursor: 'pointer',
+                  willChange: 'transform',
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation',
+                  transition: 'transform 0.18s cubic-bezier(0.2, 0, 0, 1)'
+                }}
+                title={`${book.title} by ${book.author} — Click to view details`}
+              >
+                {/* AUTHENTIC ARCHIVAL HARDCOVER BOOK SPINE */}
                 <div
                   className="shelf-spine-card"
                   style={{
                     position: 'relative',
                     width: '100%',
                     height: '100%',
-                    borderRadius: isMobile ? '2.5px' : '3px',
+                    borderRadius: '2.5px',
                     backgroundColor: spineTheme.bg,
                     overflow: 'hidden',
                     boxShadow: isActive
-                      ? '0 18px 38px rgba(0, 0, 0, 0.65), 0 0 0 2.5px #E5C158'
-                      : '0 2px 6px rgba(0, 0, 0, 0.40), inset 1px 0 2px rgba(255,255,255,0.18), inset -1px 0 2px rgba(0,0,0,0.5)',
-                    borderLeft: '1.5px solid rgba(255, 255, 255, 0.18)',
-                    borderRight: `1.5px solid ${spineTheme.border}`,
-                    transformOrigin: 'center center',
+                      ? '0 6px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(212, 175, 55, 0.85)'
+                      : '0 2px 4px rgba(0, 0, 0, 0.35), inset 1px 0 2px rgba(255,255,255,0.16), inset -1px 0 2px rgba(0,0,0,0.45)',
+                    border: isActive
+                      ? '1.2px solid rgba(212, 175, 55, 0.95)'
+                      : `1px solid ${spineTheme.border}`,
+                    borderLeft: isActive ? '1.5px solid rgba(212, 175, 55, 0.95)' : '1px solid rgba(255, 255, 255, 0.16)',
                     pointerEvents: 'auto',
-                    transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
+                    transition: 'box-shadow 0.18s ease, border 0.18s ease'
                   }}
                 >
-                  {/* Spine Face: Real archival hardcover texture */}
                   <div
                     style={{
                       position: 'absolute',
@@ -559,8 +1043,7 @@ export default function CircularBookCarousel({
                     <img
                       src={coverUrl}
                       alt={book.title}
-                      loading="eager"
-                      decoding="async"
+                      loading="lazy"
                       onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
                       style={{
                         position: 'absolute',
@@ -570,12 +1053,11 @@ export default function CircularBookCarousel({
                         objectFit: 'cover',
                         objectPosition: 'left center',
                         opacity: 0.82,
-                        filter: 'contrast(1.08) brightness(0.96)',
+                        filter: 'contrast(1.06) brightness(0.96)',
                         pointerEvents: 'none'
                       }}
                     />
 
-                    {/* 3D Cylindrical Spine Sheen */}
                     <div
                       style={{
                         position: 'absolute',
@@ -585,34 +1067,47 @@ export default function CircularBookCarousel({
                       }}
                     />
 
-                    {/* Raised Horizontal Ribs */}
-                    <div style={{ position: 'absolute', top: '22%', left: '6%', right: '6%', height: '1.5px', backgroundColor: spineTheme.rib, opacity: 0.65, boxShadow: '0 1px 1px rgba(0,0,0,0.7)', pointerEvents: 'none', zIndex: 2 }} />
-                    <div style={{ position: 'absolute', top: '78%', left: '6%', right: '6%', height: '1.5px', backgroundColor: spineTheme.rib, opacity: 0.65, boxShadow: '0 1px 1px rgba(0,0,0,0.7)', pointerEvents: 'none', zIndex: 2 }} />
+                    {/* Live Availability Status Pip */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        right: '2px',
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        backgroundColor: isBookAvailable ? '#27AE60' : '#C0392B',
+                        border: '0.6px solid #FFFFFF',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                        zIndex: 4,
+                        pointerEvents: 'none'
+                      }}
+                    />
 
-                    {/* Top Headband Trim */}
+                    <div style={{ position: 'absolute', top: '22%', left: '6%', right: '6%', height: '1.2px', backgroundColor: spineTheme.rib, opacity: 0.65, pointerEvents: 'none', zIndex: 2 }} />
+                    <div style={{ position: 'absolute', top: '78%', left: '6%', right: '6%', height: '1.2px', backgroundColor: spineTheme.rib, opacity: 0.65, pointerEvents: 'none', zIndex: 2 }} />
+
                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', zIndex: 3, pointerEvents: 'none' }}>
-                      <div style={{ width: '92%', height: isMobile ? '2px' : '2.5px', backgroundColor: spineTheme.rib, opacity: 0.95, borderRadius: '1px' }} />
-                      <div style={{ width: '75%', height: '1px', backgroundColor: 'rgba(0,0,0,0.6)' }} />
+                      <div style={{ width: '92%', height: '2px', backgroundColor: spineTheme.rib, opacity: 0.95, borderRadius: '1px' }} />
                     </div>
 
-                    {/* Vertical Book Title Typography */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', width: '100%', zIndex: 3, pointerEvents: 'none', padding: '2px 0' }}>
                       <span
                         style={{
                           writingMode: 'vertical-rl',
                           textOrientation: 'mixed',
                           transform: 'rotate(180deg)',
-                          fontSize: isMobile ? (cardW > 10 ? '7px' : '5.5px') : (cardW > 24 ? '8px' : '6.5px'),
-                          fontFamily: "'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', Georgia, serif",
+                          fontSize: desktopCardW > 14 ? '7.5px' : (desktopCardW > 10 ? '6.5px' : '5.5px'),
+                          fontFamily: "'Space Grotesk', -apple-system, sans-serif",
                           fontWeight: 700,
                           letterSpacing: '0.02em',
                           color: spineTheme.text,
-                          textShadow: '0 1px 3px rgba(0,0,0,0.98), 0 0 2px rgba(0,0,0,0.95)',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.98)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           lineHeight: 1,
-                          maxHeight: `${cardH - 18}px`,
+                          maxHeight: `${desktopCardH - 16}px`,
                           userSelect: 'none'
                         }}
                       >
@@ -620,15 +1115,13 @@ export default function CircularBookCarousel({
                       </span>
                     </div>
 
-                    {/* Bottom Headband & Availability Pip */}
                     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', zIndex: 3, pointerEvents: 'none' }}>
-                      <div style={{ width: '75%', height: '1px', backgroundColor: 'rgba(0,0,0,0.6)' }} />
-                      <div style={{ width: '92%', height: isMobile ? '1.5px' : '2px', backgroundColor: spineTheme.rib, opacity: 0.90, borderRadius: '1px' }} />
+                      <div style={{ width: '92%', height: '2px', backgroundColor: spineTheme.rib, opacity: 0.90, borderRadius: '1px' }} />
                       <span
                         style={{
                           marginTop: '1px',
-                          width: isMobile ? '3px' : '4px',
-                          height: isMobile ? '3px' : '4px',
+                          width: '3px',
+                          height: '3px',
                           borderRadius: '50%',
                           backgroundColor: isBookAvailable ? '#2E7D32' : '#C62828',
                           border: '0.5px solid #FFFFFF',
@@ -638,245 +1131,137 @@ export default function CircularBookCarousel({
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* ═════════════════════════════════════════════════════════ */
-                /* OTHER CATEGORIES: UPRIGHT FRONT BOOK COVERS               */
-                /* ═════════════════════════════════════════════════════════ */
-                <div
-                  className="shelf-front-cover-card"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: isMobile ? '3.5px' : '5px',
-                    backgroundColor: '#FFFFFF',
-                    overflow: 'hidden',
-                    border: isActive
-                      ? '2.5px solid #E5C158'
-                      : '1px solid rgba(0, 0, 0, 0.16)',
-                    boxShadow: isActive
-                      ? '0 18px 36px -4px rgba(37, 40, 32, 0.45), 0 0 0 2px #E5C158'
-                      : '0 4px 12px -2px rgba(37, 40, 32, 0.20)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    transformOrigin: 'center center',
-                    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
-                    pointerEvents: 'auto'
-                  }}
-                >
-                  <img
-                    src={coverUrl}
-                    alt={book.title}
-                    loading="eager"
-                    decoding="async"
-                    onError={(e) => handleBookCoverError(e, book.title, book.author, book.category)}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      pointerEvents: 'none'
-                    }}
-                  />
+              </div>
+            );
+          })}
+        </div>
 
-                  {/* Subtle Hardcover Hinge Crease Shadow */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      width: isMobile ? '4px' : '6px',
-                      background: 'linear-gradient(90deg, rgba(0,0,0,0.30) 0%, rgba(255,255,255,0.15) 20%, transparent 100%)',
-                      pointerEvents: 'none'
-                    }}
-                  />
-
-                  {/* Status Indicator Pip */}
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: isMobile ? '3px' : '4px',
-                      right: isMobile ? '3px' : '4px',
-                      width: isMobile ? '5px' : '7px',
-                      height: isMobile ? '5px' : '7px',
-                      borderRadius: '50%',
-                      backgroundColor: isBookAvailable ? '#2E7D32' : '#C62828',
-                      border: '1px solid #FFFFFF',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-                      pointerEvents: 'none'
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* ═════════════════════════════════════════════════════════ */}
-        {/* CENTER DISC: BOOK PROPER SHOWCASE ONLY                    */}
-        {/* Prominent front cover, category, title, author.           */}
-        {/* No options or buttons below the books (clean display).    */}
-        {/* ═════════════════════════════════════════════════════════ */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* CENTRAL CIRCLE DISC (Desktop Unified Hub)                   */}
+        {/* Clicking it also redirects to the book's details page       */}
+        {/* ═══════════════════════════════════════════════════════════ */}
         <div
           onClick={(e) => {
-            e.stopPropagation();
-            if (activeBookId && onViewDetails) {
-              onViewDetails(activeBookId);
-            }
+            if (activeBook) handleBookClick(e, activeBook);
           }}
           style={{
-            position: 'absolute',
-            width: `${innerHubDiameter}px`,
-            height: `${innerHubDiameter}px`,
+            position: 'relative',
+            width: `${desktopHubDiameter}px`,
+            height: `${desktopHubDiameter}px`,
             borderRadius: '50%',
             backgroundColor: '#FFFFFF',
-            border: '2px solid #E2DDD0',
+            border: '2px solid var(--editorial-border)',
             boxShadow: `
-              0 14px 32px rgba(37, 40, 32, 0.10),
-              inset 0 0 0 ${innerHubDiameter < 150 ? '3px' : '5px'} #FAF8F4,
-              inset 0 0 0 ${innerHubDiameter < 150 ? '5px' : '7px'} rgba(212, 175, 55, 0.28)
+              0 10px 26px rgba(37, 40, 32, 0.08),
+              inset 0 2px 5px rgba(0,0,0,0.03)
             `,
-            zIndex: 60,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            textAlign: 'center',
-            padding: innerHubDiameter < 150 ? '8px 10px' : '14px 18px',
+            padding: '12px 16px',
+            zIndex: 60,
+            cursor: activeBook ? 'pointer' : 'default',
             pointerEvents: 'auto',
-            overflow: 'hidden',
-            cursor: activeBook ? 'pointer' : 'default'
+            textAlign: 'center'
           }}
-          title={activeBook ? `${activeBook.title} by ${activeBook.author}` : 'Circular Bookshelf'}
         >
           {activeBook ? (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                overflow: 'hidden'
-              }}
-            >
-              {/* Proper Front Cover Artwork in the Middle */}
-              {activeCoverUrl && (
-                <div
-                  style={{
-                    width: innerHubDiameter < 150 ? '38px' : (innerHubDiameter < 190 ? '48px' : (innerHubDiameter < 240 ? '60px' : '72px')),
-                    height: innerHubDiameter < 150 ? '56px' : (innerHubDiameter < 190 ? '70px' : (innerHubDiameter < 240 ? '88px' : '104px')),
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 22px rgba(0,0,0,0.30)',
-                    marginBottom: innerHubDiameter < 150 ? '3px' : '6px',
-                    flexShrink: 0
-                  }}
-                >
-                  <img
-                    src={activeCoverUrl}
-                    alt={activeBook.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    onError={(e) => handleBookCoverError(e, activeBook.title, activeBook.author, activeBook.category)}
-                  />
-                </div>
-              )}
-
-              {/* Category Badge */}
-              <span
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '100%' }}>
+              <div
                 style={{
-                  fontSize: innerHubDiameter < 150 ? '0.52rem' : (innerHubDiameter < 190 ? '0.58rem' : '0.64rem'),
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  color: 'var(--editorial-accent)',
-                  textTransform: 'uppercase',
-                  marginBottom: '2px',
-                  whiteSpace: 'nowrap',
+                  width: '52px',
+                  height: '76px',
+                  borderRadius: '3px',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '92%'
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.22)',
+                  marginBottom: '8px',
+                  backgroundColor: '#1E1E1E'
                 }}
               >
-                {activeBook.category || 'LIBRARY VOLUME'}
-              </span>
+                <img
+                  src={activeCoverUrl}
+                  alt={activeBook.title}
+                  onError={(e) => handleBookCoverError(e, activeBook.title, activeBook.author, activeBook.category)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
 
-              {/* Book Title */}
               <h4
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  fontSize: innerHubDiameter < 150 ? '0.78rem' : (innerHubDiameter < 190 ? '0.88rem' : '1.02rem'),
-                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
                   color: 'var(--editorial-text)',
-                  lineHeight: 1.15,
-                  margin: '0 0 2px',
+                  lineHeight: 1.2,
+                  margin: 0,
+                  maxHeight: '36px',
+                  overflow: 'hidden',
                   display: '-webkit-box',
-                  WebkitLineClamp: innerHubDiameter < 150 ? 1 : 2,
+                  WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
+                  textOverflow: 'ellipsis'
                 }}
               >
                 {activeBook.title}
               </h4>
 
-              {/* Author */}
-              <p
-                style={{
-                  fontSize: innerHubDiameter < 150 ? '0.58rem' : (innerHubDiameter < 190 ? '0.64rem' : '0.72rem'),
-                  color: 'var(--editorial-text-muted)',
-                  margin: 0,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '92%'
-                }}
-              >
+              <div style={{ fontSize: '0.70rem', color: 'var(--editorial-text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
                 {activeBook.author}
-              </p>
+              </div>
             </div>
           ) : (
-            /* Neutral State: Clean prompt when no volume is actively hovered */
-            <div
-              style={{
-                color: 'var(--editorial-text-muted)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: innerHubDiameter < 150 ? '4px' : '10px',
-                textAlign: 'center',
-                userSelect: 'none'
-              }}
-            >
-              <span
-                style={{
-                  fontSize: innerHubDiameter < 150 ? '0.76rem' : (innerHubDiameter < 180 ? '0.86rem' : '0.96rem'),
-                  fontFamily: 'var(--font-serif)',
-                  color: 'var(--editorial-text)',
-                  fontWeight: 700,
-                  marginBottom: '2px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                No Book Selected
-              </span>
-
-              <span
-                style={{
-                  fontSize: innerHubDiameter < 150 ? '0.52rem' : (innerHubDiameter < 180 ? '0.58rem' : '0.66rem'),
-                  color: 'var(--editorial-text-muted)',
-                  lineHeight: 1.3,
-                  maxWidth: innerHubDiameter < 150 ? '110px' : (innerHubDiameter < 180 ? '140px' : '170px')
-                }}
-              >
-                {displayBooks.length === 1
-                  ? '1 volume in this category'
-                  : `All ${displayBooks.length} volumes in this view • Hover or click any book`}
+            <div style={{ color: 'var(--editorial-text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <BookOpen size={28} style={{ opacity: 0.40, color: 'var(--editorial-accent)' }} />
+              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--editorial-text)' }}>
+                {category === 'All' ? 'Complete Collection' : category}
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', fontWeight: 600 }}>
+                Hover book to preview
               </span>
             </div>
           )}
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* PLAY / PAUSE BUTTON (Right Corner, Paused by default)      */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '-10px',
+            right: '6px',
+            zIndex: 80,
+            pointerEvents: 'auto'
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAutoRotating(!isAutoRotating);
+            }}
+            className="btn btn-outline btn-sm"
+            style={{
+              padding: '7px 20px',
+              fontSize: '0.82rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              borderRadius: '9999px',
+              backgroundColor: isAutoRotating ? 'var(--editorial-green)' : '#FFFFFF',
+              color: isAutoRotating ? '#FFFFFF' : 'var(--editorial-text)',
+              border: '1.5px solid var(--editorial-border)',
+              cursor: 'pointer',
+              fontWeight: 800,
+              boxShadow: '0 4px 14px rgba(37, 40, 32, 0.16)',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap'
+            }}
+            title={isAutoRotating ? 'Pause rotation' : 'Play rotation'}
+          >
+            {isAutoRotating ? <Pause size={12} /> : <Play size={12} fill="currentColor" />}
+            <span>{isAutoRotating ? 'Pause' : 'Play'}</span>
+          </button>
         </div>
       </div>
     </div>

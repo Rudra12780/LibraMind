@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1520" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto; display: block; background-color: #FFFFFF; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Plus Jakarta Sans', -apple-system, sans-serif;">
+  <defs>
+    <!-- Faint Dot-Grid Background (Balsamiq Hand-Drawn Canvas Style) -->
+    <pattern id="dot-grid-11" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.15" fill="#D2D2D2" />
+    </pattern>
+    <filter id="wireframe-shadow-11" x="-2%" y="-1%" width="104%" height="102%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <!-- Dot Grid Canvas -->
+  <rect width="920" height="1520" fill="url(#dot-grid-11)" />
+
+  <!-- Wireframe Blueprint Top Header Card -->
+  <g transform="translate(30, 20)">
+    <rect width="860" height="42" fill="#FFFFFF" stroke="#000000" stroke-width="1.8" rx="6" />
+    <text x="16" y="26" font-size="12" font-weight="bold" fill="#000000" letter-spacing="1">LIBRAMIND LMS // DESIGN THINKING UI WIREFRAME BLUEPRINT</text>
+    <text x="490" y="26" font-size="10.5" fill="#555555">PAGE 11 OF 21: CIRCULATION ANALYTICS · PORTRAIT</text>
+  </g>
+
+  <!-- Main Website Wireframe Container -->
+  <g transform="translate(30, 75)" filter="url(#wireframe-shadow-11)">
+    <!-- Browser Window Outline (Portrait 860px x 1415px) -->
+    <rect width="860" height="1415" fill="#FFFFFF" stroke="#000000" stroke-width="2" rx="8" />
+
+    <!-- Browser Window Titlebar -->
+    <rect width="860" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" rx="8 8 0 0" />
+    <circle cx="18" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="32" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <circle cx="46" cy="16" r="4.5" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+    <!-- Address URL Bar -->
+    <rect x="70" y="6" width="460" height="20" fill="#FFFFFF" stroke="#000000" stroke-width="1.2" rx="4" />
+    <text x="82" y="20" font-size="9.5" fill="#333333">http://libramind.edu/analytics</text>
+
+    <!-- 1. NAVIGATION BAR -->
+    <g transform="translate(0, 32)">
+      <rect x="670" y="8" width="170" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="680" y="21" font-size="9.5" font-weight="bold" fill="#000000">1. NAVIGATION BAR</text>
+
+      <rect width="860" height="58" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+
+      <!-- Left: Logo (Simple Book Icon + "LibraMind") -->
+      <g transform="translate(24, 12)">
+        <rect width="32" height="32" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" rx="4" />
+        <path d="M 6 10 L 16 7 L 26 10 L 26 25 L 16 22 L 6 25 Z" fill="none" stroke="#000000" stroke-width="1.5" stroke-linejoin="round" />
+        <line x1="16" y1="7" x2="16" y2="22" stroke="#000000" stroke-width="1.5" />
+        <text x="40" y="22" font-size="15" font-weight="bold" fill="#000000">LibraMind</text>
+      </g>
+
+      <!-- Center: Navigation Links -->
+      <g transform="translate(240, 24)">
+        <rect x="0" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="50" y="0" width="40" height="8" rx="3" fill="#888888" />
+        <rect x="100" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="160" y="0" width="54" height="8" rx="3" fill="#888888" />
+        <rect x="224" y="0" width="46" height="8" rx="3" fill="#888888" />
+        <rect x="280" y="0" width="50" height="8" rx="3" fill="#888888" />
+        <rect x="340" y="0" width="46" height="8" rx="3" fill="#000000" />
+      </g>
+
+      <!-- Right: Login, Register, Profile Outlined Boxes -->
+      <g transform="translate(680, 14)">
+        <rect x="0" y="0" width="48" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="10" y="18" font-size="9" font-weight="bold" fill="#000000">Login</text>
+
+        <rect x="54" y="0" width="56" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <text x="6" y="18" font-size="9" font-weight="bold" fill="#000000">Register</text>
+
+        <rect x="116" y="0" width="28" height="28" rx="5" fill="#FFFFFF" stroke="#000000" stroke-width="1.4" />
+        <circle cx="130" cy="11" r="5" fill="none" stroke="#000000" stroke-width="1.2" />
+        <path d="M 122 23 C 122 18, 138 18, 138 23" fill="none" stroke="#000000" stroke-width="1.2" />
+      </g>
+    </g>
+
+    <!-- Page Specific Body Content -->
+    
+    <!-- 2. ANALYTICS HEADER &amp; CONTROLS -->
+    <g transform="translate(0, 90)">
+      <rect width="860" height="110" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="180" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">2. ANALYTICS CONTROLS</text>
+
+      <g transform="translate(40, 32)">
+        <text x="0" y="20" font-size="18" font-weight="bold">Circulation Velocity &amp; Demand Forecasting</text>
+        <text x="0" y="38" font-size="9.5" fill="#666666">Operational analytics on monthly volume checkout rates, seat occupancy heatmaps, and turnaround velocity.</text>
+
+        <g transform="translate(600, 8)">
+          <rect width="110" height="32" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" />
+          <text x="14" y="20" font-size="9.5" font-weight="bold">Last 30 Days v</text>
+
+          <rect x="120" y="0" width="60" height="32" rx="6" fill="#000000" />
+          <text x="132" y="20" font-size="9.5" font-weight="bold" fill="#FFFFFF">Export</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- 3. KPI CARDS STRIP -->
+    <g transform="translate(0, 200)">
+      <rect width="860" height="125" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="160" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">3. KEY KPI METRICS</text>
+
+      <g transform="translate(40, 30)">
+        
+          <g transform="translate(0, 0)">
+            <rect width="186" height="75" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+            <text x="14" y="20" font-size="8.5" fill="#666666">MONTHLY CHECKOUTS</text>
+            <text x="14" y="44" font-size="15" font-weight="bold">842 Volumes</text>
+            <text x="14" y="62" font-size="8" font-weight="bold">+14% vs last month</text>
+          </g>
+        
+          <g transform="translate(198, 0)">
+            <rect width="186" height="75" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+            <text x="14" y="20" font-size="8.5" fill="#666666">PEAK SEAT OCCUPANCY</text>
+            <text x="14" y="44" font-size="15" font-weight="bold">78% Peak</text>
+            <text x="14" y="62" font-size="8" font-weight="bold">Between 14:00 - 18:00</text>
+          </g>
+        
+          <g transform="translate(396, 0)">
+            <rect width="186" height="75" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+            <text x="14" y="20" font-size="8.5" fill="#666666">AVERAGE LOAN DURATION</text>
+            <text x="14" y="44" font-size="15" font-weight="bold">9.4 Days</text>
+            <text x="14" y="62" font-size="8" font-weight="bold">Under 14-day limit</text>
+          </g>
+        
+          <g transform="translate(594, 0)">
+            <rect width="186" height="75" rx="6" fill="#F8F8F8" stroke="#000000" stroke-width="1.4" />
+            <text x="14" y="20" font-size="8.5" fill="#666666">ACTIVE READERS</text>
+            <text x="14" y="44" font-size="15" font-weight="bold">624 Students</text>
+            <text x="14" y="62" font-size="8" font-weight="bold">89% repeat borrowers</text>
+          </g>
+        
+      </g>
+    </g>
+
+    <!-- 4. CIRCULATION TREND LINE GRAPH [X] -->
+    <g transform="translate(0, 325)">
+      <rect width="860" height="410" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">4. LOAN VELOCITY TREND CHART</text>
+
+      <g transform="translate(40, 34)">
+        <text x="0" y="16" font-size="12" font-weight="bold">MONTHLY CIRCULATION VELOCITY &amp; RETURNS (HISTORICAL 12 MONTHS)</text>
+
+        <!-- Chart Canvas Box [X] -->
+        <g transform="translate(0, 28)">
+          <rect width="780" height="320" rx="8" fill="#FAFAFA" stroke="#000000" stroke-width="1.6" />
+          
+          <!-- Axes -->
+          <line x1="50" y1="30" x2="50" y2="270" stroke="#000000" stroke-width="1.8" />
+          <line x1="50" y1="270" x2="750" y2="270" stroke="#000000" stroke-width="1.8" />
+
+          <!-- Y Axis Marks -->
+          <text x="16" y="35" font-size="8.5" font-family="monospace">1000</text>
+          <line x1="45" y1="30" x2="750" y2="30" stroke="#E0E0E0" stroke-width="1" />
+          <text x="22" y="95" font-size="8.5" font-family="monospace">750</text>
+          <line x1="45" y1="90" x2="750" y2="90" stroke="#E0E0E0" stroke-width="1" />
+          <text x="22" y="155" font-size="8.5" font-family="monospace">500</text>
+          <line x1="45" y1="150" x2="750" y2="150" stroke="#E0E0E0" stroke-width="1" />
+          <text x="22" y="215" font-size="8.5" font-family="monospace">250</text>
+          <line x1="45" y1="210" x2="750" y2="210" stroke="#E0E0E0" stroke-width="1" />
+          <text x="32" y="275" font-size="8.5" font-family="monospace">0</text>
+
+          <!-- Trend Lines (Simulated Wireframe Lines) -->
+          <polyline points="50,220 110,200 170,180 230,160 290,190 350,140 410,120 470,110 530,90 590,70 650,60 710,45" fill="none" stroke="#000000" stroke-width="2.5" />
+          <polyline points="50,240 110,225 170,210 230,195 290,210 350,170 410,150 470,145 530,120 590,105 650,90 710,75" fill="none" stroke="#666666" stroke-width="1.8" stroke-dasharray="4,3" />
+
+          <!-- Data Points -->
+          <circle cx="110" cy="200" r="4" fill="#000000" /><circle cx="170" cy="180" r="4" fill="#000000" /><circle cx="230" cy="160" r="4" fill="#000000" /><circle cx="290" cy="190" r="4" fill="#000000" /><circle cx="350" cy="140" r="4" fill="#000000" /><circle cx="410" cy="120" r="4" fill="#000000" /><circle cx="470" cy="110" r="4" fill="#000000" /><circle cx="530" cy="90" r="4" fill="#000000" /><circle cx="590" cy="70" r="4" fill="#000000" /><circle cx="650" cy="60" r="4" fill="#000000" /><circle cx="710" cy="45" r="4" fill="#000000" />
+
+          <!-- X Axis Labels -->
+          
+            <text x="50" y="290" font-size="8.5">Nov</text>
+          
+            <text x="108" y="290" font-size="8.5">Dec</text>
+          
+            <text x="166" y="290" font-size="8.5">Jan</text>
+          
+            <text x="224" y="290" font-size="8.5">Feb</text>
+          
+            <text x="282" y="290" font-size="8.5">Mar</text>
+          
+            <text x="340" y="290" font-size="8.5">Apr</text>
+          
+            <text x="398" y="290" font-size="8.5">May</text>
+          
+            <text x="456" y="290" font-size="8.5">Jun</text>
+          
+            <text x="514" y="290" font-size="8.5">Jul</text>
+          
+            <text x="572" y="290" font-size="8.5">Aug</text>
+          
+            <text x="630" y="290" font-size="8.5">Sep</text>
+          
+            <text x="688" y="290" font-size="8.5">Oct</text>
+          
+
+          <!-- Legend -->
+          <g transform="translate(520, 15)">
+            <line x1="0" y1="0" x2="30" y2="0" stroke="#000000" stroke-width="2.5" />
+            <text x="36" y="4" font-size="8.5" font-weight="bold">Books Borrowed</text>
+
+            <line x1="140" y1="0" x2="170" y2="0" stroke="#666666" stroke-width="1.8" stroke-dasharray="4,3" />
+            <text x="176" y="4" font-size="8.5">Books Returned</text>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- 5. CATEGORY DISTRIBUTION &amp; HOURLY OCCUPANCY -->
+    <g transform="translate(0, 735)">
+      <rect width="860" height="550" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <rect x="24" y="8" width="220" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="34" y="21" font-size="9.5" font-weight="bold" fill="#000000">5. CATEGORY &amp; HOURLY HEATMAP</text>
+
+      <g transform="translate(40, 34)">
+        <!-- Left: Category Bars (380px) -->
+        <g transform="translate(0, 0)">
+          <rect width="375" height="490" rx="8" fill="#FAFAFA" stroke="#000000" stroke-width="1.5" />
+          <text x="20" y="26" font-size="11.5" font-weight="bold">MOST BORROWED CATEGORIES</text>
+
+          
+            <g transform="translate(20, 48)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">Computer Science &amp; AI</text>
+              <text x="335" y="14" font-size="8.5" text-anchor="end">320 loans</text>
+              <!-- Bar -->
+              <rect x="0" y="22" width="335" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+              <rect x="0" y="22" width="294.8" height="18" rx="4" fill="#000000" />
+            </g>
+          
+            <g transform="translate(20, 123)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">Novels &amp; Fiction</text>
+              <text x="335" y="14" font-size="8.5" text-anchor="end">264 loans</text>
+              <!-- Bar -->
+              <rect x="0" y="22" width="335" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+              <rect x="0" y="22" width="247.9" height="18" rx="4" fill="#000000" />
+            </g>
+          
+            <g transform="translate(20, 198)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">Philosophy &amp; Mind</text>
+              <text x="335" y="14" font-size="8.5" text-anchor="end">210 loans</text>
+              <!-- Bar -->
+              <rect x="0" y="22" width="335" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+              <rect x="0" y="22" width="207.7" height="18" rx="4" fill="#000000" />
+            </g>
+          
+            <g transform="translate(20, 273)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">Biophilic Design &amp; Nature</text>
+              <text x="335" y="14" font-size="8.5" text-anchor="end">180 loans</text>
+              <!-- Bar -->
+              <rect x="0" y="22" width="335" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+              <rect x="0" y="22" width="180.9" height="18" rx="4" fill="#000000" />
+            </g>
+          
+            <g transform="translate(20, 348)">
+              <text x="0" y="14" font-size="9.5" font-weight="bold">Architecture &amp; Stacks</text>
+              <text x="335" y="14" font-size="8.5" text-anchor="end">135 loans</text>
+              <!-- Bar -->
+              <rect x="0" y="22" width="335" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+              <rect x="0" y="22" width="134" height="18" rx="4" fill="#000000" />
+            </g>
+          
+        </g>
+
+        <!-- Right: Hourly Heatmap (385px) -->
+        <g transform="translate(395, 0)">
+          <rect width="385" height="490" rx="8" fill="#FAFAFA" stroke="#000000" stroke-width="1.5" />
+          <text x="20" y="26" font-size="11.5" font-weight="bold">HOURLY SEAT DEMAND &amp; OCCUPANCY</text>
+
+          <g transform="translate(20, 50)">
+            
+              <g transform="translate(0, 0)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">08:00 - 10:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">Quiet (30%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="103.5" height="18" rx="4" fill="#666666" />
+              </g>
+            
+              <g transform="translate(0, 65)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">10:00 - 12:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">Moderate (55%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="189.75000000000003" height="18" rx="4" fill="#666666" />
+              </g>
+            
+              <g transform="translate(0, 130)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">12:00 - 14:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">Busy (70%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="241.49999999999997" height="18" rx="4" fill="#666666" />
+              </g>
+            
+              <g transform="translate(0, 195)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">14:00 - 16:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">Peak Demand (92%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="317.40000000000003" height="18" rx="4" fill="#000000" />
+              </g>
+            
+              <g transform="translate(0, 260)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">16:00 - 18:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">High Occupancy (85%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="293.25" height="18" rx="4" fill="#000000" />
+              </g>
+            
+              <g transform="translate(0, 325)">
+                <text x="0" y="14" font-size="9.5" font-weight="bold">18:00 - 20:00</text>
+                <text x="345" y="14" font-size="8.5" text-anchor="end">Evening Study (60%)</text>
+                <rect x="0" y="22" width="345" height="18" rx="4" fill="#EEEEEE" stroke="#000000" stroke-width="1" />
+                <rect x="0" y="22" width="207" height="18" rx="4" fill="#666666" />
+              </g>
+            
+          </g>
+        </g>
+      </g>
+    </g>
+
+
+    <!-- Standard Low-Fi Footer (At Y: 1285) -->
+    <g transform="translate(0, 1285)">
+      <rect width="860" height="130" fill="#FFFFFF" stroke="#000000" stroke-width="1.6" />
+      <line x1="0" y1="0" x2="860" y2="0" stroke="#000000" stroke-width="1.8" />
+      
+      <rect x="710" y="10" width="130" height="18" fill="#FFFFFF" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" rx="3" />
+      <text x="720" y="23" font-size="9.5" font-weight="bold" fill="#000000">FOOTER SECTION</text>
+
+      <!-- 3 Placeholder Groups: About Us, Quick Links, Contact -->
+      <g transform="translate(40, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">ABOUT LIBRAMIND</text>
+        <rect x="0" y="24" width="140" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="120" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="100" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(320, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">QUICK LINKS</text>
+        <rect x="0" y="24" width="90" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="80" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <g transform="translate(580, 24)">
+        <text x="0" y="14" font-size="11" font-weight="bold" fill="#000000">CONTACT &amp; HOURS</text>
+        <rect x="0" y="24" width="130" height="7" rx="3" fill="#666666" />
+        <rect x="0" y="37" width="110" height="7" rx="3" fill="#888888" />
+        <rect x="0" y="50" width="125" height="7" rx="3" fill="#888888" />
+      </g>
+
+      <!-- Copyright Placeholder Line -->
+      <line x1="40" y1="95" x2="820" y2="95" stroke="#CCCCCC" stroke-width="1" />
+      <rect x="330" y="105" width="200" height="7" rx="3" fill="#999999" />
+    </g>
+  </g>
+</svg>

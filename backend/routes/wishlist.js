@@ -1,8 +1,9 @@
 const express = require('express');
 const Wishlist = require('../models/Wishlist');
 const Book = require('../models/Book');
+const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
-const { buildIdFilter, serializeDoc } = require('../utils/idHelper');
+const { buildIdFilter, serializeDoc, isValidObjectId } = require('../utils/idHelper');
 
 const router = express.Router();
 
@@ -14,16 +15,21 @@ router.get('/', authenticateToken, async (req, res) => {
       .populate('book_id')
       .sort({ created_at: -1 });
 
-    const formatted = items
-      .filter(item => Boolean(item.book_id))
-      .map(item => {
-        const bookObj = serializeDoc(item.book_id);
-        return {
+    const formatted = [];
+    for (const item of items) {
+      let bookDoc = item.book_id;
+      if (!bookDoc && item.sqlite_book_id) {
+        bookDoc = await Book.findOne({ sqlite_id: item.sqlite_book_id });
+      }
+      if (bookDoc) {
+        const bookObj = serializeDoc(bookDoc);
+        formatted.push({
           wishlist_id: item._id.toString(),
           added_at: item.created_at,
           ...bookObj
-        };
-      });
+        });
+      }
+    }
 
     res.json(formatted);
   } catch (err) {
@@ -40,7 +46,13 @@ router.post('/:bookId', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const user = await User.findOne(buildIdFilter(req.user.id));
+    const targetUserId = user?._id || (isValidObjectId(req.user.id) ? req.user.id : null);
+    if (!targetUserId) {
+      return res.status(400).json({ error: 'Invalid user account' });
+    }
+
+    const userFilter = buildIdFilter(targetUserId, 'user_id', 'sqlite_user_id');
     const existing = await Wishlist.findOne({
       ...userFilter,
       book_id: targetBook._id
@@ -51,8 +63,10 @@ router.post('/:bookId', authenticateToken, async (req, res) => {
     }
 
     await Wishlist.create({
-      user_id: req.user.id,
+      user_id: targetUserId,
+      sqlite_user_id: user?.sqlite_id || (!isNaN(Number(req.user.id)) ? Number(req.user.id) : null),
       book_id: targetBook._id,
+      sqlite_book_id: targetBook.sqlite_id || null,
       created_at: new Date()
     });
 
@@ -66,13 +80,19 @@ router.post('/:bookId', authenticateToken, async (req, res) => {
 // Remove from wishlist
 router.delete('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
     const userFilter = buildIdFilter(req.user.id, 'user_id', 'sqlite_user_id');
+    const targetBook = await Book.findOne(buildIdFilter(req.params.bookId));
 
     if (targetBook) {
       await Wishlist.deleteOne({
         ...userFilter,
         book_id: targetBook._id
+      });
+    } else {
+      // Also attempt deletion by wishlist doc ID
+      await Wishlist.deleteOne({
+        ...userFilter,
+        ...buildIdFilter(req.params.bookId)
       });
     }
 
