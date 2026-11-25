@@ -1,4 +1,7 @@
-const API_BASE = '/api';
+const RAW_ENV_API_URL = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+const API_BASE = RAW_ENV_API_URL
+  ? (RAW_ENV_API_URL.endsWith('/api') ? RAW_ENV_API_URL : `${RAW_ENV_API_URL}/api`)
+  : '/api';
 
 export function getCleanPathname(pathname = (typeof window !== 'undefined' ? window.location.pathname : '')) {
   try {
@@ -167,17 +170,22 @@ async function request(endpoint, options = {}) {
       throw new Error(`Proxy gateway error ${response.status}`);
     }
   } catch (netErr) {
-    // If request failed (e.g. mobile device connecting on LAN or dev proxy hiccup),
-    // attempt automatic direct fallback to backend port 5001 on the same host
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      const directUrl = `${window.location.protocol}//${window.location.hostname}:5001/api${endpoint}`;
+    // Only fall back to direct port 5001 on local dev/LAN environments
+    const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
+    const isLocalHost =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+
+    if (API_BASE === '/api' && isLocalHost) {
+      const directUrl = `${window.location.protocol}//${host}:5001/api${endpoint}`;
       try {
         response = await fetch(directUrl, config);
       } catch (_) {
         throw new Error('Network error: Unable to connect to LibraMind server. Please verify your connection.');
       }
     } else {
-      throw netErr;
+      throw new Error(netErr?.message || 'Unable to connect to LibraMind API server.');
     }
   }
 

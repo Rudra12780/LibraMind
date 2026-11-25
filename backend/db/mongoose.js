@@ -6,24 +6,32 @@ const mongoose = require('mongoose');
 // Connection string – fall back to local MongoDB if not provided in environment
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/libramind';
 
+let connectPromise = null;
+
 /**
- * Connects to MongoDB if not already connected.
+ * Connects to MongoDB if not already connected (serverless-safe connection caching).
  * Returns the Mongoose connection instance.
- * Does NOT call process.exit() – rejects the promise so calling code can handle errors gracefully.
  */
 async function connect() {
-  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-    // 1 = connected, 2 = connecting
+  if (mongoose.connection.readyState === 1) {
     return mongoose.connection;
   }
-  try {
-    await mongoose.connect(mongoUri);
-    console.log('✅ MongoDB connected');
-    return mongoose.connection;
-  } catch (err) {
-    console.error('❌ MongoDB connection error:', err.message);
-    throw err;
+  if (!connectPromise) {
+    connectPromise = mongoose
+      .connect(mongoUri, {
+        serverSelectionTimeoutMS: 5000
+      })
+      .then(() => {
+        console.log('✅ MongoDB connected');
+        return mongoose.connection;
+      })
+      .catch((err) => {
+        connectPromise = null;
+        console.error('❌ MongoDB connection error:', err.message);
+        throw err;
+      });
   }
+  return connectPromise;
 }
 
 module.exports = { connect, mongoose };

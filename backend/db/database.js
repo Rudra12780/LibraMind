@@ -1,13 +1,18 @@
-const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.join(__dirname, '..', 'libramind.db');
-const db = new Database(dbPath);
+let db = null;
 
-// Enable foreign keys and WAL mode for reliability and concurrency
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+if (process.env.VERCEL || process.env.DISABLE_SQLITE === 'true') {
+  module.exports = null;
+} else {
+  const Database = require('better-sqlite3');
+  const dbPath = path.join(__dirname, '..', 'libramind.db');
+  db = new Database(dbPath);
+
+  // Enable foreign keys and WAL mode for reliability and concurrency
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
 
 // Initialize schema
 function initSchema() {
@@ -218,6 +223,7 @@ function initSchema() {
   if (!otpCols.includes('purpose')) db.exec("ALTER TABLE otps ADD COLUMN purpose TEXT DEFAULT 'login'");
 }
 
-initSchema();
+  initSchema();
 
-module.exports = db;
+  module.exports = db;
+}

@@ -22,9 +22,11 @@ const PORT = process.env.PORT || 5001;
 
 // Ensure local uploads directory exists for offline image storage
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (_) {}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Universal Multi-Device CORS Middleware (Guaranteed 0 CORS Errors on Any Phone/LAN/IP)
