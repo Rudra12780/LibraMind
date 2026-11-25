@@ -9,8 +9,15 @@
       "includeFiles": "backend/{routes,models,middleware,services,utils,db,server.js,scheduler.js,book_covers_map.json,node_modules}/**"
     }
   },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
