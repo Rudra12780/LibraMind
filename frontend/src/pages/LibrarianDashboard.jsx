@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import DemoAccounts, { DEMO_ACCOUNTS } from '../components/DemoAccounts';
 import {
   BookOpen,
   ArrowRightLeft,
@@ -79,6 +80,7 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
   const [libPassword, setLibPassword] = useState('');
   const [libLoginError, setLibLoginError] = useState('');
   const [loggingInLib, setLoggingInLib] = useState(false);
+  const [demoLoading, setDemoLoading] = useState('');
 
   // GitHub Staff SSO state
   const [showLibGithubModal, setShowLibGithubModal] = useState(false);
@@ -543,6 +545,30 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
     }
   };
 
+  const handleDemoLogin = async (roleKey) => {
+    const account = DEMO_ACCOUNTS[roleKey];
+    if (!account || loggingInLib || demoLoading) return;
+
+    setLibLoginError('');
+    setLibEmail(account.email);
+    setLibPassword(account.password);
+    setDemoLoading(roleKey);
+
+    try {
+      const res = await login(account.email, account.password, false);
+      if (!res.user || (res.user.role !== 'librarian' && res.user.role !== 'admin')) {
+        setLibLoginError('Access Denied: This account is not authorized as library circulation staff.');
+        return;
+      }
+      if (onNavigate) onNavigate('librarian', { user: res.user, tab: 'issue' });
+      fetchLibrarianData(res.user);
+    } catch (err) {
+      setLibLoginError(err.message || 'Demo staff sign-in failed. Please try again.');
+    } finally {
+      setDemoLoading('');
+    }
+  };
+
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
   const [libRegName, setLibRegName] = useState('');
   const [libRegEmail, setLibRegEmail] = useState('');
@@ -996,6 +1022,46 @@ export default function LibrarianDashboard({ onNavigate, initialTab = 'issue' })
                   {loggingInLib ? 'Signing in...' : 'Sign In as Librarian'}
                 </button>
               </form>
+
+              <DemoAccounts
+                roles={['librarian', 'admin']}
+                onLogin={handleDemoLogin}
+                loadingRole={demoLoading}
+                title="Demo Staff Accounts"
+                subtitle="Instant access to the circulation desk with the seeded librarian (admin also allowed)."
+                dense
+              />
+
+              <div
+                style={{
+                  marginTop: '12px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid var(--editorial-border)',
+                  textAlign: 'center'
+                }}
+              >
+                <div style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginBottom: '6px' }}>
+                  Looking for the other demo portals?
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate && onNavigate('login')}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.74rem', padding: '5px 10px' }}
+                  >
+                    Student Demo →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate && onNavigate('admin@1234')}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: '0.74rem', padding: '5px 10px' }}
+                  >
+                    Admin Demo →
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
             <form onSubmit={handleLibrarianRegister}>

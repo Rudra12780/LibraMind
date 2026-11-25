@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, User } from 'lucide-react';
+import DemoAccounts, { DEMO_ACCOUNTS } from '../components/DemoAccounts';
 
 export default function AdminLogin({ onNavigate }) {
   const { user, login, register, adminVerified } = useAuth();
@@ -18,6 +19,32 @@ export default function AdminLogin({ onNavigate }) {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState('');
+
+  const handleDemoLogin = async (roleKey = 'admin') => {
+    const account = DEMO_ACCOUNTS[roleKey];
+    if (!account || loading || demoLoading) return;
+
+    setError('');
+    setEmail(account.email);
+    setPassword(account.password);
+    setDemoLoading(roleKey);
+
+    try {
+      const res = await login(account.email, account.password, true);
+      if (!res.user || res.user.role !== 'admin') {
+        setError('Access Denied: This account is not an authorized library administrator.');
+        return;
+      }
+      if (onNavigate) {
+        onNavigate('admin', { user: res.user, adminVerified: true });
+      }
+    } catch (err) {
+      setError(err.message || 'Demo administrator sign-in failed. Please try again.');
+    } finally {
+      setDemoLoading('');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -294,6 +321,46 @@ export default function AdminLogin({ onNavigate }) {
                 {loading ? 'Signing in...' : 'Sign In as Admin'}
               </button>
             </form>
+
+            <DemoAccounts
+              roles={['admin']}
+              onLogin={handleDemoLogin}
+              loadingRole={demoLoading}
+              title="Demo Admin Account"
+              subtitle="One-click access to the governance console with the seeded administrator."
+              dense
+            />
+
+            <div
+              style={{
+                marginTop: '12px',
+                paddingTop: '12px',
+                borderTop: '1px solid var(--editorial-border)',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '0.72rem', color: 'var(--editorial-text-muted)', marginBottom: '6px' }}>
+                Looking for the other demo portals?
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => onNavigate && onNavigate('login')}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: '0.74rem', padding: '5px 10px' }}
+                >
+                  Student Demo →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate && onNavigate('lib@1234')}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: '0.74rem', padding: '5px 10px' }}
+                >
+                  Librarian Demo →
+                </button>
+              </div>
+            </div>
           </>
         ) : (
           <form onSubmit={handleRegister}>
