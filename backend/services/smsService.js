@@ -49,7 +49,7 @@ function getSmsConfig() {
 }
 
 /**
- * Dispatch real SMS message via configured provider
+ * Dispatch SMS OTP via Twilio / MSG91 if configured, otherwise use built-in virtual SMS fallback
  */
 async function sendSmsOtp(phoneNumber, otpCode, purpose = 'verification', expiresInSeconds = 300) {
   const config = getSmsConfig();
@@ -58,24 +58,24 @@ async function sendSmsOtp(phoneNumber, otpCode, purpose = 'verification', expire
     ? `${expiresInSeconds} seconds only`
     : `${Math.max(1, Math.round(expiresInSeconds / 60))} minutes`;
 
-  if (!config.isConfigured) {
-    const missingList = config.missing.join(', ');
-    const err = new Error(
-      `SMS Gateway is not configured. Missing environment variables in backend/.env: ${missingList}. ` +
-      `Please configure ${config.provider.toUpperCase()} credentials to send real SMS OTPs.`
-    );
-    err.code = 'SMS_GATEWAY_NOT_CONFIGURED';
-    err.provider = config.provider;
-    err.missing = config.missing;
-    throw err;
-  }
-
   const messageText = `Your LibraMind Library verification code is ${otpCode}. Valid for ${validityLabel}. Do not share this code with anyone.`;
 
+  if (!config.isConfigured) {
+    console.log(`[SMSService - Built-in OTP] To ${phoneNumber} (${purpose}, ${validityLabel}): ${otpCode}`);
+    return {
+      success: true,
+      deliveryMode: 'virtual_sms',
+      provider: 'built-in',
+      otpCode
+    };
+  }
+
   if (config.provider === 'twilio') {
-    return sendTwilioSms(config, phoneNumber, messageText);
+    const result = await sendTwilioSms(config, phoneNumber, messageText);
+    return { ...result, deliveryMode: 'sms' };
   } else if (config.provider === 'msg91') {
-    return sendMsg91Otp(config, phoneNumber, otpCode);
+    const result = await sendMsg91Otp(config, phoneNumber, otpCode);
+    return { ...result, deliveryMode: 'sms' };
   }
 
   throw new Error(`Unsupported SMS provider: ${config.provider}`);

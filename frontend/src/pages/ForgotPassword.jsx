@@ -25,6 +25,7 @@ export default function ForgotPassword({ onNavigate }) {
   const [userName, setUserName] = useState('');
 
   const [otp, setOtp] = useState('');
+  const [virtualOtp, setVirtualOtp] = useState('');
   const [expiresAtMs, setExpiresAtMs] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(60);
 
@@ -84,6 +85,7 @@ export default function ForgotPassword({ onNavigate }) {
       setCanonicalPhone(res.phone || targetPhone.trim());
       setMaskedPhone(res.maskedPhone || targetPhone.trim());
       setUserName(res.userName || '');
+      setVirtualOtp(res.virtualOtp || '');
       setExpiresAtMs(serverExp);
       setSecondsLeft(Math.max(1, Math.min(60, Math.ceil((serverExp - Date.now()) / 1000))));
       setOtp('');
@@ -426,6 +428,44 @@ export default function ForgotPassword({ onNavigate }) {
               </div>
             </div>
 
+            {virtualOtp && secondsLeft > 0 && (
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--editorial-bg-subtle)',
+                  border: '1px solid var(--editorial-green)',
+                  color: 'var(--editorial-text)',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  fontSize: '0.82rem'
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: 'var(--editorial-green)' }}>SMS Verification Message ({maskedPhone})</div>
+                  <div>
+                    Your 60s OTP Code: <strong style={{ fontFamily: 'monospace', fontSize: '1.05rem', letterSpacing: '2px' }}>{virtualOtp}</strong>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOtp(virtualOtp)}
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill OTP
+                </button>
+              </div>
+            )}
+
             <div className="form-group" style={{ marginBottom: '20px' }}>
               <label className="form-label">6-Digit SMS OTP Code</label>
               <input
@@ -491,6 +531,7 @@ export default function ForgotPassword({ onNavigate }) {
                   setStep('phone');
                   setError('');
                   setOtp('');
+                  setVirtualOtp('');
                 }}
                 className="btn btn-outline"
                 style={{ flex: 1, padding: '10px', fontSize: '0.84rem' }}

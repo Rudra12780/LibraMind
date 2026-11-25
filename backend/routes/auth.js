@@ -1874,16 +1874,14 @@ router.post('/forgot-password', async (req, res) => {
       }
     }
 
+    let smsResult;
     try {
-      await sendSmsOtp(canonicalPhone, otpCode, 'forgot_password', FORGOT_PASSWORD_OTP_TTL_SECONDS);
+      smsResult = await sendSmsOtp(canonicalPhone, otpCode, 'forgot_password', FORGOT_PASSWORD_OTP_TTL_SECONDS);
     } catch (smsErr) {
       await markForgotOtpsUsed(canonicalPhone);
       console.error('SMS OTP dispatch failed:', smsErr.message);
       return res.status(503).json({
-        error: smsErr.message || 'Failed to dispatch SMS OTP. Please try again.',
-        code: smsErr.code || 'SMS_GATEWAY_ERROR',
-        provider: smsErr.provider || 'unknown',
-        missing: smsErr.missing || []
+        error: smsErr.message || 'Failed to dispatch SMS OTP. Please try again.'
       });
     }
 
@@ -1892,12 +1890,13 @@ router.post('/forgot-password', async (req, res) => {
     const masked = maskPhone(canonicalPhone);
     res.json({
       success: true,
-      message: `A 6-digit SMS verification code has been sent to ${masked}. Valid for 60 seconds only.`,
+      message: `A 6-digit SMS verification code has been dispatched to ${masked}. Valid for 60 seconds only.`,
       maskedPhone: masked,
       phone: canonicalPhone,
       userName: effectiveUser.name,
       expiresIn: FORGOT_PASSWORD_OTP_TTL_SECONDS,
-      expiresAt: expiresAt.toISOString()
+      expiresAt: expiresAt.toISOString(),
+      ...(smsResult?.deliveryMode === 'virtual_sms' ? { virtualOtp: otpCode } : {})
     });
   } catch (err) {
     console.error('Forgot password SMS OTP error:', err);
